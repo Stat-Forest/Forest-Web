@@ -1,13 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import Auth from "./views/Auth/Auth";
 // import Dashboard from "./view/Dashboard/Dashboard";
-// import Auth from "./view/Auth/Auth";
 
 function App() {
   return (
     <>
       <Routes>
-        {/* <Route path="/auth" element={<Auth />} /> */}
+        <Route path="/auth" element={<Auth />} />
         <Route
           path="/*"
           element={
