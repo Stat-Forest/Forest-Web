@@ -15,7 +15,7 @@ function Login() {
       <span className="text-center w-full text-[#929292] text-[13px]">
         Urmon xo‘jaligi hisobini yuritish axborot tizimi
       </span>
-      <form action="" className="flex items-center flex-col gap-6 pt-8">
+      <form action="" className="flex items-center flex-col gap-6 pt-6">
         <Tabs defaultValue="login" className="w-[400px]">
           <TabsList className="w-full h-10 gap-3">
             <TabsTrigger className="h-[40px]" value="with_key">

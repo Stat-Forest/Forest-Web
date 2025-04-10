@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import ProtectedRoute from "./ProtectedRoute";
+// import ProtectedRoute from "./ProtectedRoute";
 import Auth from "./views/Auth/Auth";
-// import Dashboard from "./view/Dashboard/Dashboard";
+import Dashboard from "./views/Dashboard/Dashboard";
 
 function App() {
   return (
@@ -11,10 +11,9 @@ function App() {
         <Route
           path="/*"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              {/* <Dashboard /> */}
-              <h1>hello world</h1>
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Dashboard />
+            // </ProtectedRoute>
           }
         />
         <Route path="/unauthorized" element={<Navigate to="/auth" replace />} />
