@@ -32,7 +32,7 @@ export const sidebar_menu = [
   {
     id: 3,
     title: "Inson resurslarini boshqarish",
-    path: "/home",
+    path: "/resource-management",
     active_icon: "",
     default_icon: humans_default,
     arrow_icon: "",
