@@ -2,6 +2,8 @@ import { nanoid } from "@reduxjs/toolkit";
 import { lazy } from "react";
 import { routeTypes } from "./routesTypes";
 
+// Main
+
 const Main = lazy(() => import("@/views/Dashboard/Main"));
 const MainDetail = lazy(
   () => import("@/views/Dashboard/Main/Children/SendReport")
@@ -18,6 +20,12 @@ const ResponsibleRepresentatives = lazy(
 const Draft = lazy(() => import("@/views/Dashboard/Main/Children/Draft"));
 const Newsletters = lazy(
   () => import("@/views/Dashboard/Main/Children/Newsletters")
+);
+
+// resource management
+
+const ResourceManagement = lazy(
+  () => import("@/views/Dashboard/ResourceManagement")
 );
 
 export const routes: routeTypes[] = [
@@ -57,5 +65,11 @@ export const routes: routeTypes[] = [
         id: nanoid(5),
       },
     ],
+  },
+  {
+    path: "resource-management",
+    element: ResourceManagement,
+    id: nanoid(5),
+    children: [],
   },
 ];
