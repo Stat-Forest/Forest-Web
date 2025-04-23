@@ -16,7 +16,7 @@ const prepareHeaders = (headers: Headers) => {
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${base_url}/auth`, // This uses the imported base_url
+    baseUrl: `${base_url}/authentications`, // This uses the imported base_url
     prepareHeaders,
   }),
   endpoints: (builder) => ({

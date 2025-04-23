@@ -1,2 +1,2 @@
 export const base_url =
-  "https://collie-refined-amazingly.ngrok-free.app/api/v1";
+  "https://a6a5-84-54-84-75.ngrok-free.app/api/v1";
