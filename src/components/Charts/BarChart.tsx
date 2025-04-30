@@ -55,7 +55,7 @@ const CustomLegend = (props: LegendProps) => {
               borderRadius: 3,
             }}
           />
-          <span className="text-md text-gray-700">{entry.value}</span>
+          <span className="text-md text-[#364153]">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -151,12 +151,12 @@ const StaffChart = () => {
                 <SelectItem value="dark">Dark</SelectItem>
                 <SelectItem value="system">System</SelectItem>
               </SelectContent>
-            </Select>
+          </Select>
           </div>
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="bg-green-500 text-white w-full">
+                <Button className="bg-[#09B86F] text-white w-full">
                   Export
                 </Button>
               </DropdownMenuTrigger>
