@@ -1,2 +1,13 @@
-export const base_url =
-  "https://a6a5-84-54-84-75.ngrok-free.app/api/v1";
+import { decryptData } from "@/utils/crypto";
+
+export const base_url = import.meta.env.VITE_API_URL;
+
+export const prepareHeaders = (headers: Headers) => {
+  const token = decryptData("token", "token");
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return headers;
+};

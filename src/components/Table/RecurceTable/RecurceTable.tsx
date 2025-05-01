@@ -47,18 +47,18 @@ function RecurceTable() {
             <TableCell>1</TableCell>
             <TableCell>Yoshlar ishlari agentligi</TableCell>
             <TableCell>150</TableCell>
-            <TableCell>5</TableCell> {/* Boshqaruv xodimlari */}
-            <TableCell>40</TableCell> {/* Mutaxassislar */}
-            <TableCell>60</TableCell> {/* Ishlab chiqarish xodimlari */}
-            <TableCell>20</TableCell> {/* Texnik xodimlar */}
-            <TableCell>10</TableCell> {/* Xizmat ko‘rsatuvchi xodimlar */}
-            <TableCell>15</TableCell> {/* Jami vakant lavozimlar */}
-            <TableCell>2</TableCell> {/* Boshqaruv vakant */}
-            <TableCell>4</TableCell> {/* Mutaxassis vakant */}
-            <TableCell>5</TableCell> {/* Ishlab chiqarish vakant */}
-            <TableCell>2</TableCell> {/* Texnik vakant */}
-            <TableCell>1</TableCell> {/* Xizmat ko‘rsatuvchi vakant */}
-            <TableCell>1</TableCell> {/* Ishchilar vakant */}
+            <TableCell>5</TableCell>
+            <TableCell>40</TableCell>
+            <TableCell>60</TableCell>
+            <TableCell>20</TableCell>
+            <TableCell>10</TableCell>
+            <TableCell>15</TableCell>
+            <TableCell>2</TableCell>
+            <TableCell>4</TableCell>
+            <TableCell>5</TableCell>
+            <TableCell>2</TableCell>
+            <TableCell>1</TableCell>
+            <TableCell>1</TableCell>
           </TableRow>
         </TableBody>
       </Table>

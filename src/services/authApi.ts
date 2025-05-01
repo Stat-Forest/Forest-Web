@@ -1,17 +1,16 @@
-import { decryptData } from "@/utils/crypto";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { base_url } from "./baseUrl";
+import { base_url, prepareHeaders } from "./baseUrl";
 
-const prepareHeaders = (headers: Headers) => {
-  const token = decryptData("token", "token");
-  // const user = decryptData("user", "user");
+// const prepareHeaders = (headers: Headers) => {
+//   const token = decryptData("token", "token");
+// const user = decryptData("user", "user");
 
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+//   if (token) {
+//     headers.set("Authorization", `Bearer ${token}`);
+//   }
 
-  return headers;
-};
+//   return headers;
+// };
 
 export const authApi = createApi({
   reducerPath: "authApi",

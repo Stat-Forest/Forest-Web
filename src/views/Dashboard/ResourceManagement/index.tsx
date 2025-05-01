@@ -9,7 +9,6 @@ function ResourceManagement() {
           <span className="text-[#A3A3A3]">
             Inson resulrslarini boshqarish:
           </span>
-          {" "}
           Xodimlar hisobi
         </h2>
         <div className="w-full bg-[#E8E8E8] h-[4px] rounded-full">
