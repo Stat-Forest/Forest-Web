@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import logo from "../../assets/logo.svg";
-import { User2 } from "lucide-react";
+import { FileText, User2 } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -27,9 +27,7 @@ function Sidebar() {
         <Sheet key={item.id}>
           <SheetTrigger asChild>
             <div className="cursor-pointer p-2 hover:bg-gray-200 rounded-md flex items-center gap-2">
-              {item.default_icon && (
-                <img src={item.default_icon} alt="" className="w-5 h-5" />
-              )}
+              {item.icon && <img src={item.icon} alt="" className="w-5 h-5" />}
               <span>{item.name}</span>
             </div>
           </SheetTrigger>
@@ -40,14 +38,15 @@ function Sidebar() {
             <SheetHeader>
               <SheetTitle>{item.name}</SheetTitle>
             </SheetHeader>
-            <div className="flex flex-col mt-4 gap-2">
+            <div className="flex flex-col ml-6 w-full mt-1 gap-4">
               {item.children.map((child: any, index: number) => (
                 <NavLink
                   key={index}
                   to={`/resource-management/${child.id}`}
-                  className="text-blue-600 hover:underline"
+                  className="text-[#9F9F9F] hover:underline flex items-center gap-1"
                 >
-                  {child.name}
+                  <FileText />
+                  <h2 className="text-[17px]">{child.name}</h2>
                 </NavLink>
               ))}
             </div>
