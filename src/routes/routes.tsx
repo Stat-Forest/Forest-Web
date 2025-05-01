@@ -67,7 +67,7 @@ export const routes: routeTypes[] = [
     ],
   },
   {
-    path: "resource-management",
+    path: "resource-management/:id",
     element: ResourceManagement,
     id: nanoid(5),
     children: [],

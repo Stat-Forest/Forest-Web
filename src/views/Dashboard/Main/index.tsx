@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import MainPage from "./MainPage";
 
-function index() {
+function Main() {
   return (
     <div>
       <MainPage />
@@ -10,4 +10,4 @@ function index() {
   );
 }
 
-export default index;
+export default Main;
