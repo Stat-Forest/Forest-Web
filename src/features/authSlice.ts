@@ -3,10 +3,11 @@ import { decryptData, encryptData } from "@/utils/crypto";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface User {
-  id: string;
-  name: string;
-  username: string;
+  email: string;
+  user_id: string;
   role: string;
+  access: string;
+  refresh: string;
 }
 
 interface AuthState {
@@ -38,10 +39,11 @@ const authSlice = createSlice({
 
         state.token = payload.access;
         state.user = {
-          id: payload.user_id,
-          name: payload.full_name,
-          username: payload.email,
+          email: payload.email,
+          user_id: payload.user_id,
           role: payload.role,
+          access: payload.access,
+          refresh: payload.refresh,
         };
 
         encryptData("token", payload.access, "token");

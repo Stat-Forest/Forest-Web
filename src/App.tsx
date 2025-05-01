@@ -1,13 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-// import ProtectedRoute from "./ProtectedRoute";
 import Auth from "./views/Auth/Auth";
 import Dashboard from "./views/Dashboard/Dashboard";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
+  const apiUrl = import.meta.env.VITE_API_URL;
 
-  const apiUrl = import.meta.env.VITE_API_URL
-
-  console.log(apiUrl)
+  console.log(apiUrl);
 
   return (
     <>
@@ -16,9 +15,9 @@ function App() {
         <Route
           path="/*"
           element={
-            // <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["super_admin"]}>
               <Dashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
         <Route path="/unauthorized" element={<Navigate to="/auth" replace />} />
