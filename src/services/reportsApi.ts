@@ -9,13 +9,13 @@ export const reportApi = createApi({
   }),
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
-    getAllReports: builder.query({
-      query: () => ({ url: `/`, method: "GET" }),
+    getAllReports: builder.query<any, { status?: string }>({
+      query: ({ status = "" }) => `/?status=${status}`,
     }),
     getReportById: builder.query({
       query: (id: string | number) => ({ url: `/${id}/`, method: "GET" }),
     }),
-    getDashboardReport: builder.query({
+    getDashboardReport: builder.query<any, void>({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
     }),
     getDeadlinesReport: builder.query({
