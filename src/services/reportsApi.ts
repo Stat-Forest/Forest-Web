@@ -18,7 +18,7 @@ export const reportApi = createApi({
     getDashboardReport: builder.query<any, void>({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
     }),
-    getDeadlinesReport: builder.query({
+    getDeadlinesReport: builder.query<any, void>({
       query: () => ({ url: `/deadlines/`, method: "GET" }),
     }),
     getReportItemsReport: builder.query({
@@ -29,6 +29,9 @@ export const reportApi = createApi({
     }),
     getStatementsReport: builder.query<any, void>({
       query: () => ({ url: `/statements/`, method: "GET" }),
+    }),
+    getUsersReport: builder.query<any, void>({
+      query: () => ({ url: `/users/`, method: "GET" }),
     }),
 
     // ==== 🟩 POST endpoints ====
@@ -110,6 +113,7 @@ export const {
   useGetReportItemsReportQuery,
   useGetStatementColumnsReportQuery,
   useGetStatementsReportQuery,
+  useGetUsersReportQuery,
 
   // POST
   useCreateReportMutation,
