@@ -70,7 +70,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-[310px] overflow-y-auto p-4 bg-white/40">
+    <div className="w-[310px]  h-screen overflow-y-auto p-4 bg-white/40">
       <div className="w-full h-[50px] rounded-full flex items-center justify-center text-black mb-3 gap-3">
         <img width={40} height={40} src={logo} alt="logo" />
         <h2 className="font-extrabold text-[20px]">STAT-URMON</h2>

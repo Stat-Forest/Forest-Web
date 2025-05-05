@@ -7,7 +7,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-function ResponsibleRepresentativesTable() {
+function ResponsibleRepresentativesTable({ data }: any) {
+  console.log(data)
   return (
     <Table className="w-full">
       <TableHeader>
@@ -15,7 +16,9 @@ function ResponsibleRepresentativesTable() {
           <TableHead className="w-[4%] text-lg text-[#717171] rounded-tl-lg rounded-bl-lg border-none">
             T/r:
           </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[14%]  border-none">Ismi</TableHead>
+          <TableHead className="text-[#717171] text-lg w-[14%]  border-none">
+            Ismi
+          </TableHead>
           <TableHead className="text-[#717171] text-lg w-[14%] border-none">
             Familiyasi
           </TableHead>
@@ -34,23 +37,31 @@ function ResponsibleRepresentativesTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow className="h-[50px]">
-          <TableCell className="w-[4%] text-lg font-[300] border-none">321</TableCell>
-          <TableCell className="w-[14%] text-base font-[300] border-none">
-            Amirjon
-          </TableCell>
-          <TableCell className="w-[14%] text-base font-[300]  border-none">
-            Yuldashev
-          </TableCell>
-          <TableCell className="w-[14%] text-base font-[300] border-none">
-            Urmontexnoservis davlat unitar korxonasi
-          </TableCell>
-          <TableCell className="w-[14%] text-base font-[300] border-none">O’zbek</TableCell>
-          <TableCell className="w-[14%] text-base font-[300] border-none">Oliy</TableCell>
-          <TableCell className="w-[14%] text-right text-base font-[400] border-none">
-            Bosh mutaxassis
-          </TableCell>
-        </TableRow>
+        {data?.results?.map((item: any, index: any) => (
+          <TableRow className="h-[50px]" key={index}>
+            <TableCell className="w-[4%] text-lg font-[300] border-none">
+              321
+            </TableCell>
+            <TableCell className="w-[14%] text-base font-[300] border-none">
+              {item?.first_name}
+            </TableCell>
+            <TableCell className="w-[14%] text-base font-[300]  border-none">
+              {item?.last_name}
+            </TableCell>
+            <TableCell className="w-[14%] text-base font-[300] border-none">
+              Urmontexnoservis davlat unitar korxonasi
+            </TableCell>
+            <TableCell className="w-[14%] text-base font-[300] border-none">
+              O’zbek
+            </TableCell>
+            <TableCell className="w-[14%] text-base font-[300] border-none">
+              Oliy
+            </TableCell>
+            <TableCell className="w-[14%] text-right text-base font-[400] border-none">
+              Bosh mutaxassis
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );
