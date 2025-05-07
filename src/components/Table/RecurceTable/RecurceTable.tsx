@@ -1,106 +1,79 @@
-import { useRef, useState } from "react";
-import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useCallback, useRef, useState } from "react";
+import { read, utils, writeFileXLSX } from "xlsx";
 
 function RecurceTable() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [data, setData] = useState<Record<string, any>[]>([]);
+  const [htmlContent, setHtmlContent] = useState("");
+  const tableRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const keyNames = [
-    "t_r",
-    "tashkilot_nomi",
-    "jami_xodimlar",
-    "boshqaruv_xodimlari",
-    "mutaxassislar",
-    "ishlab_chiqarish_xodimlari",
-    "texnik_xodimlar",
-    "xizmat_korsatuvchilar",
-    "vakant_boshqaruv",
-    "vakant_mutaxassis",
-    "vakant_ishlabchiqarish",
-    "vakant_texnik",
-    "vakant_xizmat",
-    "vakant_ishchilar",
-  ];
-
-  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ✅ Excel faylni import qilish
+  const importFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = await file.arrayBuffer();
+    const workbook = read(data);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    let html = utils.sheet_to_html(worksheet);
 
-      const raw = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
-      const rows = raw.slice(1);
-
-      const result = rows.map((row) => {
-        const item: Record<string, any> = {};
-        keyNames.forEach((key, idx) => {
-          item[key] = row[idx] ?? null;
-        });
-        return item;
-      });
-
-      setData(result); // 🔁 Jadvalda ko‘rsatish uchun state ga joylaymiz
-
-      // 📡 Backendga yuborish
-      // fetch("/api/xisobot", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(result),
-      // })
-        // .then((res) => {
-        //   if (!res.ok) throw new Error("Yuborishda xatolik");
-        //   return res.json();
-        // })
-        // .catch((err) => {
-        //   console.error(err);
-        //   alert("Xatolik yuz berdi!");
-        // });
-    };
-
-    reader.readAsBinaryString(file);
+    // Chegarali jadval uchun class qo‘shamiz
+    html = html.replace("<table", "<table class='excel-table'");
+    setHtmlContent(html);
   };
 
-  console.log(data)
+  // ✅ Export qilish (xlsx faylga)
+  const handleExport = useCallback(() => {
+    const tableElement = tableRef.current?.getElementsByTagName("TABLE")[0];
+    if (!tableElement) return;
 
-  const handleExport = () => {
-    if (data.length === 0) return alert("Eksport qilish uchun ma'lumot yo‘q");
+    const workbook = utils.table_to_book(tableElement);
+    writeFileXLSX(workbook, "ExportedData.xlsx");
+  }, []);
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Hisobot");
-    XLSX.writeFile(workbook, "hisobot.xlsx");
-  };
-
+  // ✅ Print qilish
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open("", "_blank");
+    if (printWindow && tableRef.current) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Jadvalni chop etish</title>
+            <style>
+              table {
+                border-collapse: collapse;
+                width: 100%;
+              }
+              th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+              }
+            </style>
+          </head>
+          <body>
+            ${tableRef.current.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   return (
-    <div>
+    <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <Button>Yangi xisobot</Button>
+        <Button onClick={() => alert("Yangi xisobot qo‘shish logikasi")}>
+          Yangi xisobot
+        </Button>
         <div className="flex gap-2">
           <Button onClick={() => fileInputRef.current?.click()}>Import</Button>
           <input
             ref={fileInputRef}
             type="file"
             accept=".xlsx, .xls"
-            onChange={handleExcelImport}
+            onChange={importFile}
             className="hidden"
           />
           <Button onClick={handleExport}>Export</Button>
@@ -108,36 +81,20 @@ function RecurceTable() {
         </div>
       </div>
 
-      <div className="bg-white px-5 py-3 my-3 shadow rounded-2xl overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {keyNames.map((key) => (
-                <TableHead key={key} className="text-xs">
-                  {key.replace(/_/g, " ").toUpperCase()}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.length > 0 ? (
-              data.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {keyNames.map((key) => (
-                    <TableCell key={key}>{row[key]}</TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={keyNames.length} className="text-center">
-                  Ma’lumot mavjud emas
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <div ref={tableRef} style={{overflow:"auto"}} dangerouslySetInnerHTML={{ __html: htmlContent }} />
+
+      {/* Excel uchun custom style */}
+      <style>{`
+        .excel-table {
+          border-collapse: collapse;
+          width: 100%;
+        }
+        .excel-table th, .excel-table td {
+          border: 1px solid black;
+          padding: 8px;
+          text-align: left;
+        }
+      `}</style>
     </div>
   );
 }

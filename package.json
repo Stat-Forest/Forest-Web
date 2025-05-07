@@ -47,10 +47,12 @@
     "react-to-pdf": "^2.0.0",
     "react-to-print": "^3.0.6",
     "recharts": "^2.15.3",
+    "sheetjs-style": "^0.15.8",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^4.1.3",
     "tw-animate-css": "^1.2.5",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
