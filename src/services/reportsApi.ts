@@ -24,7 +24,7 @@ export const reportApi = createApi({
     getReportItemsReport: builder.query({
       query: () => ({ url: `/report-items/`, method: "GET" }),
     }),
-    getStatementColumnsReport: builder.query({
+    getStatementColumnsReport: builder.query<any, void>({
       query: () => ({ url: `/statement-columns/`, method: "GET" }),
     }),
     getStatementsReport: builder.query<any, void>({
