@@ -13,7 +13,7 @@ function App() {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route
-          path="/*"
+          path="/*"       
           element={
             <ProtectedRoute allowedRoles={["super_admin"]}>
               <Dashboard />
