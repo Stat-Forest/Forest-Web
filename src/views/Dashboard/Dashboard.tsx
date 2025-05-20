@@ -10,6 +10,7 @@ import ReceivedReport from "./Main/Children/ReceivedReport";
 import ResponsibleRepresentatives from "./Main/Children/ResponsibleRepresentatives";
 import Newsletters from "./Main/Children/Newsletters";
 import ResourceManagement from "./ResourceManagement";
+import CreateReport from "./Main/Children/CreateReport";
 // import { routes } from "@/routes/routes";
 
 function Dashboard() {
@@ -43,6 +44,7 @@ function Dashboard() {
               />
               <Route path="draft" element={<Draft />} />
               <Route path="newsletter" element={<Newsletters />} />
+              <Route path="create-report" element={<CreateReport />} />
             </Route>
             <Route
               path="resource-management/:id"
