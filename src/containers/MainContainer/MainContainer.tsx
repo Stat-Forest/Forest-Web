@@ -127,6 +127,21 @@ function MainContainer() {
           </span>
         </div>
       </div>
+      {/* Qoralama */}
+      <div
+        onClick={() => navigate("/main/create-report")}
+        className="w-full h-[100px] shadow rounded-lg flex items-center gap-5 pl-6 cursor-pointer"
+      >
+        <div className="bg-[purple] w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+          <FileText color="white" size={25} />
+        </div>
+        <div>
+          <h2 className="font-medium text-[18px] text-[#353535]">Yangi reja yaratish</h2>
+          <span className="text-[purple] text-[22px]">
+            {dashboard_data?.draft_reports || 0} ta
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

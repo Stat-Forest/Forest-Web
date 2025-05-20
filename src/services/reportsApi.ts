@@ -33,6 +33,9 @@ export const reportApi = createApi({
     getUsersReport: builder.query<any, void>({
       query: () => ({ url: `/users/`, method: "GET" }),
     }),
+    getPlanColumnsReport: builder.query<any, void>({
+      query: () => ({ url: `/plan-columns/`, method: "GET" }),
+    }),
 
     // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
@@ -114,6 +117,7 @@ export const {
   useGetStatementColumnsReportQuery,
   useGetStatementsReportQuery,
   useGetUsersReportQuery,
+  useGetPlanColumnsReportQuery,
 
   // POST
   useCreateReportMutation,
