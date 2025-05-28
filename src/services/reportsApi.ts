@@ -21,7 +21,7 @@ export const reportApi = createApi({
     getDeadlinesReport: builder.query<any, void>({
       query: () => ({ url: `/deadlines/`, method: "GET" }),
     }),
-    getReportItemsReport: builder.query({
+    getReportItemsReport: builder.query<any, void>({
       query: () => ({ url: `/report-items/`, method: "GET" }),
     }),
     getStatementColumnsReport: builder.query<any, void>({
@@ -59,9 +59,9 @@ export const reportApi = createApi({
         body: params,
       }),
     }),
-    sendReportEmail: builder.mutation({
+    PlanCreate: builder.mutation({
       query: (payload) => ({
-        url: `/email/`,
+        url: `/plan-create/`,
         method: "POST",
         body: payload,
       }),
@@ -123,7 +123,7 @@ export const {
   useCreateReportMutation,
   useSubmitReportFeedbackMutation,
   useGeneratePdfReportMutation,
-  useSendReportEmailMutation,
+  usePlanCreateMutation,
 
   // PUT
   useUpdateReportMutation,

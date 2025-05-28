@@ -11,14 +11,14 @@ import {
 } from "@/components/ui/select";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import {
-  useCreateReportMutation,
+  usePlanCreateMutation,
   useGetPlanColumnsReportQuery,
 } from "@/services/reportsApi";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
-  const [createReport] = useCreateReportMutation();
+  const [createReport] = usePlanCreateMutation();
 
   const {
     data: organization,
@@ -49,6 +49,8 @@ function CreateReport() {
       plan_value,
     };
 
+    console.log(payload)
+
     try {
       await createReport(payload).unwrap();
       alert("Hisobot muvaffaqiyatli yaratildi!");
@@ -77,8 +79,8 @@ function CreateReport() {
                   Xatolik yuz berdi
                 </div>
               )}
-              {organization?.results.map((item: any, index: number) => (
-                <SelectItem key={index} value={String(index)}>
+              {organization?.results.map((item: any) => (
+                <SelectItem key={item?.id} value={String(item?.id)}>
                   {item.name}
                 </SelectItem>
               ))}
