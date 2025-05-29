@@ -4,9 +4,6 @@ import Dashboard from "./views/Dashboard/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
-  const apiUrl = import.meta.env.VITE_API_URL;
-
-  console.log(apiUrl);
 
   return (
     <>
