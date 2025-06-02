@@ -13,11 +13,13 @@ import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import {
   usePlanCreateMutation,
   useGetPlanColumnsReportQuery,
+  useGetStatementsReportQuery,
 } from "@/services/reportsApi";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
+  const [statement, setStatement] = useState<string | null>(null);
   const [createReport] = usePlanCreateMutation();
 
   const {
@@ -32,6 +34,12 @@ function CreateReport() {
     error: plan_cols_error,
   } = useGetPlanColumnsReportQuery();
 
+  const {
+    data: statment,
+    isLoading: statment_loading,
+    error: statment_error,
+  } = useGetStatementsReportQuery();
+
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -45,11 +53,10 @@ function CreateReport() {
     const payload = {
       organization: selectedOrg,
       column: selectedColumn,
+      statement:statement,
       year,
       plan_value,
     };
-
-    console.log(payload)
 
     try {
       await createReport(payload).unwrap();
@@ -80,6 +87,30 @@ function CreateReport() {
                 </div>
               )}
               {organization?.results.map((item: any) => (
+                <SelectItem key={item?.id} value={String(item?.id)}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-full">
+          <Label className="pb-1.5 text-md block">Hisobot formasi</Label>
+          <Select onValueChange={setStatement}>
+            <SelectTrigger className="w-full min-h-[45px]">
+              <SelectValue placeholder="Tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {statment_loading && (
+                <div className="text-center text-sm py-2">Yuklanmoqda...</div>
+              )}
+              {statment_error && (
+                <div className="text-center text-sm text-red-500 py-2">
+                  Xatolik yuz berdi
+                </div>
+              )}
+              {statment?.results[0].children.map((item: any) => (
                 <SelectItem key={item?.id} value={String(item?.id)}>
                   {item.name}
                 </SelectItem>
