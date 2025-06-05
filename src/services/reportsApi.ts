@@ -7,6 +7,7 @@ export const reportApi = createApi({
     baseUrl: `${base_url}/reports`,
     prepareHeaders,
   }),
+  tagTypes: ["Reports"],
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
     getAllReports: builder.query<any, { status?: string }>({
@@ -14,19 +15,28 @@ export const reportApi = createApi({
     }),
     getReportById: builder.query({
       query: (id: string | number) => ({ url: `/${id}/`, method: "GET" }),
+      providesTags: ["Reports"],
     }),
     getDashboardReport: builder.query<any, void>({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
+      providesTags: ["Reports"],
     }),
     getDeadlinesReport: builder.query<any, void>({
       query: () => ({ url: `/deadlines/`, method: "GET" }),
+      providesTags: ["Reports"],
     }),
     getReportItemsReport: builder.query<any, void>({
       query: () => ({ url: `/report-items/`, method: "GET" }),
+      providesTags: ["Reports"],
     }),
-    getStatementColumnsReport: builder.query<any, void>({
-      query: () => ({ url: `/statement-columns/`, method: "GET" }),
+    getStatementColumnsReport: builder.query<any, string>({
+      query: (statementId) => ({
+        url: `/statement-columns/?statement=${statementId}`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
     }),
+
     getStatementsReport: builder.query<any, void>({
       query: () => ({ url: `/statements/`, method: "GET" }),
     }),
@@ -36,8 +46,18 @@ export const reportApi = createApi({
     getPlanColumnsReport: builder.query<any, void>({
       query: () => ({ url: `/plan-columns/`, method: "GET" }),
     }),
+    getPlanListReport: builder.query<
+      any,
+      { columnId: string; organization: string; statement: string }
+    >({
+      query: ({ columnId, organization, statement }) => ({
+        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
 
-    // ==== 🟩 POST endpoints ====
+    // ==== 🟩 POST endpoints ====      
     createReport: builder.mutation({
       query: (newReport) => ({
         url: `/create/`,
@@ -118,6 +138,7 @@ export const {
   useGetStatementsReportQuery,
   useGetUsersReportQuery,
   useGetPlanColumnsReportQuery,
+  useGetPlanListReportQuery,
 
   // POST
   useCreateReportMutation,

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import {
   Table,
@@ -11,15 +9,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store";
-import {
-  useCreateReportMutation,
-  useGetDeadlinesReportQuery,
-  useGetPlanListReportQuery,
-  useGetStatementColumnsReportQuery,
-} from "@/services/reportsApi";
-import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import {
   Select,
   SelectContent,
@@ -27,42 +16,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/app/store";
+import {
+  reportApi,
+  useCreateReportMutation,
+  useGetDeadlinesReportQuery,
+  useGetStatementColumnsReportQuery,
+} from "@/services/reportsApi";
+import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 
 function findEmptyChildrenColumnIds(
-  columns: any[],
-  parentChain: string[] = []
+  children: any[]
 ): { id: string; title: string; fullParentChain: string }[] {
-  let result: { id: string; title: string; fullParentChain: string }[] = [];
-
-  columns.forEach((col) => {
-    const currentChain = [...parentChain];
-    if (col.title) currentChain.push(col.title);
-
-    if (Array.isArray(col.children)) {
-      if (col.children.length === 0) {
+  const result: { id: string; title: string; fullParentChain: string }[] = [];
+  const traverse = (cols: any[], parentChain: string[] = []) => {
+    cols.forEach((col) => {
+      const currentChain = [...parentChain, col.title];
+      if (
+        col.children &&
+        Array.isArray(col.children) &&
+        col.children.length > 0
+      ) {
+        traverse(col.children, currentChain);
+      } else {
         result.push({
           id: col.id,
           title: col.title,
-          fullParentChain: currentChain.join(" > "),
+          fullParentChain: currentChain.join(" / "),
         });
-      } else {
-        result = result.concat(
-          findEmptyChildrenColumnIds(col.children, currentChain)
-        );
       }
-    } else {
-      result.push({
-        id: col.id,
-        title: col.title,
-        fullParentChain: currentChain.join(" > "),
-      });
-    }
-  });
-
+    });
+  };
+  traverse(children);
   return result;
 }
 
 function CreateReportItem() {
+  const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
 
   const {
@@ -70,13 +61,11 @@ function CreateReportItem() {
     isLoading: isDeadlinesLoading,
     error: deadlinesError,
   } = useGetDeadlinesReportQuery();
-
   const {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
   } = useGetOrganizationReportsQuery();
-
   const {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
@@ -87,28 +76,68 @@ function CreateReportItem() {
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
+  const [selectedOrganizationId, setSelectedOrganizationId] =
+    useState<string>("");
+  const [planListMap, setPlanListMap] = useState<Record<string, number>>({});
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
-
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
-
   const [currentStep, setCurrentStep] = useState<number>(0);
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
 
-  const rejaColumn = currentEmptyColumns.find((col) =>
-    col.title.toLowerCase().includes("reja")
-  );
+  // ✅ Reja ustunlar uchun qiymatlarni olish
+  useEffect(() => {
+    const fetchPlanLists = async () => {
+      if (!tableHeadersData || !selectedOrganizationId || !reportIds) return;
 
-  const {
-    data: plan_list,
-    isLoading: isPlanListLoading,
-    error: planListError,
-  } = useGetPlanListReportQuery(rejaColumn ? rejaColumn.id : "", {
-    skip: !rejaColumn,
-  });
+      // Faqat leaf bo‘lgan "reja" ustunlar
+      const allStepsEmptyCols = tableHeadersData
+        .map((obj: any) =>
+          Array.isArray(obj.children)
+            ? findEmptyChildrenColumnIds(obj.children)
+            : []
+        )
+        .flat();
+
+      const rejaLeafColumns = allStepsEmptyCols.filter((col: any) =>
+        col.title.toLowerCase().includes("reja")
+      );
+
+      const requests = rejaLeafColumns.map(async (col: any) => {
+        try {
+          const response = await dispatch(
+            reportApi.endpoints.getPlanListReport.initiate({
+              columnId: col.id,
+              organization: selectedOrganizationId,
+              statement: reportIds,
+            })
+          ).unwrap();
+
+          console.log(response);
+
+          const planValue = response?.results[0]?.plan_value ?? 0;
+          return { columnId: col.id, planValue };
+        } catch (error) {
+          console.error(`❌ So‘rov xatoligi: columnId=${col.id}`, error);
+          return { columnId: col.id, planValue: 0 };
+        }
+      });
+
+      const results = await Promise.all(requests);
+
+      const newPlanMap: Record<string, number> = {};
+      results.forEach(({ columnId, planValue }) => {
+        newPlanMap[columnId] = planValue;
+      });
+
+      setPlanListMap(newPlanMap);
+    };
+
+    fetchPlanLists();
+  }, [tableHeadersData, selectedOrganizationId, reportIds, dispatch]);
 
   useEffect(() => {
     if (tableHeadersData.length > 0) {
@@ -118,7 +147,6 @@ function CreateReportItem() {
         }
         return [];
       });
-
       setAllEmptyColumnsByStep(allStepsEmptyCols);
       setCurrentStep(0);
     } else {
@@ -138,14 +166,24 @@ function CreateReportItem() {
       alert("Iltimos, deadline tanlang");
       return;
     }
+    if (
+      currentEmptyColumns.some((col) =>
+        col.title.toLowerCase().includes("tashkilot")
+      ) &&
+      !selectedOrganizationId
+    ) {
+      alert("Iltimos, tashkilot tanlang");
+      return;
+    }
 
-    // Barcha stepdagi ustunlarni bitta massivga to‘plash
     const allColumns = allEmptyColumnsByStep.flat();
-
-    // report_items yaratish - barcha ustunlar bo‘yicha formValues dan qiymat olish
     const report_items = allColumns.map((col) => ({
       statement_column: col.id,
-      value: String(formValues[col.id] || "15"),
+      value: col.title.toLowerCase().includes("tashkilot")
+        ? selectedOrganizationId
+        : col.title.toLowerCase().includes("reja")
+        ? String(planListMap[col.id] ?? "")
+        : String(formValues[col.id] || "2"),
     }));
 
     const payload = {
@@ -153,7 +191,7 @@ function CreateReportItem() {
       report_items,
     };
 
-    console.log("Yuboriladigan ma'lumot:", payload);
+    console.log(payload);
 
     try {
       const res = await createReportItem(payload).unwrap();
@@ -181,42 +219,49 @@ function CreateReportItem() {
     );
 
   const totalSteps = allEmptyColumnsByStep.length;
+  const currentStepTitle =
+    tableHeadersData?.[currentStep]?.title || `Qadam ${currentStep + 1}`;
 
   return (
     <form
       onSubmit={handleSubmit}
       className="max-w-full m-6 p-6 border rounded-lg shadow space-y-6"
     >
-      <div>
-        <label className="block mb-1 text-sm font-medium">Deadline:</label>
-        <Select
-          value={selectedDeadlineId}
-          onValueChange={(value) => setSelectedDeadlineId(value)}
-          required
-        >
-          <SelectTrigger className="w-[300px] text-lg">
-            <SelectValue placeholder="Tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            {deadlines_list?.results.map((d: any) => (
-              <SelectItem key={d.id} value={d.id}>
-                {d.submit_at}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div>
+          <label className="block mb-1 text-sm font-medium">Deadline:</label>
+          <Select
+            value={selectedDeadlineId}
+            onValueChange={setSelectedDeadlineId}
+            required
+          >
+            <SelectTrigger className="w-[300px] text-base">
+              <SelectValue placeholder="Tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {deadlines_list?.results.map((d: any) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.submit_at}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {currentEmptyColumns.length > 0 ? (
         <div className="overflow-x-auto">
-          <h2 className="text-lg font-semibold mb-4">
-            Qadam {currentStep + 1} / {totalSteps}
-          </h2>
+          <div className="mb-4 flex justify-between">
+            <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
+            <span className="text-sm text-gray-500">
+              {currentStep + 1} / {totalSteps}
+            </span>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead className="min-w-[300px]">Value</TableHead>
+                <TableHead>Ustun nomi</TableHead>
+                <TableHead className="min-w-[300px]">Qiymat</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,42 +270,34 @@ function CreateReportItem() {
                   return (
                     <TableRow key={col.id}>
                       <TableCell>{col.fullParentChain}</TableCell>
-                      <TableCell className="min-w-[300px]">
-                        {isPlanListLoading ? (
-                          <p>Yuklanmoqda...</p>
-                        ) : planListError ? (
-                          <p className="text-red-500">
-                            Reja ro'yxatini olishda xatolik
-                          </p>
-                        ) : (
-                          <Input
-                            type="text"
-                            value={plan_list?.count ?? ""}
-                            disabled
-                            className="bg-gray-100"
-                          />
-                        )}
+                      <TableCell>
+                        <Input
+                          value={planListMap[col.id] ?? ""}
+                          disabled
+                          className="bg-gray-100"
+                        />
                       </TableCell>
                     </TableRow>
                   );
                 }
 
-                if (col.title === "Tashkilot nomi") {
+                if (col.title.toLowerCase().includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
                       <TableCell>{col.fullParentChain}</TableCell>
-                      <TableCell className="min-w-[300px]">
+                      <TableCell>
                         <select
-                          value={formValues[col.id] || ""}
-                          onChange={(e) =>
-                            handleInputChange(col.id, e.target.value)
-                          }
+                          value={selectedOrganizationId}
+                          onChange={(e) => {
+                            handleInputChange(col.id, e.target.value);
+                            setSelectedOrganizationId(e.target.value);
+                          }}
                           className="w-full border rounded px-2 py-1"
                           required
                         >
                           <option value="">Tanlang</option>
                           {organizationsData?.results.map((item: any) => (
-                            <option key={item.id} value={item?.id}>
+                            <option key={item.id} value={item.id}>
                               {item.name}
                             </option>
                           ))}
@@ -273,7 +310,7 @@ function CreateReportItem() {
                 return (
                   <TableRow key={col.id}>
                     <TableCell>{col.fullParentChain}</TableCell>
-                    <TableCell className="min-w-[300px]">
+                    <TableCell>
                       <Input
                         type="text"
                         value={formValues[col.id] || "15"}
@@ -290,7 +327,7 @@ function CreateReportItem() {
           </Table>
         </div>
       ) : (
-        <p>Ushbu qadamda to'ldirish uchun ustunlar mavjud emas.</p>
+        <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
       )}
 
       <div className="flex justify-between items-center pt-4">
@@ -303,7 +340,6 @@ function CreateReportItem() {
           >
             Oldingi
           </Button>
-
           {currentStep < totalSteps - 1 && (
             <Button
               type="button"
