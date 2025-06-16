@@ -135,7 +135,7 @@ function CreateReport() {
                   Xatolik yuz berdi
                 </div>
               )}
-              {plan_cols?.results.map((item: any) => (
+              {plan_cols?.map((item: any) => (
                 <SelectItem key={item.id} value={item.id}>
                   {item.parent} - {item.title}
                 </SelectItem>
