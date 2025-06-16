@@ -2,7 +2,10 @@ import TableReports from "@/components/Table/TableReports/TableReports";
 import { useGetAllReportsQuery } from "@/services/reportsApi";
 
 function Draft() {
-  const { data, isLoading, error } = useGetAllReportsQuery({ status: "saved" });
+  const { data, isLoading, error } = useGetAllReportsQuery({
+    status: "status=saved",
+    statement:""
+  });
   return (
     <div className="px-5 w-full">
       {isLoading && <h1>Yuklanmoqda...</h1>}

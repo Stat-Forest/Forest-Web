@@ -3,7 +3,8 @@ import { useGetAllReportsQuery } from "@/services/reportsApi";
 
 function ReceivedReport() {
   const { data, isLoading, error } = useGetAllReportsQuery({
-    status: "accepted",
+    status: "status=accepted",
+    statement: "",
   });
   return (
     <div className="px-5 w-full">

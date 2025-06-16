@@ -2,7 +2,10 @@ import TableReports from "@/components/Table/TableReports/TableReports";
 import { useGetAllReportsQuery } from "@/services/reportsApi";
 
 function MainDetail() {
-  const { data, isLoading, error } = useGetAllReportsQuery({ status: "sent" });
+  const { data, isLoading, error } = useGetAllReportsQuery({
+    status: "status=sent",
+    statement: "",
+  });
 
   console.log(data);
   return (
