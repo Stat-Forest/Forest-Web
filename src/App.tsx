@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Auth from "./views/Auth/Auth";
 import Dashboard from "./views/Dashboard/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import './i18n'
 
 function App() {
 
@@ -12,7 +13,7 @@ function App() {
         <Route
           path="/*"       
           element={
-            <ProtectedRoute allowedRoles={["super_admin"]}>
+            <ProtectedRoute allowedRoles={["super_admin","tashkilot_hodimi"]}>
               <Dashboard />
             </ProtectedRoute>
           }

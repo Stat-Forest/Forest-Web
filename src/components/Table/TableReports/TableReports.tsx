@@ -30,13 +30,13 @@ function TableReports({ data }: any) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data?.results?.map((item: any, index: any) => (
+        {data?.map((item: any, index: any) => (
           <TableRow className="h-[50px]" key={index}>
             <TableCell className="w-[20%] text-lg font-[300] border-none">
-              {item?.organization}
+              {item?.report_items[0].value}
             </TableCell>
             <TableCell className="w-[20%] text-base font-[300] border-none">
-              {item?.statement}
+              {item?.statement_name}
             </TableCell>
             <TableCell className="w-[20%] text-base font-[300] border-none">
               {item?.period}

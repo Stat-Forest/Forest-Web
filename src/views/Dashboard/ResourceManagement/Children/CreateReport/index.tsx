@@ -87,13 +87,9 @@ function CreateReportItem() {
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
-
-  // ✅ Reja ustunlar uchun qiymatlarni olish
   useEffect(() => {
     const fetchPlanLists = async () => {
       if (!tableHeadersData || !selectedOrganizationId || !reportIds) return;
-
-      // Faqat leaf bo‘lgan "reja" ustunlar
       const allStepsEmptyCols = tableHeadersData
         .map((obj: any) =>
           Array.isArray(obj.children)
@@ -101,11 +97,9 @@ function CreateReportItem() {
             : []
         )
         .flat();
-
       const rejaLeafColumns = allStepsEmptyCols.filter((col: any) =>
         col.title.toLowerCase().includes("reja")
       );
-
       const requests = rejaLeafColumns.map(async (col: any) => {
         try {
           const response = await dispatch(
@@ -115,9 +109,6 @@ function CreateReportItem() {
               statement: reportIds,
             })
           ).unwrap();
-
-          console.log(response);
-
           const planValue = response?.results[0]?.plan_value ?? 0;
           return { columnId: col.id, planValue };
         } catch (error) {
@@ -125,20 +116,15 @@ function CreateReportItem() {
           return { columnId: col.id, planValue: 0 };
         }
       });
-
       const results = await Promise.all(requests);
-
       const newPlanMap: Record<string, number> = {};
       results.forEach(({ columnId, planValue }) => {
         newPlanMap[columnId] = planValue;
       });
-
       setPlanListMap(newPlanMap);
     };
-
     fetchPlanLists();
   }, [tableHeadersData, selectedOrganizationId, reportIds, dispatch]);
-
   useEffect(() => {
     if (tableHeadersData.length > 0) {
       const allStepsEmptyCols = tableHeadersData.map((obj: any) => {
@@ -154,14 +140,11 @@ function CreateReportItem() {
       setCurrentStep(0);
     }
   }, [tableHeadersData]);
-
   const handleInputChange = (id: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [id]: value }));
   };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!selectedDeadlineId) {
       alert("Iltimos, deadline tanlang");
       return;
@@ -175,7 +158,6 @@ function CreateReportItem() {
       alert("Iltimos, tashkilot tanlang");
       return;
     }
-
     const allColumns = allEmptyColumnsByStep.flat();
     const report_items = allColumns.map((col) => ({
       statement_column: col.id,
@@ -183,16 +165,12 @@ function CreateReportItem() {
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
         ? String(planListMap[col.id] ?? "")
-        : String(formValues[col.id] || "2"),
+        : String(formValues[col.id] || "15"),
     }));
-
     const payload = {
       deadline: selectedDeadlineId,
       report_items,
     };
-
-    console.log(payload);
-
     try {
       const res = await createReportItem(payload).unwrap();
       console.log("Yuborildi:", res);
@@ -202,10 +180,8 @@ function CreateReportItem() {
       console.error("Yuborishda xatolik:", err?.data || err?.message);
     }
   };
-
   if (isDeadlinesLoading || isHeaderLoading || isOrgLoading)
     return <p className="p-4 text-lg">Yuklanmoqda...</p>;
-
   if (deadlinesError || headersError || orgError)
     return (
       <div className="text-red-500 p-4">
@@ -217,11 +193,9 @@ function CreateReportItem() {
         </ul>
       </div>
     );
-
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title || `Qadam ${currentStep + 1}`;
-
   return (
     <form
       onSubmit={handleSubmit}
@@ -248,7 +222,6 @@ function CreateReportItem() {
           </Select>
         </div>
       </div>
-
       {currentEmptyColumns.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="mb-4 flex justify-between">
@@ -280,7 +253,6 @@ function CreateReportItem() {
                     </TableRow>
                   );
                 }
-
                 if (col.title.toLowerCase().includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
@@ -306,7 +278,6 @@ function CreateReportItem() {
                     </TableRow>
                   );
                 }
-
                 return (
                   <TableRow key={col.id}>
                     <TableCell>{col.fullParentChain}</TableCell>
@@ -329,7 +300,6 @@ function CreateReportItem() {
       ) : (
         <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
       )}
-
       <div className="flex justify-between items-center pt-4">
         <div className="space-x-2">
           <Button
@@ -352,7 +322,6 @@ function CreateReportItem() {
             </Button>
           )}
         </div>
-
         {currentStep === totalSteps - 1 && (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Yuborilmoqda..." : "Yuborish"}

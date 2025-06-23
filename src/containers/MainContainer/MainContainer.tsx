@@ -136,9 +136,26 @@ function MainContainer() {
           <FileText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-[#353535]">Yangi reja yaratish</h2>
-          <span className="text-[purple] text-[22px]">
-            {dashboard_data?.draft_reports || 0} ta
+          <h2 className="font-medium text-[18px] text-[#353535]">
+            Yangi reja yaratish
+          </h2>
+          <span className="text-[purple] text-[22px]"></span>
+        </div>
+      </div>
+
+      <div
+        onClick={() => navigate("/main/created-plans")}
+        className="w-full h-[100px] shadow rounded-lg flex items-center gap-5 pl-6 cursor-pointer"
+      >
+        <div className="bg-[brown] w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+          <FileText color="white" size={25} />
+        </div>
+        <div>
+          <h2 className="font-medium text-[18px] text-[#353535]">
+            Yaratilgan rejalar
+          </h2>
+          <span className="text-[brown] text-[22px]">
+            {dashboard_data?.deadlines || 0} ta
           </span>
         </div>
       </div>

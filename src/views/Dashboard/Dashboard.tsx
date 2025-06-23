@@ -11,6 +11,12 @@ import ResponsibleRepresentatives from "./Main/Children/ResponsibleRepresentativ
 import Newsletters from "./Main/Children/Newsletters";
 import ResourceManagement from "./ResourceManagement";
 import CreateReport from "./Main/Children/CreateReport";
+import ReceiptInformation from "./ReceiptInformation";
+import CreateReportItem from "./ResourceManagement/Children/CreateReport";
+import SupportInformation from "./SupportInfomation";
+import ScrollToTop from "@/routes/ScrollToTop";
+import CreatedPlans from "./Main/Children/CreatedPlans";
+import UpdateReportItem from "./ResourceManagement/Children/UpdateReport";
 // import { routes } from "@/routes/routes";
 
 function Dashboard() {
@@ -20,6 +26,7 @@ function Dashboard() {
         <Sidebar />
       </div>
       <div className="flex-1 ml-[310px] overflow-y-auto">
+        <ScrollToTop />
         <Header />
         <Suspense fallback={<div>Yuklanmoqda...</div>}>
           <Routes>
@@ -45,10 +52,30 @@ function Dashboard() {
               <Route path="draft" element={<Draft />} />
               <Route path="newsletter" element={<Newsletters />} />
               <Route path="create-report" element={<CreateReport />} />
+              <Route path="created-plans" element={<CreatedPlans />} />
             </Route>
             <Route
               path="resource-management/:id"
               element={<ResourceManagement />}
+            />
+            <Route
+              path="resource-management/create"
+              element={<CreateReportItem />}
+            />
+
+            <Route
+              path="resource-management/update/:id"
+              element={<UpdateReportItem />}
+            />
+
+            <Route
+              path="receipt-information"
+              element={<ReceiptInformation />}
+            />
+
+            <Route
+              path="support-information"
+              element={<SupportInformation />}
             />
 
             <Route path="*" element={<Navigate to="/main" replace />} />

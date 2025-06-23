@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { reportApi } from "@/services/reportsApi";
 import authReducer from "../features/authSlice";
+import reportReducer from "../features/reportSlice";
 import { authApi } from "@/services/authApi";
 import { generalApi } from "@/services/generalApi";
 
@@ -11,9 +12,10 @@ export const store = configureStore({
     [generalApi.reducerPath]: generalApi.reducer,
 
     auth: authReducer,
+    report: reportReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
+    getDefaultMiddleware({  
       serializableCheck: false,
     }).concat(reportApi.middleware, authApi.middleware, generalApi.middleware),
 });

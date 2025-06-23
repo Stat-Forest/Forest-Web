@@ -47,7 +47,7 @@ function Login() {
         Tizimga kirish
       </h2>
       <span className="text-center w-full text-[#929292] text-[13px]">
-        Urmon xo‘jaligi hisobini yuritish axborot tizimi
+        O'rmon xo‘jaligi hisobini yuritish axborot tizimi
       </span>
 
       <Tabs defaultValue="login" className="w-[400px]">
@@ -125,7 +125,7 @@ function Login() {
                 type="button"
                 className="p-0 bg-transparent shadow-none text-[#09B86F] hover:bg-transparent"
               >
-                Забыли пароль?
+                Maxfiy kodni tiklash uchun?
               </Button>
             </div>
             <Button
