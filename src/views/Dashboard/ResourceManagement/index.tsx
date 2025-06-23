@@ -3,7 +3,6 @@ import ResourceContainer from "@/containers/ResourceContainer/ResourceContainer"
 function ResourceManagement() {
   return (
     <div className="px-3 py-4">
-      {/* title */}
       <div className="pt-2 pl-2">
         <h2 className="text-xl font-[500] w-[440px] text-start px-2">
           <span className="text-[#A3A3A3]">

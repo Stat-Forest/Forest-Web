@@ -10,9 +10,10 @@ export const reportApi = createApi({
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
-    getAllReports: builder.query<any, { status?: string }>({
-      query: ({ status = "" }) => `/?status=${status}`,
+    getAllReports: builder.query<any, { statement: string, status:string }>({
+      query: ({ statement, status }) => `/?statement=${statement}&${status}`,
     }),
+
     getReportById: builder.query({
       query: (id: string | number) => ({ url: `/${id}/`, method: "GET" }),
       providesTags: ["Reports"],
@@ -57,7 +58,7 @@ export const reportApi = createApi({
       providesTags: ["Reports"],
     }),
 
-    // ==== 🟩 POST endpoints ====      
+    // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
       query: (newReport) => ({
         url: `/create/`,
