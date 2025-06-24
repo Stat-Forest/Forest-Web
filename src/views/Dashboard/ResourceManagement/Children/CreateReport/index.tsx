@@ -107,6 +107,7 @@ function CreateReportItem() {
               columnId: col.id,
               organization: selectedOrganizationId,
               statement: reportIds,
+              page: "",
             })
           ).unwrap();
           const planValue = response?.results[0]?.plan_value ?? 0;

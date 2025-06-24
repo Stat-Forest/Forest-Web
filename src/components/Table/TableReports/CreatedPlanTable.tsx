@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/table";
 
 function CreatedPlantable({ data }: any) {
-  console.log(data);
   return (
     <Table className="w-full">
       <TableHeader>
@@ -28,7 +27,7 @@ function CreatedPlantable({ data }: any) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data?.results?.map((item: any, index: any) => (
+        {data?.map((item: any, index: number) => (
           <TableRow className="h-[50px]" key={index}>
             <TableCell className="w-[20%] text-lg font-[300] border-none">
               {item?.organization_name}
