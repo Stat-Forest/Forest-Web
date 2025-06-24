@@ -34,6 +34,13 @@ function ResourceContainer() {
 
   const [activeTab, setActiveTab] = useState<string>("");
 
+  useEffect(() => {
+    if (id) {
+      dispatch(setReportId(id));
+    }
+  }, [id, dispatch]);
+
+  // 👉 Tablar ro'yxatidagi bargli ustunlarni olish
   const getLeafColumnIds = (nodes: any[]): string[] => {
     let ids: string[] = [];
     nodes.forEach((node) => {
@@ -46,12 +53,7 @@ function ResourceContainer() {
     return ids;
   };
 
-  useEffect(() => {
-    if (id) {
-      dispatch(setReportId(id));
-    }
-  }, [id, dispatch]);
-
+  // 👉 Tablarni ustun ID'lari bilan maplash
   const tabLeafIdMap = useMemo(() => {
     const map: Record<string, string[]> = {};
     tableHeadersData.forEach((col: any) => {
@@ -59,6 +61,13 @@ function ResourceContainer() {
     });
     return map;
   }, [tableHeadersData]);
+
+  // 👉 Birinchi tab avtomatik tanlansin
+  useEffect(() => {
+    if (tableHeadersData.length > 0 && !activeTab) {
+      setActiveTab(tableHeadersData[0].title);
+    }
+  }, [tableHeadersData, activeTab]);
 
   const activeLeafIds = useMemo(() => {
     return tabLeafIdMap[activeTab] || [];
@@ -84,14 +93,12 @@ function ResourceContainer() {
     return <h1>Xatolik yuz berdi. Qayta urinib ko‘ring.</h1>;
   }
 
-  const firstTabTitle = tableHeadersData[0]?.title;
-
   return (
     <div className="py-3">
       <Tabs
-        defaultValue={firstTabTitle}
-        className="w-full"
+        value={activeTab}
         onValueChange={(value) => setActiveTab(value)}
+        className="w-full"
       >
         <TabsList className="w-full border border-[#A3A3A3] min-h-[50px] justify-start px-3">
           {tableHeadersData.map((col: any) => (
@@ -142,6 +149,7 @@ function ResourceContainer() {
                     ))}
                   </div>
                 </div>
+
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <button
