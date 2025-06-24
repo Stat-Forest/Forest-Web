@@ -155,7 +155,7 @@ function MainContainer() {
             Yaratilgan rejalar
           </h2>
           <span className="text-[brown] text-[22px]">
-            {dashboard_data?.deadlines || 0} ta
+            {dashboard_data?.plans || 0} ta
           </span>
         </div>
       </div>

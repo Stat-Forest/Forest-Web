@@ -10,7 +10,7 @@ export const reportApi = createApi({
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
-    getAllReports: builder.query<any, { statement: string, status:string }>({
+    getAllReports: builder.query<any, { statement: string; status: string }>({
       query: ({ statement, status }) => `/?statement=${statement}&${status}`,
     }),
 
@@ -47,12 +47,20 @@ export const reportApi = createApi({
     getPlanColumnsReport: builder.query<any, void>({
       query: () => ({ url: `/plan-columns/`, method: "GET" }),
     }),
+    getPlantsReport: builder.query<any, void>({
+      query: () => ({ url: `/plants/`, method: "GET" }),
+    }),
     getPlanListReport: builder.query<
       any,
-      { columnId: string; organization: string; statement: string }
+      {
+        columnId: string;
+        organization: string;
+        statement: string;
+        page: any;
+      }
     >({
-      query: ({ columnId, organization, statement }) => ({
-        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}`,
+      query: ({ columnId, organization, statement, page }) => ({
+        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -140,6 +148,7 @@ export const {
   useGetUsersReportQuery,
   useGetPlanColumnsReportQuery,
   useGetPlanListReportQuery,
+  useGetPlantsReportQuery,
 
   // POST
   useCreateReportMutation,

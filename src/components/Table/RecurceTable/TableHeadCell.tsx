@@ -9,7 +9,7 @@ export function TableHeadCell({ item }: { item: any }) {
       rowSpan={hasChildren ? 1 : 2}
       className="text-left border-[0.5] border-[black]"
     >
-      <div className="px-3 text-center min-w-[393.05px] max-w-[400px]">
+      <div className="px-3 text-center min-w-[394px] max-w-[400px]">
         {item.title}
       </div>
       {hasChildren && (
