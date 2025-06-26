@@ -98,25 +98,28 @@ function CreateReport() {
         <div className="w-full">
           <Label className="pb-1.5 text-md block">Hisobot formasi</Label>
           <Select onValueChange={setStatement}>
-            <SelectTrigger className="w-full min-h-[45px]">
-              <SelectValue placeholder="Tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {statment_loading && (
-                <div className="text-center text-sm py-2">Yuklanmoqda...</div>
-              )}
-              {statment_error && (
-                <div className="text-center text-sm text-red-500 py-2">
-                  Xatolik yuz berdi
-                </div>
-              )}
-              {statment?.results[0].children.map((item: any) => (
-                <SelectItem key={item?.id} value={String(item?.id)}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+  <SelectTrigger className="w-full min-h-[45px]">
+    <SelectValue placeholder="Tanlang" />
+  </SelectTrigger>
+  <SelectContent>
+    {statment_loading && (
+      <div className="text-center text-sm py-2">Yuklanmoqda...</div>
+    )}
+    {statment_error && (
+      <div className="text-center text-sm text-red-500 py-2">
+        Xatolik yuz berdi
+      </div>
+    )}
+    {statment?.results.flatMap((item: any) =>
+      item.children.map((child: any) => (
+        <SelectItem key={child.id} value={String(child.id)}>
+          {child.name}
+        </SelectItem>
+      ))
+    )}
+  </SelectContent>
+</Select>
+
         </div>
 
         {/* PLAN COLUMN */}

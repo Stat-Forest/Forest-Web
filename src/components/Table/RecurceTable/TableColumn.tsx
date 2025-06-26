@@ -14,7 +14,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function TableColumn({ data = [], rows = [] }: any) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <div className="overflow-x-auto">
       <Table className="">
@@ -41,7 +41,7 @@ function TableColumn({ data = [], rows = [] }: any) {
             {row?.report_items.map((col: any, colIndex: number) => (
               <TableCell
                 key={colIndex}
-                className="px-3 min-w-[395px] border-1 border-[black] text-center"
+                className="px-3 min-w-[401px] max-w-[400px] border-1 border-[black] text-center"
               >
                 {col.value ?? "-"}
               </TableCell>
@@ -49,7 +49,9 @@ function TableColumn({ data = [], rows = [] }: any) {
             <TableCell className="px-3 min-w-[120px] max-w-[120px] border-1 border-[black] flex items-center gap-4">
               <Button
                 className="bg-[#09B86F] hover:bg-[#09B86F]"
-                onClick={() => navigate(`/resource-management/update/${row?.id}`)}
+                onClick={() =>
+                  navigate(`/resource-management/update/${row?.id}`)
+                }
               >
                 <Edit2 />
               </Button>
