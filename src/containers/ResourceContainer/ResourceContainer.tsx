@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useGetAllReportsQuery,
   useGetStatementColumnsReportQuery,
@@ -11,6 +11,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { ChartNoAxesColumn } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { setReportId } from "@/features/reportSlice";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +34,7 @@ function ResourceContainer() {
   const isError = isErrorHeaders || isErrorRows;
 
   const [activeTab, setActiveTab] = useState<string>("");
+  const tableRef = useRef<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -155,9 +157,26 @@ function ResourceContainer() {
                     >
                       Yangi hisobod yaratish
                     </button>
+                    <button
+                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
+                      onClick={() => exportToExcel(col?.children, filteredRows)}
+                    >
+                      Hisobodni export qilib olish
+                    </button>
+
+                    <button
+                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
+                      onClick={() => tableRef.current?.print()}
+                    >
+                      Hisobodni chop etish
+                    </button>
                   </div>
                   <div>
-                    <TableColumn data={col?.children} rows={filteredRows} />
+                    <TableColumn
+                      ref={tableRef}
+                      data={col?.children}
+                      rows={filteredRows}
+                    />
                   </div>
                 </div>
               </>
