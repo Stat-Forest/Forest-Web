@@ -9,22 +9,49 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { sidebar_3, sidebar_menu } from "@/services/sidebarMenu";
-import { useGetStatementsReportQuery } from "@/services/reportsApi";
+import {
+  useGetStatementsReportQuery,
+  useGetUsersReportQuery,
+} from "@/services/reportsApi";
 import { useTranslation } from "react-i18next";
+import { RootState } from "@/app/store";
+import { useSelector } from "react-redux";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 function Sidebar() {
-  const {
-    data: sidebar_2 = [],
-    isLoading,
-    error,
-  } = useGetStatementsReportQuery();
   const { t } = useTranslation();
 
-  if (isLoading) console.log("loading...");
-  if (error) console.log("error");
+  const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
+
+  const {
+    data: sidebarData = [],
+    isLoading: sidebarLoading,
+    error: sidebarError,
+  } = useGetStatementsReportQuery();
+
+  const {
+    data: user,
+    isLoading: userLoading,
+    error: userError,
+  } = useGetUsersReportQuery(user_id ? { user_id } : skipToken);
+
+  if (sidebarLoading || userLoading) {
+    return (
+      <div className="w-[310px] h-screen flex justify-center items-center">
+        <h2 className="text-lg font-bold">{t("loading")}...</h2>
+      </div>
+    );
+  }
+
+  if (sidebarError || userError) {
+    return (
+      <div className="w-[310px] h-screen flex justify-center items-center">
+        <h2 className="text-lg font-bold text-red-500">{t("error")}</h2>
+      </div>
+    );
+  }
 
   const renderNavItem = (item: any) => {
-    // Agar child elementlari bo'lsa Sheet bilan ko'rsatadi
     if (item.children?.length > 0) {
       return (
         <Sheet key={item.id}>
@@ -58,7 +85,6 @@ function Sidebar() {
       );
     }
 
-    // Oddiy NavLink ko'rsatish
     return (
       <NavLink
         to={item.path}
@@ -74,38 +100,49 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-white/40">
-      <div className="w-full h-[50px] rounded-full flex items-center justify-center text-black mb-3 gap-3">
-        <img width={40} height={40} src={logo} alt="logo" />
-        <h2 className="font-extrabold text-[20px]">STAT-URMON</h2>
-      </div>
+    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-white/40 flex flex-col justify-between">
+      <div>
+        {/* Header */}
+        <div className="w-full h-[50px] rounded-full flex items-center justify-center text-black mb-3 gap-3">
+          <img width={40} height={40} src={logo} alt="logo" />
+          <h2 className="font-extrabold text-[20px]">STAT-URMON</h2>
+        </div>
 
-      <div className="bg-[#09B86F] w-full h-[200px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
-        <div className="mb-2">
-          <div className="bg-white h-[50px] w-[50px] flex items-center justify-center rounded-3xl">
-            <User2 />
+        {/* Foydalanuvchi kartochkasi */}
+        <div className="bg-[#09B86F] w-full h-[200px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
+          <div className="mb-2">
+            <div className="bg-white h-[50px] w-[50px] flex items-center justify-center rounded-3xl">
+              <User2 />
+            </div>
+          </div>
+          <h3 className="font-bold text-white">
+            {user.results[0].first_name || ""} {user.results[0].last_name || ""}
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="text-[#E8E8E8] text-[14px] font-light">
+              {t("user.number")}:
+            </span>
+            <h3 className="font-bold text-white text-[15px]">
+              {user.results[0].user_number || ""}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#E8E8E8] text-[14px] font-light">
+              {t("program_entry18")}
+            </span>
+            <h3 className="font-bold text-white text-[15px]">
+              {user?.results[0]?.organization__name || ""}
+            </h3>
           </div>
         </div>
-        <h3 className="font-bold text-white">Odilxon Yuldoshxonov</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-[#E8E8E8] text-[14px] font-light">
-            {t("user.number")}:
-          </span>
-          <h3 className="font-bold text-white text-[15px]">123654</h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[#E8E8E8] text-[14px] font-light">
-            {t("program_entry18")}
-          </span>
-          <h3 className="font-bold text-white text-[15px]">Urmontexnoservis</h3>
-        </div>
-      </div>
 
-      <nav className="mt-4 flex flex-col gap-2">
-        {[...sidebar_menu, ...(sidebar_2.results || []), ...sidebar_3]
-          .flat()
-          .map(renderNavItem)}
-      </nav>
+        {/* Sidebar menyulari */}
+        <nav className="mt-4 flex flex-col gap-2">
+          {[...sidebar_menu, ...(sidebarData.results || []), ...sidebar_3]
+            .flat()
+            .map(renderNavItem)}
+        </nav>
+      </div>
     </div>
   );
 }
