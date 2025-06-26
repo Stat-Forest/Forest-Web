@@ -2,18 +2,19 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Auth from "./views/Auth/Auth";
 import Dashboard from "./views/Dashboard/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import './i18n'
+import "./i18n";
+
+export const user_role = import.meta.env.USER_ROLE;
 
 function App() {
-
   return (
     <>
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route
-          path="/*"       
+          path="/*"
           element={
-            <ProtectedRoute allowedRoles={["super_admin","tashkilot_hodimi"]}>
+            <ProtectedRoute allowedRoles={user_role}>
               <Dashboard />
             </ProtectedRoute>
           }
