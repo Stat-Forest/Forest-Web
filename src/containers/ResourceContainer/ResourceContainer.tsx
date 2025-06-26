@@ -40,7 +40,6 @@ function ResourceContainer() {
     }
   }, [id, dispatch]);
 
-  // 👉 Tablar ro'yxatidagi bargli ustunlarni olish
   const getLeafColumnIds = (nodes: any[]): string[] => {
     let ids: string[] = [];
     nodes.forEach((node) => {
@@ -53,7 +52,6 @@ function ResourceContainer() {
     return ids;
   };
 
-  // 👉 Tablarni ustun ID'lari bilan maplash
   const tabLeafIdMap = useMemo(() => {
     const map: Record<string, string[]> = {};
     tableHeadersData.forEach((col: any) => {
@@ -62,7 +60,6 @@ function ResourceContainer() {
     return map;
   }, [tableHeadersData]);
 
-  // 👉 Birinchi tab avtomatik tanlansin
   useEffect(() => {
     if (tableHeadersData.length > 0 && !activeTab) {
       setActiveTab(tableHeadersData[0].title);
@@ -100,12 +97,12 @@ function ResourceContainer() {
         onValueChange={(value) => setActiveTab(value)}
         className="w-full"
       >
-        <TabsList className="w-full border border-[#A3A3A3] min-h-[50px] justify-start px-3">
+        <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
           {tableHeadersData.map((col: any) => (
             <TabsTrigger
               key={col.id}
               value={col.title}
-              className="max-w-[190px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
+              className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
             >
               {col.title}
             </TabsTrigger>
@@ -151,24 +148,12 @@ function ResourceContainer() {
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center justify-end gap-3 mb-4">
                     <button
-                      className="bg-blue-500 text-white w-[200px] py-2 rounded"
+                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
                       onClick={() => navigate("/resource-management/create")}
                     >
-                      Send
-                    </button>
-                    <button
-                      className="bg-blue-500 text-white w-[200px] py-2 rounded"
-                      onClick={() => navigate("/resource-management/create")}
-                    >
-                      Update
-                    </button>
-                    <button
-                      className="bg-blue-500 text-white w-[200px] py-2 rounded"
-                      onClick={() => navigate("/resource-management/create")}
-                    >
-                      Import
+                      Yangi hisobod yaratish
                     </button>
                   </div>
                   <div>

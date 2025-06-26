@@ -40,9 +40,13 @@ export const reportApi = createApi({
 
     getStatementsReport: builder.query<any, void>({
       query: () => ({ url: `/statements/`, method: "GET" }),
+      providesTags: ["Reports"],
     }),
-    getUsersReport: builder.query<any, void>({
-      query: () => ({ url: `/users/`, method: "GET" }),
+    getUsersReport: builder.query<any, { user_id?: string }>({
+      query: ({ user_id = "" }) => ({
+        url: `/users/?id=${user_id}`,
+        method: "GET",
+      }),
     }),
     getPlanColumnsReport: builder.query<any, void>({
       query: () => ({ url: `/plan-columns/`, method: "GET" }),
