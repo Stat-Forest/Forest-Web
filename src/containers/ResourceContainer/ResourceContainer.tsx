@@ -84,6 +84,18 @@ function ResourceContainer() {
     });
   }, [tableRowsData, activeLeafIds]);
 
+  const handlePrint = () => {
+    if (tableRef.current) {
+      const printContents = tableRef.current.getTable();
+      const originalContents = document.body.innerHTML;
+
+      document.body.innerHTML = printContents;
+      window.print();
+      document.body.innerHTML = originalContents;
+      window.location.reload(); // Sahifani qayta yuklash
+    }
+  };
+
   if (isLoading) {
     return <h1>Loading...</h1>;
   }
@@ -166,7 +178,7 @@ function ResourceContainer() {
 
                     <button
                       className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={() => tableRef.current?.print()}
+                      onClick={handlePrint}
                     >
                       Hisobodni chop etish
                     </button>
