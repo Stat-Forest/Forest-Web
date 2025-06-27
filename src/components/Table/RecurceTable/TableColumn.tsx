@@ -7,49 +7,9 @@ const TableColumn = forwardRef(({ data = [], rows = [] }: any, ref) => {
   const tableRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // Ref uzatish
   useImperativeHandle(ref, () => ({
-    print: () => {
-      if (tableRef.current) {
-        const printWindow = window.open("", "_blank", "fullscreen=yes");
-
-        if (printWindow) {
-          printWindow.document.write(`
-            <html>
-              <head>
-                <title>Hisobot</title>
-                <style>
-                  * { box-sizing: border-box; }
-                  body { margin: 0; padding: 20px; }
-                  table { border-collapse: collapse; width: 100%; page-break-inside: auto; }
-                  th, td { border: 1px solid black; padding: 8px; text-align: center; }
-                  
-                  thead { display: table-header-group; } /* Har bir sahifada table header ko‘rinishi uchun */
-  
-                  tr { page-break-inside: avoid; page-break-after: auto; }
-                  
-                  @media print {
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    table { page-break-inside: auto; }
-                    tr { page-break-inside: avoid; }
-                  }
-                </style>
-              </head>
-              <body>
-                ${tableRef.current.innerHTML}
-              </body>
-            </html>
-          `);
-
-          printWindow.document.close();
-          printWindow.focus();
-
-          setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-          }, 500);
-        }
-      }
-    },
+    getTable: () => tableRef.current?.innerHTML,
   }));
 
   // Max depth hisoblash
@@ -64,7 +24,6 @@ const TableColumn = forwardRef(({ data = [], rows = [] }: any, ref) => {
 
   const maxDepth = getMaxDepth(data);
 
-  // Recursive header qatorlarini chizish
   const renderHeaderRows = () => {
     const rows: any[] = [];
 
@@ -102,7 +61,7 @@ const TableColumn = forwardRef(({ data = [], rows = [] }: any, ref) => {
   const headerRows = renderHeaderRows();
 
   return (
-    <div className="overflow-x-auto" ref={tableRef}>
+    <div className="overflow-x-auto" ref={tableRef} id="printableTable">
       <table className="w-full border-collapse">
         <thead className="w-full">
           {headerRows.map((row, rowIndex) => (
