@@ -12,6 +12,7 @@ import { ChartNoAxesColumn } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
+import ReportItemTable from "@/components/Table/RecurceTable/ReportItemTable";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,16 @@ function ResourceContainer() {
     data: tableRowsData = [],
     isLoading: isRowsLoading,
     isError: isErrorRows,
-  } = useGetAllReportsQuery(id ? { statement: id, status: "" } : skipToken);
+  } = useGetAllReportsQuery(
+    id
+      ? {
+          statement: id,
+          status: "",
+          organization__region: "",
+          statement__period: "",
+        }
+      : skipToken
+  );
 
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
@@ -83,6 +93,18 @@ function ResourceContainer() {
       };
     });
   }, [tableRowsData, activeLeafIds]);
+
+  const handlePrint = () => {
+    if (tableRef.current) {
+      const printContents = tableRef.current.getTable();
+      const originalContents = document.body.innerHTML;
+
+      document.body.innerHTML = printContents;
+      window.print();
+      document.body.innerHTML = originalContents;
+      window.location.reload(); // Sahifani qayta yuklash
+    }
+  };
 
   if (isLoading) {
     return <h1>Loading...</h1>;
@@ -166,7 +188,7 @@ function ResourceContainer() {
 
                     <button
                       className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={() => tableRef.current?.print()}
+                      onClick={handlePrint}
                     >
                       Hisobodni chop etish
                     </button>
@@ -177,6 +199,9 @@ function ResourceContainer() {
                       data={col?.children}
                       rows={filteredRows}
                     />
+                  </div>
+                  <div className="py-14 pr-2">
+                    <ReportItemTable />
                   </div>
                 </div>
               </>

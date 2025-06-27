@@ -5,6 +5,8 @@ function ReturnedReport() {
   const { data, isLoading, error } = useGetAllReportsQuery({
     status: "status=cancelled",
     statement: "",
+    organization__region: "",
+    statement__period: "",
   });
   return (
     <div className="px-5 w-full">

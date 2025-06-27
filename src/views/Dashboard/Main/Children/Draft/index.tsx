@@ -4,7 +4,9 @@ import { useGetAllReportsQuery } from "@/services/reportsApi";
 function Draft() {
   const { data, isLoading, error } = useGetAllReportsQuery({
     status: "status=saved",
-    statement:""
+    statement: "",
+    organization__region: "",
+    statement__period: "",
   });
   return (
     <div className="px-5 w-full">

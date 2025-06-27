@@ -5,6 +5,8 @@ function MainDetail() {
   const { data, isLoading, error } = useGetAllReportsQuery({
     status: "status=sent",
     statement: "",
+    organization__region: "",
+    statement__period: "",
   });
 
   console.log(data);
