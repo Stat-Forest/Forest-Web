@@ -10,8 +10,17 @@ export const reportApi = createApi({
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
-    getAllReports: builder.query<any, { statement: string; status: string }>({
-      query: ({ statement, status }) => `/?statement=${statement}&${status}`,
+    getAllReports: builder.query<
+      any,
+      {
+        statement: string;
+        status: string;
+        organization__region: string;
+        statement__period: string;
+      }
+    >({
+      query: ({ statement, status, organization__region, statement__period }) =>
+        `/?statement=${statement}&${status}&organization__region=${organization__region}&statement__period=${statement__period}`,
     }),
 
     getReportById: builder.query({
