@@ -5,6 +5,8 @@ function ReceivedReport() {
   const { data, isLoading, error } = useGetAllReportsQuery({
     status: "status=accepted",
     statement: "",
+    organization__region: "",
+    statement__period: "",
   });
   return (
     <div className="px-5 w-full">

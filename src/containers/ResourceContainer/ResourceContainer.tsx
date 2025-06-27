@@ -12,6 +12,7 @@ import { ChartNoAxesColumn } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
+import ReportItemTable from "@/components/Table/RecurceTable/ReportItemTable";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,16 @@ function ResourceContainer() {
     data: tableRowsData = [],
     isLoading: isRowsLoading,
     isError: isErrorRows,
-  } = useGetAllReportsQuery(id ? { statement: id, status: "" } : skipToken);
+  } = useGetAllReportsQuery(
+    id
+      ? {
+          statement: id,
+          status: "",
+          organization__region: "",
+          statement__period: "",
+        }
+      : skipToken
+  );
 
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
@@ -189,6 +199,9 @@ function ResourceContainer() {
                       data={col?.children}
                       rows={filteredRows}
                     />
+                  </div>
+                  <div className="py-14 pr-2">
+                    <ReportItemTable />
                   </div>
                 </div>
               </>

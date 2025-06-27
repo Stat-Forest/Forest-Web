@@ -12,19 +12,19 @@ function TableReports({ data }: any) {
     <Table className="w-full">
       <TableHeader>
         <TableRow className="bg-[#eaeaea] h-[50px]">
-          <TableHead className="w-[20%] text-lg text-[#717171] rounded-tl-lg rounded-bl-lg border-none">
+          <TableHead className="w-[20%] pl-2 text-lg text-[#717171] rounded-tl-lg text-left rounded-bl-lg border-none">
             Tashkilot nomi
           </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] border-none">
+          <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
             Hisobot nomi
           </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] border-none">
+          <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
             Hisobot davri
           </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] border-none">
+          <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
             Topshirilgan muddati
           </TableHead>
-          <TableHead className="text-right text-[#717171] text-lg rounded-tr-lg rounded-br-lg w-[20%] border-none">
+          <TableHead className="text-right pr-2 text-[#717171] text-lg rounded-tr-lg rounded-br-lg w-[20%] border-none">
             Joriy holati
           </TableHead>
         </TableRow>
