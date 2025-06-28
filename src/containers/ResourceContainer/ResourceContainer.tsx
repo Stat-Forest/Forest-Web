@@ -1,3 +1,4 @@
+// ResourceContainer.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -9,15 +10,21 @@ import StaffChart from "@/components/Charts/BarChart";
 import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ChartNoAxesColumn } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
 import ReportItemTable from "@/components/Table/RecurceTable/ReportItemTable";
+import { RootState } from "@/app/store";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
+  const userCheckTable = user_role !== "tashkilot_hodimi";
+
+  const [selectedRow, setSelectedRow] = useState<any | null>(null);
 
   const {
     data: tableHeadersData = [],
@@ -102,7 +109,7 @@ function ResourceContainer() {
       document.body.innerHTML = printContents;
       window.print();
       document.body.innerHTML = originalContents;
-      window.location.reload(); // Sahifani qayta yuklash
+      window.location.reload();
     }
   };
 
@@ -118,7 +125,10 @@ function ResourceContainer() {
     <div className="py-3">
       <Tabs
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value)}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          setSelectedRow(null);
+        }}
         className="w-full"
       >
         <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
@@ -185,7 +195,6 @@ function ResourceContainer() {
                     >
                       Hisobodni export qilib olish
                     </button>
-
                     <button
                       className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
                       onClick={handlePrint}
@@ -193,13 +202,18 @@ function ResourceContainer() {
                       Hisobodni chop etish
                     </button>
                   </div>
+
                   <div>
                     <TableColumn
                       ref={tableRef}
                       data={col?.children}
                       rows={filteredRows}
+                      onRowClick={(row: any) => setSelectedRow(row)}
+                      selectedRow={selectedRow}
+                      userCheckTable={userCheckTable}
                     />
                   </div>
+
                   <div className="py-14 pr-2">
                     <ReportItemTable />
                   </div>
