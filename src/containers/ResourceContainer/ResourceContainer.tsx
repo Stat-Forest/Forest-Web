@@ -233,7 +233,6 @@ function ResourceContainer() {
                       userCheckTable={userCheckTable}
                     />
                   </div>
-
                   <div className="py-14 pr-2">
                     <ReportItemTable />
                   </div>
