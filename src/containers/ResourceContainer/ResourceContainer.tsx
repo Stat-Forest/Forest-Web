@@ -6,7 +6,7 @@ import {
   useGetAllReportsQuery,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
-import StaffChart from "@/components/Charts/BarChart";
+// import StaffChart from "@/components/Charts/BarChart";
 import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ChartNoAxesColumn } from "lucide-react";
@@ -15,6 +15,7 @@ import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
 import ReportItemTable from "@/components/Table/RecurceTable/ReportItemTable";
 import { RootState } from "@/app/store";
+import EmployeeIncomeChart from "@/components/Charts/EmployeeIncomeChart";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -147,7 +148,13 @@ function ResourceContainer() {
           <TabsContent key={col.id} value={col.title}>
             {activeTab === col.title && (
               <>
-                <StaffChart />
+                <div>
+                  {id === "945d9e04-9f5a-4247-934d-5b775e15a1da" ? (
+                    <EmployeeIncomeChart activeTab={"1-ilova"} />
+                  ) : id === "945d9e04-9f5a-4247-934d-5b775e15b2a" ? (
+                    <>Jamgarma</>
+                  ) : null}
+                </div>
                 <div className="bg-white shadow px-5 py-4 rounded-2xl mb-6">
                   <div className="flex items-end gap-2 pb-3">
                     <ChartNoAxesColumn color="#09B86F" fontWeight={800} />
