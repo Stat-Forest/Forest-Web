@@ -32,13 +32,6 @@ const colors = {
 };
 
 import { LegendProps } from "recharts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 
 const CustomLegend = (props: LegendProps) => {
   const { payload } = props;
@@ -141,18 +134,6 @@ const StaffChart = () => {
         className="shadow"
       >
         <div className="flex items-center justify-between px-5 py-2">
-          <div>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Theme" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
-              </SelectContent>
-          </Select>
-          </div>
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
