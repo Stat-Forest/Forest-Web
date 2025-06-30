@@ -19,7 +19,7 @@ jobs:
           node-version: "18"
 
       - name: Paketlarni o‘rnatish
-        run: npm install
+        run: npm install -f
 
       - name: Projectni build qilish
         run: npm run build
