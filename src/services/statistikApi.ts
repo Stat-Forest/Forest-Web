@@ -10,16 +10,25 @@ export const statistikApi = createApi({
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     getEmployeeIncomeStat: builder.query<any, void>({
-      query: () => `/employee-income-stat/`,
+      query: () => `/finance-income-stat/`,
     }),
     getEmployeeReportStat: builder.query<any, void>({
       query: () => `/employee-report-stat/`,
     }),
     getEmployeeFundStat: builder.query<any, void>({
-      query: () => `/employee-fund-stat/`,
+      query: () => `/finance-fund-stat/`,
     }),
     getEmployeeAnalysisStat: builder.query<any, void>({
       query: () => `/employee-analysis-stat/`,
+    }),
+    getLandForest: builder.query<any, void>({
+      query: () => `/land-forest-stat/`,
+    }),
+    getLandAcquisition: builder.query<any, void>({
+      query: () => `/land-acquisition-stat/`,
+    }),
+    getLandRented: builder.query<any, void>({
+      query: () => `/land-rented-stat/`,
     }),
   }),
 });
@@ -29,4 +38,7 @@ export const {
   useGetEmployeeFundStatQuery,
   useGetEmployeeIncomeStatQuery,
   useGetEmployeeReportStatQuery,
+  useGetLandAcquisitionQuery,
+  useGetLandForestQuery,
+  useGetLandRentedQuery,
 } = statistikApi;
