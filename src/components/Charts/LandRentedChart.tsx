@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { FileDown, FileImage, FileCode, Printer } from "lucide-react";
-
-import { useGetEmployeeIncomeStatQuery } from "@/services/statistikApi";
+import { useGetLandRentedQuery } from "@/services/statistikApi";
 
 const colors = {
   boshqaruv: "#2ECC71",
@@ -32,8 +31,8 @@ const colors = {
   ishchi: "#FF00FF",
 };
 
-const EmployeeFundChart = ({ activeTab }: { activeTab: string }) => {
-  const { data, isLoading } = useGetEmployeeIncomeStatQuery();
+const LandRentedChart = ({ activeTab }: { activeTab: string }) => {
+  const { data, isLoading } = useGetLandRentedQuery();
   const chartRef = useRef<HTMLDivElement>(null);
 
   const [chartData, setChartData] = useState<any[]>([]);
@@ -174,6 +173,7 @@ const EmployeeFundChart = ({ activeTab }: { activeTab: string }) => {
           </DropdownMenu>
         </div>
 
+        {activeTab === "1-ilova" && (
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
@@ -189,12 +189,28 @@ const EmployeeFundChart = ({ activeTab }: { activeTab: string }) => {
               <YAxis />
               <Tooltip cursor={false} />
               <Legend />
-              <Bar dataKey="Hisob raqamda yil boshiga qoldiq" stackId="a" fill={colors.boshqaruv} />
+              <Bar
+                dataKey="Jami ijara yer maydoni (ga)"
+                stackId="a"
+                fill={colors.boshqaruv}
+              />
+              <Bar
+                dataKey="Yangi yaratilgan ish o‘rinlari soni"
+                stackId="a"
+                fill={colors.mutaxassis}
+              />
+              <Bar
+                dataKey="Kiritiladigan investitsiya qiymati (ming so‘m)"
+                stackId="a"
+                fill={colors.ishlab}
+              />
+              <Bar dataKey="Texnik hodim" stackId="a" fill={colors.texnik} />
             </BarChart>
           </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
 };
 
-export default EmployeeFundChart;
+export default LandRentedChart;
