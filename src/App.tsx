@@ -3,10 +3,19 @@ import Auth from "./views/Auth/Auth";
 import Dashboard from "./views/Dashboard/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import "./i18n";
+import { useSelector } from "react-redux";
+import { RootState } from "./app/store";
+import { useEffect } from "react";
 
 export const user_role = import.meta.env.USER_ROLE;
 
 function App() {
+  const reportIds = useSelector((state: RootState) => state.report.reportId);
+
+  useEffect(() => {
+    document.cookie = `reportId=${reportIds}; path=/; max-age=86400`;
+  }, [reportIds]);
+
   return (
     <>
       <Routes>
