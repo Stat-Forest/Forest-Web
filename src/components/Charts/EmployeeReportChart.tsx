@@ -47,6 +47,8 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
         ilovaData = data[0]["1-ilova"] || [];
       } else if (activeTab === "2-ilova") {
         ilovaData = data[0]["2-ilova"] || [];
+      } else if (activeTab === "3-ilova") {
+        ilovaData = data[0]["3-ilova"] || [];
       }
 
       console.log("Aktiv ilova:", activeTab);
@@ -270,21 +272,20 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
               <Legend />
               <Bar dataKey="Doimiy" stackId={"a"} fill={colors?.ishlab} />
               <Bar dataKey="Mavsumiy" stackId={"a"} fill={colors?.boshqaruv} />
-              <Bar dataKey="O`rta" stackId={"a"} fill={colors?.boshqaruv} />
               <Bar
                 dataKey="Temir daftar va ayollar daftariga kiritilgan"
                 stackId={"a"}
-                fill={colors?.boshqaruv}
+                fill={colors?.ishchi}
               />
               <Bar
                 dataKey="Kambag’al axolidan olingan"
                 stackId={"a"}
-                fill={colors?.boshqaruv}
+                fill={colors?.mutaxassis}
               />
               <Bar
                 dataKey="Kasanachilik asosida"
                 stackId={"a"}
-                fill={colors?.boshqaruv}
+                fill={colors?.xizmat}
               />
             </BarChart>
           </ResponsiveContainer>

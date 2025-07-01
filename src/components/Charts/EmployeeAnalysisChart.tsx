@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { FileDown, FileImage, FileCode, Printer } from "lucide-react";
-
-import { useGetEmployeeIncomeStatQuery } from "@/services/statistikApi";
+import { useGetEmployeeAnalysisStatQuery } from "@/services/statistikApi";
 
 const colors = {
   boshqaruv: "#2ECC71",
@@ -33,7 +32,7 @@ const colors = {
 };
 
 const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
-  const { data, isLoading } = useGetEmployeeIncomeStatQuery();
+  const { data, isLoading } = useGetEmployeeAnalysisStatQuery();
   const chartRef = useRef<HTMLDivElement>(null);
 
   const [chartData, setChartData] = useState<any[]>([]);
@@ -44,10 +43,12 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
 
       let ilovaData = [];
 
-      if (activeTab === "1-ilova") {
-        ilovaData = data[0]["1-ilova"] || [];
-      } else if (activeTab === "2-ilova") {
-        ilovaData = data[0]["2-ilova"] || [];
+      if (activeTab === "4-ilova") {
+        ilovaData = data[0]["4-ilova"] || [];
+      } else if (activeTab === "5-ilova") {
+        ilovaData = data[0]["5-ilova"] || [];
+      } else if (activeTab === "6-ilova") {
+        ilovaData = data[0]["6-ilova"] || [];
       }
 
       console.log("Aktiv ilova:", activeTab);
@@ -174,7 +175,7 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
           </DropdownMenu>
         </div>
 
-        {activeTab === "1-ilova" && (
+        {activeTab === "4-ilova" && (
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
@@ -216,7 +217,7 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
           </ResponsiveContainer>
         )}
 
-        {activeTab === "2-ilova" && (
+        {activeTab === "5-ilova" && (
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
@@ -260,7 +261,7 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
             </BarChart>
           </ResponsiveContainer>
         )}
-        {activeTab === "3-ilova" && (
+        {activeTab === "6-ilova" && (
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
