@@ -150,7 +150,7 @@ function ResourceContainer() {
               <>
                 <div>
                   {id === "945d9e04-9f5a-4247-934d-5b775e15a1da" ? (
-                    <EmployeeIncomeChart activeTab={"1-ilova"} />
+                    <EmployeeIncomeChart activeTab={activeTab} />
                   ) : id === "945d9e04-9f5a-4247-934d-5b775e15b2a" ? (
                     <>Jamgarma</>
                   ) : null}

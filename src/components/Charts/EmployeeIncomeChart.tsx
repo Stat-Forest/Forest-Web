@@ -44,10 +44,10 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
 
       let ilovaData = [];
 
-      if (activeTab === "1-ilova") {
-        ilovaData = data[0]["1-ilova"] || [];
-      } else if (activeTab === "2-ilova") {
-        ilovaData = data[0]["2-ilova"] || [];
+      if (activeTab === "Daromad turlari bo‘yicha") {
+        ilovaData = data[0]["Daromad turlari bo‘yicha"] || [];
+      } else if (activeTab === "Tushumlar bo‘yicha") {
+        ilovaData = data[0]["Tushumlar bo‘yicha"] || [];
       }
 
       console.log("Aktiv ilova:", activeTab);
@@ -178,7 +178,7 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
           </div>
         </div>
 
-        {activeTab === "1-ilova" && (
+        {activeTab === "Daromad turlari bo‘yicha" && (
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
@@ -212,7 +212,7 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
           </ResponsiveContainer>
         )}
 
-        {activeTab === "2-ilova" && (
+        {activeTab === "Tushumlar bo‘yicha" && (
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
