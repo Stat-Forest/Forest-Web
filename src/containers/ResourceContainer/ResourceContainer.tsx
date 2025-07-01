@@ -15,7 +15,12 @@ import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
 import ReportItemTable from "@/components/Table/RecurceTable/ReportItemTable";
 import { RootState } from "@/app/store";
-import EmployeeIncomeChart from "@/components/Charts/EmployeeIncomeChart";
+import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
+import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
+import EmployeeReportChart from "@/components/Charts/EmployeeReportChart";
+import LandAcquisitionChart from "@/components/Charts/LandAcquisitionChart";
+import LandForestChart from "@/components/Charts/LandForestChart";
+import LandRentedChart from "@/components/Charts/LandRentedChart";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -151,8 +156,16 @@ function ResourceContainer() {
                 <div>
                   {id === "945d9e04-9f5a-4247-934d-5b775e15a1da" ? (
                     <EmployeeIncomeChart activeTab={activeTab} />
-                  ) : id === "945d9e04-9f5a-4247-934d-5b775e15b2a" ? (
-                    <>Jamgarma</>
+                  ) : id === "9d01a20f-1957-4cde-8ab1-22cbe54793bf" ? (
+                    <EmployeeFundChart activeTab={activeTab} />
+                  ) : id === "f76daeb7-c185-4402-8be9-0aaff5db05db" ? (
+                    <EmployeeReportChart activeTab={activeTab} />
+                  ) : id === "36101e9e-5517-4861-b0f7-aca274a5dce0" ? (
+                    <LandAcquisitionChart activeTab={activeTab} />
+                  ) : id === "94872f60-abd7-45d7-9764-e12cfeee3b35" ? (
+                    <LandForestChart activeTab={activeTab} />
+                  ) : id === "b1f640a8-0f23-4130-8f5a-646af6898595" ? (
+                    <LandRentedChart activeTab={activeTab} />
                   ) : null}
                 </div>
                 <div className="bg-white shadow px-5 py-4 rounded-2xl mb-6">
