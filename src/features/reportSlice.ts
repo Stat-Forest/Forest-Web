@@ -1,4 +1,5 @@
 // features/reportSlice.ts
+import { getCookie } from "@/utils/cookie";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface EmptyColumnId {
@@ -13,7 +14,7 @@ interface ReportState {
 
 const initialState: ReportState = {
   emptyColumns: [],
-  reportId: null, // Qo‘shilgan qism
+  reportId: getCookie("reportId") || null, // Qo‘shilgan qism
 };
 
 const reportSlice = createSlice({
