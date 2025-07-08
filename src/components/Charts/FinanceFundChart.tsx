@@ -39,16 +39,12 @@ const EmployeeFundChart = ({ activeTab }: { activeTab: string }) => {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      console.log("Backenddan kelgan data:", data);
 
       let ilovaData = [];
 
       if (activeTab === "Jamg'arma") {
         ilovaData = data[0]["Jamg'arma"] || [];
       }
-
-      console.log("Aktiv ilova:", activeTab);
-      console.log("Olingan data:", ilovaData);
 
       setChartData(ilovaData || []);
     }

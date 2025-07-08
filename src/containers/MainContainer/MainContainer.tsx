@@ -1,5 +1,8 @@
+import { RootState } from "@/app/store";
 import { useGetDashboardReportQuery } from "@/services/reportsApi";
 import { FileText } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 function MainContainer() {
@@ -9,6 +12,8 @@ function MainContainer() {
     error,
   } = useGetDashboardReportQuery();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
 
   if (isLoading) {
     return <div className="p-4 text-lg">Yuklanmoqda...</div>;
@@ -17,8 +22,6 @@ function MainContainer() {
   if (error) {
     return <div className="p-4 text-lg text-red-500">Xatolik yuz berdi!</div>;
   }
-
-  console.log(dashboard_data);
 
   return (
     <div className="grid grid-cols-3 gap-5 py-4 px-2">
@@ -32,7 +35,7 @@ function MainContainer() {
         </div>
         <div>
           <h2 className="font-medium text-[18px] text-[#353535]">
-            Jo’natilgan xisobotlar
+            {t("item_1")}
           </h2>
           <span className="text-[#FFC445] text-[22px]">
             {dashboard_data?.sent_reports || 0} ta
@@ -50,7 +53,7 @@ function MainContainer() {
         </div>
         <div>
           <h2 className="font-medium text-[18px] text-[#353535]">
-            Qaytarilgan hisobotlar
+            {t("item_2")}
           </h2>
           <span className="text-[#FF5445] text-[22px]">
             {dashboard_data?.returned_reports || 0} ta
@@ -68,7 +71,7 @@ function MainContainer() {
         </div>
         <div>
           <h2 className="font-medium text-[18px] text-[#353535]">
-            Qabul qilingan hisobotlar
+            {t("item_3")}
           </h2>
           <span className="text-[#4579FF] text-[22px]">
             {dashboard_data?.accepted_reports || 0} ta
@@ -86,7 +89,7 @@ function MainContainer() {
         </div>
         <div>
           <h2 className="font-medium text-[18px] text-[#353535]">
-            Mas’ul vakillar
+            {t("item_4")}
           </h2>
           <span className="text-[#474747] text-[22px]">
             {dashboard_data?.responsible_users || 0} ta
@@ -103,7 +106,9 @@ function MainContainer() {
           <FileText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-[#353535]">Qoralama</h2>
+          <h2 className="font-medium text-[18px] text-[#353535]">
+            {t("item_5")}
+          </h2>
           <span className="text-[#09B86F] text-[22px]">
             {dashboard_data?.draft_reports || 0} ta
           </span>
@@ -120,7 +125,7 @@ function MainContainer() {
         </div>
         <div>
           <h2 className="font-medium text-[18px] text-[#353535]">
-            Habarnomalar
+            {t("item_6")}
           </h2>
           <span className="text-[#09B86F80] text-[22px]">
             {dashboard_data?.deadlines || 0} ta
@@ -128,20 +133,22 @@ function MainContainer() {
         </div>
       </div>
       {/* Qoralama */}
-      <div
-        onClick={() => navigate("/main/create-report")}
-        className="w-full h-[100px] shadow rounded-lg flex items-center gap-5 pl-6 cursor-pointer"
-      >
-        <div className="bg-[purple] w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-          <FileText color="white" size={25} />
+      {user_role === "bolim_admin" && (
+        <div
+          onClick={() => navigate("/main/create-report")}
+          className="w-full h-[100px] shadow rounded-lg flex items-center gap-5 pl-6 cursor-pointer"
+        >
+          <div className="bg-[purple] w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+            <FileText color="white" size={25} />
+          </div>
+          <div>
+            <h2 className="font-medium text-[18px] text-[#353535]">
+              {t("item_82")}
+            </h2>
+            <span className="text-[purple] text-[22px]"></span>
+          </div>
         </div>
-        <div>
-          <h2 className="font-medium text-[18px] text-[#353535]">
-            Yangi reja yaratish
-          </h2>
-          <span className="text-[purple] text-[22px]"></span>
-        </div>
-      </div>
+      )}
 
       <div
         onClick={() => navigate("/main/created-plans")}
@@ -152,7 +159,7 @@ function MainContainer() {
         </div>
         <div>
           <h2 className="font-medium text-[18px] text-[#353535]">
-            Yaratilgan rejalar
+            {t("item_7")}
           </h2>
           <span className="text-[brown] text-[22px]">
             {dashboard_data?.plans || 0} ta

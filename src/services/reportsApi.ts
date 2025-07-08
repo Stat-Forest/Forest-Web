@@ -39,21 +39,24 @@ export const reportApi = createApi({
       query: () => ({ url: `/report-items/`, method: "GET" }),
       providesTags: ["Reports"],
     }),
-    getStatementColumnsReport: builder.query<any, string>({
-      query: (statementId) => ({
-        url: `/statement-columns/?statement=${statementId}`,
+    getStatementColumnsReport: builder.query<
+      any,
+      { statementId: any; lang: string }
+    >({
+      query: ({ statementId, lang }) => ({
+        url: `/statement-columns/?statement=${statementId}&lang=${lang}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
     }),
 
-    getStatementsReport: builder.query<any, void>({
-      query: () => ({ url: `/statements/`, method: "GET" }),
+    getStatementsReport: builder.query<any, { lang: string }>({
+      query: ({lang}) => ({ url: `/statements/?lang=${lang}`, method: "GET" }),
       providesTags: ["Reports"],
     }),
-    getUsersReport: builder.query<any, { user_id?: string }>({
-      query: ({ user_id = "" }) => ({
-        url: `/users/?id=${user_id}`,
+    getUsersReport: builder.query<any, { user_id?: string; page: any }>({
+      query: ({ user_id = "", page }) => ({
+        url: `/users/?id=${user_id}&page=${page}`,
         method: "GET",
       }),
     }),
