@@ -1,15 +1,18 @@
 import { useParams } from "react-router-dom";
 import ResourceContainer from "@/containers/ResourceContainer/ResourceContainer";
 import { useGetStatementsReportQuery } from "@/services/reportsApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 function ResourceManagement() {
   const { id } = useParams<{ id: string }>();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: statementData,
     isLoading,
     isError,
-  } = useGetStatementsReportQuery();
+  } = useGetStatementsReportQuery({lang});
 
   const currentItem = statementData?.results?.find((parent: any) =>
     parent.children?.some((child: any) => child.id === id)

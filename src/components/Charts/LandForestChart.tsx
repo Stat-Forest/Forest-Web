@@ -39,7 +39,6 @@ const LandForestChart = ({ activeTab }: { activeTab: string }) => {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      console.log("Backenddan kelgan data:", data);
 
       let ilovaData = [];
 
@@ -48,9 +47,6 @@ const LandForestChart = ({ activeTab }: { activeTab: string }) => {
       } else if (activeTab === "2-ilova") {
         ilovaData = data[0]["2-ilova"] || [];
       }
-
-      console.log("Aktiv ilova:", activeTab);
-      console.log("Olingan data:", ilovaData);
 
       setChartData(ilovaData || []);
     }

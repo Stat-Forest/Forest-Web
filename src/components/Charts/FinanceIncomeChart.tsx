@@ -40,7 +40,6 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      console.log("Backenddan kelgan data:", data);
 
       let ilovaData = [];
 
@@ -49,9 +48,6 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
       } else if (activeTab === "Tushumlar bo‘yicha") {
         ilovaData = data[0]["Tushumlar bo‘yicha"] || [];
       }
-
-      console.log("Aktiv ilova:", activeTab);
-      console.log("Olingan data:", ilovaData);
 
       setChartData(ilovaData || []);
     }

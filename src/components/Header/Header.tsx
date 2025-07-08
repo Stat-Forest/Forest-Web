@@ -1,4 +1,4 @@
-import { Bell, LogOut, Search, User2, VideoIcon } from "lucide-react";
+import { LogOut, Search, User2, VideoIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import {
@@ -21,6 +21,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
+import { setLanguage } from "@/features/languageSlice";
 
 function Header() {
   const dispatch = useDispatch();
@@ -28,14 +31,17 @@ function Header() {
   const location = useLocation();
   const { t } = useTranslation();
 
+  const currentLang = useSelector((state: RootState) => state.language.lang);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
-
+  
   const handleChangeLang = (lang: string) => {
     i18n.changeLanguage(lang);
     localStorage.setItem("lang", lang);
+    dispatch(setLanguage(lang));
 
     const currentPath = location.pathname.split("/");
     currentPath[1] = lang;
@@ -47,7 +53,7 @@ function Header() {
       <div className="w-[30%] border-1 border-silver flex items-center bg-white rounded-lg gap-1 px-2">
         <Search className="text-[#A4A4A4]" />
         <Input
-          placeholder={t("search_placeholder")}
+          placeholder={t("item_79")}
           className="border-none h-[42px]"
           style={{ fontSize: "17px" }}
         />
@@ -56,12 +62,9 @@ function Header() {
       <div className="flex items-center gap-3">
         <Button className="bg-[#09B86F] h-[42px] w-[170px] hover:bg-[#09B86F]">
           <VideoIcon />
-          {t("video_instruction")}
+          {t("item_65")}
         </Button>
-        <Button className="h-[42px] w-[42px] bg-[transparent] border-1 text-[#09B86F] hover:text-[white] hover:bg-[#09B86F]">
-          <Bell size={50} />
-        </Button>
-        <Select value={i18n.language} onValueChange={handleChangeLang}>
+        <Select value={currentLang} onValueChange={handleChangeLang}>
           <SelectTrigger className="w-[120px] min-h-[42px] shadow-none">
             <SelectValue />
           </SelectTrigger>
@@ -77,10 +80,14 @@ function Header() {
               <User2 size={38} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-38 mt-2">
+          <DropdownMenuContent className="w-48 mt-2 mr-2">
+            <DropdownMenuItem>
+              <User2 color="#09B86F" />
+              {t("item_81")}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut color="#FF5445" />
-              {t("logout")}
+              {t("item_80")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
