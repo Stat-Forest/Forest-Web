@@ -2,9 +2,11 @@ import { configureStore } from "@reduxjs/toolkit";
 import { reportApi } from "@/services/reportsApi";
 import authReducer from "../features/authSlice";
 import reportReducer from "../features/reportSlice";
+import languageReducer from "../features/languageSlice";
 import { authApi } from "@/services/authApi";
 import { generalApi } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
+import { sumApi } from "@/services/sumApi";
 
 export const store = configureStore({
   reducer: {
@@ -12,9 +14,11 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [generalApi.reducerPath]: generalApi.reducer,
     [statistikApi.reducerPath]: statistikApi.reducer,
+    [sumApi.reducerPath]: sumApi.reducer,
 
     auth: authReducer,
     report: reportReducer,
+    language: languageReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -23,7 +27,8 @@ export const store = configureStore({
       reportApi.middleware,
       authApi.middleware,
       generalApi.middleware,
-      statistikApi.middleware
+      statistikApi.middleware,
+      sumApi.middleware
     ),
 });
 

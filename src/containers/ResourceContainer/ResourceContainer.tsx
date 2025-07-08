@@ -1,4 +1,3 @@
-// ResourceContainer.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -6,10 +5,8 @@ import {
   useGetAllReportsQuery,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
-// import StaffChart from "@/components/Charts/BarChart";
 import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { ChartNoAxesColumn } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
@@ -21,6 +18,9 @@ import EmployeeReportChart from "@/components/Charts/EmployeeReportChart";
 import LandAcquisitionChart from "@/components/Charts/LandAcquisitionChart";
 import LandForestChart from "@/components/Charts/LandForestChart";
 import LandRentedChart from "@/components/Charts/LandRentedChart";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import IncomeSum from "@/components/Sum/IncomeSum";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -31,12 +31,16 @@ function ResourceContainer() {
   const userCheckTable = user_role !== "tashkilot_hodimi";
 
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: tableHeadersData = [],
     isLoading: isHeadersLoading,
     isError: isErrorHeaders,
-  } = useGetStatementColumnsReportQuery(id || "", { skip: !id });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: id || "", lang },
+    { skip: !id }
+  );
 
   const {
     data: tableRowsData = [],
@@ -110,21 +114,61 @@ function ResourceContainer() {
   const handlePrint = () => {
     if (tableRef.current) {
       const printContents = tableRef.current.getTable();
-      const originalContents = document.body.innerHTML;
-
-      document.body.innerHTML = printContents;
-      window.print();
-      document.body.innerHTML = originalContents;
-      window.location.reload();
+      const printWindow = window.open("", "", "height=600,width=800");
+      if (printWindow) {
+        printWindow.document.write(
+          "<html><head><title>Hisobot</title></head><body>"
+        );
+        printWindow.document.write(printContents);
+        printWindow.document.write("</body></html>");
+        printWindow.document.close();
+        printWindow.print();
+      }
     }
   };
 
+  const chartComponents: Record<string, React.ReactNode> = {
+    "945d9e04-9f5a-4247-934d-5b775e15a1da": (
+      <EmployeeIncomeChart activeTab={activeTab} />
+    ),
+    "9d01a20f-1957-4cde-8ab1-22cbe54793bf": (
+      <EmployeeFundChart activeTab={activeTab} />
+    ),
+    "f76daeb7-c185-4402-8be9-0aaff5db05db": (
+      <EmployeeReportChart activeTab={activeTab} />
+    ),
+    "36101e9e-5517-4861-b0f7-aca274a5dce0": (
+      <LandAcquisitionChart activeTab={activeTab} />
+    ),
+    "94872f60-abd7-45d7-9764-e12cfeee3b35": (
+      <LandForestChart activeTab={activeTab} />
+    ),
+    "b1f640a8-0f23-4130-8f5a-646af6898595": (
+      <LandRentedChart activeTab={activeTab} />
+    ),
+  };
+
+  const sumComponents: Record<string, React.ReactNode> = {
+    "945d9e04-9f5a-4247-934d-5b775e15a1da": <IncomeSum activeTab={activeTab} />,
+  };
+
   if (isLoading) {
-    return <h1>Loading...</h1>;
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <Loader2 className="animate-spin text-blue-500 w-12 h-12" />
+      </div>
+    );
   }
 
   if (isError) {
-    return <h1>Xatolik yuz berdi. Qayta urinib ko‘ring.</h1>;
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <Alert variant="destructive">
+          <AlertTitle>Xatolik yuz berdi</AlertTitle>
+          <AlertDescription>Qayta urinib ko‘ring.</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -153,54 +197,8 @@ function ResourceContainer() {
           <TabsContent key={col.id} value={col.title}>
             {activeTab === col.title && (
               <>
-                <div>
-                  {id === "945d9e04-9f5a-4247-934d-5b775e15a1da" ? (
-                    <EmployeeIncomeChart activeTab={activeTab} />
-                  ) : id === "9d01a20f-1957-4cde-8ab1-22cbe54793bf" ? (
-                    <EmployeeFundChart activeTab={activeTab} />
-                  ) : id === "f76daeb7-c185-4402-8be9-0aaff5db05db" ? (
-                    <EmployeeReportChart activeTab={activeTab} />
-                  ) : id === "36101e9e-5517-4861-b0f7-aca274a5dce0" ? (
-                    <LandAcquisitionChart activeTab={activeTab} />
-                  ) : id === "94872f60-abd7-45d7-9764-e12cfeee3b35" ? (
-                    <LandForestChart activeTab={activeTab} />
-                  ) : id === "b1f640a8-0f23-4130-8f5a-646af6898595" ? (
-                    <LandRentedChart activeTab={activeTab} />
-                  ) : null}
-                </div>
-                <div className="bg-white shadow px-5 py-4 rounded-2xl mb-6">
-                  <div className="flex items-end gap-2 pb-3">
-                    <ChartNoAxesColumn color="#09B86F" fontWeight={800} />
-                    <h2>Jadval bo'yicha qisqacha ma'lumot</h2>
-                  </div>
-                  <div className="flex items-center justify-between gap-10 overflow-x-auto">
-                    {["#457AFF", "#FFB145", "#09B86F"].map((color, i) => (
-                      <div
-                        key={i}
-                        className={`bg-[${color}4c] h-[220px] w-[100%] min-w-[400px] rounded-xl py-6 px-3 flex flex-col gap-5`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className={`text-xl font-[500] text-[${color}]`}>
-                            Jami xodimlar
-                          </h3>
-                          <h2 className={`text-3xl font-[500] text-[${color}]`}>
-                            1324
-                          </h2>
-                        </div>
-                        <div>
-                          <span className={`text-[${color}] text-lg`}>
-                            Eng ko'p xodimlar: Respublika tashkilotlari (150)
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg">Boshqaruv: 122</span>
-                          <span className="text-lg">Mutaxassislar: 465</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+                <div>{chartComponents[id as string] || null}</div>
+                <div>{sumComponents[id as string] || null}</div>
                 <div>
                   <div className="flex items-center justify-end gap-3 mb-4">
                     <button
