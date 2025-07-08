@@ -39,7 +39,6 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      console.log("Backenddan kelgan data:", data);
 
       let ilovaData = [];
 
@@ -50,9 +49,6 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
       } else if (activeTab === "3-ilova") {
         ilovaData = data[0]["3-ilova"] || [];
       }
-
-      console.log("Aktiv ilova:", activeTab);
-      console.log("Olingan data:", ilovaData);
 
       setChartData(ilovaData || []);
     }

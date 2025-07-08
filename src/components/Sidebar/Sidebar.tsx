@@ -22,18 +22,19 @@ function Sidebar() {
   const { t } = useTranslation();
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: sidebarData = [],
     isLoading: sidebarLoading,
     error: sidebarError,
-  } = useGetStatementsReportQuery();
+  } = useGetStatementsReportQuery({ lang });
 
   const {
     data: user,
     isLoading: userLoading,
     error: userError,
-  } = useGetUsersReportQuery(user_id ? { user_id } : skipToken);
+  } = useGetUsersReportQuery(user_id ? { user_id, page: "" } : skipToken);
 
   if (sidebarLoading || userLoading) {
     return (
