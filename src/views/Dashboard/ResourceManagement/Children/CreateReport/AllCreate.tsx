@@ -61,17 +61,20 @@ function AllCreateReportItem() {
     isLoading: isDeadlinesLoading,
     error: deadlinesError,
   } = useGetDeadlinesReportQuery();
+
   const {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
   } = useGetOrganizationReportsQuery();
+
   const {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(reportIds as string, {
     skip: !reportIds,
+    refetchOnMountOrArgChange: false, // disable unnecessary re-fetching
   });
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
@@ -79,17 +82,25 @@ function AllCreateReportItem() {
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
   const [planListMap, setPlanListMap] = useState<Record<string, number>>({});
-
-  const [createReportItem, { isLoading: isSubmitting }] =
-    useCreateReportMutation();
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
+
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
+
+  // Fetch plan values for "Reja" columns
   useEffect(() => {
     const fetchPlanLists = async () => {
-      if (!tableHeadersData || !selectedOrganizationId || !reportIds) return;
+      if (
+        !selectedOrganizationId ||
+        !reportIds ||
+        !tableHeadersData ||
+        tableHeadersData.length === 0
+      ) {
+        return;
+      }
+
       const allStepsEmptyCols = tableHeadersData
         .map((obj: any) =>
           Array.isArray(obj.children)
@@ -97,9 +108,11 @@ function AllCreateReportItem() {
             : []
         )
         .flat();
+
       const rejaLeafColumns = allStepsEmptyCols.filter((col: any) =>
         col.title.toLowerCase().includes("reja")
       );
+
       const requests = rejaLeafColumns.map(async (col: any) => {
         try {
           const response = await dispatch(
@@ -117,6 +130,7 @@ function AllCreateReportItem() {
           return { columnId: col.id, planValue: 0 };
         }
       });
+
       const results = await Promise.all(requests);
       const newPlanMap: Record<string, number> = {};
       results.forEach(({ columnId, planValue }) => {
@@ -124,16 +138,18 @@ function AllCreateReportItem() {
       });
       setPlanListMap(newPlanMap);
     };
+
     fetchPlanLists();
-  }, [tableHeadersData, selectedOrganizationId, reportIds, dispatch]);
+  }, [selectedOrganizationId, reportIds, dispatch]); // removed tableHeadersData dependency
+
+  // Initialize empty columns by step
   useEffect(() => {
     if (tableHeadersData.length > 0) {
-      const allStepsEmptyCols = tableHeadersData.map((obj: any) => {
-        if (Array.isArray(obj.children)) {
-          return findEmptyChildrenColumnIds(obj.children);
-        }
-        return [];
-      });
+      const allStepsEmptyCols = tableHeadersData.map((obj: any) =>
+        Array.isArray(obj.children)
+          ? findEmptyChildrenColumnIds(obj.children)
+          : []
+      );
       setAllEmptyColumnsByStep(allStepsEmptyCols);
       setCurrentStep(0);
     } else {
@@ -141,9 +157,14 @@ function AllCreateReportItem() {
       setCurrentStep(0);
     }
   }, [tableHeadersData]);
+
+  const [createReportItem, { isLoading: isSubmitting }] =
+    useCreateReportMutation();
+
   const handleInputChange = (id: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [id]: value }));
   };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedDeadlineId) {
@@ -159,6 +180,7 @@ function AllCreateReportItem() {
       alert("Iltimos, tashkilot tanlang");
       return;
     }
+
     const allColumns = allEmptyColumnsByStep.flat();
     const report_items = allColumns.map((col) => ({
       statement_column: col.id,
@@ -168,10 +190,12 @@ function AllCreateReportItem() {
         ? String(planListMap[col.id] ?? "")
         : String(formValues[col.id] || "15"),
     }));
+
     const payload = {
       deadline: selectedDeadlineId,
       report_items,
     };
+
     try {
       const res = await createReportItem(payload).unwrap();
       console.log("Yuborildi:", res);
@@ -181,8 +205,10 @@ function AllCreateReportItem() {
       console.error("Yuborishda xatolik:", err?.data || err?.message);
     }
   };
+
   if (isDeadlinesLoading || isHeaderLoading || isOrgLoading)
     return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+
   if (deadlinesError || headersError || orgError)
     return (
       <div className="text-red-500 p-4">
@@ -194,9 +220,11 @@ function AllCreateReportItem() {
         </ul>
       </div>
     );
+
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title || `Qadam ${currentStep + 1}`;
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -223,6 +251,7 @@ function AllCreateReportItem() {
           </Select>
         </div>
       </div>
+
       {currentEmptyColumns.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="mb-4 flex justify-between">
@@ -269,7 +298,7 @@ function AllCreateReportItem() {
                           required
                         >
                           <option value="">Tanlang</option>
-                          {organizationsData?.results.map((item: any) => (
+                          {organizationsData?.map((item: any) => (
                             <option key={item.id} value={item.id}>
                               {item.name}
                             </option>
@@ -301,6 +330,7 @@ function AllCreateReportItem() {
       ) : (
         <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
       )}
+
       <div className="flex justify-between items-center pt-4">
         <div className="space-x-2">
           <Button
