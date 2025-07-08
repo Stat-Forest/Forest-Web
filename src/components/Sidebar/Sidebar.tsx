@@ -64,7 +64,7 @@ function Sidebar() {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="ml-[310px] w-[490px] sm:w-[490px]"
+            className="ml-[310px] min-w-[460px] sm:w-[460px]"
           >
             <SheetHeader>
               <SheetTitle>{t(item.name)}</SheetTitle>

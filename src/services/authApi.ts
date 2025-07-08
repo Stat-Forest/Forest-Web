@@ -26,6 +26,13 @@ export const authApi = createApi({
         body: credentials,
       }),
     }),
+    changePassword: builder.mutation({
+      query: (credentials) => ({
+        url: "/change-password/",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
     getUserProfile: builder.query({
       query: () => ({
         url: "/profile/",
@@ -35,4 +42,8 @@ export const authApi = createApi({
   }),
 });
 
-export const { useLoginMutation, useGetUserProfileQuery } = authApi;
+export const {
+  useLoginMutation,
+  useGetUserProfileQuery,
+  useChangePasswordMutation,
+} = authApi;
