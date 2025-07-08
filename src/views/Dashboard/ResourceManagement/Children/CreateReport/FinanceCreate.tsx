@@ -436,7 +436,6 @@ function CreateFinanceReport() {
     };
 
     try {
-      console.log("Final submission payload:", payload);
       const res = await createReportItem(payload).unwrap();
       console.log("Report submitted successfully:", res);
       removeCookie("reportId");
@@ -602,7 +601,7 @@ function CreateFinanceReport() {
                             <SelectValue placeholder="Select organization" />
                           </SelectTrigger>
                           <SelectContent>
-                            {organizationsData?.results.map((item: any) => (
+                            {organizationsData?.results?.map((item: any) => (
                               <SelectItem key={item.id} value={item.id}>
                                 {item.name}
                               </SelectItem>
