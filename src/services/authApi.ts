@@ -1,21 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { base_url, prepareHeaders } from "./baseUrl";
 
-// const prepareHeaders = (headers: Headers) => {
-//   const token = decryptData("token", "token");
-// const user = decryptData("user", "user");
-
-//   if (token) {
-//     headers.set("Authorization", `Bearer ${token}`);
-//   }
-
-//   return headers;
-// };
-
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${base_url}/authentications`, // This uses the imported base_url
+    baseUrl: `${base_url}/authentications`,
     prepareHeaders,
   }),
   endpoints: (builder) => ({
@@ -39,6 +28,13 @@ export const authApi = createApi({
         method: "GET",
       }),
     }),
+    eimzoLogin: builder.mutation({
+      query: (data) => ({
+        url: "/login/eimzo/",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -46,4 +42,5 @@ export const {
   useLoginMutation,
   useGetUserProfileQuery,
   useChangePasswordMutation,
+  useEimzoLoginMutation,
 } = authApi;
