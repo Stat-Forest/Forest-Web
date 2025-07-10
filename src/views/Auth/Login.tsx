@@ -41,6 +41,66 @@ function Login() {
     }
   };
 
+  const handleEimzoLogin = async () => {
+    setError(null);
+    const textToSign = `login-${new Date().toISOString()}`;
+
+    const ws = new WebSocket("wss://127.0.0.1:13579/");
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ id: 1, method: "getKeys", params: [] }));
+    };
+
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      if (data.error) {
+        setError("E-IMZO xatosi: " + data.error.message);
+        return;
+      }
+
+      if (data.id === 1 && data.result.length > 0) {
+        const cert = data.result[0];
+
+        ws.send(
+          JSON.stringify({
+            id: 2,
+            method: "sign",
+            params: [cert.id, btoa(textToSign)],
+          })
+        );
+
+        ws.onmessage = async (e2) => {
+          const res2 = JSON.parse(e2.data);
+          if (res2.result) {
+            try {
+              const response = await dispatch(
+                authApi.endpoints.eimzoLogin.initiate({
+                  signed: res2.result,
+                  originalText: textToSign,
+                  certInfo: cert,
+                })
+              ).unwrap();
+
+              localStorage.setItem("token", response.token);
+              navigate("/");
+            } catch (err: any) {
+              console.error("E-IMZO login failed", err);
+              setError("E-IMZO login muvaffaqiyatsiz");
+            }
+          }
+        };
+      } else {
+        setError(
+          "Sertifikat topilmadi. Iltimos E-IMZO ochilganligini tekshiring."
+        );
+      }
+    };
+
+    ws.onerror = () => {
+      setError("E-IMZO serverga ulanishda muammo. Iltimos tekshiring.");
+    };
+  };
+
   return (
     <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex items-center flex-col gap-3.5">
       <h2 className="text-center text-[#000000] text-[34px] font-bold">
@@ -66,18 +126,14 @@ function Login() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="with_key" className="pt-6">
-          <div className="w-full">
-            <Label htmlFor="key_email" className="mb-2">
-              Elektron pochta manzili
-            </Label>
-            <Input
-              id="key_email"
-              name="key_email"
-              placeholder="mail@gmail.com"
-              className="h-[43px]"
-            />
-          </div>
+        <TabsContent value="with_key" className="pt-6 flex flex-col gap-4">
+          <Button
+            onClick={handleEimzoLogin}
+            className="w-full h-[45px] text-white bg-[#09B86F] font-bold hover:bg-[#09B86F] hover:text-white"
+          >
+            E-IMZO bilan kirish
+          </Button>
+          {error && <p className="error-message text-red-600">{error}</p>}
         </TabsContent>
 
         <TabsContent
