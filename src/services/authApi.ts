@@ -15,6 +15,13 @@ export const authApi = createApi({
         body: credentials,
       }),
     }),
+    eimzoLogin: builder.mutation({
+      query: (data) => ({
+        url: "/login/eimzo/",
+        method: "POST",
+        body: data,
+      }),
+    }),
     changePassword: builder.mutation({
       query: (credentials) => ({
         url: "/change-password/",
@@ -28,19 +35,12 @@ export const authApi = createApi({
         method: "GET",
       }),
     }),
-    eimzoLogin: builder.mutation({
-      query: (data) => ({
-        url: "/login/eimzo/",
-        method: "POST",
-        body: data,
-      }),
-    }),
   }),
 });
 
 export const {
   useLoginMutation,
-  useGetUserProfileQuery,
-  useChangePasswordMutation,
   useEimzoLoginMutation,
+  useChangePasswordMutation,
+  useGetUserProfileQuery,
 } = authApi;
