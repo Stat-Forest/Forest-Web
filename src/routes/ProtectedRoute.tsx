@@ -12,8 +12,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles,
 }) => {
   const { token, user } = useSelector((state: any) => state.auth);
-  console.log(token);
-  console.log(user);
+
+  console.log(token, user)
+
   if (!token) {
     return <Navigate to="/auth" />;
   }
@@ -21,6 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/unauthorized" />;
   }
+
   return <>{children}</>;
 };
 
