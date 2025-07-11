@@ -121,7 +121,7 @@ function Sidebar() {
           </h3>
           <div className="flex items-center gap-2">
             <span className="text-[#E8E8E8] text-[14px] font-light">
-              {t("user.number")}:
+              {t("item_78")}:
             </span>
             <h3 className="font-bold text-white text-[15px]">
               {user.results[0].user_number || ""}
@@ -129,7 +129,7 @@ function Sidebar() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[#E8E8E8] text-[14px] font-light">
-              {t("program_entry18")}
+              {t("item_12")}
             </span>
             <h3 className="font-bold text-white text-[15px]">
               {user?.results[0]?.organization__name || ""}

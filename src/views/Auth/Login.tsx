@@ -1,19 +1,20 @@
+// ✅ Login.tsx
+
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import key_icon_default from "../../assets/key_icon_default.svg";
-import user_icon_active from "../../assets/user_icon_active.svg";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "@/services/authApi";
 import { useState } from "react";
+// import key_icon_default from "../../assets/key_icon_default.svg";
+// import user_icon_active from "../../assets/user_icon_active.svg";
 
-interface Credentials {
-  email: string;
-  password: string;
-}
+// interface Credentials {
+//   email: string;
+//   password: string;
+// }
 
 function Login() {
   const dispatch = useDispatch<any>();
@@ -27,25 +28,26 @@ function Login() {
     const password = formData.get("password") as string;
 
     if (!email || !password) {
-      console.warn("Email yoki parol bo'sh bo'lishi mumkin emas!");
+      setError("Email yoki parol bo‘sh bo‘lmasligi kerak");
       return;
     }
 
-    const credentials: Credentials = { email, password };
     try {
-      await dispatch(authApi.endpoints.login.initiate(credentials)).unwrap();
+      const response = await dispatch(
+        authApi.endpoints.login.initiate({ email, password })
+      ).unwrap();
+      localStorage.setItem("token", response.token);
       navigate("/");
-    } catch (error: any) {
-      console.error("Login failed", error);
-      setError("Авторизация не удалась.");
+    } catch {
+      setError("Oddiy login muvaffaqiyatsiz.");
     }
   };
 
   const handleEimzoLogin = async () => {
     setError(null);
-    const textToSign = `login-${new Date().toISOString()}`;
+    const originalText = `login-${new Date().toISOString()}`;
+    const ws = new WebSocket("ws://127.0.0.1:64443/");
 
-    const ws = new WebSocket("wss://127.0.0.1:13579/");
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ id: 1, method: "getKeys", params: [] }));
@@ -61,136 +63,71 @@ function Login() {
       if (data.id === 1 && data.result.length > 0) {
         const cert = data.result[0];
 
-        ws.send(
-          JSON.stringify({
-            id: 2,
-            method: "sign",
-            params: [cert.id, btoa(textToSign)],
-          })
-        );
+        // ✳️ Sign text
+        ws.send(JSON.stringify({
+          id: 2,
+          method: "sign",
+          params: [cert.id, btoa(originalText)],
+        }));
 
-        ws.onmessage = async (e2) => {
-          const res2 = JSON.parse(e2.data);
-          if (res2.result) {
+        ws.onmessage = async (signEvent) => {
+          const signRes = JSON.parse(signEvent.data);
+          if (signRes.result) {
             try {
-              const response = await dispatch(
+              const res = await dispatch(
                 authApi.endpoints.eimzoLogin.initiate({
-                  signed: res2.result,
-                  originalText: textToSign,
+                  signed: signRes.result,
+                  originalText,
                   certInfo: cert,
                 })
               ).unwrap();
-
-              localStorage.setItem("token", response.token);
+              localStorage.setItem("token", res.token);
               navigate("/");
-            } catch (err: any) {
-              console.error("E-IMZO login failed", err);
-              setError("E-IMZO login muvaffaqiyatsiz");
+            } catch (err) {
+              setError("E-IMZO login muvaffaqiyatsiz.");
             }
           }
         };
       } else {
-        setError(
-          "Sertifikat topilmadi. Iltimos E-IMZO ochilganligini tekshiring."
-        );
+        setError("Kalit topilmadi. Iltimos, E-IMZO ochiq ekanini tekshiring.");
       }
     };
 
     ws.onerror = () => {
-      setError("E-IMZO serverga ulanishda muammo. Iltimos tekshiring.");
+      setError("E-IMZO serverga ulanishda muammo.");
     };
   };
 
   return (
-    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex items-center flex-col gap-3.5">
-      <h2 className="text-center text-[#000000] text-[34px] font-bold">
-        Tizimga kirish
-      </h2>
-      <span className="text-center w-full text-[#929292] text-[13px]">
-        O'rmon xo‘jaligi hisobini yuritish axborot tizimi
-      </span>
-
-      <Tabs defaultValue="login" className="w-[400px]">
-        <TabsList className="w-full h-10 gap-3">
-          <TabsTrigger className="h-[40px]" value="with_key">
-            <div className="flex items-center justify-between w-full px-5">
-              <span>Kalit orqali</span>
-              <img src={key_icon_default} alt="img" />
-            </div>
-          </TabsTrigger>
-          <TabsTrigger className="h-[40px]" value="login">
-            <div className="flex items-center justify-between w-full px-5">
-              <span>Login orqali</span>
-              <img src={user_icon_active} alt="img" />
-            </div>
-          </TabsTrigger>
+    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
+      <h2 className="text-[30px] font-bold">Tizimga kirish</h2>
+      <Tabs defaultValue="login" className="w-full">
+        <TabsList className="w-full gap-3">
+          <TabsTrigger value="with_key" className="flex-1">Kalit orqali</TabsTrigger>
+          <TabsTrigger value="login" className="flex-1">Login orqali</TabsTrigger>
         </TabsList>
 
         <TabsContent value="with_key" className="pt-6 flex flex-col gap-4">
-          <Button
-            onClick={handleEimzoLogin}
-            className="w-full h-[45px] text-white bg-[#09B86F] font-bold hover:bg-[#09B86F] hover:text-white"
-          >
+          <Button onClick={handleEimzoLogin} className="bg-green-600 text-white h-[45px]">
             E-IMZO bilan kirish
           </Button>
-          {error && <p className="error-message text-red-600">{error}</p>}
+          {error && <p className="text-red-600">{error}</p>}
         </TabsContent>
 
-        <TabsContent
-          className="flex items-center flex-col gap-4 pt-4"
-          value="login"
-        >
-          <form
-            onSubmit={checkAuthHandler}
-            className="flex items-center flex-col gap-4 w-full"
-          >
-            <div className="w-full">
-              <Label htmlFor="email" className="mb-2">
-                Elektron pochta manzili
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="mail@gmail.com"
-                className="h-[43px]"
-                autoComplete="email"
-              />
+        <TabsContent value="login" className="pt-6">
+          <form onSubmit={checkAuthHandler} className="flex flex-col gap-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" placeholder="email@example.com" />
             </div>
-            <div className="w-full">
-              <Label htmlFor="password" className="mb-2">
-                Maxfiy kod
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="********"
-                className="h-[43px]"
-                autoComplete="current-password"
-              />
+            <div>
+              <Label htmlFor="password">Parol</Label>
+              <Input id="password" name="password" type="password" placeholder="********" />
             </div>
-            <div className="flex justify-between w-full">
-              <div className="flex items-center gap-2">
-                <Checkbox id="remember" name="remember" />
-                <Label htmlFor="remember" className="text-[#8F8F8F]">
-                  Meni eslab qol
-                </Label>
-              </div>
-              <Button
-                type="button"
-                className="p-0 bg-transparent shadow-none text-[#09B86F] hover:bg-transparent"
-              >
-                Maxfiy kodni tiklash uchun?
-              </Button>
-            </div>
-            <Button
-              type="submit"
-              className="w-full h-[45px] text-white bg-[#09B86F] font-bold hover:bg-[#09B86F] hover:text-white"
-            >
-              KIRISH
+            <Button type="submit" className="bg-green-600 text-white h-[45px]">
+              Kirish
             </Button>
-            {error && <p className="error-message text-red-600">{error}</p>}
+            {error && <p className="text-red-600">{error}</p>}
           </form>
         </TabsContent>
       </Tabs>
