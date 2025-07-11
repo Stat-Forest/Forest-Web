@@ -114,7 +114,7 @@ const TableColumn = forwardRef(
                       key={colIndex}
                       className="border min-w-[380px] border-black px-2 py-1 text-center"
                     >
-                      {col.value ?? "-"}
+                      {col?.plant_values[0].value ?? "-"}
                     </td>
                   ))}
                   <td className="border border-black px-2 py-1 text-center">

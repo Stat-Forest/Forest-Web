@@ -21,6 +21,7 @@ function ReceiptInformation() {
           <div
             key={item.id}
             className="h-[130px] shadow rounded-lg flex items-center justify-between px-5 cursor-pointer"
+            onClick={() => window.open('https://my.gov.uz', '_blank')}
           >
             <div className="flex flex-col gap-5">
               <div>
