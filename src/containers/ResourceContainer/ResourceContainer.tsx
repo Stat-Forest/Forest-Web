@@ -56,7 +56,7 @@ function ResourceContainer() {
         }
       : skipToken
   );
-
+console.log(tableRowsData)
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
 
@@ -66,6 +66,8 @@ function ResourceContainer() {
   useEffect(() => {
     if (id) {
       dispatch(setReportId(id));
+      // 0fd27397-ed03-499f-bcbc-2621b00f1252
+      // 0fd27397-ed03-499f-bcbc-2621b00f1252
     }
   }, [id, dispatch]);
 
@@ -102,7 +104,7 @@ function ResourceContainer() {
   const filteredRows = useMemo(() => {
     return tableRowsData.map((row: any) => {
       const filteredItems = row.report_items.filter((item: any) =>
-        activeLeafIds.includes(item.statement_column)
+        activeLeafIds.includes(item.statement_column_id)
       );
       return {
         ...row,
@@ -110,6 +112,9 @@ function ResourceContainer() {
       };
     });
   }, [tableRowsData, activeLeafIds]);
+
+  console.log(filteredRows)
+
 
   const handlePrint = () => {
     if (tableRef.current) {

@@ -2,13 +2,23 @@
 <html lang="en">
 
 <head>
+  <script src="https://test.e-imzo.uz/demo/e-imzo.js"></script>
+  <script src="https://test.e-imzo.uz/demo/e-imzo-client.js"></script>
+  <script>
+    // Add dates comparison utility used by E-IMZO
+    window.dates = {
+      compare: function (a, b) {
+        return (a > b) ? 1 : (a < b) ? -1 : 0;
+      }
+    };
+  </script>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="./src/assets/logo.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stat-Forest Platform</title>
 </head>
 
-<body style="background-color: #FAFAFA;">
+<body style="background-color: #FAFAFA;"> 
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

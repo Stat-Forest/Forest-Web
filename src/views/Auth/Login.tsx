@@ -1,14 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import key_icon_default from "../../assets/key_icon_default.svg";
-import user_icon_active from "../../assets/user_icon_active.svg";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "@/services/authApi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+declare global {
+  interface Window {
+    EIMZOClient: any;
+    dates: any;
+  }
+}
+
+interface EimzoKey {
+  id: string;
+  value: string;
+  label: string;
+  disabled: boolean;
+  vo: any;
+}
 
 interface Credentials {
   email: string;
@@ -19,6 +31,182 @@ function Login() {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
+  const [selectedKey, setSelectedKey] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // E-IMZO klientini ishga tushirish
+  useEffect(() => {
+    if (window.EIMZOClient) {
+      initializeEimzo();
+    } else {
+      setError("E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang.");
+    }
+  }, []);
+
+  const initializeEimzo = () => {
+    setIsLoading(true);
+    setError(null);
+
+    // E-IMZO API kalitlari
+    window.EIMZOClient.API_KEYS = [
+      'localhost', '96D0C1491615C82B9A54D9989779DF825B690748224C2B04F500F370D51827CE2644D8D4A82C18184D73AB8530BB8ED537269603F61DB0D03D2104ABF789970B',
+      '127.0.0.1', 'A7BCFA5D490B351BE0754130DF03A068F855DB4333D43921125B9CF2670EF6A40370C646B90401955E1F7BC9CDBF59CE0B2C5467D820BE189C845D0B79CFC96F',
+      'null', 'E0A205EC4E7B78BBB56AFF83A733A1BB9FD39D562E67978CC5E7D73B0951DB1954595A20672A63332535E13CC6EC1E1FC8857BB09E0855D7E76E411B6FA16E9D',
+      'ruxsatnoma-urmon.uz', '57081C44AC4FD8FA104A4A4E359524F6632FB589618B4C9A380D176CEC4789407135BE5C4417898FA172596031A95562B4B021C67BFE53D4FB1B53B811E6DF17'
+    ];
+
+    // Versiyani tekshirish
+    window.EIMZOClient.checkVersion(
+      (major: number, minor: number) => {
+        const requiredVersion = 3 * 100 + 37; // 3.37
+        const currentVersion = major * 100 + minor;
+
+        if (currentVersion < requiredVersion) {
+          setError("Iltimos, E-IMZO dasturini yangilang");
+          setIsLoading(false);
+        } else {
+          installApiKeys();
+        }
+      },
+      (r: any) => {
+        if (r) {
+          setError(r);
+        } else {
+          setError("E-IMZO bilan ulanib bo'lmadi");
+        }
+        setIsLoading(false);
+      }
+    );
+  };
+
+  const installApiKeys = () => {
+    window.EIMZOClient.installApiKeys(
+      () => loadEimzoKeys(),
+      (r: any) => {
+        if (r) {
+          setError(r);
+        } else {
+          setError("API kalitlarini o'rnatib bo'lmadi");
+        }
+        setIsLoading(false);
+      }
+    );
+  };
+
+  const loadEimzoKeys = () => {
+    window.EIMZOClient.listAllUserKeys(
+      (o: any, i: number) => `itm-${o.serialNumber}-${i}`,
+      (itemId: string, v: any) => {
+        const now = new Date();
+        const validTo = new Date(v.validTo);
+        const expired = validTo < now;
+
+        return {
+          id: itemId,
+          value: itemId,
+          label: expired ? `${v.CN} (muddati tugagan)` : v.CN,
+          disabled: expired,
+          vo: v
+        };
+      },
+      (items: EimzoKey[], firstId: string) => {
+        setEimzoKeys(items);
+        if (items.length > 0) {
+          setSelectedKey(firstId);
+        } else {
+          setError("E-IMZO kalitlari topilmadi");
+        }
+        setIsLoading(false);
+      },
+      (r: any) => {
+        if (r) {
+          setError(r);
+        } else {
+          setError("Kalitlarni yuklab bo'lmadi");
+        }
+        setIsLoading(false);
+      }
+    );
+  };
+  const handleEimzoLogin = async () => {
+    if (!selectedKey) {
+      setError("Iltimos, sertifikatni tanlang");
+      return;
+    }
+
+    const selectedItem = eimzoKeys.find(item => item.id === selectedKey);
+    if (!selectedItem) {
+      setError("Noto'g'ri tanlangan sertifikat");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 1. Kalitni yuklash
+      const keyId = await new Promise<string>((resolve, reject) => {
+        window.EIMZOClient.loadKey(
+          selectedItem.vo,
+          (id: string) => resolve(id),
+          (r: any) => {
+            const errorMsg = r?.includes("BadPaddingException")
+              ? "Noto'g'ri parol"
+              : r || "Kalitni yuklab bo'lmadi";
+            setError(errorMsg);
+            reject(new Error(errorMsg));
+          }
+        );
+      });
+
+      // 2. Imzo yaratish
+      const pkcs7 = await new Promise<string>((resolve, reject) => {
+        window.EIMZOClient.createPkcs7(
+          keyId,
+          "Tasdiqlaymiz",
+          null,
+          (signature: string) => resolve(signature),
+          (r: any) => {
+            const errorMsg = r?.includes("BadPaddingException")
+              ? "Noto'g'ri parol"
+              : r || "Imzo yaratib bo'lmadi";
+            setError(errorMsg);
+            reject(new Error(errorMsg));
+          }
+        );
+      });
+
+      // 3. EIMZO login va token olish
+      const response = await dispatch(
+        authApi.endpoints.eimzoLogin.initiate({
+          pkcs7,
+          vo: selectedItem.vo,
+        })
+      ).unwrap();
+
+      // 4. Muvaffaqiyatli login bo‘lsa, redirect
+      if (response?.access) {
+        navigate("/main");
+      } else {
+        throw new Error("Token olinmadi");
+      }
+    } catch (error: any) {
+      console.error("E-IMZO orqali kirish muvaffaqiyatsiz:", error);
+
+      let errorMessage = "E-IMZO orqali kirish muvaffaqiyatsiz. Iltimos, qayta urinib ko'ring.";
+      if (typeof error === "object" && "status" in error && error.status === 404) {
+        errorMessage = "E-IMZO login endpointi topilmadi. Iltimos, tizim administratoriga murojaat qiling.";
+      }
+
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
 
   const checkAuthHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,99 +230,81 @@ function Login() {
   };
 
   return (
-    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex items-center flex-col gap-3.5">
-      <h2 className="text-center text-[#000000] text-[34px] font-bold">
-        Tizimga kirish
-      </h2>
-      <span className="text-center w-full text-[#929292] text-[13px]">
-        O'rmon xo‘jaligi hisobini yuritish axborot tizimi
-      </span>
+    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
+      <h2 className="text-[30px] font-bold">Tizimga kirish</h2>
 
-      <Tabs defaultValue="login" className="w-[400px]">
-        <TabsList className="w-full h-10 gap-3">
-          <TabsTrigger className="h-[40px]" value="with_key">
-            <div className="flex items-center justify-between w-full px-5">
-              <span>Kalit orqali</span>
-              <img src={key_icon_default} alt="img" />
-            </div>
-          </TabsTrigger>
-          <TabsTrigger className="h-[40px]" value="login">
-            <div className="flex items-center justify-between w-full px-5">
-              <span>Login orqali</span>
-              <img src={user_icon_active} alt="img" />
-            </div>
-          </TabsTrigger>
+      <Tabs defaultValue="login" className="w-full">
+        <TabsList className="w-full gap-3">
+          <TabsTrigger value="eimzo" className="flex-1">E-IMZO orqali</TabsTrigger>
+          <TabsTrigger value="login" className="flex-1">Login orqali</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="with_key" className="pt-6">
-          <div className="w-full">
-            <Label htmlFor="key_email" className="mb-2">
-              Elektron pochta manzili
-            </Label>
-            <Input
-              id="key_email"
-              name="key_email"
-              placeholder="mail@gmail.com"
-              className="h-[43px]"
-            />
-          </div>
+        {/* E-IMZO orqali kirish */}
+        <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
+          {isLoading ? (
+            <p>Yuklanmoqda...</p>
+          ) : eimzoKeys.length > 0 ? (
+            <>
+              <select
+                value={selectedKey}
+                onChange={(e) => setSelectedKey(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="" disabled>Sertifikatni tanlang</option>
+                {eimzoKeys.map((key) => (
+                  <option
+                    key={key.id}
+                    value={key.id}
+                    disabled={key.disabled}
+                    className={key.disabled ? "text-gray-400" : ""}
+                  >
+                    {key.label}
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                onClick={handleEimzoLogin}
+                className="bg-green-600 text-white h-[45px]"
+                disabled={!selectedKey || isLoading}
+              >
+                {isLoading ? "Ishlanmoqda..." : "Kirish"}
+              </Button>
+            </>
+          ) : (
+            <p>Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.</p>
+          )}
+
+          {error && <p className="text-red-600">{error}</p>}
         </TabsContent>
 
-        <TabsContent
-          className="flex items-center flex-col gap-4 pt-4"
-          value="login"
-        >
-          <form
-            onSubmit={checkAuthHandler}
-            className="flex items-center flex-col gap-4 w-full"
-          >
-            <div className="w-full">
-              <Label htmlFor="email" className="mb-2">
-                Elektron pochta manzili
-              </Label>
+        {/* Oddiy login */}
+        <TabsContent value="login" className="pt-6">
+          <form onSubmit={checkAuthHandler} className="flex flex-col gap-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="mail@gmail.com"
-                className="h-[43px]"
-                autoComplete="email"
+                placeholder="email@example.com"
+                required
               />
             </div>
-            <div className="w-full">
-              <Label htmlFor="password" className="mb-2">
-                Maxfiy kod
-              </Label>
+            <div>
+              <Label htmlFor="password">Parol</Label>
               <Input
                 id="password"
                 name="password"
                 type="password"
                 placeholder="********"
-                className="h-[43px]"
-                autoComplete="current-password"
+                required
               />
             </div>
-            <div className="flex justify-between w-full">
-              <div className="flex items-center gap-2">
-                <Checkbox id="remember" name="remember" />
-                <Label htmlFor="remember" className="text-[#8F8F8F]">
-                  Meni eslab qol
-                </Label>
-              </div>
-              <Button
-                type="button"
-                className="p-0 bg-transparent shadow-none text-[#09B86F] hover:bg-transparent"
-              >
-                Maxfiy kodni tiklash uchun?
-              </Button>
-            </div>
-            <Button
-              type="submit"
-              className="w-full h-[45px] text-white bg-[#09B86F] font-bold hover:bg-[#09B86F] hover:text-white"
-            >
-              KIRISH
+            <Button type="submit" className="bg-green-600 text-white h-[45px]">
+              Kirish
             </Button>
-            {error && <p className="error-message text-red-600">{error}</p>}
+            {error && <p className="text-red-600">{error}</p>}
           </form>
         </TabsContent>
       </Tabs>
