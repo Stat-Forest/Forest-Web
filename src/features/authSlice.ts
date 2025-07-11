@@ -1,6 +1,6 @@
-import { authApi } from "@/services/authApi";
-import { decryptData, encryptData } from "@/utils/crypto";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { authApi } from "@/services/authApi";
+import { encryptData, decryptData } from "@/utils/crypto";
 
 interface User {
   email: string;
@@ -32,11 +32,11 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Oddiy login
     builder.addMatcher(
       authApi.endpoints.login.matchFulfilled,
       (state, action: PayloadAction<any>) => {
         const payload = action.payload;
-
         state.token = payload.access;
         state.user = {
           email: payload.email,
@@ -45,11 +45,26 @@ const authSlice = createSlice({
           access: payload.access,
           refresh: payload.refresh,
         };
-
         encryptData("token", payload.access, "token");
-        console.log(payload.access);
         encryptData("user", payload, "user");
-        console.log(payload);
+      }
+    );
+
+    // EIMZO login
+    builder.addMatcher(
+      authApi.endpoints.eimzoLogin.matchFulfilled,
+      (state, action: PayloadAction<any>) => {
+        const payload = action.payload;
+        state.token = payload.access;
+        state.user = {
+          email: payload.email,
+          user_id: payload.user_id,
+          role: payload.role,
+          access: payload.access,
+          refresh: payload.refresh,
+        };
+        encryptData("token", payload.access, "token");
+        encryptData("user", payload, "user");
       }
     );
   },
