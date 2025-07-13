@@ -20,7 +20,7 @@ jobs:
           node-version: "18"
 
       - name: Paketlarni o‘rnatish
-        run: npm install -f
+        run: npm install --legacy-peer-deps
 
       - name: Projectni build qilish
         run: npm run build
