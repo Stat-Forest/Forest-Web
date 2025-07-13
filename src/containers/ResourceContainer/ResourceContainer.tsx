@@ -21,11 +21,16 @@ import LandRentedChart from "@/components/Charts/LandRentedChart";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import IncomeSum from "@/components/Sum/IncomeSum";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import CancelReportModal from "@/components/Modals/CancelReportModal";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const userCheckTable = user_role !== "tashkilot_hodimi";
@@ -53,14 +58,14 @@ function ResourceContainer() {
   } = useGetAllReportsQuery(
     id
       ? {
-          statement: id,
-          status: "",
-          organization__region: "",
-          statement__period: "",
-        }
+        statement: id,
+        status: "",
+        organization__region: "",
+        statement__period: "",
+      }
       : skipToken
   );
-console.log(tableRowsData)
+  console.log(tableRowsData)
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
 
@@ -181,75 +186,105 @@ console.log(tableRowsData)
   }
 
   return (
-    <div className="py-3">
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          setActiveTab(value);
-          setSelectedRow(null);
-        }}
-        className="w-full"
-      >
-        <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
+    <>
+      <div className="py-3">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            setSelectedRow(null);
+          }}
+          className="w-full"
+        >
+          <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
+            {tableHeadersData.map((col: any) => (
+              <TabsTrigger
+                key={col.id}
+                value={col.title}
+                className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
+              >
+                {col.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
           {tableHeadersData.map((col: any) => (
-            <TabsTrigger
-              key={col.id}
-              value={col.title}
-              className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
-            >
-              {col.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {tableHeadersData.map((col: any) => (
-          <TabsContent key={col.id} value={col.title}>
-            {activeTab === col.title && (
-              <>
-                <div>{chartComponents[id as string] || null}</div>
-                <div>{sumComponents[id as string] || null}</div>
-                <div>
-                  <div className="flex items-center justify-end gap-3 mb-4">
-                    <button
-                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={() => navigate("/resource-management/create")}
-                    >
-                      Yangi hisobod yaratish
-                    </button>
-                    <button
-                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={() => exportToExcel(col?.children, filteredRows)}
-                    >
-                      Hisobodni export qilib olish
-                    </button>
-                    <button
-                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={handlePrint}
-                    >
-                      Hisobodni chop etish
-                    </button>
-                  </div>
-
+            <TabsContent key={col.id} value={col.title}>
+              {activeTab === col.title && (
+                <>
+                  <div>{chartComponents[id as string] || null}</div>
+                  <div>{sumComponents[id as string] || null}</div>
                   <div>
-                    <TableColumn
-                      ref={tableRef}
-                      data={col?.children}
-                      rows={filteredRows}
-                      onRowClick={(row: any) => setSelectedRow(row)}
-                      selectedRow={selectedRow}
-                      userCheckTable={userCheckTable}
-                    />
+                    <div>
+                      <div className="flex justify-end items-center gap-3 mb-3">
+                        {(user_role === "tashkilot_rahbari" || user_role === "bolim_admin") && (
+                          <Button
+                            onClick={() => setIsCancelModalOpen(true)}
+                            className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                          >
+                            Qayta ishlash
+                          </Button>
+                        )}
+                        {user_role == "tashkilot_rahbari" && (
+                          <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
+                            Yuborish
+                          </Button>
+                        )}
+
+                        {user_role == "bolim_admin" && (
+                          <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
+                            Qabul qilish
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 mb-4">
+                        <button
+                          className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
+                          onClick={() => navigate("/resource-management/create")}
+                        >
+                          Yangi hisobod yaratish
+                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="py-2.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
+                              Export
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56 mt-2 mr-2">
+                            <DropdownMenuItem onClick={() => exportToExcel(col?.children, filteredRows)}>
+                              Hisobodni export qilib olish
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handlePrint}>
+                              Hisobodni chop etish
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    <div>
+                      <TableColumn
+                        ref={tableRef}
+                        data={col?.children}
+                        rows={filteredRows}
+                        onRowClick={(row: any) => setSelectedRow(row)}
+                        selectedRow={selectedRow}
+                        userCheckTable={userCheckTable}
+                      />
+                    </div>
+                    <div className="py-14 pr-2">
+                      <ReportItemTable />
+                    </div>
                   </div>
-                  <div className="py-14 pr-2">
-                    <ReportItemTable />
-                  </div>
-                </div>
-              </>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
+                </>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
+      <CancelReportModal open={isCancelModalOpen} reportId="123" setOpen={setIsCancelModalOpen} />
+    </>
   );
 }
 

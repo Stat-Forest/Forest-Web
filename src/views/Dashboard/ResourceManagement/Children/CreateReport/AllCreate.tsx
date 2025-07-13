@@ -52,7 +52,10 @@ function AllCreateReportItem() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
+<<<<<<< HEAD
   const navigate = useNavigate();
+=======
+>>>>>>> d28091c (add accept cancel send button)
 
   const {
     data: organizationsData,
@@ -65,12 +68,21 @@ function AllCreateReportItem() {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
+<<<<<<< HEAD
     { statementId: reportIds, lang },
     {
       skip: !reportIds,
       refetchOnMountOrArgChange: false,
     }
   );
+=======
+    { statementId: reportIds as string, lang },
+    {
+      skip: !reportIds,
+    }
+  );
+
+>>>>>>> d28091c (add accept cancel send button)
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
@@ -182,8 +194,13 @@ function AllCreateReportItem() {
       value: col.title.toLowerCase().includes("tashkilot")
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
+<<<<<<< HEAD
         ? String(planListMap[col.id] ?? "")
         : String(formValues[col.id] || ""),
+=======
+          ? String(planListMap[col.id] ?? "")
+          : String(formValues[col.id] || "15"),
+>>>>>>> d28091c (add accept cancel send button)
     }));
 
     const payload = {
