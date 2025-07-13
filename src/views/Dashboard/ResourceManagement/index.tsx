@@ -12,7 +12,7 @@ function ResourceManagement() {
     data: statementData,
     isLoading,
     isError,
-  } = useGetStatementsReportQuery({lang});
+  } = useGetStatementsReportQuery({ lang });
 
   const currentItem = statementData?.results?.find((parent: any) =>
     parent.children?.some((child: any) => child.id === id)

@@ -9,22 +9,18 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
+  fetchReportDeadlines,
   reportApi,
   useCreateReportMutation,
-  useGetDeadlinesReportQuery,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import { removeCookie } from "@/utils/cookie";
+import { useNavigate } from "react-router-dom";
+import InfiniteSelect from "@/components/ui/InfiniteSelect";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -55,41 +51,51 @@ function findEmptyChildrenColumnIds(
 function AllCreateReportItem() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
+  const lang = useSelector((state: RootState) => state.language.lang);
+  const navigate = useNavigate();
 
-  const {
-    data: deadlines_list,
-    isLoading: isDeadlinesLoading,
-    error: deadlinesError,
-  } = useGetDeadlinesReportQuery();
   const {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
   } = useGetOrganizationReportsQuery();
+
   const {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
-  } = useGetStatementColumnsReportQuery(reportIds as string, {
-    skip: !reportIds,
-  });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: reportIds, lang },
+    {
+      skip: !reportIds,
+      refetchOnMountOrArgChange: false,
+    }
+  );
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
-  const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
+  const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
   const [planListMap, setPlanListMap] = useState<Record<string, number>>({});
-
-  const [createReportItem, { isLoading: isSubmitting }] =
-    useCreateReportMutation();
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
+
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
+
+  // Fetch plan values for "Reja" columns
   useEffect(() => {
     const fetchPlanLists = async () => {
-      if (!tableHeadersData || !selectedOrganizationId || !reportIds) return;
+      if (
+        !selectedOrganizationId ||
+        !reportIds ||
+        !tableHeadersData ||
+        tableHeadersData.length === 0
+      ) {
+        return;
+      }
+
       const allStepsEmptyCols = tableHeadersData
         .map((obj: any) =>
           Array.isArray(obj.children)
@@ -97,9 +103,11 @@ function AllCreateReportItem() {
             : []
         )
         .flat();
+
       const rejaLeafColumns = allStepsEmptyCols.filter((col: any) =>
         col.title.toLowerCase().includes("reja")
       );
+
       const requests = rejaLeafColumns.map(async (col: any) => {
         try {
           const response = await dispatch(
@@ -117,6 +125,7 @@ function AllCreateReportItem() {
           return { columnId: col.id, planValue: 0 };
         }
       });
+
       const results = await Promise.all(requests);
       const newPlanMap: Record<string, number> = {};
       results.forEach(({ columnId, planValue }) => {
@@ -124,16 +133,18 @@ function AllCreateReportItem() {
       });
       setPlanListMap(newPlanMap);
     };
+
     fetchPlanLists();
-  }, [tableHeadersData, selectedOrganizationId, reportIds, dispatch]);
+  }, [selectedOrganizationId, reportIds, dispatch]);
+
+  // Initialize empty columns by step
   useEffect(() => {
     if (tableHeadersData.length > 0) {
-      const allStepsEmptyCols = tableHeadersData.map((obj: any) => {
-        if (Array.isArray(obj.children)) {
-          return findEmptyChildrenColumnIds(obj.children);
-        }
-        return [];
-      });
+      const allStepsEmptyCols = tableHeadersData.map((obj: any) =>
+        Array.isArray(obj.children)
+          ? findEmptyChildrenColumnIds(obj.children)
+          : []
+      );
       setAllEmptyColumnsByStep(allStepsEmptyCols);
       setCurrentStep(0);
     } else {
@@ -141,9 +152,14 @@ function AllCreateReportItem() {
       setCurrentStep(0);
     }
   }, [tableHeadersData]);
+
+  const [createReportItem, { isLoading: isSubmitting }] =
+    useCreateReportMutation();
+
   const handleInputChange = (id: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [id]: value }));
   };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedDeadlineId) {
@@ -159,6 +175,7 @@ function AllCreateReportItem() {
       alert("Iltimos, tashkilot tanlang");
       return;
     }
+
     const allColumns = allEmptyColumnsByStep.flat();
     const report_items = allColumns.map((col) => ({
       statement_column: col.id,
@@ -166,37 +183,45 @@ function AllCreateReportItem() {
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
         ? String(planListMap[col.id] ?? "")
-        : String(formValues[col.id] || "15"),
+        : String(formValues[col.id] || ""),
     }));
+
     const payload = {
       deadline: selectedDeadlineId,
       report_items,
     };
+
     try {
       const res = await createReportItem(payload).unwrap();
       console.log("Yuborildi:", res);
+      removeCookie("reportId");
+      navigate(-1);
       setFormValues({});
       setCurrentStep(0);
     } catch (err: any) {
       console.error("Yuborishda xatolik:", err?.data || err?.message);
     }
   };
-  if (isDeadlinesLoading || isHeaderLoading || isOrgLoading)
+
+  if (isHeaderLoading || isOrgLoading)
     return <p className="p-4 text-lg">Yuklanmoqda...</p>;
-  if (deadlinesError || headersError || orgError)
+
+  if (headersError || orgError)
     return (
       <div className="text-red-500 p-4">
         <p>Xatolik yuz berdi:</p>
         <ul className="list-disc list-inside">
-          {deadlinesError && <li>Deadline ma'lumotlarini yuklashda xatolik</li>}
+          {<li>Deadline ma'lumotlarini yuklashda xatolik</li>}
           {headersError && <li>Jadval ustunlarini olishda xatolik</li>}
           {orgError && <li>Tashkilotlar ro'yxatini olishda xatolik</li>}
         </ul>
       </div>
     );
+
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title || `Qadam ${currentStep + 1}`;
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -205,24 +230,17 @@ function AllCreateReportItem() {
       <div className="flex flex-col gap-4 sm:flex-row">
         <div>
           <label className="block mb-1 text-sm font-medium">Deadline:</label>
-          <Select
+          <InfiniteSelect
+            placeholder="Tanlang"
+            fetchData={fetchReportDeadlines}
+            className="border-none w-[300px] text-base"
+            name="deadline"
             value={selectedDeadlineId}
             onValueChange={setSelectedDeadlineId}
-            required
-          >
-            <SelectTrigger className="w-[300px] text-base">
-              <SelectValue placeholder="Tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {deadlines_list?.results.map((d: any) => (
-                <SelectItem key={d.id} value={d.id}>
-                  {d.submit_at}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
       </div>
+
       {currentEmptyColumns.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="mb-4 flex justify-between">
@@ -269,7 +287,7 @@ function AllCreateReportItem() {
                           required
                         >
                           <option value="">Tanlang</option>
-                          {organizationsData?.results.map((item: any) => (
+                          {organizationsData?.map((item: any) => (
                             <option key={item.id} value={item.id}>
                               {item.name}
                             </option>
@@ -285,7 +303,7 @@ function AllCreateReportItem() {
                     <TableCell>
                       <Input
                         type="text"
-                        value={formValues[col.id] || "15"}
+                        value={formValues[col.id] || ""}
                         onChange={(e) =>
                           handleInputChange(col.id, e.target.value)
                         }
@@ -301,6 +319,7 @@ function AllCreateReportItem() {
       ) : (
         <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
       )}
+
       <div className="flex justify-between items-center pt-4">
         <div className="space-x-2">
           <Button

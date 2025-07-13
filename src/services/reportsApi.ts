@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { base_url, prepareHeaders } from "./baseUrl";
+import { decryptData } from "@/utils/crypto";
 
 export const reportApi = createApi({
   reducerPath: "reportApi",
@@ -51,7 +52,10 @@ export const reportApi = createApi({
     }),
 
     getStatementsReport: builder.query<any, { lang: string }>({
-      query: ({lang}) => ({ url: `/statements/?lang=${lang}`, method: "GET" }),
+      query: ({ lang }) => ({
+        url: `/statements/?lang=${lang}`,
+        method: "GET",
+      }),
       providesTags: ["Reports"],
     }),
     getUsersReport: builder.query<any, { user_id?: string; page: any }>({
@@ -151,6 +155,33 @@ export const reportApi = createApi({
     }),
   }),
 });
+
+export const fetchReportDeadlines = async (page: number, perPage: number) => {
+  const token = decryptData("token", "token");
+
+  if (!token) {
+    throw new Error("No token found. Please log in.");
+  }
+
+  const res = await fetch(
+    `${base_url}/reports/deadlines/?page=${page}&per_page=${perPage}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(`Error ${res.status}: ${errorBody}`);
+  }
+
+  const data = await res.json();
+  return data;
+};
 
 export const {
   // GET

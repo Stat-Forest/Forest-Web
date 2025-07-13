@@ -81,6 +81,7 @@ function CreateFinanceReport() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const navigate = useNavigate();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: deadlines_list,
@@ -96,9 +97,12 @@ function CreateFinanceReport() {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
-  } = useGetStatementColumnsReportQuery(reportIds as string, {
-    skip: !reportIds,
-  });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: reportIds, lang },
+    {
+      skip: !reportIds,
+    }
+  );
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
@@ -436,7 +440,6 @@ function CreateFinanceReport() {
     };
 
     try {
-      console.log("Final submission payload:", payload);
       const res = await createReportItem(payload).unwrap();
       console.log("Report submitted successfully:", res);
       removeCookie("reportId");
@@ -602,7 +605,7 @@ function CreateFinanceReport() {
                             <SelectValue placeholder="Select organization" />
                           </SelectTrigger>
                           <SelectContent>
-                            {organizationsData?.results.map((item: any) => (
+                            {organizationsData?.results?.map((item: any) => (
                               <SelectItem key={item.id} value={item.id}>
                                 {item.name}
                               </SelectItem>
