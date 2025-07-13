@@ -15,6 +15,8 @@ import {
   useGetPlanColumnsReportQuery,
   useGetStatementsReportQuery,
 } from "@/services/reportsApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
@@ -33,12 +35,15 @@ function CreateReport() {
     isLoading: plan_cols_loading,
     error: plan_cols_error,
   } = useGetPlanColumnsReportQuery();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: statment,
     isLoading: statment_loading,
     error: statment_error,
-  } = useGetStatementsReportQuery();
+  } = useGetStatementsReportQuery({
+    lang,
+  });
 
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,7 +58,7 @@ function CreateReport() {
     const payload = {
       organization: selectedOrg,
       column: selectedColumn,
-      statement:statement,
+      statement: statement,
       year,
       plan_value,
     };
@@ -86,7 +91,7 @@ function CreateReport() {
                   Xatolik yuz berdi
                 </div>
               )}
-              {organization?.results.map((item: any) => (
+              {organization?.map((item: any) => (
                 <SelectItem key={item?.id} value={String(item?.id)}>
                   {item.name}
                 </SelectItem>
@@ -98,28 +103,27 @@ function CreateReport() {
         <div className="w-full">
           <Label className="pb-1.5 text-md block">Hisobot formasi</Label>
           <Select onValueChange={setStatement}>
-  <SelectTrigger className="w-full min-h-[45px]">
-    <SelectValue placeholder="Tanlang" />
-  </SelectTrigger>
-  <SelectContent>
-    {statment_loading && (
-      <div className="text-center text-sm py-2">Yuklanmoqda...</div>
-    )}
-    {statment_error && (
-      <div className="text-center text-sm text-red-500 py-2">
-        Xatolik yuz berdi
-      </div>
-    )}
-    {statment?.results.flatMap((item: any) =>
-      item.children.map((child: any) => (
-        <SelectItem key={child.id} value={String(child.id)}>
-          {child.name}
-        </SelectItem>
-      ))
-    )}
-  </SelectContent>
-</Select>
-
+            <SelectTrigger className="w-full min-h-[45px]">
+              <SelectValue placeholder="Tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {statment_loading && (
+                <div className="text-center text-sm py-2">Yuklanmoqda...</div>
+              )}
+              {statment_error && (
+                <div className="text-center text-sm text-red-500 py-2">
+                  Xatolik yuz berdi
+                </div>
+              )}
+              {statment?.results.flatMap((item: any) =>
+                item.children.map((child: any) => (
+                  <SelectItem key={child.id} value={String(child.id)}>
+                    {child.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* PLAN COLUMN */}

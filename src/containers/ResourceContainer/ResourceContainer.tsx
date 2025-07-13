@@ -33,6 +33,8 @@ function ResourceContainer() {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const lang = useSelector((state: RootState) => state.language.lang);
 
+  console.log(selectedRow);
+
   const {
     data: tableHeadersData = [],
     isLoading: isHeadersLoading,
@@ -41,6 +43,8 @@ function ResourceContainer() {
     { statementId: id || "", lang },
     { skip: !id }
   );
+
+  console.log(tableHeadersData);
 
   const {
     data: tableRowsData = [],
