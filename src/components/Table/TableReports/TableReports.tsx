@@ -6,26 +6,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 
 function TableReports({ data }: any) {
+  const { t } = useTranslation();
   return (
     <Table className="w-full">
       <TableHeader>
         <TableRow className="bg-[#eaeaea] h-[50px]">
           <TableHead className="w-[20%] pl-2 text-lg text-[#717171] rounded-tl-lg text-left rounded-bl-lg border-none">
-            Tashkilot nomi
+            {t("item_12")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-            Hisobot nomi
+            {t("item_83")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-            Hisobot davri
+            {t("item_14")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-            Topshirilgan muddati
+            {t("item_15")}
           </TableHead>
           <TableHead className="text-right pr-2 text-[#717171] text-lg rounded-tr-lg rounded-br-lg w-[20%] border-none">
-            Joriy holati
+            {t("item_16")}
           </TableHead>
         </TableRow>
       </TableHeader>
