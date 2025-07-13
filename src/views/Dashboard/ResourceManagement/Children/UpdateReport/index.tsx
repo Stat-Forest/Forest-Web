@@ -58,6 +58,7 @@ function UpdateReportItem() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const { data: reportData, isLoading: isReportLoading } =
     useGetReportByIdQuery(id!);
@@ -66,9 +67,15 @@ function UpdateReportItem() {
   const { data: organizationsData, isLoading: isOrgLoading } =
     useGetOrganizationReportsQuery();
   const { data: tableHeadersData = [], isLoading: isHeaderLoading } =
-    useGetStatementColumnsReportQuery(reportIds as string, {
-      skip: !reportIds,
-    });
+    useGetStatementColumnsReportQuery(
+      {
+        statementId: reportIds,
+        lang,
+      },
+      {
+        skip: !reportIds,
+      }
+    );
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");

@@ -82,7 +82,7 @@ function LeasedLandAccountCreate() {
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
-  const [planListMap, setPlanListMap] = useState<Record<string, number>>({});
+  const [planListMap] = useState<Record<string, number>>({});
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
