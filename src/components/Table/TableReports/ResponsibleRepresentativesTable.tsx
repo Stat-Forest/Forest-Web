@@ -6,8 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 
 function ResponsibleRepresentativesTable({ data }: any) {
+  const { t } = useTranslation();
   return (
     <Table className="w-full">
       <TableHeader>
@@ -16,22 +18,22 @@ function ResponsibleRepresentativesTable({ data }: any) {
             T/r:
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[14%] border-none">
-            Ismi
+            {t("item_19")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[14%] border-none">
-            Familiyasi
+            {t("item_20")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[14%] border-none">
-            Tashkilot nomi
+            {t("item_12")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[14%] border-none">
-            Millati
+            {t("item_21")}
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[14%] border-none">
-            Ma’lumoti
+            {t("item_22")}
           </TableHead>
           <TableHead className="text-right text-[#717171] text-lg rounded-tr-lg rounded-br-lg w-[14%] border-none">
-            Lavozimi
+            {t("item_23")}
           </TableHead>
         </TableRow>
       </TableHeader>

@@ -222,7 +222,7 @@ function Login() {
     const credentials: Credentials = { email, password };
     try {
       await dispatch(authApi.endpoints.login.initiate(credentials)).unwrap();
-      navigate("/");
+      navigate("/main");
     } catch (error: any) {
       console.error("Login failed", error);
       setError("Авторизация не удалась.");
