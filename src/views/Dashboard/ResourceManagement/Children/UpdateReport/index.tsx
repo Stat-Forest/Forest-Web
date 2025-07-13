@@ -67,6 +67,7 @@ function UpdateReportItem() {
   const { data: organizationsData, isLoading: isOrgLoading } =
     useGetOrganizationReportsQuery();
   const { data: tableHeadersData = [], isLoading: isHeaderLoading } =
+<<<<<<< HEAD
     useGetStatementColumnsReportQuery(
       {
         statementId: reportIds,
@@ -76,6 +77,12 @@ function UpdateReportItem() {
         skip: !reportIds,
       }
     );
+=======
+    useGetStatementColumnsReportQuery({ statementId: reportIds as string, lang },
+      {
+        skip: !reportIds,
+      });
+>>>>>>> d28091c (add accept cancel send button)
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
@@ -208,8 +215,8 @@ function UpdateReportItem() {
       value: col.title.toLowerCase().includes("tashkilot")
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
-        ? String(planListMap[col.id] ?? "")
-        : String(formValues[col.id] || "15"),
+          ? String(planListMap[col.id] ?? "")
+          : String(formValues[col.id] || "15"),
     }));
 
     const payload = { deadline: selectedDeadlineId, report_items };

@@ -97,12 +97,19 @@ function CreateFinanceReport() {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
+<<<<<<< HEAD
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds, lang },
     {
       skip: !reportIds,
     }
   );
+=======
+  } = useGetStatementColumnsReportQuery({ statementId: reportIds as string, lang },
+    {
+      skip: !reportIds,
+    });
+>>>>>>> d28091c (add accept cancel send button)
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");

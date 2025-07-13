@@ -23,6 +23,7 @@ function CreateReport() {
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [statement, setStatement] = useState<string | null>(null);
   const [createReport] = usePlanCreateMutation();
+    const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: organization,
@@ -41,9 +42,13 @@ function CreateReport() {
     data: statment,
     isLoading: statment_loading,
     error: statment_error,
+<<<<<<< HEAD
   } = useGetStatementsReportQuery({
     lang,
   });
+=======
+  } = useGetStatementsReportQuery({ lang });
+>>>>>>> d28091c (add accept cancel send button)
 
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -124,6 +129,10 @@ function CreateReport() {
               )}
             </SelectContent>
           </Select>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d28091c (add accept cancel send button)
         </div>
 
         {/* PLAN COLUMN */}
