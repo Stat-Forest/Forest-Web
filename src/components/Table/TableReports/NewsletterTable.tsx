@@ -7,12 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 
 function NewsletterTable({ data }: any) {
+  const { t } = useTranslation();
   const [openRowIndex, setOpenRowIndex] = useState<number | null>(null);
 
   const toggleRow = (index: number) => {
-    setOpenRowIndex(prev => (prev === index ? null : index));
+    setOpenRowIndex((prev) => (prev === index ? null : index));
   };
 
   return (
@@ -23,13 +25,13 @@ function NewsletterTable({ data }: any) {
             T/r:
           </TableHead>
           <TableHead className="text-[#717171] border-none text-lg w-[20%]">
-            Hisobot nomi
+            {t("item_13")}
           </TableHead>
           <TableHead className="text-[#717171] border-none text-lg w-[20%]">
-            Hisobot davri
+            {t("item_14")}
           </TableHead>
           <TableHead className="text-[#717171] border-none text-lg w-[20%]">
-            Hisobot topshirish vahti
+            {t("item_17")}
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -63,9 +65,7 @@ function NewsletterTable({ data }: any) {
                     <ul className="list-disc ml-5 space-y-1">
                       {item.organizations?.length > 0 ? (
                         item.organizations.map((org: any, idx: number) => (
-                          <li key={idx}>
-                            {org.name}
-                          </li>
+                          <li key={idx}>{org.name}</li>
                         ))
                       ) : (
                         <p className="text-gray-500">Tashkilotlar yo'q</p>

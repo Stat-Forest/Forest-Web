@@ -11,7 +11,6 @@
   "item_10": "Malumotnoma olish",
   "item_11": "Yordam va ma'lumot",
   "item_12": "Tashkilot nomi",
-  "item_13": "Hisobot nomi",
   "item_14": "Hisobot davri",
   "item_15": "Topshirilgan muddati",
   "item_16": "Joriy holati",
@@ -63,7 +62,7 @@
   "item_62": "2. Qo‘llanma (PDF shaklida)",
   "item_63": "3. Ko‘p so‘raladigan savollar (FAQ)",
   "item_64": "4. Texnik yordam",
-  "item_65": "5. Video qo‘llanmalar",
+  "item_65": "Video qo‘llanmalar",
   "item_66": "Formati: Excel (.xlsx), Word (.docx), PDF (*.pdf)",
   "item_67": "Elektron imzo: Talab qilinadi (.pfx, .key)",
   "item_68": "[Qo‘llanma yuklab olish (PDF)]",
@@ -80,5 +79,10 @@
   "item_79": "Qidiruv...",
   "item_80": "Tizimdan chiqish",
   "item_81": "Parolni o'zgartirish",
-  "item_82": "Yangi reja yaratish"
+  "item_82": "Yangi reja yaratish",
+  "item_83": "Hisobot nomi",
+  "item_84": "Qabul qilingan",
+  "item_85": "Qaytailgan",
+  "item_86": "Qoralama",
+  "item_87": "Jo'natilgan"
 }
