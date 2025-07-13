@@ -25,6 +25,8 @@ import {
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import { removeCookie } from "@/utils/cookie";
+import { useNavigate } from "react-router-dom";
 
 interface Column {
   id: string;
@@ -70,6 +72,7 @@ function findEmptyChildrenColumnIds(children: any[]) {
 function LandAcquisitionCreate() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: deadlines_list,
@@ -85,9 +88,12 @@ function LandAcquisitionCreate() {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
-  } = useGetStatementColumnsReportQuery(reportIds as string, {
-    skip: !reportIds,
-  });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: reportIds, lang },
+    {
+      skip: !reportIds,
+    }
+  );
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
@@ -99,6 +105,7 @@ function LandAcquisitionCreate() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
+  const navigate = useNavigate();
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
@@ -237,10 +244,12 @@ function LandAcquisitionCreate() {
 
     try {
       console.log(report_items);
-      //   await createReportItem({
-      //     deadline: selectedDeadlineId,
-      //     report_items,
-      //   }).unwrap();
+      await createReportItem({
+        deadline: selectedDeadlineId,
+        report_items,
+      }).unwrap();
+      removeCookie("reportId");
+      navigate(-1);
       setFormValues({});
       setCurrentStep(0);
     } catch (err: any) {
@@ -326,7 +335,12 @@ function LandAcquisitionCreate() {
                 </TableRow>
               );
             }
-            if (col.fullParentChain.toLowerCase().includes("tashkilot")) {
+            if (
+              col.fullParentChain.toLowerCase().includes("tashkilot") ||
+              col.fullParentChain
+                .toLowerCase()
+                .includes("наименование организации")
+            ) {
               return (
                 <TableRow key={col.id}>
                   <TableCell>{col.fullParentChain}</TableCell>

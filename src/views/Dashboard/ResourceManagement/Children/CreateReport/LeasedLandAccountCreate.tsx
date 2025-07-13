@@ -54,6 +54,7 @@ function findEmptyChildrenColumnIds(children: any[]) {
 function LeasedLandAccountCreate() {
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const navigate = useNavigate();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: deadlines_list,
@@ -69,10 +70,13 @@ function LeasedLandAccountCreate() {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
-  } = useGetStatementColumnsReportQuery(reportIds as string, {
-    skip: !reportIds,
-    refetchOnMountOrArgChange: false,
-  });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: reportIds, lang },
+    {
+      skip: !reportIds,
+      refetchOnMountOrArgChange: false,
+    }
+  );
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");

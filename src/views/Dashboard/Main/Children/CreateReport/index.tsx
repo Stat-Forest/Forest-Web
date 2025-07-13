@@ -15,6 +15,8 @@ import {
   useGetPlanColumnsReportQuery,
   useGetStatementsReportQuery,
 } from "@/services/reportsApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
@@ -33,12 +35,15 @@ function CreateReport() {
     isLoading: plan_cols_loading,
     error: plan_cols_error,
   } = useGetPlanColumnsReportQuery();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: statment,
     isLoading: statment_loading,
     error: statment_error,
-  } = useGetStatementsReportQuery();
+  } = useGetStatementsReportQuery({
+    lang,
+  });
 
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

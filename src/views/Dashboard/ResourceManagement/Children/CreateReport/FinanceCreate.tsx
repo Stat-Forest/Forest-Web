@@ -81,6 +81,7 @@ function CreateFinanceReport() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const navigate = useNavigate();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: deadlines_list,
@@ -96,9 +97,12 @@ function CreateFinanceReport() {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
-  } = useGetStatementColumnsReportQuery(reportIds as string, {
-    skip: !reportIds,
-  });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: reportIds, lang },
+    {
+      skip: !reportIds,
+    }
+  );
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
