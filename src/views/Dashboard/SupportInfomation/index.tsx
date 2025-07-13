@@ -73,7 +73,7 @@ function SupportInformation() {
 
         <AccordionItem value="item-5" className="shadow py-2 rounded-lg px-5">
           <AccordionTrigger className="text-2xl font-medium text-green-600">
-            {t("item_65")}
+            5. {t("item_65")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
             <p>{t("item_76")}</p>

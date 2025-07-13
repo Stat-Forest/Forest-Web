@@ -6,23 +6,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 
 function CreatedPlantable({ data }: any) {
+  const { t } = useTranslation();
   return (
     <Table className="w-full">
       <TableHeader>
         <TableRow className="bg-[#eaeaea] h-[50px]">
           <TableHead className="w-[20%] text-lg text-[#717171] text-left rounded-tl-lg rounded-bl-lg border-none">
-            Tashkilot nomi
+            {t("item_12")}
           </TableHead>
           <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
-            Hisobot nomi
+            {t("item_83")}
           </TableHead>
           <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
-            Hisobot davri
+            {t("item_14")}
           </TableHead>
           <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
-            Topshirilgan muddati
+            {t("item_15")}
           </TableHead>
         </TableRow>
       </TableHeader>
