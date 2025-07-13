@@ -57,6 +57,7 @@ function findEmptyChildrenColumnIds(
 function EmployeeAnalysisCreate() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: deadlines_list,
@@ -74,10 +75,13 @@ function EmployeeAnalysisCreate() {
     data: tableHeadersData = [],
     isLoading: isHeaderLoading,
     error: headersError,
-  } = useGetStatementColumnsReportQuery(reportIds as string, {
-    skip: !reportIds,
-    refetchOnMountOrArgChange: false,
-  });
+  } = useGetStatementColumnsReportQuery(
+    { statementId: reportIds, lang },
+    {
+      skip: !reportIds,
+      refetchOnMountOrArgChange: false,
+    }
+  );
 
   const navigate = useNavigate();
 
