@@ -65,12 +65,12 @@ function AllCreateReportItem() {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
-    { statementId: reportIds, lang },
+    { statementId: reportIds as string, lang },
     {
       skip: !reportIds,
-      refetchOnMountOrArgChange: false,
     }
   );
+
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
@@ -182,8 +182,8 @@ function AllCreateReportItem() {
       value: col.title.toLowerCase().includes("tashkilot")
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
-        ? String(planListMap[col.id] ?? "")
-        : String(formValues[col.id] || ""),
+        ? String(planListMap[col.id] ?? "1")
+        : String(formValues[col.id] || "1"),
     }));
 
     const payload = {
@@ -303,7 +303,7 @@ function AllCreateReportItem() {
                     <TableCell>
                       <Input
                         type="text"
-                        value={formValues[col.id] || ""}
+                        value={formValues[col.id] || "1"}
                         onChange={(e) =>
                           handleInputChange(col.id, e.target.value)
                         }

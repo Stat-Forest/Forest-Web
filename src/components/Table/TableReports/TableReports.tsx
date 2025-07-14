@@ -9,6 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 function TableReports({ data }: any) {
+  console.log(data)
   const { t } = useTranslation();
   return (
     <Table className="w-full">
@@ -35,7 +36,7 @@ function TableReports({ data }: any) {
         {data?.map((item: any, index: any) => (
           <TableRow className="h-[50px]" key={index}>
             <TableCell className="w-[20%] text-lg font-[300] border-none">
-              {item?.report_items[0].value}
+              {item?.organization_name}
             </TableCell>
             <TableCell className="w-[20%] text-base font-[300] border-none">
               {item?.statement_name}
