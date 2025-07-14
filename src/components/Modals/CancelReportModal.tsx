@@ -6,20 +6,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useCancelReportMutation } from "@/services/reportsApi"; // ✅ mutation import qilindi
 
 type Props = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  reportId: string; // agar hisobot ID kerak bo‘lsa
+  reportId: string;
 };
 
 export default function CancelReportModal({ open, setOpen, reportId }: Props) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Bu yerga RTK Query mutation hookni qo‘shing (misol: useCancelReportMutation)
-  // const [cancelReport] = useCancelReportMutation();
+  const [cancelReport, { isLoading }] = useCancelReportMutation(); // ✅ mutation ishlatilmoqda
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,19 +29,17 @@ export default function CancelReportModal({ open, setOpen, reportId }: Props) {
     }
 
     try {
-      setIsLoading(true);
+      await cancelReport({
+        id: reportId,
+        cancel_reason: reason,
+      }).unwrap();
 
-      // Backendga so‘rov yuborish (agar kerak bo‘lsa):
-      // await cancelReport({ id: reportId, reason }).unwrap();
-
-      alert("Hisobot muvaffaqiyatli qaytarildi");
+      alert("Hisobot qaytarildi");
       setReason("");
       setOpen(false);
     } catch (err: any) {
       const msg = err?.data?.message || "Xatolik yuz berdi";
       setError(msg);
-    } finally {
-      setIsLoading(false);
     }
   };
 

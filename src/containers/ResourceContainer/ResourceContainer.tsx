@@ -22,23 +22,17 @@ import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import IncomeSum from "@/components/Sum/IncomeSum";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import CancelReportModal from "@/components/Modals/CancelReportModal";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const userCheckTable = user_role !== "tashkilot_hodimi";
 
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const lang = useSelector((state: RootState) => state.language.lang);
-
-  console.log(selectedRow);
 
   const {
     data: tableHeadersData = [],
@@ -48,8 +42,6 @@ function ResourceContainer() {
     { statementId: id || "", lang },
     { skip: !id }
   );
-
-  console.log(tableHeadersData);
 
   const {
     data: tableRowsData = [],
@@ -65,7 +57,6 @@ function ResourceContainer() {
       }
       : skipToken
   );
-  console.log(tableRowsData)
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
 
@@ -215,52 +206,28 @@ function ResourceContainer() {
                   <div>{chartComponents[id as string] || null}</div>
                   <div>{sumComponents[id as string] || null}</div>
                   <div>
-                    <div>
-                      <div className="flex justify-end items-center gap-3 mb-3">
-                        {(user_role === "tashkilot_rahbari" || user_role === "bolim_admin") && (
-                          <Button
-                            onClick={() => setIsCancelModalOpen(true)}
-                            className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
-                          >
-                            Qayta ishlash
-                          </Button>
-                        )}
-                        {user_role == "tashkilot_rahbari" && (
-                          <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
-                            Yuborish
-                          </Button>
-                        )}
-
-                        {user_role == "bolim_admin" && (
-                          <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
-                            Qabul qilish
-                          </Button>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-end gap-3 mb-4">
-                        <button
-                          className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
-                          onClick={() => navigate("/resource-management/create")}
-                        >
-                          Yangi hisobod yaratish
-                        </button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="py-2.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
-                              Export
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="w-56 mt-2 mr-2">
-                            <DropdownMenuItem onClick={() => exportToExcel(col?.children, filteredRows)}>
-                              Hisobodni export qilib olish
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handlePrint}>
-                              Hisobodni chop etish
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                    <div className="flex items-center justify-end gap-3 mb-4">
+                      <button
+                        className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
+                        onClick={() => navigate("/resource-management/create")}
+                      >
+                        Yangi hisobod yaratish
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="py-2.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
+                            Export
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 mt-2 mr-2">
+                          <DropdownMenuItem onClick={() => exportToExcel(col?.children, filteredRows)}>
+                            Hisobodni export qilib olish
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handlePrint}>
+                            Hisobodni chop etish
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     <div>
@@ -271,6 +238,7 @@ function ResourceContainer() {
                         onRowClick={(row: any) => setSelectedRow(row)}
                         selectedRow={selectedRow}
                         userCheckTable={userCheckTable}
+                        tableRowsData={tableRowsData}
                       />
                     </div>
                     <div className="py-14 pr-2">
@@ -283,7 +251,6 @@ function ResourceContainer() {
           ))}
         </Tabs>
       </div>
-      <CancelReportModal open={isCancelModalOpen} reportId="123" setOpen={setIsCancelModalOpen} />
     </>
   );
 }
