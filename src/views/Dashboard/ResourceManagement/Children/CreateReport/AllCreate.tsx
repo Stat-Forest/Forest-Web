@@ -52,10 +52,7 @@ function AllCreateReportItem() {
   const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
-<<<<<<< HEAD
   const navigate = useNavigate();
-=======
->>>>>>> d28091c (add accept cancel send button)
 
   const {
     data: organizationsData,
@@ -68,21 +65,12 @@ function AllCreateReportItem() {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
-<<<<<<< HEAD
-    { statementId: reportIds, lang },
-    {
-      skip: !reportIds,
-      refetchOnMountOrArgChange: false,
-    }
-  );
-=======
     { statementId: reportIds as string, lang },
     {
       skip: !reportIds,
     }
   );
 
->>>>>>> d28091c (add accept cancel send button)
 
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
@@ -194,13 +182,8 @@ function AllCreateReportItem() {
       value: col.title.toLowerCase().includes("tashkilot")
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
-<<<<<<< HEAD
-        ? String(planListMap[col.id] ?? "")
-        : String(formValues[col.id] || ""),
-=======
-          ? String(planListMap[col.id] ?? "")
-          : String(formValues[col.id] || "15"),
->>>>>>> d28091c (add accept cancel send button)
+        ? String(planListMap[col.id] ?? "1")
+        : String(formValues[col.id] || "1"),
     }));
 
     const payload = {
@@ -320,7 +303,7 @@ function AllCreateReportItem() {
                     <TableCell>
                       <Input
                         type="text"
-                        value={formValues[col.id] || ""}
+                        value={formValues[col.id] || "1"}
                         onChange={(e) =>
                           handleInputChange(col.id, e.target.value)
                         }
