@@ -21,6 +21,7 @@ import LandRentedChart from "@/components/Charts/LandRentedChart";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import IncomeSum from "@/components/Sum/IncomeSum";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -33,8 +34,6 @@ function ResourceContainer() {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const lang = useSelector((state: RootState) => state.language.lang);
 
-  console.log(selectedRow);
-
   const {
     data: tableHeadersData = [],
     isLoading: isHeadersLoading,
@@ -44,8 +43,6 @@ function ResourceContainer() {
     { skip: !id }
   );
 
-  console.log(tableHeadersData);
-
   const {
     data: tableRowsData = [],
     isLoading: isRowsLoading,
@@ -53,14 +50,13 @@ function ResourceContainer() {
   } = useGetAllReportsQuery(
     id
       ? {
-          statement: id,
-          status: "",
-          organization__region: "",
-          statement__period: "",
-        }
+        statement: id,
+        status: "",
+        organization__region: "",
+        statement__period: "",
+      }
       : skipToken
   );
-console.log(tableRowsData)
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
 
@@ -181,75 +177,81 @@ console.log(tableRowsData)
   }
 
   return (
-    <div className="py-3">
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          setActiveTab(value);
-          setSelectedRow(null);
-        }}
-        className="w-full"
-      >
-        <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
+    <>
+      <div className="py-3">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            setSelectedRow(null);
+          }}
+          className="w-full"
+        >
+          <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
+            {tableHeadersData.map((col: any) => (
+              <TabsTrigger
+                key={col.id}
+                value={col.title}
+                className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
+              >
+                {col.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
           {tableHeadersData.map((col: any) => (
-            <TabsTrigger
-              key={col.id}
-              value={col.title}
-              className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
-            >
-              {col.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {tableHeadersData.map((col: any) => (
-          <TabsContent key={col.id} value={col.title}>
-            {activeTab === col.title && (
-              <>
-                <div>{chartComponents[id as string] || null}</div>
-                <div>{sumComponents[id as string] || null}</div>
-                <div>
-                  <div className="flex items-center justify-end gap-3 mb-4">
-                    <button
-                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={() => navigate("/resource-management/create")}
-                    >
-                      Yangi hisobod yaratish
-                    </button>
-                    <button
-                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={() => exportToExcel(col?.children, filteredRows)}
-                    >
-                      Hisobodni export qilib olish
-                    </button>
-                    <button
-                      className="bg-blue-500 text-md font-semibold text-white w-[250px] py-3 rounded"
-                      onClick={handlePrint}
-                    >
-                      Hisobodni chop etish
-                    </button>
-                  </div>
-
+            <TabsContent key={col.id} value={col.title}>
+              {activeTab === col.title && (
+                <>
+                  <div>{chartComponents[id as string] || null}</div>
+                  <div>{sumComponents[id as string] || null}</div>
                   <div>
-                    <TableColumn
-                      ref={tableRef}
-                      data={col?.children}
-                      rows={filteredRows}
-                      onRowClick={(row: any) => setSelectedRow(row)}
-                      selectedRow={selectedRow}
-                      userCheckTable={userCheckTable}
-                    />
+                    <div className="flex items-center justify-end gap-3 mb-4">
+                      <button
+                        className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
+                        onClick={() => navigate("/resource-management/create")}
+                      >
+                        Yangi hisobod yaratish
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="py-2.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
+                            Export
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 mt-2 mr-2">
+                          <DropdownMenuItem onClick={() => exportToExcel(col?.children, filteredRows)}>
+                            Hisobodni export qilib olish
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handlePrint}>
+                            Hisobodni chop etish
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <div>
+                      <TableColumn
+                        ref={tableRef}
+                        data={col?.children}
+                        rows={filteredRows}
+                        onRowClick={(row: any) => setSelectedRow(row)}
+                        selectedRow={selectedRow}
+                        userCheckTable={userCheckTable}
+                        tableRowsData={tableRowsData}
+                      />
+                    </div>
+                    <div className="py-14 pr-2">
+                      <ReportItemTable />
+                    </div>
                   </div>
-                  <div className="py-14 pr-2">
-                    <ReportItemTable />
-                  </div>
-                </div>
-              </>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
+                </>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
+    </>
   );
 }
 

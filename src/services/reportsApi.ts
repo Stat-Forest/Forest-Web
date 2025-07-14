@@ -108,6 +108,27 @@ export const reportApi = createApi({
         body: params,
       }),
     }),
+    sendReport: builder.mutation({
+      query: ({ id }) => ({
+        url: `/send/`,
+        method: "POST",
+        body: { id },
+      }),
+    }),
+    acceptReport: builder.mutation({
+      query: ({ id }) => ({
+        url: `/accept/`,
+        method: "POST",
+        body: { id },
+      }),
+    }),
+    cancelReport: builder.mutation({
+      query: ({ id, cancel_reason }) => ({
+        url: `/cancel/`,
+        method: "POST",
+        body: { id, cancel_reason },
+      }),
+    }),
     PlanCreate: builder.mutation({
       query: (payload) => ({
         url: `/plan-create/`,
@@ -202,6 +223,9 @@ export const {
   useSubmitReportFeedbackMutation,
   useGeneratePdfReportMutation,
   usePlanCreateMutation,
+  useSendReportMutation,
+  useCancelReportMutation,
+  useAcceptReportMutation,
 
   // PUT
   useUpdateReportMutation,

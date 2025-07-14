@@ -23,6 +23,7 @@ function CreateReport() {
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [statement, setStatement] = useState<string | null>(null);
   const [createReport] = usePlanCreateMutation();
+  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: organization,
@@ -35,15 +36,12 @@ function CreateReport() {
     isLoading: plan_cols_loading,
     error: plan_cols_error,
   } = useGetPlanColumnsReportQuery();
-  const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: statment,
     isLoading: statment_loading,
     error: statment_error,
-  } = useGetStatementsReportQuery({
-    lang,
-  });
+  } = useGetStatementsReportQuery({ lang });
 
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -124,6 +122,7 @@ function CreateReport() {
               )}
             </SelectContent>
           </Select>
+
         </div>
 
         {/* PLAN COLUMN */}
