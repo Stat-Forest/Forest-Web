@@ -41,8 +41,9 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "dist/*"
+          source: "dist/**"
           target: "/var/www/stat-ormon/"
+          strip_components: 1
 
       - name: Nginx reload qilish
         uses: appleboy/ssh-action@v0.1.10
