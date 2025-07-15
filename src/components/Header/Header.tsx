@@ -15,30 +15,50 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/features/authSlice";
 import { useNavigate, useLocation } from "react-router-dom";
-
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
-import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { setLanguage } from "@/features/languageSlice";
 import { useState } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
+
+// 🔁 Import all RTK Query APIs
+import { authApi } from "@/services/authApi";
+import { reportApi } from "@/services/reportsApi";
+import { generalApi } from "@/services/generalApi";
+import { statistikApi } from "@/services/statistikApi";
+import { sumApi } from "@/services/sumApi";
+
+// 🧹 Import persistor for redux-persist
+import { persistor } from "@/app/store";
 
 function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-
   const [open, setOpen] = useState(false);
 
   const currentLang = useSelector((state: RootState) => state.language.lang);
 
   const handleLogout = () => {
+    // 🔐 Remove token & user from redux and localStorage
     dispatch(logout());
+
+    // 🔁 Clear RTK Query caches
+    dispatch(authApi.util.resetApiState());
+    dispatch(reportApi.util.resetApiState());
+    dispatch(generalApi.util.resetApiState());
+    dispatch(statistikApi.util.resetApiState());
+    dispatch(sumApi.util.resetApiState());
+
+    // 🧹 Clear persisted redux state
+    persistor.purge();
+
+    // ↪️ Navigate to login
     navigate("/login");
   };
 
@@ -69,6 +89,7 @@ function Header() {
             <VideoIcon />
             {t("item_65")}
           </Button>
+
           <Select value={currentLang} onValueChange={handleChangeLang}>
             <SelectTrigger className="w-[120px] min-h-[42px] shadow-none">
               <SelectValue />
@@ -78,7 +99,9 @@ function Header() {
               <SelectItem value="ru">Русский</SelectItem>
             </SelectContent>
           </Select>
-          |
+
+          <span>|</span>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="h-[40px] w-[40px] rounded-full bg-transparent border-1 text-[#09B86F] hover:text-[white] hover:bg-[#09B86F]">
@@ -96,6 +119,7 @@ function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
           <Button
             className="h-[40px] w-[40px] bg-transparent border-1 hover:bg-[#FF5445] text-[#FF5445] hover:text-[white]"
             onClick={handleLogout}
@@ -104,6 +128,7 @@ function Header() {
           </Button>
         </div>
       </div>
+
       <ChangePasswordModal open={open} setOpen={setOpen} />
     </>
   );

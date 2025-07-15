@@ -212,12 +212,18 @@ function ResourceContainer() {
                   <div>{sumComponents[id as string] || null}</div>
                   <div>
                     <div className="flex items-center justify-end gap-3 mb-4">
-                      <button
-                        className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
-                        onClick={() => navigate("/resource-management/create")}
-                      >
-                        Yangi hisobod yaratish
-                      </button>
+                      {(user_role === "tashkilot_hodimi" ||
+                        user_role === "super_admin" ||
+                        user_role === "hududiy_boshqarma") && (
+                        <button
+                          className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
+                          onClick={() =>
+                            navigate("/resource-management/create")
+                          }
+                        >
+                          Yangi hisobod yaratish
+                        </button>
+                      )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="py-2.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">

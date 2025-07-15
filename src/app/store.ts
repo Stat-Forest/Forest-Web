@@ -8,18 +8,34 @@ import { generalApi } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
 
-export const store = configureStore({
-  reducer: {
-    [reportApi.reducerPath]: reportApi.reducer,
-    [authApi.reducerPath]: authApi.reducer,
-    [generalApi.reducerPath]: generalApi.reducer,
-    [statistikApi.reducerPath]: statistikApi.reducer,
-    [sumApi.reducerPath]: sumApi.reducer,
+// 🆕 persist qo‘shiladi
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // localStorage ishlatish uchun
+import { combineReducers } from "redux";
 
-    auth: authReducer,
-    report: reportReducer,
-    language: languageReducer,
+const rootReducer = combineReducers({
+  [reportApi.reducerPath]: reportApi.reducer,
+  [authApi.reducerPath]: authApi.reducer,
+  [generalApi.reducerPath]: generalApi.reducer,
+  [statistikApi.reducerPath]: statistikApi.reducer,
+  [sumApi.reducerPath]: sumApi.reducer,
+
+  auth: authReducer,
+  report: reportReducer,
+  language: languageReducer,
+});
+
+const persistedReducer = persistReducer(
+  {
+    key: "root",
+    storage,
+    whitelist: ["auth", "language"], // faqat qaysi slice'lar saqlansin
   },
+  rootReducer
+);
+
+export const store = configureStore({
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
@@ -31,6 +47,9 @@ export const store = configureStore({
       sumApi.middleware
     ),
 });
+
+// 🆕 persist uchun export
+export const persistor = persistStore(store);
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
