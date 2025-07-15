@@ -17,7 +17,6 @@ function MainPage() {
 
       {/* container */}
       <MainContainer />
-      <h1>Hello</h1>
     </div>
   );
 }
