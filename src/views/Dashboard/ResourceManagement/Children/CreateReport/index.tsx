@@ -20,13 +20,13 @@ function CreateReportItem() {
     return <CreateFinanceReport />;
   } else if (reportIds === "d8ee1c2f-0af0-4658-9e33-3eea672c49dc") {
     return <FundCreate />;
-  } else if (reportIds === "b6f99f7d-3d32-4201-9794-716017fe5bf0") {
+  } else if (reportIds === "b9ad04fd-d7ff-4233-a25d-d30cf5c81ffc") {
     return <EmployeeCountCreate />;
   } else if (reportIds === "8e9a4650-39a2-41ff-9c47-f180acc839e5") {
     return <LandAcquisitionCreate />;
   } else if (reportIds === "b85cc419-c658-4381-9f17-d419861749a3") {
     return <LeasedLandAccountCreate />;
-  } else if (reportIds === "a6c79bc4-d63f-4122-8bac-e4340e07fc60") {
+  } else if (reportIds === "85ec062e-3f6f-4f53-9465-21319fd89581") {
     return <EmployeeAnalysisCreate />;
   } else if (reportIds === "c613b0f6-6834-4c06-8c3b-19cdbf45601d") {
     return <ClosedRootCreate />;
