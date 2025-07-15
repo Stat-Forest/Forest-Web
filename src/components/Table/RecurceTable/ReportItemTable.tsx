@@ -10,16 +10,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function ReportItemTable() {
   const { id } = useParams();
 
-  // Filter state'lari
   const [selectedOrganization, setSelectedOrganization] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // API Query
   const {
     data: report,
     isLoading,
@@ -28,9 +29,10 @@ function ReportItemTable() {
     id
       ? {
           statement: id,
-          status: selectedStatus,
+          status: `status=${selectedStatus}`,
           organization__region: selectedOrganization,
           statement__period: selectedPeriod,
+          search: searchTerm,
         }
       : skipToken
   );
@@ -41,11 +43,23 @@ function ReportItemTable() {
   return (
     <>
       <div className="flex items-center gap-5 mb-6">
-        {/* Tashkilot Select */}
         <div>
-          <Select onValueChange={(value) => setSelectedOrganization(value)}>
+          <Input
+            type="text"
+            placeholder="Qidiruv..."
+            className="w-[260px] text-xl min-h-[40px] border-black"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <Select
+            value={selectedOrganization}
+            onValueChange={(value) => setSelectedOrganization(value)}
+          >
             <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-              <SelectValue placeholder="Tashkilot nomi" />
+              <SelectValue placeholder="Region" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="tashkent">Tashkent</SelectItem>
@@ -65,9 +79,11 @@ function ReportItemTable() {
           </Select>
         </div>
 
-        {/* Hisobot turi Select */}
         <div>
-          <Select onValueChange={(value) => setSelectedPeriod(value)}>
+          <Select
+            value={selectedPeriod}
+            onValueChange={(value) => setSelectedPeriod(value)}
+          >
             <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
               <SelectValue placeholder="Hisobot turi" />
             </SelectTrigger>
@@ -81,9 +97,11 @@ function ReportItemTable() {
           </Select>
         </div>
 
-        {/* Hisobot holati Select */}
         <div>
-          <Select onValueChange={(value) => setSelectedStatus(value)}>
+          <Select
+            value={selectedStatus}
+            onValueChange={(value) => setSelectedStatus(value)}
+          >
             <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
               <SelectValue placeholder="Hisobot holati" />
             </SelectTrigger>
@@ -94,6 +112,19 @@ function ReportItemTable() {
               <SelectItem value="accepted">Qabul qilingan</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div>
+          <Button
+            onClick={() => {
+              setSelectedOrganization("");
+              setSelectedPeriod("");
+              setSelectedStatus("");
+              setSearchTerm("");
+            }}
+            className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
+          >
+            Reset
+          </Button>
         </div>
       </div>
 
