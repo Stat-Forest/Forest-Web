@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Edit2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import { useAcceptReportMutation, useSendReportMutation } from "@/services/reportsApi";
+import {
+  useAcceptReportMutation,
+  useDeleteReportMutation,
+  useSendReportMutation,
+} from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
@@ -13,7 +17,14 @@ import QRCodeGenerator from "@/components/QRCodeGenerator";
 
 const TableColumn = forwardRef(
   (
-    { data = [], rows = [], onRowClick, selectedRow, userCheckTable, tableRowsData }: any,
+    {
+      data = [],
+      rows = [],
+      onRowClick,
+      selectedRow,
+      userCheckTable,
+      tableRowsData,
+    }: any,
     ref
   ) => {
     const tableRef = useRef<HTMLDivElement>(null);
@@ -22,8 +33,9 @@ const TableColumn = forwardRef(
     const [sendReport, { isLoading: isSending }] = useSendReportMutation();
     const user_role = useSelector((state: RootState) => state.auth.user?.role);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-    const [acceptReport, { isLoading: isAccepting }] = useAcceptReportMutation();
-
+    const [deleteReport] = useDeleteReportMutation();
+    const [acceptReport, { isLoading: isAccepting }] =
+      useAcceptReportMutation();
 
     useImperativeHandle(ref, () => ({
       getTable: () => tableRef.current?.innerHTML,
@@ -38,7 +50,7 @@ const TableColumn = forwardRef(
       }, 0);
     };
 
-    console.log(selectedRow)
+    console.log(selectedRow);
 
     const maxDepth = getMaxDepth(data);
 
@@ -78,43 +90,43 @@ const TableColumn = forwardRef(
 
     const headerRows = renderHeaderRows();
 
-//     const handlePrint = () => {
-//       if (!printRef.current) return;
-//       const printContents = printRef.current.innerHTML;
-//       const printWindow = window.open("", "_blank");
-//       if (printWindow) {
-//         printWindow.document.write(`
-//   <html>
-//     <head>
-//       <title>Print Report</title>
-//       <style>
-//         * {
-//           font-family: sans-serif;
-//           box-sizing: border-box;
-//         }
-//         table, th, td {
-//           border: 1px solid black;
-//           border-collapse: collapse;
-//           padding: 6px;
-//           text-align: center;
-//         }
-//         body {
-//           padding: 20px;
-//         }
-//       </style>
-//     </head>
-//     <body>
-//       ${printContents}
-//     </body>
-//   </html>
-// `);
+    //     const handlePrint = () => {
+    //       if (!printRef.current) return;
+    //       const printContents = printRef.current.innerHTML;
+    //       const printWindow = window.open("", "_blank");
+    //       if (printWindow) {
+    //         printWindow.document.write(`
+    //   <html>
+    //     <head>
+    //       <title>Print Report</title>
+    //       <style>
+    //         * {
+    //           font-family: sans-serif;
+    //           box-sizing: border-box;
+    //         }
+    //         table, th, td {
+    //           border: 1px solid black;
+    //           border-collapse: collapse;
+    //           padding: 6px;
+    //           text-align: center;
+    //         }
+    //         body {
+    //           padding: 20px;
+    //         }
+    //       </style>
+    //     </head>
+    //     <body>
+    //       ${printContents}
+    //     </body>
+    //   </html>
+    // `);
 
-//         printWindow.document.close();
-//         printWindow.focus();
-//         printWindow.print();
-//         printWindow.close();
-//       }
-//     };
+    //         printWindow.document.close();
+    //         printWindow.focus();
+    //         printWindow.print();
+    //         printWindow.close();
+    //       }
+    //     };
 
     return (
       <>
@@ -185,6 +197,7 @@ const TableColumn = forwardRef(
                         className="bg-[#09B86F] hover:bg-[#09B86F]"
                         onClick={(e) => {
                           e.stopPropagation();
+                          deleteReport(row.id);
                           console.log(row.id);
                         }}
                       >
@@ -202,13 +215,11 @@ const TableColumn = forwardRef(
         {userCheckTable && selectedRow && (
           <>
             <div className="flex items-center justify-between my-5">
-              <div className="flex items-center gap-2">
-              </div>
+              <div className="flex items-center gap-2"></div>
               <div>
-
-
                 <div className="flex justify-end items-center gap-3 mb-3">
-                  {(user_role === "tashkilot_rahbari" || user_role === "bolim_admin") && (
+                  {(user_role === "tashkilot_rahbari" ||
+                    user_role === "bolim_admin") && (
                     <Button
                       onClick={() => setIsCancelModalOpen(true)}
                       className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
@@ -225,10 +236,14 @@ const TableColumn = forwardRef(
                         }
 
                         try {
-                          await sendReport({ id: tableRowsData[0]?.id }).unwrap();
+                          await sendReport({
+                            id: tableRowsData[0]?.id,
+                          }).unwrap();
                           alert("Hisobot muvaffaqiyatli yuborildi!");
                         } catch (error: any) {
-                          const msg = error?.data?.message || "Hisobot yuborishda xatolik yuz berdi";
+                          const msg =
+                            error?.data?.message ||
+                            "Hisobot yuborishda xatolik yuz berdi";
                           alert(msg);
                         }
                       }}
@@ -239,8 +254,6 @@ const TableColumn = forwardRef(
                     </Button>
                   )}
 
-
-
                   {user_role == "bolim_admin" && (
                     <Button
                       onClick={async () => {
@@ -250,10 +263,14 @@ const TableColumn = forwardRef(
                         }
 
                         try {
-                          await acceptReport({ id: tableRowsData[0]?.id }).unwrap();
+                          await acceptReport({
+                            id: tableRowsData[0]?.id,
+                          }).unwrap();
                           alert("Hisobot muvaffaqiyatli qabul qilindi!");
                         } catch (error: any) {
-                          const msg = error?.data?.message || "Qabul qilishda xatolik yuz berdi";
+                          const msg =
+                            error?.data?.message ||
+                            "Qabul qilishda xatolik yuz berdi";
                           alert(msg);
                         }
                       }}
@@ -262,9 +279,9 @@ const TableColumn = forwardRef(
                     >
                       {isAccepting ? "Qabul qilinmoqda..." : "Qabul qilish"}
                     </Button>
-
                   )}
-                  { //  <DropdownMenu>
+                  {
+                    //  <DropdownMenu>
                     //   <DropdownMenuTrigger asChild>
                     //     <button className="py-1.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
                     //       Export
@@ -289,34 +306,58 @@ const TableColumn = forwardRef(
                   {headerRows.map((row, rowIndex) => (
                     <tr key={rowIndex}>
                       {rowIndex === 0 && (
-                        <th rowSpan={maxDepth} className="border border-black px-2 py-1 text-center">T/R</th>
+                        <th
+                          rowSpan={maxDepth}
+                          className="border border-black px-2 py-1 text-center"
+                        >
+                          T/R
+                        </th>
                       )}
                       {row.map((cell: any, cellIndex: number) => (
-                        <th key={cellIndex} className="border w-[400px] border-black px-2 py-1 text-center" colSpan={cell.colSpan} rowSpan={cell.rowSpan}>
+                        <th
+                          key={cellIndex}
+                          className="border w-[400px] border-black px-2 py-1 text-center"
+                          colSpan={cell.colSpan}
+                          rowSpan={cell.rowSpan}
+                        >
                           {cell.title}
                         </th>
                       ))}
                       {rowIndex === 0 && (
-                        <th rowSpan={maxDepth} className="border border-black px-2 py-1 text-center">Amallar</th>
+                        <th
+                          rowSpan={maxDepth}
+                          className="border border-black px-2 py-1 text-center"
+                        >
+                          Amallar
+                        </th>
                       )}
                     </tr>
                   ))}
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-black px-2 py-1 text-center">1</td>
-                    {selectedRow.report_items.map((col: any, colIndex: number) => (
-                      <td key={colIndex} className="border min-w-[380px] min-h-[60px] border-black px-2 py-3 text-center">
-                        {col?.value ?? "-"}
-                      </td>
-                    ))}
+                    <td className="border border-black px-2 py-1 text-center">
+                      1
+                    </td>
+                    {selectedRow.report_items.map(
+                      (col: any, colIndex: number) => (
+                        <td
+                          key={colIndex}
+                          className="border min-w-[380px] min-h-[60px] border-black px-2 py-3 text-center"
+                        >
+                          {col?.value ?? "-"}
+                        </td>
+                      )
+                    )}
                     <td className="border border-black px-2 py-1 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <Button
                           className="bg-[#09B86F] hover:bg-[#09B86F]"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/resource-management/update/${selectedRow?.id}`);
+                            navigate(
+                              `/resource-management/update/${selectedRow?.id}`
+                            );
                           }}
                         >
                           <Edit2 />
@@ -325,7 +366,7 @@ const TableColumn = forwardRef(
                           className="bg-[#09B86F] hover:bg-[#09B86F]"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log(selectedRow.id);
+                            console.log(selectedRow);
                           }}
                         >
                           <Trash2 />
@@ -337,23 +378,31 @@ const TableColumn = forwardRef(
               </table>
 
               {/* QR Code pastga qo‘shiladi (printda ham chiqadi) */}
-              {selectedRow.sent_by_full_name && selectedRow.sent_by_org_name && selectedRow.sent_by_role && (
-                <div className="mt-8 flex items-center gap-4 justify-start print:mt-12">
-                  <QRCodeGenerator
-                    sentBy={selectedRow.sent_by_full_name}
-                    sentByOrg={selectedRow.sent_by_org_name}
-                    sentByRole={selectedRow.sent_by_role}
-                  />
-                  <div>
-                    <h2 className="text-lg font-semibold">{selectedRow.sent_by_full_name}</h2>
-                    <h2 className="text-md">{selectedRow.sent_by_org_name}</h2>
+              {selectedRow.sent_by_full_name &&
+                selectedRow.sent_by_org_name &&
+                selectedRow.sent_by_role && (
+                  <div className="mt-8 flex items-center gap-4 justify-start print:mt-12">
+                    <QRCodeGenerator
+                      sentBy={selectedRow.sent_by_full_name}
+                      sentByOrg={selectedRow.sent_by_org_name}
+                      sentByRole={selectedRow.sent_by_role}
+                    />
+                    <div>
+                      <h2 className="text-lg font-semibold">
+                        {selectedRow.sent_by_full_name}
+                      </h2>
+                      <h2 className="text-md">
+                        {selectedRow.sent_by_org_name}
+                      </h2>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
-            <CancelReportModal open={isCancelModalOpen}
+            <CancelReportModal
+              open={isCancelModalOpen}
               setOpen={setIsCancelModalOpen}
-              reportId={selectedRow?.id} />
+              reportId={selectedRow?.id}
+            />
           </>
         )}
       </>
