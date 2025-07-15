@@ -2,7 +2,7 @@ import MainContainer from "@/containers/MainContainer/MainContainer";
 import { useTranslation } from "react-i18next";
 
 function MainPage() {
-  const {t} = useTranslation()
+  const { t } = useTranslation();
   return (
     <div className="px-3 py-4">
       {/* title */}
@@ -17,6 +17,7 @@ function MainPage() {
 
       {/* container */}
       <MainContainer />
+      <h1>Hello</h1>
     </div>
   );
 }

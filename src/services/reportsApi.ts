@@ -177,7 +177,7 @@ export const reportApi = createApi({
     // ==== 🟥 DELETE endpoint ====
     deleteReport: builder.mutation({
       query: (id: string | number) => ({
-        url: `/${id}/`,
+        url: `/${id}/delete/`,
         method: "DELETE",
       }),
     }),
