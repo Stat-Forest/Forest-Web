@@ -18,10 +18,17 @@ export const reportApi = createApi({
         status: string;
         organization__region: string;
         statement__period: string;
+        search: string;
       }
     >({
-      query: ({ statement, status, organization__region, statement__period }) =>
-        `/?statement=${statement}&${status}&organization__region=${organization__region}&statement__period=${statement__period}`,
+      query: ({
+        statement,
+        status,
+        organization__region,
+        statement__period,
+        search,
+      }) =>
+        `/?statement=${statement}&${status}&organization__region=${organization__region}&statement__period=${statement__period}&search=${search}`,
     }),
 
     getReportById: builder.query({

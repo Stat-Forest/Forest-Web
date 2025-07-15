@@ -21,7 +21,12 @@ import LandRentedChart from "@/components/Charts/LandRentedChart";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import IncomeSum from "@/components/Sum/IncomeSum";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function ResourceContainer() {
   const { id } = useParams<{ id: string }>();
@@ -50,11 +55,12 @@ function ResourceContainer() {
   } = useGetAllReportsQuery(
     id
       ? {
-        statement: id,
-        status: "",
-        organization__region: "",
-        statement__period: "",
-      }
+          statement: id,
+          status: "",
+          organization__region: "",
+          statement__period: "",
+          search: "",
+        }
       : skipToken
   );
   const isLoading = isHeadersLoading || isRowsLoading;
@@ -113,8 +119,7 @@ function ResourceContainer() {
     });
   }, [tableRowsData, activeLeafIds]);
 
-  console.log(filteredRows)
-
+  console.log(filteredRows);
 
   const handlePrint = () => {
     if (tableRef.current) {
@@ -220,7 +225,11 @@ function ResourceContainer() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56 mt-2 mr-2">
-                          <DropdownMenuItem onClick={() => exportToExcel(col?.children, filteredRows)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              exportToExcel(col?.children, filteredRows)
+                            }
+                          >
                             Hisobodni export qilib olish
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={handlePrint}>

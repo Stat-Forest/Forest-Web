@@ -167,7 +167,7 @@ const TableColumn = forwardRef(
                       key={colIndex}
                       className="border min-w-[380px] border-black px-2 py-1 text-center"
                     >
-                      {col?.plant_values[0].value ?? "-"}
+                      {col?.value ?? "-"}
                     </td>
                   ))}
                   <td className="border border-black px-2 py-1 text-center">
@@ -307,7 +307,7 @@ const TableColumn = forwardRef(
                     <td className="border border-black px-2 py-1 text-center">1</td>
                     {selectedRow.report_items.map((col: any, colIndex: number) => (
                       <td key={colIndex} className="border min-w-[380px] min-h-[60px] border-black px-2 py-3 text-center">
-                        {col?.plant_values[0].value ?? "-"}
+                        {col?.value ?? "-"}
                       </td>
                     ))}
                     <td className="border border-black px-2 py-1 text-center">
