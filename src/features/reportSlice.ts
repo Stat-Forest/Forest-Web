@@ -10,11 +10,13 @@ interface EmptyColumnId {
 interface ReportState {
   emptyColumns: EmptyColumnId[];
   reportId: string | null; // Qo‘shilgan qism
+  reportName?: string;
 }
 
 const initialState: ReportState = {
   emptyColumns: [],
   reportId: getCookie("reportId") || null, // Qo‘shilgan qism
+  reportName: "",
 };
 
 const reportSlice = createSlice({
@@ -30,9 +32,16 @@ const reportSlice = createSlice({
     setReportId: (state, action: PayloadAction<string>) => {
       state.reportId = action.payload; // Qo‘shilgan reducer
     },
+    setReportName: (state, action) => {
+      state.reportName = action.payload;
+    },
   },
 });
 
-export const { setEmptyColumns, clearEmptyColumns, setReportId } =
-  reportSlice.actions;
+export const {
+  setEmptyColumns,
+  clearEmptyColumns,
+  setReportId,
+  setReportName,
+} = reportSlice.actions;
 export default reportSlice.reducer;
