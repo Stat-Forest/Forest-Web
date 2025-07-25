@@ -3,10 +3,14 @@ import ResourceContainer from "@/containers/ResourceContainer/ResourceContainer"
 import { useGetStatementsReportQuery } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setReportName } from "@/features/reportSlice";
 
 function ResourceManagement() {
   const { id } = useParams<{ id: string }>();
   const lang = useSelector((state: RootState) => state.language.lang);
+  const dispatch = useDispatch();
 
   const {
     data: statementData,
@@ -22,6 +26,10 @@ function ResourceManagement() {
   const childTitle = currentItem?.children?.find(
     (child: any) => child.id === id
   )?.name;
+
+  useEffect(() => {
+    dispatch(setReportName(childTitle));
+  }, [childTitle]);
 
   return (
     <div className="px-3 py-4">

@@ -85,8 +85,6 @@ const InfiniteSelect = ({
     }
   };
 
-  console.log(items);
-
   return (
     <Select value={value} onValueChange={onValueChange} name={name}>
       <SelectTrigger className={`w-full bg-white cursor-pointer ${className}`}>
