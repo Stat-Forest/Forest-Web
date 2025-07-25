@@ -1,24 +1,25 @@
 export function findEmptyChildrenColumnIds(
-  columns: any[],
-  rows: any[]
-): { id: string; title: string }[] {
-  let result: { id: string; title: string }[] = [];
-
-  columns.forEach((col) => {
-    const isEmpty = rows.every((row) =>
-      row.report_items.every(
-        (item: any) => item.column_id !== col.id || item.value == null
-      )
-    );
-
-    if (isEmpty) {
-      result.push({ id: col.id, title: col.title });
-    }
-
-    if (Array.isArray(col.children) && col.children.length > 0) {
-      result = result.concat(findEmptyChildrenColumnIds(col.children, rows));
-    }
-  });
-
+  children: any[]
+): { id: string; title: string; fullParentChain: string }[] {
+  const result: { id: string; title: string; fullParentChain: string }[] = [];
+  const traverse = (cols: any[], parentChain: string[] = []) => {
+    cols.forEach((col) => {
+      const currentChain = [...parentChain, col.title];
+      if (
+        col.children &&
+        Array.isArray(col.children) &&
+        col.children.length > 0
+      ) {
+        traverse(col.children, currentChain);
+      } else {
+        result.push({
+          id: col.id,
+          title: col.title,
+          fullParentChain: currentChain.join(" / "),
+        });
+      }
+    });
+  };
+  traverse(children);
   return result;
 }
