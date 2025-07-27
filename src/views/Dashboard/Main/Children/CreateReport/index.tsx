@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -17,12 +16,24 @@ import {
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
-  const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [statement, setStatement] = useState<string | null>(null);
-  const [createReport] = usePlanCreateMutation();
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [year, setYear] = useState<number>(2025);
+  const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
@@ -32,38 +43,59 @@ function CreateReport() {
   } = useGetOrganizationReportsQuery();
 
   const {
-    data: plan_cols,
-    isLoading: plan_cols_loading,
-    error: plan_cols_error,
-  } = useGetPlanColumnsReportQuery();
-
-  const {
     data: statment,
     isLoading: statment_loading,
     error: statment_error,
   } = useGetStatementsReportQuery({ lang });
 
+  const {
+    data: plan_cols = [],
+    isLoading: plan_cols_loading,
+    error: plan_cols_error,
+  } = useGetPlanColumnsReportQuery(
+    statement ? { search: statement } : skipToken
+  );
+
+  const handleChange = (columnId: string, value: string) => {
+    setValues((prev) => ({ ...prev, [columnId]: value }));
+  };
+
+  const resetForm = () => {
+    setSelectedOrg(null);
+    setStatement(null);
+    setValues({});
+    setYear(2025);
+  };
+
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const { year, plan_value } = Object.fromEntries(formData.entries());
 
-    if (!selectedOrg || !selectedColumn) {
-      alert("Iltimos, barcha maydonlarni to'ldiring!");
+    if (!selectedOrg || !statement || !year) {
+      alert("Iltimos, barcha maydonlarni to‘ldiring!");
       return;
     }
 
+    if (Object.values(values).some((val) => val === "")) {
+      alert("Barcha ustunlarga qiymat kiriting!");
+      return;
+    }
+
+    const plan_items = Object.entries(values).map(([column, value]) => ({
+      column,
+      value,
+    }));
+
     const payload = {
       organization: selectedOrg,
-      column: selectedColumn,
-      statement: statement,
+      statement,
       year,
-      plan_value,
+      plan_items,
     };
 
     try {
       await createReport(payload).unwrap();
       alert("Hisobot muvaffaqiyatli yaratildi!");
+      resetForm();
     } catch (error) {
       console.error("Yaratishda xatolik:", error);
       alert("Hisobotni yaratishda xatolik yuz berdi!");
@@ -76,7 +108,7 @@ function CreateReport() {
         {/* ORGANIZATION */}
         <div className="w-full">
           <Label className="pb-1.5 text-md block">Organizatsiya</Label>
-          <Select onValueChange={setSelectedOrg}>
+          <Select value={selectedOrg ?? ""} onValueChange={setSelectedOrg}>
             <SelectTrigger className="w-full min-h-[45px]">
               <SelectValue placeholder="Tanlang" />
             </SelectTrigger>
@@ -98,9 +130,10 @@ function CreateReport() {
           </Select>
         </div>
 
+        {/* STATEMENT */}
         <div className="w-full">
           <Label className="pb-1.5 text-md block">Hisobot formasi</Label>
-          <Select onValueChange={setStatement}>
+          <Select value={statement ?? ""} onValueChange={setStatement}>
             <SelectTrigger className="w-full min-h-[45px]">
               <SelectValue placeholder="Tanlang" />
             </SelectTrigger>
@@ -122,52 +155,79 @@ function CreateReport() {
               )}
             </SelectContent>
           </Select>
-
-        </div>
-
-        {/* PLAN COLUMN */}
-        <div className="w-full">
-          <Label className="pb-1.5 text-md block">Hisobot ustuni</Label>
-          <Select onValueChange={setSelectedColumn}>
-            <SelectTrigger className="w-full min-h-[45px]">
-              <SelectValue placeholder="Tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {plan_cols_loading && (
-                <div className="text-center text-sm py-2">Yuklanmoqda...</div>
-              )}
-              {plan_cols_error && (
-                <div className="text-center text-sm text-red-500 py-2">
-                  Xatolik yuz berdi
-                </div>
-              )}
-              {plan_cols?.map((item: any) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.parent} - {item.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {/* YEAR */}
         <div className="w-full">
           <Label className="pb-1.5 text-md">Yil</Label>
-          <Input name="year" className="min-h-[45px]" required />
+          <Input
+            name="year"
+            className="min-h-[45px]"
+            type="number"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            required
+          />
         </div>
 
-        {/* COUNT */}
-        <div className="w-full">
-          <Label className="pb-1.5 text-md">Qiymat</Label>
-          <Input name="plan_value" className="min-h-[45px]" required />
-        </div>
+        {/* PLAN COLUMNS */}
+        {statement && (
+          <>
+            {plan_cols_loading ? (
+              <div className="text-center py-4">Jadval yuklanmoqda...</div>
+            ) : plan_cols_error ? (
+              <div className="text-center text-red-500 py-4">
+                Ustunlarni olishda xatolik yuz berdi.
+              </div>
+            ) : plan_cols.length > 0 ? (
+              <div className="w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ustun nomi</TableHead>
+                      <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {plan_cols.map((item: any, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.parent}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={values[item.id] || ""}
+                            onChange={(e) =>
+                              handleChange(item.id, e.target.value)
+                            }
+                            placeholder="Qiymat kiriting"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center text-sm text-gray-500 py-4">
+                Jadval bo‘sh.
+              </div>
+            )}
+          </>
+        )}
 
         {/* SUBMIT */}
-        <div>
-          <Button className="min-h-[40px] min-w-[130px] bg-[#09B86F] text-md">
-            Yuborish
-          </Button>
-        </div>
+        {statement && plan_cols.length > 0 && (
+          <div>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="min-h-[40px] min-w-[130px] bg-[#09B86F] text-md flex items-center gap-2"
+            >
+              {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
+              Yuborish
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   );

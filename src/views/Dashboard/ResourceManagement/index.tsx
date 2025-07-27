@@ -47,7 +47,7 @@ function ResourceManagement() {
         </div>
       </div>
 
-      <ResourceContainer />
+      <ResourceContainer reportName={childTitle} />
     </div>
   );
 }

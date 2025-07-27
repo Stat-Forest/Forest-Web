@@ -10,7 +10,6 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useDispatch, useSelector } from "react-redux";
 import { setReportId } from "@/features/reportSlice";
 import { exportToExcel } from "@/utils/exportToExcel";
-import ReportItemTable from "@/components/Table/RecurceTable/ReportItemTable";
 import { RootState } from "@/app/store";
 import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
 import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
@@ -27,8 +26,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-function ResourceContainer() {
+function ResourceContainer({reportName}:any) {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -38,6 +45,11 @@ function ResourceContainer() {
 
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const lang = useSelector((state: RootState) => state.language.lang);
+
+  // Filter states - use "all" instead of empty string
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
 
   const {
     data: tableHeadersData = [],
@@ -52,28 +64,36 @@ function ResourceContainer() {
     data: tableRowsData = [],
     isLoading: isRowsLoading,
     isError: isErrorRows,
+    isFetching: isRowsFetching,
   } = useGetAllReportsQuery(
     id
       ? {
           statement: id,
           status: "",
-          organization__region: "",
-          statement__period: "",
-          search: "",
+          // Convert "all" to empty string for API
+          organization__region: selectedRegion === "all" ? "" : selectedRegion,
+          statement__period: selectedPeriod === "all" ? "" : selectedPeriod,
+          search: searchTerm,
         }
       : skipToken
   );
+
   const isLoading = isHeadersLoading || isRowsLoading;
   const isError = isErrorHeaders || isErrorRows;
 
   const [activeTab, setActiveTab] = useState<string>("");
   const tableRef = useRef<any>(null);
 
+  // Reset filters when report changes
+  useEffect(() => {
+    setSearchTerm("");
+    setSelectedRegion("all");
+    setSelectedPeriod("all");
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       dispatch(setReportId(id));
-      // 0fd27397-ed03-499f-bcbc-2621b00f1252
-      // 0fd27397-ed03-499f-bcbc-2621b00f1252
     }
   }, [id, dispatch]);
 
@@ -107,6 +127,7 @@ function ResourceContainer() {
     return tabLeafIdMap[activeTab] || [];
   }, [tabLeafIdMap, activeTab]);
 
+  // FIX: Added filter states to dependency array
   const filteredRows = useMemo(() => {
     return tableRowsData.map((row: any) => {
       const filteredItems = row.report_items.filter((item: any) =>
@@ -117,9 +138,13 @@ function ResourceContainer() {
         report_items: filteredItems,
       };
     });
-  }, [tableRowsData, activeLeafIds]);
-
-  console.log(filteredRows);
+  }, [
+    tableRowsData,
+    activeLeafIds,
+    searchTerm,
+    selectedRegion,
+    selectedPeriod,
+  ]); // Added dependencies
 
   const handlePrint = () => {
     if (tableRef.current) {
@@ -138,13 +163,13 @@ function ResourceContainer() {
   };
 
   const chartComponents: Record<string, React.ReactNode> = {
-    "945d9e04-9f5a-4247-934d-5b775e15a1da": (
+    "Daromad": (
       <EmployeeIncomeChart activeTab={activeTab} />
     ),
-    "9d01a20f-1957-4cde-8ab1-22cbe54793bf": (
+    "Jamg'arma": (
       <EmployeeFundChart activeTab={activeTab} />
     ),
-    "f76daeb7-c185-4402-8be9-0aaff5db05db": (
+    "Xodimlar hisobi": (
       <EmployeeReportChart activeTab={activeTab} />
     ),
     "36101e9e-5517-4861-b0f7-aca274a5dce0": (
@@ -208,56 +233,162 @@ function ResourceContainer() {
             <TabsContent key={col.id} value={col.title}>
               {activeTab === col.title && (
                 <>
-                  <div>{chartComponents[id as string] || null}</div>
+                  <div>{chartComponents[reportName as string] || null}</div>
                   <div>{sumComponents[id as string] || null}</div>
                   <div>
-                    <div className="flex items-center justify-end gap-3 mb-4">
-                      {(user_role === "tashkilot_hodimi" ||
-                        user_role === "super_admin" ||
-                        user_role === "hududiy_boshqarma") && (
-                        <button
-                          className="bg-[#09B86F] text-md font-semibold text-white w-[220px] py-3 rounded"
-                          onClick={() =>
-                            navigate("/resource-management/create")
-                          }
+                    <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                      <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                        <Input
+                          placeholder="Qidiruv"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full md:w-[250px]"
+                        />
+                        <Select
+                          value={selectedRegion}
+                          onValueChange={setSelectedRegion}
                         >
-                          Yangi hisobod yaratish
-                        </button>
-                      )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="py-2.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
-                            Export
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 mt-2 mr-2">
-                          <DropdownMenuItem
+                          <SelectTrigger className="w-full md:w-[260px] text-xl min-h-[40px] border-black">
+                            <SelectValue placeholder="Region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              Barcha regionlar
+                            </SelectItem>
+                            <SelectItem value="toshkent_shahri">
+                              Toshkent shahri
+                            </SelectItem>
+                            <SelectItem value="toshkent_viloyati">
+                              Toshkent viloyati
+                            </SelectItem>
+                            <SelectItem value="andijon_viloyati">
+                              Andijon viloyati
+                            </SelectItem>
+                            <SelectItem value="fargona_viloyati">
+                              Farg'ona viloyati
+                            </SelectItem>
+                            <SelectItem value="namangan_viloyati">
+                              Namangan viloyati
+                            </SelectItem>
+                            <SelectItem value="samarqand_viloyati">
+                              Samarqand viloyati
+                            </SelectItem>
+                            <SelectItem value="buxoro_viloyati">
+                              Buxoro viloyati
+                            </SelectItem>
+                            <SelectItem value="xorazm_viloyati">
+                              Xorazm viloyati
+                            </SelectItem>
+                            <SelectItem value="surxondaryo_viloyati">
+                              Surxondaryo viloyati
+                            </SelectItem>
+                            <SelectItem value="qashqadaryo_viloyati">
+                              Qashqadaryo viloyati
+                            </SelectItem>
+                            <SelectItem value="jizzax_viloyati">
+                              Jizzax viloyati
+                            </SelectItem>
+                            <SelectItem value="sirdaryo_viloyati">
+                              Sirdaryo viloyati
+                            </SelectItem>
+                            <SelectItem value="navoiy_viloyati">
+                              Navoiy viloyati
+                            </SelectItem>
+                            <SelectItem value="qoraqalpogiston">
+                              Qoraqalpog'iston Respublikasi
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={selectedPeriod}
+                          onValueChange={setSelectedPeriod}
+                        >
+                          <SelectTrigger className="w-full md:w-[260px] text-xl min-h-[40px] border-black">
+                            <SelectValue placeholder="Hisobot turi" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              Barcha hisobotlar
+                            </SelectItem>
+                            <SelectItem value="daily">Kunlik</SelectItem>
+                            <SelectItem value="weekly">Haftalik</SelectItem>
+                            <SelectItem value="monthly">Oylik</SelectItem>
+                            <SelectItem value="quarterly">
+                              Choraklik (3 oy)
+                            </SelectItem>
+                            <SelectItem value="yearly">Yillik</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
+                        {(user_role === "tashkilot_hodimi" ||
+                          user_role === "super_admin" ||
+                          user_role === "hududiy_boshqarma") && (
+                          <button
+                            className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
                             onClick={() =>
-                              exportToExcel(col?.children, filteredRows)
+                              navigate("/resource-management/create")
                             }
                           >
-                            Hisobodni export qilib olish
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handlePrint}>
-                            Hisobodni chop etish
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            Yangi hisobot yaratish
+                          </button>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
+                              Export
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56 mt-2 mr-2">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const headerRows =
+                                  tableRef.current?.getHeaderRows?.();
+                                const bodyRows = filteredRows.map(
+                                  (row: any, index: number) => [
+                                    index + 1,
+                                    ...row.report_items.map(
+                                      (item: any) => item.value ?? "-"
+                                    ),
+                                    "✏️🗑️",
+                                  ]
+                                );
+
+                                if (headerRows && bodyRows) {
+                                  exportToExcel(headerRows, bodyRows);
+                                } else {
+                                  alert("Jadvalni eksport qilishda xatolik!");
+                                }
+                              }}
+                            >
+                              Hisobotni export qilib olish
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={handlePrint}>
+                              Hisobotni chop etish
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
 
                     <div>
-                      <TableColumn
-                        ref={tableRef}
-                        data={col?.children}
-                        rows={filteredRows}
-                        onRowClick={(row: any) => setSelectedRow(row)}
-                        selectedRow={selectedRow}
-                        userCheckTable={userCheckTable}
-                        tableRowsData={tableRowsData}
-                      />
-                    </div>
-                    <div className="py-14 pr-2">
-                      <ReportItemTable />
+                      {isRowsFetching ? (
+                        <div className="flex justify-center py-10">
+                          <Loader2 className="animate-spin text-blue-500 w-12 h-12" />
+                        </div>
+                      ) : (
+                        <TableColumn
+                          ref={tableRef}
+                          data={col?.children}
+                           rows={filteredRows}
+                          onRowClick={(row: any) => setSelectedRow(row)}
+                          selectedRow={selectedRow}
+                          userCheckTable={userCheckTable}
+                          tableRowsData={tableRowsData}
+                        />
+                      )}
                     </div>
                   </div>
                 </>

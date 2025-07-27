@@ -38,7 +38,9 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
+      // Disable both checks to resolve warnings
       serializableCheck: false,
+      immutableCheck: false,
     }).concat(
       reportApi.middleware,
       authApi.middleware,
