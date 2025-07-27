@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
+import ReportItemTable from "./ReportItemTable";
 // import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 // import { exportToExcel } from "@/utils/exportToExcel";
 
@@ -27,6 +28,7 @@ const TableColumn = forwardRef(
     }: any,
     ref
   ) => {
+    console.log(rows)
     const tableRef = useRef<HTMLDivElement>(null);
     // const printRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -49,8 +51,6 @@ const TableColumn = forwardRef(
         return Math.max(max, 1);
       }, 0);
     };
-
-    console.log(selectedRow);
 
     const maxDepth = getMaxDepth(data);
 
@@ -209,6 +209,10 @@ const TableColumn = forwardRef(
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="py-14 pr-2">
+          <ReportItemTable />
         </div>
 
         {/* Detal ko‘rinish */}

@@ -51,9 +51,9 @@ function Dashboard() {
               />
               <Route path="draft" element={<Draft />} />
               <Route path="newsletter" element={<Newsletters />} />
-              <Route path="create-report" element={<CreateReport />} />
               <Route path="created-plans" element={<CreatedPlans />} />
             </Route>
+            <Route path="plan/create-report" element={<CreateReport />} />
             <Route
               path="resource-management/:id"
               element={<ResourceManagement />}

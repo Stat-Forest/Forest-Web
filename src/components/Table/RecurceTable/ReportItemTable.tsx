@@ -13,7 +13,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-function ReportItemTable() {
+function ReportItemTable({ setDetailId }: any) {
   const { id } = useParams();
 
   const [selectedOrganization, setSelectedOrganization] = useState("");

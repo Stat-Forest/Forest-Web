@@ -71,8 +71,11 @@ export const reportApi = createApi({
         method: "GET",
       }),
     }),
-    getPlanColumnsReport: builder.query<any, void>({
-      query: () => ({ url: `/plan-columns/`, method: "GET" }),
+    getPlanColumnsReport: builder.query<any, { search: string }>({
+      query: ({ search }) => ({
+        url: `/plan-columns/?search=${search}`,
+        method: "GET",
+      }),
     }),
     getPlantsReport: builder.query<any, void>({
       query: () => ({ url: `/plants/`, method: "GET" }),

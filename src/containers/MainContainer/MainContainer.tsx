@@ -133,9 +133,9 @@ function MainContainer() {
         </div>
       </div>
       {/* Qoralama */}
-      {user_role === "bolim_admin" && (
+      {(user_role === "bolim_admin" || user_role  == "super_admin") && (
         <div
-          onClick={() => navigate("/main/create-report")}
+          onClick={() => navigate("/plan/create-report")}
           className="w-full h-[100px] shadow rounded-lg flex items-center gap-5 pl-6 cursor-pointer"
         >
           <div className="bg-[purple] w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
