@@ -71,7 +71,6 @@ function AllCreateReportItem() {
     }
   );
 
-
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
@@ -116,6 +115,8 @@ function AllCreateReportItem() {
               organization: selectedOrganizationId,
               statement: reportIds,
               page: "",
+              search: "",
+              year: "",
             })
           ).unwrap();
           const planValue = response?.results[0]?.plan_value ?? 0;

@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import CreateFinanceReport from "./FinanceCreate";
 import FundCreate from "./FundCreate";
-import EmployeeCountCreate from "./EmployeeCountCreate";
+// import EmployeeCountCreate from "./EmployeeCountCreate";
 import LandAcquisitionCreate from "./LandAcquisitionCreate";
 import LeasedLandAccountCreate from "./LeasedLandAccountCreate";
 import EmployeeAnalysisCreate from "./EmployeeAnalysisCreate";
@@ -11,6 +11,7 @@ import RodPrepareCreate from "./RodPrepareCreate";
 import SeedMovementCreate from "./SeedMovementCreate";
 import SuitableSeedlingsCreate from "./SutiableSeedlingsCreate";
 import AllCreateReportItem from "./AllCreate";
+import DefaultCreate from "./DefaultCreate";
 
 function CreateReportItem() {
   const reportName = useSelector((state: any) => state.report.reportName);
@@ -20,7 +21,7 @@ function CreateReportItem() {
   } else if (reportName === "Jamg'arma") {
     return <FundCreate />;
   } else if (reportName === "Xodimlar hisobi") {
-    return <EmployeeCountCreate />;
+    return <DefaultCreate />;
   } else if (reportName === "Yer o‘zlashtirish") {
     return <LandAcquisitionCreate />;
   } else if (reportName === "Ijaraga berilgan yerlar hisobi") {

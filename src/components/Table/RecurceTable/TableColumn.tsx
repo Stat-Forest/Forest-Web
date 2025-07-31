@@ -28,7 +28,8 @@ const TableColumn = forwardRef(
     }: any,
     ref
   ) => {
-    console.log(rows)
+    console.log(rows);
+    console.log(selectedRow);
     const tableRef = useRef<HTMLDivElement>(null);
     // const printRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -174,14 +175,19 @@ const TableColumn = forwardRef(
                   <td className="border border-black px-2 py-1 text-center">
                     {rowIndex + 1}
                   </td>
-                  {row.report_items.map((col: any, colIndex: number) => (
-                    <td
-                      key={colIndex}
-                      className="border min-w-[380px] border-black px-2 py-1 text-center"
-                    >
-                      {col?.value ?? "-"}
-                    </td>
-                  ))}
+                  {row.report_items?.map((reportItem: any) =>
+                    reportItem.statement_columns?.map((col: any) =>
+                      col.inners?.map((inner: any, index: number) => (
+                        <td
+                          key={inner.id || index}
+                          className="border min-w-[380px] border-black px-2 py-1 text-center"
+                        >
+                          {inner.value}
+                        </td>
+                      ))
+                    )
+                  )}
+
                   <td className="border border-black px-2 py-1 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Button
@@ -223,7 +229,8 @@ const TableColumn = forwardRef(
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
                   {(user_role === "tashkilot_rahbari" ||
-                    user_role === "bolim_admin") && (
+                    user_role === "bolim_admin" ||
+                    user_role === "super_admin") && (
                     <Button
                       onClick={() => setIsCancelModalOpen(true)}
                       className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
@@ -231,7 +238,8 @@ const TableColumn = forwardRef(
                       Qayta ishlash
                     </Button>
                   )}
-                  {user_role == "tashkilot_rahbari" && (
+                  {(user_role == "tashkilot_rahbari" ||
+                    user_role === "super_admin") && (
                     <Button
                       onClick={async () => {
                         if (!tableRowsData[0]?.id) {
@@ -258,7 +266,8 @@ const TableColumn = forwardRef(
                     </Button>
                   )}
 
-                  {user_role == "bolim_admin" && (
+                  {(user_role == "bolim_admin" ||
+                    user_role === "super_admin") && (
                     <Button
                       onClick={async () => {
                         if (!tableRowsData[0]?.id) {
@@ -343,14 +352,16 @@ const TableColumn = forwardRef(
                     <td className="border border-black px-2 py-1 text-center">
                       1
                     </td>
-                    {selectedRow.report_items.map(
-                      (col: any, colIndex: number) => (
-                        <td
-                          key={colIndex}
-                          className="border min-w-[380px] min-h-[60px] border-black px-2 py-3 text-center"
-                        >
-                          {col?.value ?? "-"}
-                        </td>
+                    {selectedRow.report_items?.map((reportItem: any) =>
+                      reportItem.statement_columns?.map((col: any) =>
+                        col.inners?.map((inner: any, index: number) => (
+                          <td
+                            key={inner.id || index}
+                            className="border min-w-[380px] border-black px-2 py-1 text-center"
+                          >
+                            {inner.value}
+                          </td>
+                        ))
                       )
                     )}
                     <td className="border border-black px-2 py-1 text-center">
