@@ -87,10 +87,12 @@ export const reportApi = createApi({
         organization: string;
         statement: string;
         page: any;
+        search: string;
+        year: string;
       }
     >({
-      query: ({ columnId, organization, statement, page }) => ({
-        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}`,
+      query: ({ columnId, organization, statement, page, search, year }) => ({
+        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -184,6 +186,13 @@ export const reportApi = createApi({
         method: "DELETE",
       }),
     }),
+    deletePlan: builder.mutation({
+      query: (id: string | number) => ({
+        url: `/plans/${id}/delete/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Reports"],
+    }),
   }),
 });
 
@@ -245,4 +254,5 @@ export const {
 
   // DELETE
   useDeleteReportMutation,
+  useDeletePlanMutation,
 } = reportApi;

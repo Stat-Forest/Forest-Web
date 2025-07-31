@@ -1,16 +1,25 @@
 import CreatedPlantable from "@/components/Table/TableReports/CreatedPlanTable";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useGetPlanListReportQuery } from "@/services/reportsApi";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/utils/useDebounce";
 
 function CreatedPlans() {
   const [page, setPage] = useState(1);
   const [allData, setAllData] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchYear, setSearchYear] = useState("");
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedSearchYear = useDebounce(searchYear, 500);
 
   const { data, isLoading, isFetching, isError } = useGetPlanListReportQuery({
     columnId: "",
     organization: "",
     statement: "",
     page,
+    search: searchTerm,
+    year: searchYear,
   });
 
   useEffect(() => {
@@ -18,6 +27,12 @@ function CreatedPlans() {
       setAllData((prev) => [...prev, ...data.results]);
     }
   }, [data]);
+
+  // Reset data when filters change
+  useEffect(() => {
+    setAllData([]);
+    setPage(1);
+  }, [debouncedSearchTerm, debouncedSearchYear]);
 
   const observerRef = useRef<HTMLDivElement | null>(null);
 
@@ -32,21 +47,46 @@ function CreatedPlans() {
   );
 
   useEffect(() => {
-    const option = {
+    const observer = new IntersectionObserver(handleObserver, {
       root: null,
       rootMargin: "0px",
       threshold: 1.0,
-    };
-    const observer = new IntersectionObserver(handleObserver, option);
-    if (observerRef.current) observer.observe(observerRef.current);
+    });
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
 
     return () => {
-      if (observerRef.current) observer.unobserve(observerRef.current);
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current);
+      }
     };
   }, [handleObserver]);
 
   return (
     <div className="w-full px-5">
+      <div className="flex items-center gap-5 mb-6">
+        <div>
+          <Input
+            type="text"
+            placeholder="Qidiruv..."
+            className="w-[260px] text-xl min-h-[40px] border-black"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div>
+          <Input
+            type="text"
+            placeholder="Yili..."
+            className="w-[260px] text-xl min-h-[40px] border-black"
+            value={searchYear}
+            onChange={(e) => setSearchYear(e.target.value)}
+          />
+        </div>
+      </div>
+
       {isLoading && (
         <h1 className="text-center text-lg">Boshlang‘ich yuklanmoqda...</h1>
       )}

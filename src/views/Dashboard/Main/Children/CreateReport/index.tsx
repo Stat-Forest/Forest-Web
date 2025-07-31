@@ -27,14 +27,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useNavigate } from "react-router-dom";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [statement, setStatement] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [year, setYear] = useState<number>(2025);
   const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
+  const navigate = useNavigate();
 
   const {
     data: organization,
@@ -54,6 +57,10 @@ function CreateReport() {
     error: plan_cols_error,
   } = useGetPlanColumnsReportQuery(
     statement ? { search: statement } : skipToken
+  );
+
+  const filteredOrganizations = organization?.filter((item: any) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleChange = (columnId: string, value: string) => {
@@ -95,6 +102,7 @@ function CreateReport() {
     try {
       await createReport(payload).unwrap();
       alert("Hisobot muvaffaqiyatli yaratildi!");
+      navigate("/main");
       resetForm();
     } catch (error) {
       console.error("Yaratishda xatolik:", error);
@@ -103,7 +111,7 @@ function CreateReport() {
   };
 
   return (
-    <div className="px-5 w-full mb-30">
+    <div className="px-5 py-5 w-full mb-30">
       <form onSubmit={createReportHandler} className="grid grid-cols-1 gap-3">
         {/* ORGANIZATION */}
         <div className="w-full">
@@ -113,6 +121,15 @@ function CreateReport() {
               <SelectValue placeholder="Tanlang" />
             </SelectTrigger>
             <SelectContent>
+              <div className="p-2">
+                <Input
+                  placeholder="Izlash..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full mb-2"
+                />
+              </div>
+
               {organization_loading && (
                 <div className="text-center text-sm py-2">Yuklanmoqda...</div>
               )}
@@ -121,11 +138,17 @@ function CreateReport() {
                   Xatolik yuz berdi
                 </div>
               )}
-              {organization?.map((item: any) => (
-                <SelectItem key={item?.id} value={String(item?.id)}>
-                  {item.name}
-                </SelectItem>
-              ))}
+              {filteredOrganizations?.length > 0 ? (
+                filteredOrganizations.map((item: any) => (
+                  <SelectItem key={item?.id} value={String(item?.id)}>
+                    {item.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="text-center text-sm text-gray-500 py-2">
+                  Hech narsa topilmadi
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>

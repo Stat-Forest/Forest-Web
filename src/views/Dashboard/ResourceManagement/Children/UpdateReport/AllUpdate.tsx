@@ -157,6 +157,8 @@ function AllUpdate() {
               organization: selectedOrganizationId,
               statement: reportIds,
               page: "",
+              search: "",
+              year: "",
             })
           ).unwrap();
 
@@ -208,8 +210,8 @@ function AllUpdate() {
       value: col.title.toLowerCase().includes("tashkilot")
         ? selectedOrganizationId
         : col.title.toLowerCase().includes("reja")
-          ? String(planListMap[col.id] ?? "")
-          : String(formValues[col.id] || "15"),
+        ? String(planListMap[col.id] ?? "")
+        : String(formValues[col.id] || "15"),
     }));
 
     const payload = { deadline: selectedDeadlineId, report_items };

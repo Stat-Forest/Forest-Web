@@ -245,6 +245,8 @@ function EmployeeCountUpdate() {
               organization: selectedOrganizationId,
               statement: reportIds,
               page: "",
+              search: "",
+              year: "",
             })
           ).unwrap();
 

@@ -233,6 +233,8 @@ function BuildForestCreate() {
               organization: selectedOrganizationId,
               statement: reportIds,
               page: "",
+              search: "",
+              year: "",
             })
           ).unwrap();
           const planValue = response?.results[0]?.plan_value ?? 0;

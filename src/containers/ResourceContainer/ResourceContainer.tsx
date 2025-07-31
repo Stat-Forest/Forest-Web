@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-function ResourceContainer({reportName}:any) {
+function ResourceContainer({ reportName }: any) {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -130,12 +130,21 @@ function ResourceContainer({reportName}:any) {
   // FIX: Added filter states to dependency array
   const filteredRows = useMemo(() => {
     return tableRowsData.map((row: any) => {
-      const filteredItems = row.report_items.filter((item: any) =>
-        activeLeafIds.includes(item.statement_column_id)
-      );
+      const filteredReportItems = row.report_items.map((reportItem: any) => {
+        const filteredColumns =
+          reportItem.statement_columns?.filter((item: any) =>
+            activeLeafIds.includes(item.statement_column_id)
+          ) || [];
+
+        return {
+          ...reportItem,
+          statement_columns: filteredColumns,
+        };
+      });
+
       return {
         ...row,
-        report_items: filteredItems,
+        report_items: filteredReportItems,
       };
     });
   }, [
@@ -144,7 +153,7 @@ function ResourceContainer({reportName}:any) {
     searchTerm,
     selectedRegion,
     selectedPeriod,
-  ]); // Added dependencies
+  ]);
 
   const handlePrint = () => {
     if (tableRef.current) {
@@ -163,15 +172,9 @@ function ResourceContainer({reportName}:any) {
   };
 
   const chartComponents: Record<string, React.ReactNode> = {
-    "Daromad": (
-      <EmployeeIncomeChart activeTab={activeTab} />
-    ),
-    "Jamg'arma": (
-      <EmployeeFundChart activeTab={activeTab} />
-    ),
-    "Xodimlar hisobi": (
-      <EmployeeReportChart activeTab={activeTab} />
-    ),
+    Daromad: <EmployeeIncomeChart activeTab={activeTab} />,
+    "Jamg'arma": <EmployeeFundChart activeTab={activeTab} />,
+    "Xodimlar hisobi": <EmployeeReportChart activeTab={activeTab} />,
     "36101e9e-5517-4861-b0f7-aca274a5dce0": (
       <LandAcquisitionChart activeTab={activeTab} />
     ),
@@ -382,7 +385,7 @@ function ResourceContainer({reportName}:any) {
                         <TableColumn
                           ref={tableRef}
                           data={col?.children}
-                           rows={filteredRows}
+                          rows={filteredRows}
                           onRowClick={(row: any) => setSelectedRow(row)}
                           selectedRow={selectedRow}
                           userCheckTable={userCheckTable}
