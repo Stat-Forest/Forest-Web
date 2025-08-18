@@ -28,8 +28,6 @@ const TableColumn = forwardRef(
     }: any,
     ref
   ) => {
-    console.log(rows);
-    console.log(selectedRow);
     const tableRef = useRef<HTMLDivElement>(null);
     // const printRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();

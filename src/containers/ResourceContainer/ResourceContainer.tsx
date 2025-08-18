@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 function ResourceContainer({ reportName }: any) {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +57,7 @@ function ResourceContainer({ reportName }: any) {
     isLoading: isHeadersLoading,
     isError: isErrorHeaders,
   } = useGetStatementColumnsReportQuery(
-    { statementId: id || "", lang },
+    { statementId: id || "", lang, isUser: "" },
     { skip: !id }
   );
 
@@ -240,6 +241,56 @@ function ResourceContainer({ reportName }: any) {
                   <div>{sumComponents[id as string] || null}</div>
                   <div>
                     <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                      <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
+                        {(user_role === "tashkilot_hodimi" ||
+                          user_role === "super_admin" ||
+                          user_role === "hududiy_boshqarma") && (
+                          <button
+                            className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
+                            onClick={() =>
+                              navigate("/resource-management/create")
+                            }
+                          >
+                            Yangi hisobot yaratish
+                          </button>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
+                              Export
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56 mt-2 mr-2">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const headerRows =
+                                  tableRef.current?.getHeaderRows?.();
+                                const bodyRows = filteredRows.map(
+                                  (row: any, index: number) => [
+                                    index + 1,
+                                    ...row.report_items.map(
+                                      (item: any) => item.value ?? "-"
+                                    ),
+                                    "✏️🗑️",
+                                  ]
+                                );
+
+                                if (headerRows && bodyRows) {
+                                  exportToExcel(headerRows, bodyRows);
+                                } else {
+                                  alert("Jadvalni eksport qilishda xatolik!");
+                                }
+                              }}
+                            >
+                              Hisobotni export qilib olish
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={handlePrint}>
+                              Hisobotni chop etish
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                       <div className="flex flex-wrap gap-3 w-full md:w-auto">
                         <Input
                           placeholder="Qidiruv"
@@ -251,7 +302,7 @@ function ResourceContainer({ reportName }: any) {
                           value={selectedRegion}
                           onValueChange={setSelectedRegion}
                         >
-                          <SelectTrigger className="w-full md:w-[260px] text-xl min-h-[40px] border-black">
+                          <SelectTrigger className="w-full md:w-[220px] text-xl min-h-[40px] border-black">
                             <SelectValue placeholder="Region" />
                           </SelectTrigger>
                           <SelectContent>
@@ -307,7 +358,7 @@ function ResourceContainer({ reportName }: any) {
                           value={selectedPeriod}
                           onValueChange={setSelectedPeriod}
                         >
-                          <SelectTrigger className="w-full md:w-[260px] text-xl min-h-[40px] border-black">
+                          <SelectTrigger className="w-full md:w-[220px] text-xl min-h-[40px] border-black">
                             <SelectValue placeholder="Hisobot turi" />
                           </SelectTrigger>
                           <SelectContent>
@@ -323,56 +374,12 @@ function ResourceContainer({ reportName }: any) {
                             <SelectItem value="yearly">Yillik</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
-                        {(user_role === "tashkilot_hodimi" ||
-                          user_role === "super_admin" ||
-                          user_role === "hududiy_boshqarma") && (
-                          <button
-                            className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
-                            onClick={() =>
-                              navigate("/resource-management/create")
-                            }
-                          >
-                            Yangi hisobot yaratish
-                          </button>
-                        )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
-                              Export
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="w-56 mt-2 mr-2">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                const headerRows =
-                                  tableRef.current?.getHeaderRows?.();
-                                const bodyRows = filteredRows.map(
-                                  (row: any, index: number) => [
-                                    index + 1,
-                                    ...row.report_items.map(
-                                      (item: any) => item.value ?? "-"
-                                    ),
-                                    "✏️🗑️",
-                                  ]
-                                );
-
-                                if (headerRows && bodyRows) {
-                                  exportToExcel(headerRows, bodyRows);
-                                } else {
-                                  alert("Jadvalni eksport qilishda xatolik!");
-                                }
-                              }}
-                            >
-                              Hisobotni export qilib olish
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={handlePrint}>
-                              Hisobotni chop etish
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Input
+                          className="w-full border border-[black] md:w-[150px]"
+                          type="number"
+                          placeholder="Yili"
+                        />
+                        <Button>Qidiruv</Button>
                       </div>
                     </div>
 

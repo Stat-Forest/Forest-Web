@@ -76,7 +76,7 @@ function EmployeeAnalysisCreate() {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
-    { statementId: reportIds, lang },
+    { statementId: reportIds, lang, isUser:"true" },
     {
       skip: !reportIds,
       refetchOnMountOrArgChange: false,
@@ -379,7 +379,7 @@ function EmployeeAnalysisCreate() {
       </div>
 
       {currentEmptyColumns.length > 0 ? (
-        <div className="overflow-x-auto">
+        <div className="">
           <div className="mb-4 flex justify-between">
             <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
             <span className="text-sm text-gray-500">
@@ -389,8 +389,10 @@ function EmployeeAnalysisCreate() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ustun nomi</TableHead>
-                <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                <TableHead className="max-w-[250px] break-words whitespace-normal">
+                  Ustun nomi
+                </TableHead>
+                <TableHead className="min-w-[100px]">Qiymat</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -400,7 +402,9 @@ function EmployeeAnalysisCreate() {
                 if (col.title.toLowerCase().includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
-                      <TableCell>{col.fullParentChain}</TableCell>
+                      <TableCell className="break-words whitespace-normal max-w-[1000px]">
+                        {col.fullParentChain}
+                      </TableCell>
                       <TableCell>
                         <select
                           value={selectedOrganizationId}
@@ -422,10 +426,13 @@ function EmployeeAnalysisCreate() {
                     </TableRow>
                   );
                 }
+
                 return (
                   <TableRow key={col.id}>
-                    <TableCell>{col.fullParentChain}</TableCell>
-                    <TableCell>
+                    <TableCell className="break-words whitespace-normal max-w-[1500px]">
+                      {col.fullParentChain}
+                    </TableCell>
+                    <TableCell className="max-w-[50px]">
                       <Input
                         type="number"
                         value={formValues[col.id] || ""}
@@ -434,7 +441,7 @@ function EmployeeAnalysisCreate() {
                           !isTotalField &&
                           handleInputChange(col.id, e.target.value)
                         }
-                        className={isTotalField ? "bg-gray-100" : ""}
+                        className={isTotalField ? "bg-gray-100 w-[100px]" : "w-[300px]"}
                         required={!isTotalField}
                       />
                     </TableCell>
@@ -476,7 +483,7 @@ function EmployeeAnalysisCreate() {
           </Button>
         )}
       </div>
-    </form>
+    </form> 
   );
 }
 

@@ -49,10 +49,10 @@ export const reportApi = createApi({
     }),
     getStatementColumnsReport: builder.query<
       any,
-      { statementId: any; lang: string }
+      { statementId: any; lang: string; isUser: string }
     >({
-      query: ({ statementId, lang }) => ({
-        url: `/statement-columns/?statement=${statementId}&lang=${lang}`,
+      query: ({ statementId, lang, isUser }) => ({
+        url: `/statement-columns/?statement=${statementId}&lang=${lang}&is_user_input=${isUser}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -73,7 +73,7 @@ export const reportApi = createApi({
     }),
     getPlanColumnsReport: builder.query<any, { search: string }>({
       query: ({ search }) => ({
-        url: `/plan-columns/?search=${search}`,
+        url: `/plan-columns/?statement=${search}`,
         method: "GET",
       }),
     }),
