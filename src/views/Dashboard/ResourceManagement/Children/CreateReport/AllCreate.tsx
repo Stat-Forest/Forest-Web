@@ -9,11 +9,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "@/app/store";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 import {
   fetchReportDeadlines,
-  reportApi,
   useCreateReportMutation,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
@@ -49,7 +48,6 @@ function findEmptyChildrenColumnIds(
 }
 
 function AllCreateReportItem() {
-  const dispatch = useDispatch<AppDispatch>();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
@@ -65,7 +63,7 @@ function AllCreateReportItem() {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
-    { statementId: reportIds as string, lang, isUser:"true" },
+    { statementId: reportIds as string, lang, isUser: "true" },
     {
       skip: !reportIds,
     }
@@ -75,68 +73,12 @@ function AllCreateReportItem() {
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
-  const [planListMap, setPlanListMap] = useState<Record<string, number>>({});
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
-
-  // Fetch plan values for "Reja" columns
-  useEffect(() => {
-    const fetchPlanLists = async () => {
-      if (
-        !selectedOrganizationId ||
-        !reportIds ||
-        !tableHeadersData ||
-        tableHeadersData.length === 0
-      ) {
-        return;
-      }
-
-      const allStepsEmptyCols = tableHeadersData
-        .map((obj: any) =>
-          Array.isArray(obj.children)
-            ? findEmptyChildrenColumnIds(obj.children)
-            : []
-        )
-        .flat();
-
-      const rejaLeafColumns = allStepsEmptyCols.filter((col: any) =>
-        col.title.toLowerCase().includes("reja")
-      );
-
-      const requests = rejaLeafColumns.map(async (col: any) => {
-        try {
-          const response = await dispatch(
-            reportApi.endpoints.getPlanListReport.initiate({
-              columnId: col.id,
-              organization: selectedOrganizationId,
-              statement: reportIds,
-              page: "",
-              search: "",
-              year: "",
-            })
-          ).unwrap();
-          const planValue = response?.results[0]?.plan_value ?? 0;
-          return { columnId: col.id, planValue };
-        } catch (error) {
-          console.error(`❌ So‘rov xatoligi: columnId=${col.id}`, error);
-          return { columnId: col.id, planValue: 0 };
-        }
-      });
-
-      const results = await Promise.all(requests);
-      const newPlanMap: Record<string, number> = {};
-      results.forEach(({ columnId, planValue }) => {
-        newPlanMap[columnId] = planValue;
-      });
-      setPlanListMap(newPlanMap);
-    };
-
-    fetchPlanLists();
-  }, [selectedOrganizationId, reportIds, dispatch]);
 
   // Initialize empty columns by step
   useEffect(() => {
@@ -153,6 +95,21 @@ function AllCreateReportItem() {
       setCurrentStep(0);
     }
   }, [tableHeadersData]);
+
+  // Set initial input values to "1"
+  useEffect(() => {
+    if (currentEmptyColumns.length > 0) {
+      const initialValues: Record<string, any> = {};
+
+      currentEmptyColumns.forEach((col) => {
+        if (!col.title.toLowerCase().includes("tashkilot")) {
+          initialValues[col.id] = "1";
+        }
+      });
+
+      setFormValues((prev) => ({ ...prev, ...initialValues }));
+    }
+  }, [currentStep, currentEmptyColumns]);
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
@@ -178,19 +135,42 @@ function AllCreateReportItem() {
     }
 
     const allColumns = allEmptyColumnsByStep.flat();
-    const report_items = allColumns.map((col) => ({
-      statement_column: col.id,
-      value: col.title.toLowerCase().includes("tashkilot")
-        ? selectedOrganizationId
-        : col.title.toLowerCase().includes("reja")
-        ? String(planListMap[col.id] ?? "1")
-        : String(formValues[col.id] || "1"),
-    }));
+
+    const report_items = allColumns
+      .map((col) => {
+        const isOrganizationColumn = col.title
+          .toLowerCase()
+          .includes("tashkilot");
+
+        // Use selected organization ID for organization columns
+        const rawValue = isOrganizationColumn
+          ? selectedOrganizationId
+          : formValues[col.id];
+
+        // Skip empty values
+        if (!rawValue) return null;
+
+        const columnValues = Array.isArray(rawValue) ? rawValue : [rawValue];
+
+        const inners = columnValues
+          .filter(
+            (value) => value !== null && value !== undefined && value !== ""
+          )
+          .map((value) => ({ value: String(value) }));
+
+        return {
+          statement_column: col.id,
+          inners,
+        };
+      })
+      .filter((item) => item !== null); // Remove empty items
 
     const payload = {
       deadline: selectedDeadlineId,
       report_items,
     };
+
+    console.log("Payload:", payload);
 
     try {
       const res = await createReportItem(payload).unwrap();
@@ -259,21 +239,9 @@ function AllCreateReportItem() {
             </TableHeader>
             <TableBody>
               {currentEmptyColumns.map((col) => {
-                if (col.title.toLowerCase().includes("reja")) {
-                  return (
-                    <TableRow key={col.id}>
-                      <TableCell>{col.fullParentChain}</TableCell>
-                      <TableCell>
-                        <Input
-                          value={planListMap[col.id] ?? ""}
-                          disabled
-                          className="bg-gray-100"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                }
-                if (col.title.toLowerCase().includes("tashkilot")) {
+                const lowerTitle = col.title.toLowerCase();
+                // Agar "tashkilot" bo'lsa
+                if (lowerTitle.includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
                       <TableCell>{col.fullParentChain}</TableCell>
@@ -281,8 +249,8 @@ function AllCreateReportItem() {
                         <select
                           value={selectedOrganizationId}
                           onChange={(e) => {
-                            handleInputChange(col.id, e.target.value);
                             setSelectedOrganizationId(e.target.value);
+                            handleInputChange(col.id, e.target.value);
                           }}
                           className="w-full border rounded px-2 py-1"
                           required
@@ -298,6 +266,8 @@ function AllCreateReportItem() {
                     </TableRow>
                   );
                 }
+
+                // Oddiy ustunlar
                 return (
                   <TableRow key={col.id}>
                     <TableCell>{col.fullParentChain}</TableCell>
@@ -318,7 +288,7 @@ function AllCreateReportItem() {
           </Table>
         </div>
       ) : (
-        <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
+        <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
       )}
 
       <div className="flex justify-between items-center pt-4">

@@ -1,10 +1,7 @@
 import { useSelector } from "react-redux";
 import CreateFinanceReport from "./FinanceCreate";
 import FundCreate from "./FundCreate";
-import EmployeeCountCreate from "./EmployeeCountCreate";
 import LandAcquisitionCreate from "./LandAcquisitionCreate";
-import LeasedLandAccountCreate from "./LeasedLandAccountCreate";
-import EmployeeAnalysisCreate from "./EmployeeAnalysisCreate";
 import ClosedRootCreate from "./ClosedRootCreate";
 import BuildForestCreate from "./BuildForestCreate";
 import RodPrepareCreate from "./RodPrepareCreate";
@@ -19,14 +16,8 @@ function CreateReportItem() {
     return <CreateFinanceReport />;
   } else if (reportName === "Jamg'arma") {
     return <FundCreate />;
-  } else if (reportName === "Xodimlar hisobi") {
-    return <EmployeeCountCreate />;
   } else if (reportName === "Yer o‘zlashtirish") {
     return <LandAcquisitionCreate />;
-  } else if (reportName === "Ijaraga berilgan yerlar hisobi") {
-    return <LeasedLandAccountCreate />;
-  } else if (reportName === "Xodimlar hisobi taxlili") {
-    return <EmployeeAnalysisCreate />;
   } else if (reportName === "Yopiq ildiz yirik hajmli") {
     return <ClosedRootCreate />;
   } else if (reportName === "O'rmon barpo qilish bo'limi") {
