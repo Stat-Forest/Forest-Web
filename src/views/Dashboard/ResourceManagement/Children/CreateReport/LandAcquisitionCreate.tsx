@@ -89,7 +89,7 @@ function LandAcquisitionCreate() {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
-    { statementId: reportIds, lang },
+    { statementId: reportIds, lang,isUser:"true" },
     {
       skip: !reportIds,
     }

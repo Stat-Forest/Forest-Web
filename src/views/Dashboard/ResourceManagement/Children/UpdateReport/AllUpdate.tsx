@@ -70,7 +70,7 @@ function AllUpdate() {
     useGetStatementColumnsReportQuery(
       {
         statementId: reportIds,
-        lang,
+        lang,isUser:"true"
       },
       {
         skip: !reportIds,

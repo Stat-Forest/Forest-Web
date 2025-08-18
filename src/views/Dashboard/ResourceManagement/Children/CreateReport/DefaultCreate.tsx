@@ -54,7 +54,7 @@ const DefaultCreate = () => {
     isLoading: isHeaderLoading,
     error: headersError,
   } = useGetStatementColumnsReportQuery(
-    { statementId: reportIds as string, lang },
+    { statementId: reportIds as string, lang,isUser:"true" },
     {
       skip: !reportIds,
     }
