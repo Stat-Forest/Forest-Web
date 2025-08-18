@@ -39,7 +39,6 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
 
   useEffect(() => {
     if (data && data.length > 0) {
-
       let ilovaData = [];
 
       if (activeTab === "1-ilova") {
@@ -129,46 +128,50 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
         style={{ background: "white", borderRadius: "10px", filter: "none" }}
         className="shadow"
       >
-        <div className="flex items-center justify-between px-5 py-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="bg-[#09B86F] text-white w-full">Export</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-full max-w-[200px]">
-              <DropdownMenuItem
-                onClick={() => exportAs("pdf")}
-                className="w-full gap-2"
-              >
-                <span className="flex items-center gap-2">
-                  <FileDown size={16} /> Export PDF
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => exportAs("png")}
-                className="w-full gap-2"
-              >
-                <span className="flex items-center gap-2">
-                  <FileImage size={16} /> Export PNG
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => exportAs("svg")}
-                className="w-full gap-2"
-              >
-                <span className="flex items-center gap-2">
-                  <FileCode size={16} /> Export SVG
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => exportAs("print")}
-                className="w-full gap-2"
-              >
-                <span className="flex items-center gap-2">
-                  <Printer size={16} /> Print
-                </span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center justify-end px-5 py-2">
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-[#09B86F] text-white w-full">
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full max-w-[200px]">
+                <DropdownMenuItem
+                  onClick={() => exportAs("pdf")}
+                  className="w-full gap-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileDown size={16} /> Export PDF
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportAs("png")}
+                  className="w-full gap-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileImage size={16} /> Export PNG
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportAs("svg")}
+                  className="w-full gap-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileCode size={16} /> Export SVG
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportAs("print")}
+                  className="w-full gap-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <Printer size={16} /> Print
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {activeTab === "1-ilova" && (
