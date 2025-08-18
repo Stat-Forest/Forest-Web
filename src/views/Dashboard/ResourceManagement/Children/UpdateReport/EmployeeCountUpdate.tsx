@@ -90,7 +90,7 @@ function EmployeeCountUpdate() {
     useGetStatementColumnsReportQuery(
       {
         statementId: reportIds,
-        lang,
+        lang,isUser:"true"
       },
       {
         skip: !reportIds,
