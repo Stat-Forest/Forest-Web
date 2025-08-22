@@ -1,25 +1,14 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  useGetAllReportsQuery,
-  useGetStatementColumnsReportQuery,
-} from "@/services/reportsApi";
-import TableColumn from "@/components/Table/RecurceTable/TableColumn";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { useDispatch, useSelector } from "react-redux";
-import { setReportId } from "@/features/reportSlice";
-import { exportToExcel } from "@/utils/exportToExcel";
 import { RootState } from "@/app/store";
-import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
-import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
+import EmployeeAnalysisChart from "@/components/Charts/EmployeeAnalysisChart";
 import EmployeeReportChart from "@/components/Charts/EmployeeReportChart";
-import LandAcquisitionChart from "@/components/Charts/LandAcquisitionChart";
+import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
+import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
 import LandForestChart from "@/components/Charts/LandForestChart";
 import LandRentedChart from "@/components/Charts/LandRentedChart";
-import { Loader2 } from "lucide-react";
+import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
+import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import IncomeSum from "@/components/Sum/IncomeSum";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +23,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { setReportId } from "@/features/reportSlice";
+import {
+  useGetAllReportsQuery,
+  useGetStatementColumnsReportQuery,
+} from "@/services/reportsApi";
+import {
+  useGetEmployeeAnalysisSumQuery,
+  useGetEmployeeReportSumQuery,
+  useGetFinanceFundSumQuery,
+  useGetIncomeSumQuery,
+  useGetLandAcquisitionSumQuery,
+} from "@/services/sumApi";
+import { exportToExcel } from "@/utils/exportToExcel";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 
 function ResourceContainer({ reportName }: any) {
   const { id } = useParams<{ id: string }>();
@@ -47,11 +55,15 @@ function ResourceContainer({ reportName }: any) {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const lang = useSelector((state: RootState) => state.language.lang);
 
+  const [activeTab, setActiveTab] = useState<string>("");
+  const tableRef = useRef<any>(null);
+
   // Filter states - use "all" instead of empty string
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
 
+  // api
   const {
     data: tableHeadersData = [],
     isLoading: isHeadersLoading,
@@ -70,22 +82,47 @@ function ResourceContainer({ reportName }: any) {
     id
       ? {
           statement: id,
-          status: "",
-          // Convert "all" to empty string for API
+          status: "status=accepted", // shu yerga yozish to‘g‘ri
           organization__region: selectedRegion === "all" ? "" : selectedRegion,
           statement__period: selectedPeriod === "all" ? "" : selectedPeriod,
           search: searchTerm,
         }
       : skipToken
   );
+  
 
-  const isLoading = isHeadersLoading || isRowsLoading;
+  // SUM API
+  const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
+    useGetEmployeeAnalysisSumQuery();
+
+  const { data: financeIncomeSum, isLoading: isFinaceIncomeLoading } =
+    useGetIncomeSumQuery();
+
+  const { data: employeeReportSum, isLoading: isEmployeeReportSumLoading } =
+    useGetEmployeeReportSumQuery();
+
+  const { data: financeFundSum, isLoading: isFinaceFundSumLoading } =
+    useGetFinanceFundSumQuery();
+
+  const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
+    useGetLandAcquisitionSumQuery();
+
+  // Statistics API
+  // const { data: financeChart } = use;
+
+  const isLoading =
+    isHeadersLoading ||
+    isRowsLoading ||
+    isEmployeeAnalysisLoading ||
+    isFinaceIncomeLoading ||
+    isEmployeeReportSumLoading ||
+    isFinaceFundSumLoading ||
+    isLandAcquisitionLoading;
+
   const isError = isErrorHeaders || isErrorRows;
 
-  const [activeTab, setActiveTab] = useState<string>("");
-  const tableRef = useRef<any>(null);
+  // hooks
 
-  // Reset filters when report changes
   useEffect(() => {
     setSearchTerm("");
     setSelectedRegion("all");
@@ -128,7 +165,6 @@ function ResourceContainer({ reportName }: any) {
     return tabLeafIdMap[activeTab] || [];
   }, [tabLeafIdMap, activeTab]);
 
-  // FIX: Added filter states to dependency array
   const filteredRows = useMemo(() => {
     return tableRowsData.map((row: any) => {
       const filteredReportItems = row.report_items.map((reportItem: any) => {
@@ -173,12 +209,12 @@ function ResourceContainer({ reportName }: any) {
   };
 
   const chartComponents: Record<string, React.ReactNode> = {
-    Daromad: <EmployeeIncomeChart activeTab={activeTab} />,
+    Daromad: (
+      <EmployeeIncomeChart activeTab={activeTab} data={"financeChart"} />
+    ),
     "Jamg'arma": <EmployeeFundChart activeTab={activeTab} />,
     "Xodimlar hisobi": <EmployeeReportChart activeTab={activeTab} />,
-    "36101e9e-5517-4861-b0f7-aca274a5dce0": (
-      <LandAcquisitionChart activeTab={activeTab} />
-    ),
+    "Xodimlar hisobi taxlili": <EmployeeAnalysisChart activeTab={activeTab} />,
     "94872f60-abd7-45d7-9764-e12cfeee3b35": (
       <LandForestChart activeTab={activeTab} />
     ),
@@ -188,16 +224,29 @@ function ResourceContainer({ reportName }: any) {
   };
 
   const sumComponents: Record<string, React.ReactNode> = {
-    "945d9e04-9f5a-4247-934d-5b775e15a1da": <IncomeSum activeTab={activeTab} />,
+    Daromad: (
+      <EmployeeAnalysisSum activeTab={activeTab} data={financeIncomeSum} />
+    ),
+    "Xodimlar hisobi taxlili": (
+      <EmployeeAnalysisSum activeTab={activeTab} data={employeeAnalysisSum} />
+    ),
+    "Xodimlar hisobi": (
+      <EmployeeAnalysisSum activeTab={activeTab} data={employeeReportSum} />
+    ),
+    "Jamg'arma": (
+      <EmployeeAnalysisSum activeTab={activeTab} data={financeFundSum} />
+    ),
+    "Yer o‘zlashtirish": (
+      <EmployeeAnalysisSum activeTab={activeTab} data={landAcquisition} />
+    ),
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="flex justify-center items-center h-[80vh]">
+      <div className="flex justify-center items-center py-10 w-full h-[20vh]">
         <Loader2 className="animate-spin text-blue-500 w-12 h-12" />
       </div>
     );
-  }
 
   if (isError) {
     return (
@@ -238,7 +287,7 @@ function ResourceContainer({ reportName }: any) {
               {activeTab === col.title && (
                 <>
                   <div>{chartComponents[reportName as string] || null}</div>
-                  <div>{sumComponents[id as string] || null}</div>
+                  <div>{sumComponents[reportName as string] || null}</div>
                   <div>
                     <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                       <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">

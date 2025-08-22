@@ -12,7 +12,25 @@ export const sumApi = createApi({
     getIncomeSum: builder.query<any, void>({
       query: () => `/finance-income/`,
     }),
+    getEmployeeAnalysisSum: builder.query<any, void>({
+      query: () => `/employee-analysis/`,
+    }),
+    getEmployeeReportSum: builder.query<any, void>({
+      query: () => `/employee-report/`,
+    }),
+    getFinanceFundSum: builder.query<any, void>({
+      query: () => `/finance-fund/`,
+    }),
+    getLandAcquisitionSum: builder.query<any, void>({
+      query: () => `/land-acquisition/`,
+    }),
   }),
 });
 
-export const { useGetIncomeSumQuery } = sumApi;
+export const {
+  useGetIncomeSumQuery,
+  useGetEmployeeAnalysisSumQuery,
+  useGetEmployeeReportSumQuery,
+  useGetFinanceFundSumQuery,
+  useGetLandAcquisitionSumQuery
+} = sumApi;
