@@ -236,19 +236,19 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
               <Bar
                 dataKey="O`rta maxsus"
                 stackId={"a"}
-                fill={colors?.boshqaruv}
+                fill={colors?.xizmat}
               />
               <Bar dataKey="O`rta" stackId={"a"} fill={colors?.boshqaruv} />
-              <Bar dataKey="Ayol" stackId={"a"} fill={colors?.boshqaruv} />
+              <Bar dataKey="Ayol" stackId={"a"} fill={colors?.ishchi} />
               <Bar
                 dataKey="Erkak xodimlar"
                 stackId={"a"}
-                fill={colors?.boshqaruv}
+                fill={colors?.mutaxassis}
               />
               <Bar
                 dataKey="Yoshlar Jami"
                 stackId={"a"}
-                fill={colors?.boshqaruv}
+                fill={colors?.texnik}
               />
             </BarChart>
           </ResponsiveContainer>

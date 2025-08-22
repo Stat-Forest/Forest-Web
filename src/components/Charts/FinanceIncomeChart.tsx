@@ -21,8 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileDown, FileImage, FileCode, Printer } from "lucide-react";
 
-import { useGetEmployeeIncomeStatQuery } from "@/services/statistikApi";
-
 const colors = {
   boshqaruv: "#2ECC71",
   mutaxassis: "#F4B740",
@@ -32,15 +30,19 @@ const colors = {
   ishchi: "#FF00FF",
 };
 
-const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
-  const { data, isLoading } = useGetEmployeeIncomeStatQuery();
+const EmployeeIncomeChart = ({
+  activeTab,
+  data,
+}: {
+  activeTab: string;
+  data: any;
+}) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
     if (data && data.length > 0) {
-
       let ilovaData = [];
 
       if (activeTab === "Daromad turlari bo‘yicha") {
@@ -116,10 +118,6 @@ const EmployeeIncomeChart = ({ activeTab }: { activeTab: string }) => {
       setTimeout(() => printWindow.print(), 500);
     }
   };
-
-  if (isLoading) {
-    return <div className="p-5">Loading...</div>;
-  }
 
   return (
     <div className="my-2">
