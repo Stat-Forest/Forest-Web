@@ -87,9 +87,9 @@ function CreateReport() {
       return;
     }
 
-    const plan_items = Object.entries(values).map(([column, value]) => ({
+    const plan_items = Object.entries(values).map(([column, plan_value]) => ({
       column,
-      value,
+      plan_value,
     }));
 
     const payload = {

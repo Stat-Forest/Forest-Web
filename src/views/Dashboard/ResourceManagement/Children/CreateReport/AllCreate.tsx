@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/app/store";
 import {
   fetchReportDeadlines,
   useCreateReportMutation,
   useGetStatementColumnsReportQuery,
+  reportApi,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
@@ -48,9 +49,19 @@ function findEmptyChildrenColumnIds(
 }
 
 function AllCreateReportItem() {
+  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
+  const [selectedOrganizationId, setSelectedOrganizationId] =
+    useState<string>("");
+  const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
+    { id: string; title: string; fullParentChain: string }[][]
+  >([]);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const {
     data: organizationsData,
@@ -64,23 +75,10 @@ function AllCreateReportItem() {
     error: headersError,
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds as string, lang, isUser: "true" },
-    {
-      skip: !reportIds,
-    }
+    { skip: !reportIds }
   );
 
-  const [formValues, setFormValues] = useState<Record<string, any>>({});
-  const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
-  const [selectedOrganizationId, setSelectedOrganizationId] =
-    useState<string>("");
-  const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
-    { id: string; title: string; fullParentChain: string }[][]
-  >([]);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-
-  const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
-
-  // Initialize empty columns by step
+  // Bo'sh ustunlarni step-larga bo'lish
   useEffect(() => {
     if (tableHeadersData.length > 0) {
       const allStepsEmptyCols = tableHeadersData.map((obj: any) =>
@@ -96,20 +94,75 @@ function AllCreateReportItem() {
     }
   }, [tableHeadersData]);
 
-  // Set initial input values to "1"
+  // Boshlang'ich qiymatlarni o'rnatish
   useEffect(() => {
-    if (currentEmptyColumns.length > 0) {
+    if (allEmptyColumnsByStep[currentStep]?.length > 0) {
       const initialValues: Record<string, any> = {};
-
-      currentEmptyColumns.forEach((col) => {
-        if (!col.title.toLowerCase().includes("tashkilot")) {
+      allEmptyColumnsByStep[currentStep].forEach((col) => {
+        if (
+          !col.title.toLowerCase().includes("tashkilot") &&
+          !col.title.toLowerCase().includes("reja")
+        ) {
           initialValues[col.id] = "1";
         }
       });
-
       setFormValues((prev) => ({ ...prev, ...initialValues }));
     }
-  }, [currentStep, currentEmptyColumns]);
+  }, [currentStep, allEmptyColumnsByStep]);
+
+  // ✅ Plan ma'lumotlarini olish (har bir "reja" column uchun)
+  const [planItems, setPlanItems] = useState<
+    { columnId: string; plan_value: string; fullParentChain: string }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchPlanDataForColumns = async () => {
+      const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
+
+      const rejaColumns = currentEmptyColumns.filter((col) =>
+        col.title.toLowerCase().includes("reja")
+      );
+
+      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
+        return;
+
+      try {
+        const results = await Promise.all(
+          rejaColumns.map((col) =>
+            dispatch(
+              reportApi.endpoints.getPlanItemsReport.initiate({
+                organization_id: selectedOrganizationId,
+                statement_id: reportIds as string,
+                year: "2025",
+                column: col.id,
+              })
+            ).unwrap()
+          )
+        );
+
+        const mergedResults = rejaColumns.map((col, idx) => {
+          const res = results[idx]?.[0]; // API array qaytaradi
+          return {
+            columnId: col.id,
+            fullParentChain: col.fullParentChain,
+            plan_value: res?.plan_value?.toString() || "",
+          };
+        });
+
+        setPlanItems(mergedResults);
+      } catch (error) {
+        console.error("Plan ma'lumotlarini olishda xatolik:", error);
+      }
+    };
+
+    fetchPlanDataForColumns();
+  }, [
+    currentStep,
+    allEmptyColumnsByStep,
+    selectedOrganizationId,
+    reportIds,
+    dispatch,
+  ]);
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
@@ -125,7 +178,7 @@ function AllCreateReportItem() {
       return;
     }
     if (
-      currentEmptyColumns.some((col) =>
+      allEmptyColumnsByStep[currentStep]?.some((col) =>
         col.title.toLowerCase().includes("tashkilot")
       ) &&
       !selectedOrganizationId
@@ -141,13 +194,19 @@ function AllCreateReportItem() {
         const isOrganizationColumn = col.title
           .toLowerCase()
           .includes("tashkilot");
+        const isRejaColumn = col.title.toLowerCase().includes("reja");
 
-        // Use selected organization ID for organization columns
-        const rawValue = isOrganizationColumn
-          ? selectedOrganizationId
-          : formValues[col.id];
+        let rawValue;
 
-        // Skip empty values
+        if (isOrganizationColumn) {
+          rawValue = selectedOrganizationId;
+        } else if (isRejaColumn) {
+          const planItem = planItems.find((item) => item.columnId === col.id);
+          rawValue = planItem ? planItem.plan_value : "";
+        } else {
+          rawValue = formValues[col.id];
+        }
+
         if (!rawValue) return null;
 
         const columnValues = Array.isArray(rawValue) ? rawValue : [rawValue];
@@ -163,25 +222,26 @@ function AllCreateReportItem() {
           inners,
         };
       })
-      .filter((item) => item !== null); // Remove empty items
+      .filter((item) => item !== null);
 
-    const payload = {
-      deadline: selectedDeadlineId,
-      report_items,
-    };
+    const payload = { deadline: selectedDeadlineId, report_items };
+console.log("Yuborilmoqda:", payload);
+    await createReportItem(payload);
+    removeCookie("reportId");
+    navigate(-1);
+    setFormValues({});
+    setCurrentStep(0);
 
-    console.log("Payload:", payload);
-
-    try {
-      const res = await createReportItem(payload).unwrap();
-      console.log("Yuborildi:", res);
-      removeCookie("reportId");
-      navigate(-1);
-      setFormValues({});
-      setCurrentStep(0);
-    } catch (err: any) {
-      console.error("Yuborishda xatolik:", err?.data || err?.message);
-    }
+    // try {
+    //   const res = await createReportItem(payload)
+    //   console.log("Yuborildi:", res);
+    //   removeCookie("reportId");
+    //   navigate(-1);
+    //   setFormValues({});
+    //   setCurrentStep(0);
+    // } catch (err: any) {
+    //   console.error("Yuborishda xatolik:", err?.data || err?.message);
+    // }
   };
 
   if (isHeaderLoading || isOrgLoading)
@@ -191,14 +251,10 @@ function AllCreateReportItem() {
     return (
       <div className="text-red-500 p-4">
         <p>Xatolik yuz berdi:</p>
-        <ul className="list-disc list-inside">
-          {<li>Deadline ma'lumotlarini yuklashda xatolik</li>}
-          {headersError && <li>Jadval ustunlarini olishda xatolik</li>}
-          {orgError && <li>Tashkilotlar ro'yxatini olishda xatolik</li>}
-        </ul>
       </div>
     );
 
+  const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title || `Qadam ${currentStep + 1}`;
@@ -240,7 +296,30 @@ function AllCreateReportItem() {
             <TableBody>
               {currentEmptyColumns.map((col) => {
                 const lowerTitle = col.title.toLowerCase();
-                // Agar "tashkilot" bo'lsa
+
+                // Reja ustunlari
+                if (lowerTitle.includes("reja")) {
+                  const planItem = planItems.find(
+                    (item) => item.columnId === col.id
+                  );
+                  const planValue = planItem ? planItem.plan_value : "";
+
+                  return (
+                    <TableRow key={col.id}>
+                      <TableCell>{col.fullParentChain}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          value={planValue}
+                          disabled
+                          className="bg-gray-100 cursor-not-allowed"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
+                // Tashkilot ustuni
                 if (lowerTitle.includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>

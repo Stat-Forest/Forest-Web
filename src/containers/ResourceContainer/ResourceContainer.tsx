@@ -82,14 +82,13 @@ function ResourceContainer({ reportName }: any) {
     id
       ? {
           statement: id,
-          status: "status=accepted", // shu yerga yozish to‘g‘ri
+          status: "status=", // shu yerga yozish to‘g‘ri
           organization__region: selectedRegion === "all" ? "" : selectedRegion,
           statement__period: selectedPeriod === "all" ? "" : selectedPeriod,
           search: searchTerm,
         }
       : skipToken
   );
-  
 
   // SUM API
   const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
@@ -146,6 +145,7 @@ function ResourceContainer({ reportName }: any) {
     });
     return ids;
   };
+  console.log(tableRowsData);
 
   const tabLeafIdMap = useMemo(() => {
     const map: Record<string, string[]> = {};

@@ -98,6 +98,17 @@ export const reportApi = createApi({
       providesTags: ["Reports"],
     }),
 
+    getPlanItemsReport: builder.query<
+      any,
+      { organization_id:string; statement_id:string; year:string; column:string }
+    >({
+      query: ({ organization_id, statement_id, year, column }) => ({
+        url: `/plan-items/?plan_organization=${organization_id}&column=${column}&plan_statement=${statement_id}&plan_year=${year}`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
+
     // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
       query: (newReport) => ({
@@ -236,6 +247,7 @@ export const {
   useGetPlanColumnsReportQuery,
   useGetPlanListReportQuery,
   useGetPlantsReportQuery,
+  useGetPlanItemsReportQuery,
 
   // POST
   useCreateReportMutation,
