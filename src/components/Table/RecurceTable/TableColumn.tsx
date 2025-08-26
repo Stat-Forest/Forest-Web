@@ -29,6 +29,8 @@ const TableColumn = forwardRef(
     ref
   ) => {
     const tableRef = useRef<HTMLDivElement>(null);
+
+    console.log(rows);
     // const printRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const [sendReport, { isLoading: isSending }] = useSendReportMutation();

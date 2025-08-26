@@ -12,7 +12,7 @@ import AllCreateReportItem from "./AllCreate";
 function CreateReportItem() {
   const reportName = useSelector((state: any) => state.report.reportName);
 
-  if (reportName === "Daromad" || reportName === "Доход") {
+  if (reportName === "all" || reportName === "all") {
     return <CreateFinanceReport />;
   } else if (reportName === "Jamg'arma") {
     return <FundCreate />;
