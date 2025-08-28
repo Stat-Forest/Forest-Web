@@ -13,8 +13,6 @@ import { RootState } from "@/app/store";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
 import ReportItemTable from "./ReportItemTable";
-// import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-// import { exportToExcel } from "@/utils/exportToExcel";
 
 const TableColumn = forwardRef(
   (
@@ -24,14 +22,11 @@ const TableColumn = forwardRef(
       onRowClick,
       selectedRow,
       userCheckTable,
-      tableRowsData,
+      // tableRowsData,
     }: any,
     ref
   ) => {
     const tableRef = useRef<HTMLDivElement>(null);
-
-    console.log(rows);
-    // const printRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const [sendReport, { isLoading: isSending }] = useSendReportMutation();
     const user_role = useSelector((state: RootState) => state.auth.user?.role);
@@ -39,6 +34,9 @@ const TableColumn = forwardRef(
     const [deleteReport] = useDeleteReportMutation();
     const [acceptReport, { isLoading: isAccepting }] =
       useAcceptReportMutation();
+
+    // Qabul qilingan hisobotlarni kuzatish uchun state
+    const [acceptedReports, setAcceptedReports] = useState(new Set());
 
     useImperativeHandle(ref, () => ({
       getTable: () => tableRef.current?.innerHTML,
@@ -91,43 +89,44 @@ const TableColumn = forwardRef(
 
     const headerRows = renderHeaderRows();
 
-    //     const handlePrint = () => {
-    //       if (!printRef.current) return;
-    //       const printContents = printRef.current.innerHTML;
-    //       const printWindow = window.open("", "_blank");
-    //       if (printWindow) {
-    //         printWindow.document.write(`
-    //   <html>
-    //     <head>
-    //       <title>Print Report</title>
-    //       <style>
-    //         * {
-    //           font-family: sans-serif;
-    //           box-sizing: border-box;
-    //         }
-    //         table, th, td {
-    //           border: 1px solid black;
-    //           border-collapse: collapse;
-    //           padding: 6px;
-    //           text-align: center;
-    //         }
-    //         body {
-    //           padding: 20px;
-    //         }
-    //       </style>
-    //     </head>
-    //     <body>
-    //       ${printContents}
-    //     </body>
-    //   </html>
-    // `);
+    // Har bir satr uchun alohida qabul qilish funksiyasi
+    const handleAcceptReport = async (reportId: string) => {
+      if (!reportId) {
+        alert("Hisobot ID topilmadi");
+        return;
+      }
 
-    //         printWindow.document.close();
-    //         printWindow.focus();
-    //         printWindow.print();
-    //         printWindow.close();
-    //       }
-    //     };
+      try {
+        await acceptReport({ id: reportId }).unwrap();
+
+        // Qabul qilingan hisobotlarni ro'yxatga qo'shish
+        setAcceptedReports((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(reportId);
+          return newSet;
+        });
+
+        alert("Hisobot muvaffaqiyatli qabul qilindi!");
+      } catch (error: any) {
+        console.error("Qabul qilishda xatolik:", error);
+
+        if (error.status === 400) {
+          alert(
+            "Noto'g'ri so'rov. Hisobot ID-si noto'g'ri yoki allaqachon qabul qilingan."
+          );
+        } else if (error.status === 401) {
+          alert("Kirish rad etildi. Iltimos, tizimga qayta kiring.");
+        } else if (error.status === 404) {
+          alert("Hisobot topilmadi.");
+        } else {
+          alert(
+            `Qabul qilishda xatolik yuz berdi: ${
+              error.data?.message || error.status
+            }`
+          );
+        }
+      }
+    };
 
     return (
       <>
@@ -209,6 +208,25 @@ const TableColumn = forwardRef(
                       >
                         <Trash2 />
                       </Button>
+
+                      {/* Har bir satr uchun qabul qilish tugmasi */}
+                      {(user_role == "bolim_admin" ||
+                        user_role === "super_admin") && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAcceptReport(row.id);
+                          }}
+                          disabled={isAccepting || acceptedReports.has(row.id)}
+                          className="bg-[#09B86F] rounded hover:bg-[#09B86F]"
+                        >
+                          {isAccepting
+                            ? "..."
+                            : acceptedReports.has(row.id)
+                            ? "Qabul qilindi"
+                            : "Qabul qilish"}
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -221,7 +239,7 @@ const TableColumn = forwardRef(
           <ReportItemTable />
         </div>
 
-        {/* Detal ko‘rinish */}
+        {/* Detal ko'rinish */}
         {userCheckTable && selectedRow && (
           <>
             <div className="flex items-center justify-between my-5">
@@ -242,14 +260,14 @@ const TableColumn = forwardRef(
                     user_role === "super_admin") && (
                     <Button
                       onClick={async () => {
-                        if (!tableRowsData[0]?.id) {
+                        if (!selectedRow?.id) {
                           alert("Hisobot ID topilmadi");
                           return;
                         }
 
                         try {
                           await sendReport({
-                            id: tableRowsData[0]?.id,
+                            id: selectedRow.id,
                           }).unwrap();
                           alert("Hisobot muvaffaqiyatli yuborildi!");
                         } catch (error: any) {
@@ -270,15 +288,23 @@ const TableColumn = forwardRef(
                     user_role === "super_admin") && (
                     <Button
                       onClick={async () => {
-                        if (!tableRowsData[0]?.id) {
+                        if (!selectedRow?.id) {
                           alert("Hisobot ID topilmadi");
                           return;
                         }
 
                         try {
                           await acceptReport({
-                            id: tableRowsData[0]?.id,
+                            id: selectedRow.id,
                           }).unwrap();
+
+                          // Qabul qilingan hisobotlarni ro'yxatga qo'shish
+                          setAcceptedReports((prev) => {
+                            const newSet = new Set(prev);
+                            newSet.add(selectedRow.id);
+                            return newSet;
+                          });
+
                           alert("Hisobot muvaffaqiyatli qabul qilindi!");
                         } catch (error: any) {
                           const msg =
@@ -287,29 +313,18 @@ const TableColumn = forwardRef(
                           alert(msg);
                         }
                       }}
-                      disabled={isAccepting}
+                      disabled={
+                        isAccepting || acceptedReports.has(selectedRow.id)
+                      }
                       className="bg-[#09B86F] rounded w-[150px] hover:bg-[#09B86F]"
                     >
-                      {isAccepting ? "Qabul qilinmoqda..." : "Qabul qilish"}
+                      {isAccepting
+                        ? "Qabul qilinmoqda..."
+                        : acceptedReports.has(selectedRow.id)
+                        ? "Qabul qilindi"
+                        : "Qabul qilish"}
                     </Button>
                   )}
-                  {
-                    //  <DropdownMenu>
-                    //   <DropdownMenuTrigger asChild>
-                    //     <button className="py-1.5 font-semibold w-[100px]  rounded bg-[#09B86F] border-1 text-[white]">
-                    //       Export
-                    //     </button>
-                    //   </DropdownMenuTrigger>
-                    //    <DropdownMenuContent className="w-56 mt-2 mr-2">
-                    //      <DropdownMenuItem onClick={() => exportToExcel(col?.children, filteredRows)}>
-                    //        Hisobodni export qilib olish
-                    //      </DropdownMenuItem>
-                    //      <DropdownMenuItem onClick={handlePrint}>
-                    //        Hisobodni chop etish
-                    //      </DropdownMenuItem>
-                    //    </DropdownMenuContent>
-                    //    </DropdownMenu>
-                  }
                 </div>
               </div>
             </div>
@@ -392,7 +407,7 @@ const TableColumn = forwardRef(
                 </tbody>
               </table>
 
-              {/* QR Code pastga qo‘shiladi (printda ham chiqadi) */}
+              {/* QR Code pastga qo'shiladi (printda ham chiqadi) */}
               {selectedRow.sent_by_full_name &&
                 selectedRow.sent_by_org_name &&
                 selectedRow.sent_by_role && (

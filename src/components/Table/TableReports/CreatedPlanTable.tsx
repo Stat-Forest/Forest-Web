@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Fragment } from "react";
 import {
   Table,
   TableBody,
@@ -11,12 +12,14 @@ import { useDeletePlanMutation } from "@/services/reportsApi";
 import { Edit2, Trash2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function CreatedPlantable({ data }: any) {
   const [deletePlan] = useDeletePlanMutation();
   const { t } = useTranslation();
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [openRow, setOpenRow] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   const handleDelete = async (id: number) => {
     setLoadingId(id);
@@ -55,17 +58,16 @@ function CreatedPlantable({ data }: any) {
 
       <TableBody>
         {data?.map((item: any, index: number) => (
-          <>
+          <Fragment key={item.id}>
             <TableRow
-              key={index}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
               onClick={() => toggleRow(index)}
             >
               <TableCell className="w-[20%] text-lg font-[300] border-none">
-                {item?.organization_name}
+                {item?.organization}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.statement_name}
+                {item?.statement}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
                 {item?.year}
@@ -75,7 +77,10 @@ function CreatedPlantable({ data }: any) {
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
                 <div className="flex items-center justify-center gap-2">
-                  <Button className="bg-[#09B86F] hover:bg-[#09B86F]">
+                  <Button
+                    onClick={() => navigate(`/plan-update/${item.id}`)}
+                    className="bg-[#09B86F] hover:bg-[#09B86F]"
+                  >
                     <Edit2 />
                   </Button>
                   <Button
@@ -111,11 +116,11 @@ function CreatedPlantable({ data }: any) {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-1 gap-4">
                     {item?.plan_items?.map((plan: any, idx: number) => (
                       <div
-                        key={idx}
+                        key={plan.id || idx}
                         className="p-3 border rounded-md shadow-sm bg-white"
                       >
                         <p className="text-sm font-semibold text-gray-700">
-                          {plan.column_name}
+                          {plan?.column_parent_name} {plan.column_name}
                         </p>
                         <p className="text-base text-black">
                           {plan.plan_value}
@@ -126,7 +131,7 @@ function CreatedPlantable({ data }: any) {
                 </TableCell>
               </TableRow>
             )}
-          </>
+          </Fragment>
         ))}
       </TableBody>
     </Table>
