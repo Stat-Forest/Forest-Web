@@ -108,6 +108,13 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
+    getPlanById: builder.query<any, string>({
+      query: (id) => ({
+        url: `/plan/${id}/`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
 
     // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
@@ -174,6 +181,14 @@ export const reportApi = createApi({
         method: "PUT",
         body: { status },
       }),
+    }),
+    updatePlan: builder.mutation<any, { id: string; data: any }>({
+      query: ({ id, data }) => ({
+        url: `/plan/${id}/update/`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Reports"],
     }),
     updateReportSummary: builder.mutation({
       query: ({ id, summary }) => ({
@@ -248,6 +263,7 @@ export const {
   useGetPlanListReportQuery,
   useGetPlantsReportQuery,
   useGetPlanItemsReportQuery,
+  useGetPlanByIdQuery,
 
   // POST
   useCreateReportMutation,
@@ -263,6 +279,7 @@ export const {
   useUpdateReportStatusMutation,
   useUpdateReportSummaryMutation,
   useUpdateReportOwnerMutation,
+  useUpdatePlanMutation,
 
   // DELETE
   useDeleteReportMutation,

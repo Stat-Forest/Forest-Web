@@ -10,12 +10,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function TableReports({ data }: any) {
-  console.log(data);
   const { t } = useTranslation();
+  const [activeId, setActiveId] = useState<null | string>(null); // id string bo‘ladi
 
-  const [activeId, setActiveId] = useState<null | number>(null); // faqat bitta aktiv ID
-
-  const toggleRow = (id: number) => {
+  const toggleRow = (id: string) => {
     setActiveId((prev) => (prev === id ? null : id));
   };
 
@@ -41,11 +39,11 @@ function TableReports({ data }: any) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data?.map((item: any, index: any) => (
+        {data?.map((item: any) => (
           <>
             <TableRow
-              className="h-[50px]"
-              key={index}
+              key={item.id}
+              className="h-[50px] cursor-pointer hover:bg-gray-100"
               onClick={() => toggleRow(item.id)}
             >
               <TableCell className="w-[20%] text-lg font-[300] border-none">
@@ -75,24 +73,60 @@ function TableReports({ data }: any) {
                   {item?.status == "accepted"
                     ? "Qabul qilingan"
                     : item.status == "cancelled"
-                    ? "Qaytailgan"
+                    ? "Qaytarilgan"
                     : item.status == "saved"
                     ? "Qoralama"
                     : "Jo'natilgan"}
                 </span>
               </TableCell>
             </TableRow>
-            {/*  */}
+
+            {/* DETAIL QISMI */}
             {activeId === item.id && (
-              <table>
-                <tr>
-                  <td colSpan={5} className="py-4 px-6 bg-[#f9f9f9] text-left">
-                    <div className="text-sm text-gray-600">
-                      <strong>ID:</strong> {item.id}
+              <div>
+                <TableRow className="bg-[#f9f9f9]">
+                  <TableCell colSpan={5} className="p-4">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border border-gray-300">
+                        <thead className="bg-gray-200">
+                          <tr>
+                            {item.report_items[0]?.statement_columns?.map(
+                              (col: any) => (
+                                <th
+                                  key={col.statement_column_id}
+                                  className="px-2 py-1 border border-gray-300 text-left"
+                                >
+                                  {col.statement_column_name}
+                                </th>
+                              )
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {item.report_items.map(
+                            (reportItem: any, idx: number) => (
+                              <tr key={idx}>
+                                {reportItem.statement_columns.map(
+                                  (col: any) => (
+                                    <td
+                                      key={col.statement_column_id}
+                                      className="px-2 py-1 border border-gray-300 text-left"
+                                    >
+                                      {col.inners
+                                        .map((inner: any) => inner.value)
+                                        .join(", ")}
+                                    </td>
+                                  )
+                                )}
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
                     </div>
-                  </td>
-                </tr>
-              </table>
+                  </TableCell>
+                </TableRow>
+              </div>
             )}
           </>
         ))}

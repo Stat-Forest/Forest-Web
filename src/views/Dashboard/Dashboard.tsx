@@ -17,6 +17,7 @@ import SupportInformation from "./SupportInfomation";
 import ScrollToTop from "@/routes/ScrollToTop";
 import CreatedPlans from "./Main/Children/CreatedPlans";
 import UpdateReportItem from "./ResourceManagement/Children/UpdateReport";
+import UpdatePlans from "./Main/Children/UpdatePlans";
 // import { routes } from "@/routes/routes";
 
 function Dashboard() {
@@ -54,6 +55,7 @@ function Dashboard() {
               <Route path="created-plans" element={<CreatedPlans />} />
             </Route>
             <Route path="plan/create-report" element={<CreateReport />} />
+            <Route path="plan-update/:id" element={<UpdatePlans />} />
             <Route
               path="resource-management/:id"
               element={<ResourceManagement />}
