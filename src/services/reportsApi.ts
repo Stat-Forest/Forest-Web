@@ -80,6 +80,15 @@ export const reportApi = createApi({
     getPlantsReport: builder.query<any, void>({
       query: () => ({ url: `/plants/`, method: "GET" }),
     }),
+    getRepoblicReport: builder.query<any, void>({
+      query: () => ({ url: `/republic/`, method: "GET" }),
+    }),
+    getReganalReport: builder.query<any, { statement: string }>({
+      query: ({ statement }) => ({
+        url: `/regional/?statement=${statement}`,
+        method: "GET",
+      }),
+    }),
     getPlanListReport: builder.query<
       any,
       {
@@ -100,7 +109,12 @@ export const reportApi = createApi({
 
     getPlanItemsReport: builder.query<
       any,
-      { organization_id:string; statement_id:string; year:string; column:string }
+      {
+        organization_id: string;
+        statement_id: string;
+        year: string;
+        column: string;
+      }
     >({
       query: ({ organization_id, statement_id, year, column }) => ({
         url: `/plan-items/?plan_organization=${organization_id}&column=${column}&plan_statement=${statement_id}&plan_year=${year}`,
@@ -264,6 +278,8 @@ export const {
   useGetPlantsReportQuery,
   useGetPlanItemsReportQuery,
   useGetPlanByIdQuery,
+  useGetRepoblicReportQuery,
+  useGetReganalReportQuery,
 
   // POST
   useCreateReportMutation,
