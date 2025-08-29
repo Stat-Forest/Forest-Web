@@ -1,32 +1,11 @@
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
 import { RootState } from "@/app/store";
-import EmployeeAnalysisChart from "@/components/Charts/EmployeeAnalysisChart";
-import EmployeeReportChart from "@/components/Charts/EmployeeReportChart";
-import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
-import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
-import LandForestChart from "@/components/Charts/LandForestChart";
-import LandRentedChart from "@/components/Charts/LandRentedChart";
-import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
-import TableColumn from "@/components/Table/RecurceTable/TableColumn";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setReportId } from "@/features/reportSlice";
 import {
-  useGetAllReportsQuery,
+  // useGetAllReportsQuery,
+  useGetReganalReportQuery,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
 import {
@@ -36,33 +15,89 @@ import {
   useGetIncomeSumQuery,
   useGetLandAcquisitionSumQuery,
 } from "@/services/sumApi";
-import { exportToExcel } from "@/utils/exportToExcel";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+// import { skipToken } from "@reduxjs/toolkit/query";
 
-function ResourceContainer({ reportName }: any) {
+// UI Components
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
+
+// Custom Components
+import EmployeeAnalysisChart from "@/components/Charts/EmployeeAnalysisChart";
+import EmployeeReportChart from "@/components/Charts/EmployeeReportChart";
+import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
+import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
+import LandForestChart from "@/components/Charts/LandForestChart";
+import LandRentedChart from "@/components/Charts/LandRentedChart";
+import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
+import TableColumn from "@/components/Table/RecurceTable/TableColumn";
+import { exportToExcel } from "@/utils/exportToExcel";
+
+interface ReportColumn {
+  id: string;
+  title: string;
+  children?: ReportColumn[];
+}
+
+interface ReportItem {
+  statement_column_id: string;
+  statement_column_name: string;
+  inners: Array<{
+    id?: string;
+    value: string;
+  }>;
+}
+
+interface ReportRow {
+  id: string;
+  organization_name: string;
+  report_items: Array<{
+    organization_id: string;
+    organization_name: string;
+    statement_columns: ReportItem[];
+  }>;
+  children_reports?: ReportRow[];
+  sent_by_full_name?: string;
+  sent_by_org_name?: string;
+  sent_by_role?: string;
+}
+
+function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const user_role = useSelector((state: RootState) => state.auth.user?.role);
-  const userCheckTable = user_role !== "tashkilot_hodimi";
-
-  const [selectedRow, setSelectedRow] = useState<any | null>(null);
-  const lang = useSelector((state: RootState) => state.language.lang);
-
-  const [activeTab, setActiveTab] = useState<string>("");
   const tableRef = useRef<any>(null);
 
-  // Filter states
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
+  const lang = useSelector((state: RootState) => state.language.lang);
+  const userCheckTable = user_role !== "tashkilot_hodimi";
+
+  const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("");
 
-  // api
+  // API calls
+  // const { data: regional, isLoading: isRegionalLoading } =
+  //   useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
+
   const {
     data: tableHeadersData = [],
     isLoading: isHeadersLoading,
@@ -77,17 +112,9 @@ function ResourceContainer({ reportName }: any) {
     isLoading: isRowsLoading,
     isError: isErrorRows,
     isFetching: isRowsFetching,
-  } = useGetAllReportsQuery(
-    id
-      ? {
-          statement: id,
-          organization__region: selectedRegion === "all" ? "" : selectedRegion,
-          statement__period: selectedPeriod === "all" ? "" : selectedPeriod,
-          search: searchTerm,
-          status: "",
-        }
-      : skipToken
-  );
+  } =  useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
+
+  console.log(tableRowsData?.results)
 
   // SUM API
   const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
@@ -116,6 +143,7 @@ function ResourceContainer({ reportName }: any) {
     setSearchTerm("");
     setSelectedRegion("all");
     setSelectedPeriod("all");
+    setSelectedYear("");
   }, [id]);
 
   useEffect(() => {
@@ -124,7 +152,7 @@ function ResourceContainer({ reportName }: any) {
     }
   }, [id, dispatch]);
 
-  const getLeafColumnIds = (nodes: any[]): string[] => {
+  const getLeafColumnIds = (nodes: ReportColumn[]): string[] => {
     let ids: string[] = [];
     nodes.forEach((node) => {
       if (!node.children || node.children.length === 0) {
@@ -136,9 +164,11 @@ function ResourceContainer({ reportName }: any) {
     return ids;
   };
 
+  console.log(getLeafColumnIds);
+
   const tabLeafIdMap = useMemo(() => {
     const map: Record<string, string[]> = {};
-    tableHeadersData.forEach((col: any) => {
+    tableHeadersData.forEach((col: ReportColumn) => {
       map[col.title] = getLeafColumnIds(col.children || []);
     });
     return map;
@@ -154,16 +184,20 @@ function ResourceContainer({ reportName }: any) {
     return tabLeafIdMap[activeTab] || [];
   }, [tabLeafIdMap, activeTab]);
 
-  // ✅ Fix: Reja yo‘qolmasligi uchun filter shartini yumshatdik
   const filteredRows = useMemo(() => {
-    return tableRowsData.map((row: any) => {
+    function filterRow(row: any): any {
       const filteredReportItems = row.report_items.map((reportItem: any) => {
         let filteredColumns = reportItem.statement_columns || [];
 
         if (activeLeafIds.length > 0) {
-          filteredColumns = filteredColumns.filter((item: any) =>
-            activeLeafIds.includes(item.statement_column_id)
-          );
+          filteredColumns = filteredColumns
+            .filter((col: any) =>
+              activeLeafIds.includes(col.statement_column_id)
+            )
+            .map((col: any) => ({
+              ...col,
+              inners: col.inners || [],
+            }));
         }
 
         return {
@@ -175,15 +209,14 @@ function ResourceContainer({ reportName }: any) {
       return {
         ...row,
         report_items: filteredReportItems,
+        children_reports: (row.children_reports || []).map(filterRow), // rekursiv
       };
-    });
-  }, [
-    tableRowsData,
-    activeLeafIds,
-    searchTerm,
-    selectedRegion,
-    selectedPeriod,
-  ]);
+    }
+
+    return tableRowsData?.results?.map(filterRow);
+  }, [tableRowsData, activeLeafIds]);
+
+  console.log(filteredRows);
 
   const handlePrint = () => {
     if (tableRef.current) {
@@ -263,7 +296,7 @@ function ResourceContainer({ reportName }: any) {
         className="w-full"
       >
         <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
-          {tableHeadersData.map((col: any) => (
+          {tableHeadersData.map((col: ReportColumn) => (
             <TabsTrigger
               key={col.id}
               value={col.title}
@@ -274,12 +307,12 @@ function ResourceContainer({ reportName }: any) {
           ))}
         </TabsList>
 
-        {tableHeadersData.map((col: any) => (
+        {tableHeadersData.map((col: ReportColumn) => (
           <TabsContent key={col.id} value={col.title}>
             {activeTab === col.title && (
               <>
-                <div>{chartComponents[reportName as string] || null}</div>
-                <div>{sumComponents[reportName as string] || null}</div>
+                <div>{chartComponents[reportName] || null}</div>
+                <div>{sumComponents[reportName] || null}</div>
 
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   {/* Filters */}
@@ -306,7 +339,7 @@ function ResourceContainer({ reportName }: any) {
                             const headerRows =
                               tableRef.current?.getHeaderRows?.();
                             const bodyRows = filteredRows.map(
-                              (row: any, index: number) => [
+                              (row: ReportRow, index: number) => [
                                 index + 1,
                                 ...row.report_items.map(
                                   (item: any) => item.value ?? "-"
@@ -416,6 +449,8 @@ function ResourceContainer({ reportName }: any) {
                       className="w-full border border-[black] md:w-[150px]"
                       type="number"
                       placeholder="Yili"
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
                     />
                     <Button>Qidiruv</Button>
                   </div>
@@ -431,7 +466,7 @@ function ResourceContainer({ reportName }: any) {
                       ref={tableRef}
                       data={col?.children}
                       rows={filteredRows}
-                      onRowClick={(row: any) => setSelectedRow(row)}
+                      onRowClick={(row: ReportRow) => setSelectedRow(row)}
                       selectedRow={selectedRow}
                       userCheckTable={userCheckTable}
                       tableRowsData={tableRowsData}

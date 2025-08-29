@@ -1,4 +1,5 @@
 // TableColumn.tsx
+import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +23,7 @@ const TableColumn = forwardRef(
       onRowClick,
       selectedRow,
       userCheckTable,
-      // tableRowsData,
+      tableRowsData,
     }: any,
     ref
   ) => {
@@ -89,44 +90,8 @@ const TableColumn = forwardRef(
 
     const headerRows = renderHeaderRows();
 
-    // Har bir satr uchun alohida qabul qilish funksiyasi
-    const handleAcceptReport = async (reportId: string) => {
-      if (!reportId) {
-        alert("Hisobot ID topilmadi");
-        return;
-      }
-
-      try {
-        await acceptReport({ id: reportId }).unwrap();
-
-        // Qabul qilingan hisobotlarni ro'yxatga qo'shish
-        setAcceptedReports((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(reportId);
-          return newSet;
-        });
-
-        alert("Hisobot muvaffaqiyatli qabul qilindi!");
-      } catch (error: any) {
-        console.error("Qabul qilishda xatolik:", error);
-
-        if (error.status === 400) {
-          alert(
-            "Noto'g'ri so'rov. Hisobot ID-si noto'g'ri yoki allaqachon qabul qilingan."
-          );
-        } else if (error.status === 401) {
-          alert("Kirish rad etildi. Iltimos, tizimga qayta kiring.");
-        } else if (error.status === 404) {
-          alert("Hisobot topilmadi.");
-        } else {
-          alert(
-            `Qabul qilishda xatolik yuz berdi: ${
-              error.data?.message || error.status
-            }`
-          );
-        }
-      }
-    };
+    console.log("tableRowsData:", tableRowsData);
+    console.log("rows:", rows);
 
     return (
       <>
@@ -166,70 +131,83 @@ const TableColumn = forwardRef(
             </thead>
             <tbody>
               {rows.map((row: any, rowIndex: number) => (
-                <tr
-                  key={row.id}
-                  onClick={() => onRowClick(row)}
-                  className="cursor-pointer hover:bg-gray-100"
-                >
-                  <td className="border border-black px-2 py-1 text-center">
-                    {rowIndex + 1}
-                  </td>
-                  {row.report_items?.map((reportItem: any) =>
-                    reportItem.statement_columns?.map((col: any) =>
-                      col.inners?.map((inner: any, index: number) => (
-                        <td
-                          key={inner.id || index}
-                          className="border min-w-[380px] border-black px-2 py-1 text-center"
-                        >
-                          {inner.value}
-                        </td>
-                      ))
-                    )
-                  )}
+                <Fragment key={row.id}>
+                  {/* Asosiy row */}
+                  <tr
+                    onClick={() => onRowClick(row)}
+                    className="cursor-pointer hover:bg-gray-100"
+                  >
+                    <td className="border border-black px-2 py-1 text-center"></td>
+                    {row.report_items?.map((reportItem: any) =>
+                      reportItem.statement_columns?.map((col: any) =>
+                        col.inners?.map((inner: any) => (
+                          <td
+                            key={inner.id}
+                            className="border min-w-[380px] border-black px-2 py-1 text-center font-bold"
+                          >
+                            {inner.value}
+                          </td>
+                        ))
+                      )
+                    )}
 
-                  <td className="border border-black px-2 py-1 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        className="bg-[#09B86F] hover:bg-[#09B86F]"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/resource-management/update/${row?.id}`);
-                        }}
-                      >
-                        <Edit2 />
-                      </Button>
-                      <Button
-                        className="bg-[#09B86F] hover:bg-[#09B86F]"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteReport(row.id);
-                          console.log(row.id);
-                        }}
-                      >
-                        <Trash2 />
-                      </Button>
+                    <td className="border border-black px-2 py-1 text-center"></td>
+                  </tr>
 
-                      {/* Har bir satr uchun qabul qilish tugmasi */}
-                      {(user_role == "bolim_admin" ||
-                        user_role === "super_admin") && (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAcceptReport(row.id);
-                          }}
-                          disabled={isAccepting || acceptedReports.has(row.id)}
-                          className="bg-[#09B86F] rounded hover:bg-[#09B86F]"
+                  {/* Faqat children_reports mavjud bo‘lsa qo‘shiladi */}
+                  {row.children_reports?.length > 0 &&
+                    row.children_reports.map(
+                      (child: any, childIndex: number) => (
+                        <tr
+                          key={child.id || childIndex}
+                          onClick={() => onRowClick(row)}
+                          className="cursor-pointer hover:bg-gray-100"
                         >
-                          {isAccepting
-                            ? "..."
-                            : acceptedReports.has(row.id)
-                            ? "Qabul qilindi"
-                            : "Qabul qilish"}
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                          <td className="border border-black px-2 py-1 text-center">
+                            {rowIndex + 1}.{childIndex + 1}
+                          </td>
+
+                          {child.report_items?.map((reportItem: any) =>
+                            reportItem.statement_columns?.map((col: any) =>
+                              col.inners?.map((inner: any) => (
+                                <td
+                                  key={inner.id}
+                                  className="border min-w-[380px] border-black px-2 py-1 text-center"
+                                >
+                                  {inner.value}
+                                </td>
+                              ))
+                            )
+                          )}
+
+                          <td className="border border-black px-2 py-1 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(
+                                    `/resource-management/update/${row?.id}`
+                                  );
+                                }}
+                              >
+                                <Edit2 />
+                              </Button>
+                              <Button
+                                className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteReport(row.id);
+                                }}
+                              >
+                                <Trash2 />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    )}
+                </Fragment>
               ))}
             </tbody>
           </table>

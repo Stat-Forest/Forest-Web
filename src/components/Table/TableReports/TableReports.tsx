@@ -6,16 +6,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+// import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 function TableReports({ data }: any) {
   const { t } = useTranslation();
-  const [activeId, setActiveId] = useState<null | string>(null); // id string bo‘ladi
+  const navigate = useNavigate();
+  // const [activeId, setActiveId] = useState<null | string>(null); // id string bo‘ladi
 
-  const toggleRow = (id: string) => {
-    setActiveId((prev) => (prev === id ? null : id));
-  };
+  // const toggleRow = (id: string) => {
+  //   setActiveId((prev) => (prev === id ? null : id));
+  // };
 
   return (
     <Table className="w-full">
@@ -44,7 +46,8 @@ function TableReports({ data }: any) {
             <TableRow
               key={item.id}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
-              onClick={() => toggleRow(item.id)}
+              // onClick={() => toggleRow(item.id)}
+              onClick={() => navigate(`/resource-management/${item.sta}`)}
             >
               <TableCell className="w-[20%] text-lg font-[300] border-none">
                 {item?.organization_name}
@@ -82,7 +85,7 @@ function TableReports({ data }: any) {
             </TableRow>
 
             {/* DETAIL QISMI */}
-            {activeId === item.id && (
+            {/* {activeId === item.id && (
               <div>
                 <TableRow className="bg-[#f9f9f9]">
                   <TableCell colSpan={5} className="p-4">
@@ -127,7 +130,7 @@ function TableReports({ data }: any) {
                   </TableCell>
                 </TableRow>
               </div>
-            )}
+            )} */}
           </>
         ))}
       </TableBody>
