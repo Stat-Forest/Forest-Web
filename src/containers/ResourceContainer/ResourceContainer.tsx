@@ -6,6 +6,7 @@ import { setReportId } from "@/features/reportSlice";
 import {
   // useGetAllReportsQuery,
   useGetReganalReportQuery,
+  useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
 import {
@@ -94,10 +95,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("");
 
-  // API calls
-  // const { data: regional, isLoading: isRegionalLoading } =
-  //   useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
-
   const {
     data: tableHeadersData = [],
     isLoading: isHeadersLoading,
@@ -112,9 +109,15 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isLoading: isRowsLoading,
     isError: isErrorRows,
     isFetching: isRowsFetching,
-  } =  useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
+  } = useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
 
-  console.log(tableRowsData?.results)
+  const {
+    data: rupblic,
+    isLoading: isRepublicLoading,
+    isError: isRepublicError,
+  } = useGetRepoblicReportQuery();
+
+  console.log(tableRowsData?.results);
 
   // SUM API
   const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
@@ -135,9 +138,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isFinaceIncomeLoading ||
     isEmployeeReportSumLoading ||
     isFinaceFundSumLoading ||
+    isRepublicLoading ||
     isLandAcquisitionLoading;
 
-  const isError = isErrorHeaders || isErrorRows;
+  const isError = isErrorHeaders || isErrorRows || isRepublicError;
 
   useEffect(() => {
     setSearchTerm("");
@@ -164,8 +168,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     return ids;
   };
 
-  console.log(getLeafColumnIds);
-
   const tabLeafIdMap = useMemo(() => {
     const map: Record<string, string[]> = {};
     tableHeadersData.forEach((col: ReportColumn) => {
@@ -186,25 +188,27 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   const filteredRows = useMemo(() => {
     function filterRow(row: any): any {
-      const filteredReportItems = row.report_items.map((reportItem: any) => {
-        let filteredColumns = reportItem.statement_columns || [];
+      const filteredReportItems = (row.report_items || []).map(
+        (reportItem: any) => {
+          let filteredColumns = reportItem.statement_columns || [];
 
-        if (activeLeafIds.length > 0) {
-          filteredColumns = filteredColumns
-            .filter((col: any) =>
-              activeLeafIds.includes(col.statement_column_id)
-            )
-            .map((col: any) => ({
-              ...col,
-              inners: col.inners || [],
-            }));
+          if (activeLeafIds.length > 0) {
+            filteredColumns = filteredColumns
+              .filter((col: any) =>
+                activeLeafIds.includes(col.statement_column_id)
+              )
+              .map((col: any) => ({
+                ...col,
+                inners: col.inners || [],
+              }));
+          }
+
+          return {
+            ...reportItem,
+            statement_columns: filteredColumns,
+          };
         }
-
-        return {
-          ...reportItem,
-          statement_columns: filteredColumns,
-        };
-      });
+      );
 
       return {
         ...row,
@@ -213,8 +217,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       };
     }
 
-    return tableRowsData?.results?.map(filterRow);
-  }, [tableRowsData, activeLeafIds]);
+    // 🔹 Ikkala endpointni qo‘shib yuboramiz
+    const rows = [
+      ...(tableRowsData?.results || []),
+      ...(rupblic?.results || []),
+    ];
+
+    return rows.map(filterRow);
+  }, [tableRowsData, rupblic, activeLeafIds]);
 
   console.log(filteredRows);
 

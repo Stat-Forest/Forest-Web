@@ -47,7 +47,7 @@ function TableReports({ data }: any) {
               key={item.id}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
               // onClick={() => toggleRow(item.id)}
-              onClick={() => navigate(`/resource-management/${item.sta}`)}
+              onClick={() => navigate(`/resource-management/${item.statement}`)}
             >
               <TableCell className="w-[20%] text-lg font-[300] border-none">
                 {item?.organization_name}
