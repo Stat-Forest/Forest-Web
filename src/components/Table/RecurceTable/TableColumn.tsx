@@ -1,19 +1,42 @@
 // TableColumn.tsx
-import { Fragment } from "react";
+import {
+  Fragment,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
+  useGetAllReportsQuery,
   useSendReportMutation,
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
-import ReportItemTable from "./ReportItemTable";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
+import { skipToken } from "@reduxjs/toolkit/query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 const TableColumn = forwardRef(
   (
@@ -23,25 +46,53 @@ const TableColumn = forwardRef(
       onRowClick,
       selectedRow,
       userCheckTable,
-      tableRowsData,
+      statement_id,
     }: any,
     ref
   ) => {
+    // Tüm hook'ları bileşenin en başında çağırın
     const tableRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [sendReport, { isLoading: isSending }] = useSendReportMutation();
     const user_role = useSelector((state: RootState) => state.auth.user?.role);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [deleteReport] = useDeleteReportMutation();
     const [acceptReport, { isLoading: isAccepting }] =
       useAcceptReportMutation();
-
-    // Qabul qilingan hisobotlarni kuzatish uchun state
+    const [selectedOrganization, setSelectedOrganization] = useState("");
+    const [selectedPeriod, setSelectedPeriod] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
     const [acceptedReports, setAcceptedReports] = useState(new Set());
+
+    // useGetAllReportsQuery hook'unu her zaman çağırın, skipToken ile koşullu yapın
+    const {
+      data: report,
+      isLoading,
+      error,
+    } = useGetAllReportsQuery(
+      statement_id
+        ? {
+            statement: statement_id,
+            status: `status=${selectedStatus}`,
+            organization__region: selectedOrganization,
+            statement__period: selectedPeriod,
+            search: searchTerm,
+          }
+        : skipToken
+    );
 
     useImperativeHandle(ref, () => ({
       getTable: () => tableRef.current?.innerHTML,
     }));
+
+    // Loading ve error durumlarını hook çağrılarından SONRA kontrol edin
+    if (isLoading) return <h1>loading...</h1>;
+    if (error) return <h1>error</h1>;
+
+    console.log(statement_id);
+    console.log(report);
 
     const getMaxDepth = (items: any[]): number => {
       return items.reduce((max: number, item: any) => {
@@ -90,8 +141,14 @@ const TableColumn = forwardRef(
 
     const headerRows = renderHeaderRows();
 
-    console.log("tableRowsData:", tableRowsData);
-    console.log("rows:", rows);
+    // ✅ Toggle row funksiyasi qo‘shildi
+    const toggleRow = (row: any) => {
+      if (selectedRow?.id === row.id) {
+        onRowClick(null); // ikkinchi marta bosilsa yopiladi
+      } else {
+        onRowClick(row); // detail ochiladi
+      }
+    };
 
     return (
       <>
@@ -134,7 +191,7 @@ const TableColumn = forwardRef(
                 <Fragment key={row.id}>
                   {/* Asosiy row */}
                   <tr
-                    onClick={() => onRowClick(row)}
+                    // onClick={() => onRowClick(row)}
                     className="cursor-pointer hover:bg-gray-100"
                   >
                     <td className="border border-black px-2 py-1 text-center"></td>
@@ -154,7 +211,7 @@ const TableColumn = forwardRef(
                     <td className="border border-black px-2 py-1 text-center"></td>
                   </tr>
 
-                  {/* Faqat children_reports mavjud bo‘lsa qo‘shiladi */}
+                  {/* Faqat children_reports mavjud bo'lsa qo'shiladi */}
                   {row.children_reports?.length > 0 &&
                     row.children_reports.map(
                       (child: any, childIndex: number) => (
@@ -214,7 +271,159 @@ const TableColumn = forwardRef(
         </div>
 
         <div className="py-14 pr-2">
-          <ReportItemTable />
+          <div className="flex items-center gap-5 mb-6">
+            <div>
+              <Input
+                type="text"
+                placeholder="Qidiruv..."
+                className="w-[260px] text-xl min-h-[40px] border-black"
+                value={searchTerm}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Select
+                value={selectedOrganization}
+                onValueChange={(value) => setSelectedOrganization(value)}
+              >
+                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                  <SelectValue placeholder="Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tashkent">Tashkent</SelectItem>
+                  <SelectItem value="namangan">Namangan</SelectItem>
+                  <SelectItem value="andijon">Andijon</SelectItem>
+                  <SelectItem value="fargona">Fergana</SelectItem>
+                  <SelectItem value="buxoro">Bukhara</SelectItem>
+                  <SelectItem value="samarqand">Samarkand</SelectItem>
+                  <SelectItem value="navoiy">Navoi</SelectItem>
+                  <SelectItem value="qashqadaryo">Qashqadarya</SelectItem>
+                  <SelectItem value="surxondaryo">Surxondaryo</SelectItem>
+                  <SelectItem value="xorazm">Khorezm</SelectItem>
+                  <SelectItem value="sirdaryo">Sirdaryo</SelectItem>
+                  <SelectItem value="jizzax">Jizzakh</SelectItem>
+                  <SelectItem value="qoraqalpog'iston">
+                    Karakalpakstan
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Select
+                value={selectedPeriod}
+                onValueChange={(value) => setSelectedPeriod(value)}
+              >
+                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                  <SelectValue placeholder="Hisobot turi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Kunlik</SelectItem>
+                  <SelectItem value="weekly">Haftalik</SelectItem>
+                  <SelectItem value="monthly">Oylik</SelectItem>
+                  <SelectItem value="quarterly">Choraklik (3 oy)</SelectItem>
+                  <SelectItem value="yearly">Yillik</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Select
+                value={selectedStatus}
+                onValueChange={(value) => setSelectedStatus(value)}
+              >
+                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                  <SelectValue placeholder="Hisobot holati" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="saved">Qoralama</SelectItem>
+                  <SelectItem value="sent">Jo'natilgan</SelectItem>
+                  <SelectItem value="cancelled">Qaytarilgan</SelectItem>
+                  <SelectItem value="accepted">Qabul qilingan</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Button
+                onClick={() => {
+                  setSelectedOrganization("");
+                  setSelectedPeriod("");
+                  setSelectedStatus("");
+                  setSearchTerm("");
+                }}
+                className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow className="bg-[#eaeaea] h-[50px]">
+                <TableHead className="w-[20%] pl-2 text-lg text-[#717171] border-none">
+                  {t("item_12")}
+                </TableHead>
+                <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+                  {t("item_83")}
+                </TableHead>
+                <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+                  {t("item_14")}
+                </TableHead>
+                <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+                  {t("item_15")}
+                </TableHead>
+                <TableHead className="text-right pr-2 text-[#717171] text-lg w-[20%] border-none">
+                  {t("item_16")}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {report?.map((item: any) => (
+                <TableRow
+                  key={item.id}
+                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${
+                    selectedRow?.id === item.id ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => toggleRow(item)}
+                >
+                  <TableCell className="w-[20%] text-lg font-[300] border-none">
+                    {item?.organization_name}
+                  </TableCell>
+                  <TableCell className="w-[20%] text-base font-[300] border-none">
+                    {item?.statement_name}
+                  </TableCell>
+                  <TableCell className="w-[20%] text-base font-[300] border-none">
+                    {item?.period}
+                  </TableCell>
+                  <TableCell className="w-[20%] text-base font-[300] border-none">
+                    {item?.created_at}
+                  </TableCell>
+                  <TableCell className="text-right text-base font-[400] border-none">
+                    <span
+                      className={`px-4 py-1 rounded-full ${
+                        item.status === "accepted"
+                          ? "bg-[#7fa1f84f] text-[#4579FF]"
+                          : item.status === "cancelled"
+                          ? "bg-[#f9695c74] text-[#FF5445]"
+                          : item.status == "saved"
+                          ? "bg-[#65656555] text-[#4D4D4D]"
+                          : "bg-[#fcc7544a] text-[#fd9c15]"
+                      }`}
+                    >
+                      {item?.status == "accepted"
+                        ? "Qabul qilingan"
+                        : item.status == "cancelled"
+                        ? "Qaytarilgan"
+                        : item.status == "saved"
+                        ? "Qoralama"
+                        : "Jo'natilgan"}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
 
         {/* Detal ko'rinish */}
