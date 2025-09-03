@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { RootState } from "@/app/store";
 import { setReportId } from "@/features/reportSlice";
 import {
-  // useGetAllReportsQuery,
+  useGetAllReportsQuery,
   useGetReganalReportQuery,
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
@@ -16,7 +16,6 @@ import {
   useGetIncomeSumQuery,
   useGetLandAcquisitionSumQuery,
 } from "@/services/sumApi";
-// import { skipToken } from "@reduxjs/toolkit/query";
 
 // UI Components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -105,6 +104,22 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   );
 
   const {
+    data: allReports,
+    isLoading: isAllReportLoading,
+    isError: isAllReportError,
+  } = useGetAllReportsQuery(
+    {
+      statement: id || "",
+      status: "",
+      organization__region: "",
+      statement__period: "",
+      search: "",
+    },
+    { skip: !id }
+  );
+  
+
+  const {
     data: tableRowsData = [],
     isLoading: isRowsLoading,
     isError: isErrorRows,
@@ -139,9 +154,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isEmployeeReportSumLoading ||
     isFinaceFundSumLoading ||
     isRepublicLoading ||
-    isLandAcquisitionLoading;
+    isLandAcquisitionLoading ||
+    isAllReportLoading;
 
-  const isError = isErrorHeaders || isErrorRows || isRepublicError;
+  const isError =
+    isErrorHeaders || isErrorRows || isRepublicError || isAllReportError;
 
   useEffect(() => {
     setSearchTerm("");
@@ -479,7 +496,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       onRowClick={(row: ReportRow) => setSelectedRow(row)}
                       selectedRow={selectedRow}
                       userCheckTable={userCheckTable}
-                      tableRowsData={tableRowsData}
+                      tableRowsData={allReports}
+                      statement_id={id}
                     />
                   )}
                 </div>
