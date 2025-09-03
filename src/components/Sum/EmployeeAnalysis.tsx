@@ -41,7 +41,7 @@ function EmployeeAnalysisSum({ activeTab, data }: any) {
     return Object.entries(obj).map(([label, value], i) => (
       <div
         key={label + i}
-        className="bg-gray-100 h-[180px] rounded-xl py-6 px-4 flex flex-col justify-between"
+        className="bg-gray-100 h-[140px] rounded-xl py-6 px-4 flex flex-col justify-between"
       >
         <h3 className="text-md font-medium text-gray-700">{label}</h3>
         {typeof value === "object" && value !== null ? (
@@ -54,7 +54,7 @@ function EmployeeAnalysisSum({ activeTab, data }: any) {
             ))}
           </div>
         ) : (
-          <h2 className="text-2xl font-bold text-gray-900">{value}</h2>
+          <h2 className="text-xl font-bold text-gray-900">{value}</h2>
         )}
       </div>
     ));
@@ -67,7 +67,7 @@ function EmployeeAnalysisSum({ activeTab, data }: any) {
         <h2>Jadval bo'yicha qisqacha ma'lumot</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {renderEntries(sumData)}
       </div>
     </div>

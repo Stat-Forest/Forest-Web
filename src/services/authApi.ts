@@ -35,6 +35,27 @@ export const authApi = createApi({
         method: "GET",
       }),
     }),
+    sendEmail: builder.mutation({
+      query: (email) => ({
+        url: "/forgot-password/send-code/",
+        method: "POST",
+        body: email,
+      }),
+    }),
+    verifyCode: builder.mutation({
+      query: (data) => ({
+        url: "/forgot-password/verify-code/",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    setNewPassword: builder.mutation({
+      query: (data) => ({
+        url: "/forgot-password/new-password/",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -43,4 +64,7 @@ export const {
   useEimzoLoginMutation,
   useChangePasswordMutation,
   useGetUserProfileQuery,
+  useSendEmailMutation,
+  useVerifyCodeMutation,
+  useSetNewPasswordMutation,
 } = authApi;
