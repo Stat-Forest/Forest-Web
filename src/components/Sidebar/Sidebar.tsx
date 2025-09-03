@@ -8,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { sidebar_3, sidebar_menu } from "@/services/sidebarMenu";
 import {
   useGetStatementsReportQuery,
   useGetUsersReportQuery,
@@ -17,9 +16,11 @@ import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useSidebarMenu } from "@/services/sidebarMenu";
 
 function Sidebar() {
   const { t } = useTranslation();
+  const { sidebar_menu, sidebar_3 } = useSidebarMenu();
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const lang = useSelector((state: RootState) => state.language.lang);

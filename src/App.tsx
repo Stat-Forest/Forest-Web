@@ -6,6 +6,10 @@ import "./i18n";
 import { useSelector } from "react-redux";
 import { RootState } from "./app/store";
 import { useEffect } from "react";
+import ForgetPassword from "./views/Auth/ForgetPassword";
+import Login from "./views/Auth/Login";
+import CheckCode from "./views/Auth/CheckCode";
+import ChangePassword from "./views/Auth/changePassword";
 
 export const user_role = import.meta.env.USER_ROLE;
 
@@ -19,7 +23,12 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth" element={<Auth/>}>
+          <Route index element={<Login />} />
+          <Route path="forget-password" element={<ForgetPassword />} />
+          <Route path="check-code" element={<CheckCode />} />
+          <Route path="change-password" element={<ChangePassword />} />
+        </Route>
         <Route
           path="/*"
           element={
