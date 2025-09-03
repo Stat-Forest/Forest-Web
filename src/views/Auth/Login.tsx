@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "@/services/authApi";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -34,6 +35,7 @@ function Login() {
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // E-IMZO klientini ishga tushirish
   useEffect(() => {
@@ -230,6 +232,7 @@ function Login() {
   };
 
   return (
+    <>
     <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
       <h2 className="text-[30px] font-bold">Tizimga kirish</h2>
 
@@ -300,6 +303,9 @@ function Login() {
                 placeholder="********"
                 required
               />
+              <div className="flex justify-end">
+            <Link to={"/auth/forget-password"} type="button" onClick={()=>setIsModalOpen(true)} className="text-[#09B86F] text-[15px] font-medium">Забыли пароль?</Link>
+              </div>
             </div>
             <Button type="submit" className="bg-green-600 text-white h-[45px]">
               Kirish
@@ -309,6 +315,7 @@ function Login() {
         </TabsContent>
       </Tabs>
     </div>
+      </>
   );
 }
 
