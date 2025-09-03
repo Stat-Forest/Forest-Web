@@ -1,4 +1,4 @@
-import { useChangePasswordMutation, useSetNewPasswordMutation } from '@/services/authApi';
+import { useSetNewPasswordMutation } from '@/services/authApi';
 import { decryptData } from '@/utils/crypto';
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';

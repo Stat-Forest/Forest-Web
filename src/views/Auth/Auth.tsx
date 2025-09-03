@@ -1,5 +1,4 @@
 import { NavLink, Outlet } from "react-router-dom";
-import Login from "./Login";
 import AuthHeader from "@/components/Header/AuthHeader";
 
 function Auth() {
