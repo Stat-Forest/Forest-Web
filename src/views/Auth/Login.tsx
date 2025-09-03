@@ -35,7 +35,6 @@ function Login() {
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // E-IMZO klientini ishga tushirish
   useEffect(() => {
@@ -304,7 +303,7 @@ function Login() {
                 required
               />
               <div className="flex justify-end">
-            <Link to={"/auth/forget-password"} type="button" onClick={()=>setIsModalOpen(true)} className="text-[#09B86F] text-[15px] font-medium">Забыли пароль?</Link>
+            <Link to={"/auth/forget-password"} type="button" className="text-[#09B86F] text-[15px] font-medium">Забыли пароль?</Link>
               </div>
             </div>
             <Button type="submit" className="bg-green-600 text-white h-[45px]">
