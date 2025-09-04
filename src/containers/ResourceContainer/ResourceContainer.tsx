@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { RootState } from "@/app/store";
@@ -31,15 +31,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
 // Custom Components
-import EmployeeAnalysisChart from "@/components/Charts/EmployeeAnalysisChart";
-import EmployeeReportChart from "@/components/Charts/EmployeeReportChart";
-import EmployeeFundChart from "@/components/Charts/FinanceFundChart";
-import EmployeeIncomeChart from "@/components/Charts/FinanceIncomeChart";
-import LandForestChart from "@/components/Charts/LandForestChart";
-import LandRentedChart from "@/components/Charts/LandRentedChart";
 import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
 import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import { exportToExcel } from "@/utils/exportToExcel";
+import ReportChartItem from "@/components/Charts";
 
 interface ReportColumn {
   id: string;
@@ -234,21 +229,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     }
   };
 
-  const chartComponents: Record<string, React.ReactNode> = {
-    Daromad: (
-      <EmployeeIncomeChart activeTab={activeTab} data={"financeChart"} />
-    ),
-    "Jamg'arma": <EmployeeFundChart activeTab={activeTab} />,
-    "Xodimlar hisobi": <EmployeeReportChart activeTab={activeTab} />,
-    "Xodimlar hisobi taxlili": <EmployeeAnalysisChart activeTab={activeTab} />,
-    "94872f60-abd7-45d7-9764-e12cfeee3b35": (
-      <LandForestChart activeTab={activeTab} />
-    ),
-    "b1f640a8-0f23-4130-8f5a-646af6898595": (
-      <LandRentedChart activeTab={activeTab} />
-    ),
-  };
-
   if (isLoading)
     return (
       <div className="flex justify-center items-center py-10 w-full h-[20vh]">
@@ -293,10 +273,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
           <TabsContent key={col.id} value={col.title}>
             {activeTab === col.title && (
               <>
-                <div>{chartComponents[reportName] || null}</div>
-                {/* <div>{sumComponents[reportName] || null}</div> */}
                 <div>
-                  <EmployeeAnalysisSum reportName={reportName} activeTab={activeTab} />
+                  <ReportChartItem activeTab={activeTab} reportName={reportName} />
+                </div>
+                <div>
+                  <EmployeeAnalysisSum
+                    reportName={reportName}
+                    activeTab={activeTab}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
