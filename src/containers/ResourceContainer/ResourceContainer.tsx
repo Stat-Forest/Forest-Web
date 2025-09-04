@@ -7,8 +7,10 @@ import {
   useGetAllReportsQuery,
   useGetIndividualQuery,
   useGetReganalReportQuery,
+  useGetDeadlinesReportQuery,
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
+  useLazyGetReganalReportQuery,
 } from "@/services/reportsApi";
 
 // UI Components
@@ -53,7 +55,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [activeTab, setActiveTab] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("");
 
   const [selectedOrganizationReport, setSelectedOrganizationReport] =
@@ -61,6 +62,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedPeriodReport, setSelectedPeriodReport] = useState("");
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const { data: deadline} = useGetDeadlinesReportQuery();
 
   const {
     data: tableHeadersData = [],
@@ -87,12 +90,21 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       : skipToken
   );
 
-  const {
-    data: tableRowsData = [],
-    isLoading: isRowsLoading,
-    isError: isErrorRows,
-    isFetching: isRowsFetching,
-  } = useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
+
+  const [getRegionalReport, { 
+  data: tableRowsData = [], 
+  isLoading: isRowsLoading, 
+  isError: isErrorRows, 
+  isFetching: isRowsFetching 
+}] = useLazyGetReganalReportQuery();
+
+const handleSearchRegional = () => {
+  getRegionalReport({
+    statement: id || "",
+    region: selectedRegion,
+    deadline: selectedPeriod,
+  });
+};
 
   const {
     data: rupblic,
@@ -299,13 +311,13 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     {(user_role === "tashkilot_hodimi" ||
                       user_role === "super_admin" ||
                       user_role === "hududiy_boshqarma") && (
-                      <button
-                        className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
-                        onClick={() => navigate("/resource-management/create")}
-                      >
-                        Yangi hisobot yaratish
-                      </button>
-                    )}
+                        <button
+                          className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
+                          onClick={() => navigate("/resource-management/create")}
+                        >
+                          Yangi hisobot yaratish
+                        </button>
+                      )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
@@ -376,9 +388,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Hisobot turi" />
                       </SelectTrigger>
                       <SelectContent>
-                        {periods.map((period) => (
-                          <SelectItem key={period.value} value={period.value}>
-                            {period.label}
+                        <SelectItem value="all">Barcha hisobotlar</SelectItem>
+                        {deadline?.results?.map((item: any) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.submit_at}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -390,7 +403,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
                     />
-                    <Button>Qidiruv</Button>
+                    <Button onClick={handleSearchRegional}>Qidiruv</Button>
                   </div>
                 </div>
 
@@ -404,6 +417,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       ref={tableRef}
                       data={col?.children}
                       rows={filteredRows} // reganal + republic
+                      // rows={filteredRows}
                       onRowClick={(row: ReportRow) => setSelectedRow(row)}
                       selectedRow={selectedRow}
                       individualRows={filteredIndividualRows} // individual qo‘shildi ✅
