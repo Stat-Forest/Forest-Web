@@ -6,7 +6,6 @@ import { setReportId } from "@/features/reportSlice";
 import {
   useGetAllReportsQuery,
   useGetIndividualQuery,
-  useGetReganalReportQuery,
   useGetDeadlinesReportQuery,
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
@@ -40,7 +39,7 @@ import { exportToExcel } from "@/utils/exportToExcel";
 import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
-import { periods, regions } from "@/services/constants";
+import { regions } from "@/services/constants";
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
