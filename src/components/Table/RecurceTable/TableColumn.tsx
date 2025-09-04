@@ -34,6 +34,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { periods, regions, statuses } from "@/services/constants";
 
@@ -117,8 +123,11 @@ const TableColumn = forwardRef(
         0
       );
     };
+    
 
     const headerRows = renderHeaderRows();
+
+    
 
     return (
       <>
@@ -203,7 +212,7 @@ const TableColumn = forwardRef(
         </div>
 
         <div className="py-14 pr-2">
-          <div className="flex items-center gap-5 mb-6">
+          <div className="flex items-center gap-5 mb-6 ">
             <div>
               <Input
                 type="text"
@@ -237,7 +246,7 @@ const TableColumn = forwardRef(
                 value={selectedPeriodReport}
                 onValueChange={(value) => setSelectedPeriodReport(value)}
               >
-                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-[200px] text-xl min-h-[40px] border-black">
                   <SelectValue placeholder="Hisobot turi" />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,7 +264,7 @@ const TableColumn = forwardRef(
                 value={selectedStatusReport}
                 onValueChange={(value) => setSelectedStatusReport(value)}
               >
-                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-[200px] text-xl min-h-[40px] border-black">
                   <SelectValue placeholder="Hisobot holati" />
                 </SelectTrigger>
                 <SelectContent>
@@ -358,6 +367,7 @@ const TableColumn = forwardRef(
               <div className="flex items-center gap-2"></div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
+                  
                   {(user_role === "tashkilot_rahbari" ||
                     user_role === "bolim_admin" ||
                     user_role === "super_admin") && (
@@ -437,6 +447,22 @@ const TableColumn = forwardRef(
                         : "Qabul qilish"}
                     </Button>
                   )}
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
+                          Export
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 mt-2 mr-2">
+                        <DropdownMenuItem>
+                          Hisobotni export qilib olish
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem>
+                          Hisobotni chop etish
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
               </div>
             </div>
