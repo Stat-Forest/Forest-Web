@@ -83,7 +83,10 @@ export const reportApi = createApi({
     getRepoblicReport: builder.query<any, void>({
       query: () => ({ url: `/republic/`, method: "GET" }),
     }),
-    getReganalReport: builder.query<any, { statement: string, region: string, deadline: string }>({
+    getReganalReport: builder.query<
+      any,
+      { statement: string; region: string; deadline: string }
+    >({
       query: ({ statement, region, deadline }) => ({
         url: `/regional/?statement=${statement}&region=${region}&deadline=${deadline}`,
         method: "GET",
@@ -193,12 +196,13 @@ export const reportApi = createApi({
 
     // ==== 🟦 PUT endpoints ====
     updateReport: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/${id}/`,
+      query: ({ id, ...rest }) => ({
+        url: `/${id}/update/`,
         method: "PUT",
-        body: data,
+        body: rest,
       }),
     }),
+
     updateReportStatus: builder.mutation({
       query: ({ id, status }) => ({
         url: `/${id}/status/`,
