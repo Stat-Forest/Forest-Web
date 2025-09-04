@@ -62,7 +62,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
-  const { data: deadline} = useGetDeadlinesReportQuery();
+  const { data: deadline } = useGetDeadlinesReportQuery();
 
   const {
     data: tableHeadersData = [],
@@ -80,30 +80,30 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   } = useGetAllReportsQuery(
     id
       ? {
-          statement: id,
-          status: `status=${selectedStatusReport}`,
-          organization__region: selectedOrganizationReport,
-          statement__period: selectedPeriodReport,
-          search: searchTermReport,
-        }
+        statement: id,
+        status: `status=${selectedStatusReport}`,
+        organization__region: selectedOrganizationReport,
+        statement__period: selectedPeriodReport,
+        search: searchTermReport,
+      }
       : skipToken
   );
 
 
-  const [getRegionalReport, { 
-  data: tableRowsData = [], 
-  isLoading: isRowsLoading, 
-  isError: isErrorRows, 
-  isFetching: isRowsFetching 
-}] = useLazyGetReganalReportQuery();
+  const [getRegionalReport, {
+    data: tableRowsData = [],
+    isLoading: isRowsLoading,
+    isError: isErrorRows,
+    isFetching: isRowsFetching
+  }] = useLazyGetReganalReportQuery();
 
-const handleSearchRegional = () => {
-  getRegionalReport({
-    statement: id || "",
-    region: selectedRegion,
-    deadline: selectedPeriod,
-  });
-};
+  const handleSearchRegional = () => {
+    getRegionalReport({
+      statement: id || "",
+      region: selectedRegion,
+      deadline: selectedPeriod,
+    });
+  };
 
   const {
     data: rupblic,
@@ -179,48 +179,40 @@ const handleSearchRegional = () => {
 
   // 🔹 filteredRows: faqat reganal + republic
   const filteredRows = useMemo(() => {
-  function filterRow(row: any): any {
-    const filteredReportItems = (row.report_items || []).map(
-      (reportItem: any) => {
+    function filterRow(row: any): any {
+      const filteredReportItems = (row.report_items || []).map((reportItem: any) => {
+        // mavjud ustunlar
         let filteredColumns = reportItem.statement_columns || [];
 
-        if (activeLeafIds.length > 0) {
-          filteredColumns = filteredColumns
-            .filter((col: any) =>
-              activeLeafIds.includes(col.statement_column_id)
-            )
-            .map((col: any) => ({
-              ...col,
-              inners: col.inners || [],
-            }));
-        }
+        // 🔹 barcha activeLeafIds bo‘yicha bo‘sh ustunlarni qo‘shamiz
+        const normalizedColumns = activeLeafIds.map((colId) => {
+          const found = filteredColumns.find((c: any) => c.statement_column_id === colId);
+          return found || { statement_column_id: colId, value: "-", inners: [] };
+        });
 
         return {
           ...reportItem,
-          statement_columns: filteredColumns,
+          statement_columns: normalizedColumns,
         };
-      }
-    );
+      });
 
-    return {
-      ...row,
-      report_items: filteredReportItems,
-      children_reports: (row.children_reports || []).map(filterRow),
-    };
-  }
+      return {
+        ...row,
+        report_items: filteredReportItems,
+        children_reports: (row.children_reports || []).map(filterRow),
+      };
+    }
 
-  let rows: any[] = [];
+    let rows: any[] = [];
+    if (tableRowsData?.results?.length > 0) {
+      rows = [
+        ...(tableRowsData?.results || []),
+        ...(rupblic?.results || []),
+      ];
+    }
 
-  // ✅ tableRowsData bor bo‘lsa qo‘shamiz
-  if (tableRowsData?.results?.length > 0) {
-    rows = [
-      ...(tableRowsData?.results || []),
-      ...(rupblic?.results || []), // republic faqat shu paytda qo‘shiladi
-    ];
-  }
-
-  return rows.map(filterRow);
-}, [tableRowsData, rupblic, activeLeafIds]);
+    return rows.map(filterRow);
+  }, [tableRowsData, rupblic, activeLeafIds]);
 
   // 🔹 Individual alohida
   const filteredIndividualRows = useMemo(() => {
@@ -420,15 +412,33 @@ const handleSearchRegional = () => {
                     <TableColumn
                       ref={tableRef}
                       data={col?.children}
-                      rows={filteredRows} 
-                      // reganal + republic
-                      // rows={filteredRows}
-                      onRowClick={(row: ReportRow) => setSelectedRow(row)}
+                      rows={filteredRows}
+                      onRowClick={(row: ReportRow) => {
+                        // 🔹 Normalize qilamiz
+                        const normalizedReportItems = (row.report_items || []).map((reportItem: any) => {
+                          const normalizedColumns = activeLeafIds.map((colId) => {
+                            const found = (reportItem.statement_columns || []).find(
+                              (c: any) => c.statement_column_id === colId
+                            );
+                            return found || { statement_column_id: colId, value: "-", inners: [] };
+                          });
+
+                          return {
+                            ...reportItem,
+                            statement_columns: normalizedColumns,
+                          };
+                        });
+
+                        const normalizedRow = {
+                          ...row,
+                          report_items: normalizedReportItems,
+                        };
+
+                        setSelectedRow(normalizedRow);
+                      }}
                       selectedRow={selectedRow}
-                      individualRows={filteredIndividualRows} // individual qo‘shildi ✅
-                      setSelectedOrganizationReport={
-                        setSelectedOrganizationReport
-                      }
+                      individualRows={filteredIndividualRows}
+                      setSelectedOrganizationReport={setSelectedOrganizationReport}
                       setSelectedPeriodReport={setSelectedPeriodReport}
                       setSelectedStatusReport={setSelectedStatusReport}
                       setSearchTermReport={setSearchTermReport}
