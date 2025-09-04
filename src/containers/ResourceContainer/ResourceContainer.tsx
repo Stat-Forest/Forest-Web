@@ -39,7 +39,7 @@ import { exportToExcel } from "@/utils/exportToExcel";
 import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
-import { regions } from "@/services/constants";
+import { regions, regions2 } from "@/services/constants";
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
@@ -179,43 +179,48 @@ const handleSearchRegional = () => {
 
   // 🔹 filteredRows: faqat reganal + republic
   const filteredRows = useMemo(() => {
-    function filterRow(row: any): any {
-      const filteredReportItems = (row.report_items || []).map(
-        (reportItem: any) => {
-          let filteredColumns = reportItem.statement_columns || [];
+  function filterRow(row: any): any {
+    const filteredReportItems = (row.report_items || []).map(
+      (reportItem: any) => {
+        let filteredColumns = reportItem.statement_columns || [];
 
-          if (activeLeafIds.length > 0) {
-            filteredColumns = filteredColumns
-              .filter((col: any) =>
-                activeLeafIds.includes(col.statement_column_id)
-              )
-              .map((col: any) => ({
-                ...col,
-                inners: col.inners || [],
-              }));
-          }
-
-          return {
-            ...reportItem,
-            statement_columns: filteredColumns,
-          };
+        if (activeLeafIds.length > 0) {
+          filteredColumns = filteredColumns
+            .filter((col: any) =>
+              activeLeafIds.includes(col.statement_column_id)
+            )
+            .map((col: any) => ({
+              ...col,
+              inners: col.inners || [],
+            }));
         }
-      );
 
-      return {
-        ...row,
-        report_items: filteredReportItems,
-        children_reports: (row.children_reports || []).map(filterRow),
-      };
-    }
+        return {
+          ...reportItem,
+          statement_columns: filteredColumns,
+        };
+      }
+    );
 
-    const rows = [
+    return {
+      ...row,
+      report_items: filteredReportItems,
+      children_reports: (row.children_reports || []).map(filterRow),
+    };
+  }
+
+  let rows: any[] = [];
+
+  // ✅ tableRowsData bor bo‘lsa qo‘shamiz
+  if (tableRowsData?.results?.length > 0) {
+    rows = [
       ...(tableRowsData?.results || []),
-      ...(rupblic?.results || []),
+      ...(rupblic?.results || []), // republic faqat shu paytda qo‘shiladi
     ];
+  }
 
-    return rows.map(filterRow);
-  }, [tableRowsData, rupblic, activeLeafIds]);
+  return rows.map(filterRow);
+}, [tableRowsData, rupblic, activeLeafIds]);
 
   // 🔹 Individual alohida
   const filteredIndividualRows = useMemo(() => {
@@ -371,7 +376,7 @@ const handleSearchRegional = () => {
                         <SelectValue placeholder="Region" />
                       </SelectTrigger>
                       <SelectContent>
-                        {regions.map((region) => (
+                        {regions2.map((region) => (
                           <SelectItem key={region.value} value={region.value}>
                             {region.label}
                           </SelectItem>
@@ -415,7 +420,8 @@ const handleSearchRegional = () => {
                     <TableColumn
                       ref={tableRef}
                       data={col?.children}
-                      rows={filteredRows} // reganal + republic
+                      rows={filteredRows} 
+                      // reganal + republic
                       // rows={filteredRows}
                       onRowClick={(row: ReportRow) => setSelectedRow(row)}
                       selectedRow={selectedRow}
