@@ -6,9 +6,10 @@ import { setReportId } from "@/features/reportSlice";
 import {
   useGetAllReportsQuery,
   useGetIndividualQuery,
-  useGetReganalReportQuery,
+  useGetDeadlinesReportQuery,
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
+  useLazyGetReganalReportQuery,
 } from "@/services/reportsApi";
 
 // UI Components
@@ -38,7 +39,7 @@ import { exportToExcel } from "@/utils/exportToExcel";
 import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
-import { periods, regions } from "@/services/constants";
+import { regions2 } from "@/services/constants";
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +54,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [activeTab, setActiveTab] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("");
 
   const [selectedOrganizationReport, setSelectedOrganizationReport] =
@@ -61,6 +61,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedPeriodReport, setSelectedPeriodReport] = useState("");
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const { data: deadline} = useGetDeadlinesReportQuery();
 
   const {
     data: tableHeadersData = [],
@@ -87,12 +89,21 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       : skipToken
   );
 
-  const {
-    data: tableRowsData = [],
-    isLoading: isRowsLoading,
-    isError: isErrorRows,
-    isFetching: isRowsFetching,
-  } = useGetReganalReportQuery({ statement: id || "" }, { skip: !id });
+
+  const [getRegionalReport, { 
+  data: tableRowsData = [], 
+  isLoading: isRowsLoading, 
+  isError: isErrorRows, 
+  isFetching: isRowsFetching 
+}] = useLazyGetReganalReportQuery();
+
+const handleSearchRegional = () => {
+  getRegionalReport({
+    statement: id || "",
+    region: selectedRegion,
+    deadline: selectedPeriod,
+  });
+};
 
   const {
     data: rupblic,
@@ -168,43 +179,48 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   // 🔹 filteredRows: faqat reganal + republic
   const filteredRows = useMemo(() => {
-    function filterRow(row: any): any {
-      const filteredReportItems = (row.report_items || []).map(
-        (reportItem: any) => {
-          let filteredColumns = reportItem.statement_columns || [];
+  function filterRow(row: any): any {
+    const filteredReportItems = (row.report_items || []).map(
+      (reportItem: any) => {
+        let filteredColumns = reportItem.statement_columns || [];
 
-          if (activeLeafIds.length > 0) {
-            filteredColumns = filteredColumns
-              .filter((col: any) =>
-                activeLeafIds.includes(col.statement_column_id)
-              )
-              .map((col: any) => ({
-                ...col,
-                inners: col.inners || [],
-              }));
-          }
-
-          return {
-            ...reportItem,
-            statement_columns: filteredColumns,
-          };
+        if (activeLeafIds.length > 0) {
+          filteredColumns = filteredColumns
+            .filter((col: any) =>
+              activeLeafIds.includes(col.statement_column_id)
+            )
+            .map((col: any) => ({
+              ...col,
+              inners: col.inners || [],
+            }));
         }
-      );
 
-      return {
-        ...row,
-        report_items: filteredReportItems,
-        children_reports: (row.children_reports || []).map(filterRow),
-      };
-    }
+        return {
+          ...reportItem,
+          statement_columns: filteredColumns,
+        };
+      }
+    );
 
-    const rows = [
+    return {
+      ...row,
+      report_items: filteredReportItems,
+      children_reports: (row.children_reports || []).map(filterRow),
+    };
+  }
+
+  let rows: any[] = [];
+
+  // ✅ tableRowsData bor bo‘lsa qo‘shamiz
+  if (tableRowsData?.results?.length > 0) {
+    rows = [
       ...(tableRowsData?.results || []),
-      ...(rupblic?.results || []),
+      ...(rupblic?.results || []), // republic faqat shu paytda qo‘shiladi
     ];
+  }
 
-    return rows.map(filterRow);
-  }, [tableRowsData, rupblic, activeLeafIds]);
+  return rows.map(filterRow);
+}, [tableRowsData, rupblic, activeLeafIds]);
 
   // 🔹 Individual alohida
   const filteredIndividualRows = useMemo(() => {
@@ -299,13 +315,13 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     {(user_role === "tashkilot_hodimi" ||
                       user_role === "super_admin" ||
                       user_role === "hududiy_boshqarma") && (
-                      <button
-                        className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
-                        onClick={() => navigate("/resource-management/create")}
-                      >
-                        Yangi hisobot yaratish
-                      </button>
-                    )}
+                        <button
+                          className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
+                          onClick={() => navigate("/resource-management/create")}
+                        >
+                          Yangi hisobot yaratish
+                        </button>
+                      )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
@@ -360,7 +376,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Region" />
                       </SelectTrigger>
                       <SelectContent>
-                        {regions.map((region) => (
+                        {regions2.map((region) => (
                           <SelectItem key={region.value} value={region.value}>
                             {region.label}
                           </SelectItem>
@@ -376,9 +392,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Hisobot turi" />
                       </SelectTrigger>
                       <SelectContent>
-                        {periods.map((period) => (
-                          <SelectItem key={period.value} value={period.value}>
-                            {period.label}
+                        <SelectItem value="all">Barcha hisobotlar</SelectItem>
+                        {deadline?.results?.map((item: any) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.submit_at}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -390,7 +407,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
                     />
-                    <Button>Qidiruv</Button>
+                    <Button onClick={handleSearchRegional}>Qidiruv</Button>
                   </div>
                 </div>
 
@@ -403,7 +420,9 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     <TableColumn
                       ref={tableRef}
                       data={col?.children}
-                      rows={filteredRows} // reganal + republic
+                      rows={filteredRows} 
+                      // reganal + republic
+                      // rows={filteredRows}
                       onRowClick={(row: ReportRow) => setSelectedRow(row)}
                       selectedRow={selectedRow}
                       individualRows={filteredIndividualRows} // individual qo‘shildi ✅

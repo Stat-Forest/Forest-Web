@@ -428,6 +428,3 @@ function AllCreateReportItem() {
 }
 
 export default AllCreateReportItem;
-
-// 14ed253a-b4ad-49ee-a51e-6bf4a7462372
-// 14ed253a-b4ad-49ee-a51e-6bf4a7462372

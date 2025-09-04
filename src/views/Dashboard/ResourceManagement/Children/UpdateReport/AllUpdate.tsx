@@ -1,30 +1,11 @@
 import { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
-import {
-  reportApi,
-  useGetDeadlinesReportQuery,
-  useGetStatementColumnsReportQuery,
-  useGetReportByIdQuery,
-  useUpdateReportMutation,
-} from "@/services/reportsApi";
+import { reportApi, useGetDeadlinesReportQuery, useGetStatementColumnsReportQuery, useGetReportByIdQuery, useUpdateReportMutation, } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { useParams } from "react-router-dom";
 

@@ -83,9 +83,9 @@ export const reportApi = createApi({
     getRepoblicReport: builder.query<any, void>({
       query: () => ({ url: `/republic/`, method: "GET" }),
     }),
-    getReganalReport: builder.query<any, { statement: string }>({
-      query: ({ statement }) => ({
-        url: `/regional/?statement=${statement}`,
+    getReganalReport: builder.query<any, { statement: string, region: string, deadline: string }>({
+      query: ({ statement, region, deadline }) => ({
+        url: `/regional/?statement=${statement}&region=${region}&deadline=${deadline}`,
         method: "GET",
       }),
     }),
@@ -291,6 +291,7 @@ export const {
   useGetRepoblicReportQuery,
   useGetReganalReportQuery,
   useGetIndividualQuery,
+  useLazyGetReganalReportQuery,
 
   // POST
   useCreateReportMutation,
