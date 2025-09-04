@@ -30,3 +30,21 @@ export const statuses = [
   { value: "cancelled", label: "Qaytarilgan" },
   { value: "accepted", label: "Qabul qilingan" },
 ];
+
+export const regions2 = [
+  { value: "all", label: "Barcha regionlar" },
+  { value: "tashkent", label: "Toshkent" },
+  { value: "andijon", label: "Andijon" },
+  { value: "fargona", label: "Fargʻona" },
+  { value: "namangan", label: "Namangan" },
+  { value: "samarqand", label: "Samarqand" },
+  { value: "buxoro", label: "Buxoro" },
+  { value: "navoiy", label: "Navoiy" },
+  { value: "qashqadaryo", label: "Qashqadaryo" },
+  { value: "surxondaryo", label: "Surxondaryo" },
+  { value: "jizzax", label: "Jizzax" },
+  { value: "sirdaryo", label: "Sirdaryo" },
+  { value: "xorazm", label: "Xorazm" },
+  { value: "qoraqalpog‘iston", label: "Qoraqalpog‘iston" },
+  { value: "republic", label: "Respublika tashkilotlari" },
+];
