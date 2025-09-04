@@ -1,8 +1,50 @@
+import {
+  useGetEmployeeAnalysisSumQuery,
+  useGetEmployeeReportSumQuery,
+  useGetFinanceFundSumQuery,
+  useGetIncomeSumQuery,
+  useGetLandAcquisitionSumQuery,
+} from "@/services/sumApi";
 import { ChartNoAxesColumn } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-function EmployeeAnalysisSum({ activeTab, data }: any) {
+function EmployeeAnalysisSum({ activeTab, reportName }: any) {
   const [sumData, setSumData] = useState<Record<string, any>>({});
+
+  const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
+    useGetEmployeeAnalysisSumQuery();
+  const { data: financeIncomeSum, isLoading: isFinaceIncomeLoading } =
+    useGetIncomeSumQuery();
+  const { data: employeeReportSum, isLoading: isEmployeeReportSumLoading } =
+    useGetEmployeeReportSumQuery();
+  const { data: financeFundSum, isLoading: isFinaceFundSumLoading } =
+    useGetFinanceFundSumQuery();
+  const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
+    useGetLandAcquisitionSumQuery();
+
+  // umumiy loading holatini yig'ish
+  const isLoading =
+    isEmployeeAnalysisLoading ||
+    isFinaceIncomeLoading ||
+    isEmployeeReportSumLoading ||
+    isFinaceFundSumLoading ||
+    isLandAcquisitionLoading;
+
+  let data;
+  if (reportName === "Xodimlar tahlili") {
+    data = employeeAnalysisSum;
+  } else if (reportName === "Daromad turlari bo‘yicha") {
+    data = financeIncomeSum;
+  } else if (reportName === "Xodimlar hisoboti") {
+    data = employeeReportSum;
+  } else if (reportName === "Moliya jamg‘armalari") {
+    data = financeFundSum;
+  } else if (reportName === "Yer uchastkalarini egallash") {
+    data = landAcquisition;
+  } else {
+    data = employeeAnalysisSum;
+  }
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -20,15 +62,11 @@ function EmployeeAnalysisSum({ activeTab, data }: any) {
         ilovaData = data[0]["1-ilova"] || {};
       } else if (activeTab === "2-ilova") {
         ilovaData = data[0]["2-ilova"] || {};
-      }
-       else if (activeTab === "3-ilova") {
+      } else if (activeTab === "3-ilova") {
         ilovaData = data[0]["3-ilova"] || {};
-      } 
-       else if (activeTab === "Jamg'arma") {
+      } else if (activeTab === "Jamg'arma") {
         ilovaData = data[0]["Jamg'arma"] || {};
-      } 
-      else {
-        // fallback: butun obyektni berib yuborish
+      } else {
         ilovaData = data[0] || {};
       }
 
@@ -68,7 +106,11 @@ function EmployeeAnalysisSum({ activeTab, data }: any) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {renderEntries(sumData)}
+        {isLoading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-[140px] rounded-xl bg-gray-200" />
+            ))
+          : renderEntries(sumData)}
       </div>
     </div>
   );
