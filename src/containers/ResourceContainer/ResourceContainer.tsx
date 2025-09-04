@@ -9,13 +9,6 @@ import {
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
-import {
-  useGetEmployeeAnalysisSumQuery,
-  useGetEmployeeReportSumQuery,
-  useGetFinanceFundSumQuery,
-  useGetIncomeSumQuery,
-  useGetLandAcquisitionSumQuery,
-} from "@/services/sumApi";
 
 // UI Components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -117,7 +110,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     },
     { skip: !id }
   );
-  
 
   const {
     data: tableRowsData = [],
@@ -132,29 +124,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isError: isRepublicError,
   } = useGetRepoblicReportQuery();
 
-  console.log(tableRowsData?.results);
-
-  // SUM API
-  const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
-    useGetEmployeeAnalysisSumQuery();
-  const { data: financeIncomeSum, isLoading: isFinaceIncomeLoading } =
-    useGetIncomeSumQuery();
-  const { data: employeeReportSum, isLoading: isEmployeeReportSumLoading } =
-    useGetEmployeeReportSumQuery();
-  const { data: financeFundSum, isLoading: isFinaceFundSumLoading } =
-    useGetFinanceFundSumQuery();
-  const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
-    useGetLandAcquisitionSumQuery();
-
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||
-    isEmployeeAnalysisLoading ||
-    isFinaceIncomeLoading ||
-    isEmployeeReportSumLoading ||
-    isFinaceFundSumLoading ||
     isRepublicLoading ||
-    isLandAcquisitionLoading ||
     isAllReportLoading;
 
   const isError =
@@ -276,24 +249,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     ),
   };
 
-  const sumComponents: Record<string, React.ReactNode> = {
-    Daromad: (
-      <EmployeeAnalysisSum activeTab={activeTab} data={financeIncomeSum} />
-    ),
-    "Xodimlar hisobi taxlili": (
-      <EmployeeAnalysisSum activeTab={activeTab} data={employeeAnalysisSum} />
-    ),
-    "Xodimlar hisobi": (
-      <EmployeeAnalysisSum activeTab={activeTab} data={employeeReportSum} />
-    ),
-    "Jamg'arma": (
-      <EmployeeAnalysisSum activeTab={activeTab} data={financeFundSum} />
-    ),
-    "Yer o‘zlashtirish": (
-      <EmployeeAnalysisSum activeTab={activeTab} data={landAcquisition} />
-    ),
-  };
-
   if (isLoading)
     return (
       <div className="flex justify-center items-center py-10 w-full h-[20vh]">
@@ -339,7 +294,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
             {activeTab === col.title && (
               <>
                 <div>{chartComponents[reportName] || null}</div>
-                <div>{sumComponents[reportName] || null}</div>
+                {/* <div>{sumComponents[reportName] || null}</div> */}
+                <div>
+                  <EmployeeAnalysisSum reportName={reportName} activeTab={activeTab} />
+                </div>
 
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   {/* Filters */}
