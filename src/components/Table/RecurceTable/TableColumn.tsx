@@ -217,7 +217,7 @@ const TableColumn = forwardRef(
                       (child: any, childIndex: number) => (
                         <tr
                           key={child.id || childIndex}
-                          onClick={() => onRowClick(row)}
+                          onClick={() => onRowClick(child)}
                           className="cursor-pointer hover:bg-gray-100"
                         >
                           <td className="border border-black px-2 py-1 text-center">
