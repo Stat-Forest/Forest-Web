@@ -1,26 +1,20 @@
-import { useEffect, useState } from "react";
+import { Marquee } from "@/components/magicui/marquee";
 
 const messages = [
   "Tizim hozirda test rejimida",
   "Система сейчас в тестовом режиме",
 ];
 
-const TestModeCarousel = () => {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % messages.length);
-    }, 3000); // Har 3 soniyada almashtirish
-
-    return () => clearInterval(timer);
-  }, []);
-
+export function TestModeCarousel() {
   return (
-    <div className="w-full bg-yellow-100 text-yellow-900 text-center py-2 font-medium shadow">
-      {messages[index]}
+    <div className="fixed top-0 left-0 z-[100] flex w-full items-center justify-center overflow-hidden">
+      <Marquee className="[--duration:15s] text-xs font-medium text-red-500 py-0">
+        {messages.map((msg, i) => (
+          <span key={i} className="mx-8">
+            {msg}
+          </span>
+        ))}
+      </Marquee>
     </div>
   );
-};
-
-export default TestModeCarousel;
+}
