@@ -5,6 +5,7 @@ import { RootState } from "@/app/store";
 import { setReportId } from "@/features/reportSlice";
 import {
   useGetAllReportsQuery,
+  useGetIndividualQuery,
   useGetReganalReportQuery,
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
@@ -35,35 +36,9 @@ import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
 import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import { exportToExcel } from "@/utils/exportToExcel";
 import ReportChartItem from "@/components/Charts";
-
-interface ReportColumn {
-  id: string;
-  title: string;
-  children?: ReportColumn[];
-}
-
-interface ReportItem {
-  statement_column_id: string;
-  statement_column_name: string;
-  inners: Array<{
-    id?: string;
-    value: string;
-  }>;
-}
-
-interface ReportRow {
-  id: string;
-  organization_name: string;
-  report_items: Array<{
-    organization_id: string;
-    organization_name: string;
-    statement_columns: ReportItem[];
-  }>;
-  children_reports?: ReportRow[];
-  sent_by_full_name?: string;
-  sent_by_org_name?: string;
-  sent_by_role?: string;
-}
+import { skipToken } from "@reduxjs/toolkit/query";
+import { ReportColumn, ReportRow } from "@/types/reportInterface";
+import { periods, regions } from "@/services/constants";
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
@@ -73,7 +48,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const lang = useSelector((state: RootState) => state.language.lang);
-  const userCheckTable = user_role !== "tashkilot_hodimi";
 
   const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
@@ -81,6 +55,12 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("");
+
+  const [selectedOrganizationReport, setSelectedOrganizationReport] =
+    useState("");
+  const [selectedPeriodReport, setSelectedPeriodReport] = useState("");
+  const [selectedStatusReport, setSelectedStatusReport] = useState("");
+  const [searchTermReport, setSearchTermReport] = useState("");
 
   const {
     data: tableHeadersData = [],
@@ -92,18 +72,19 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   );
 
   const {
-    data: allReports,
+    data: allReports = [],
     isLoading: isAllReportLoading,
-    isError: isAllReportError,
+    error: isAllReportError,
   } = useGetAllReportsQuery(
-    {
-      statement: id || "",
-      status: "",
-      organization__region: "",
-      statement__period: "",
-      search: "",
-    },
-    { skip: !id }
+    id
+      ? {
+          statement: id,
+          status: `status=${selectedStatusReport}`,
+          organization__region: selectedOrganizationReport,
+          statement__period: selectedPeriodReport,
+          search: searchTermReport,
+        }
+      : skipToken
   );
 
   const {
@@ -119,14 +100,28 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isError: isRepublicError,
   } = useGetRepoblicReportQuery();
 
+  const {
+    data: individualReports,
+    isLoading: isIndividualLoading,
+    isError: isIndividualError,
+  } = useGetIndividualQuery(
+    { statement: id || "", deadline: "", organization: "" },
+    { skip: !id }
+  );
+
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||
     isRepublicLoading ||
-    isAllReportLoading;
+    isAllReportLoading ||
+    isIndividualLoading;
 
   const isError =
-    isErrorHeaders || isErrorRows || isRepublicError || isAllReportError;
+    isErrorHeaders ||
+    isErrorRows ||
+    isRepublicError ||
+    isAllReportError ||
+    isIndividualError;
 
   useEffect(() => {
     setSearchTerm("");
@@ -171,6 +166,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     return tabLeafIdMap[activeTab] || [];
   }, [tabLeafIdMap, activeTab]);
 
+  // 🔹 filteredRows: faqat reganal + republic
   const filteredRows = useMemo(() => {
     function filterRow(row: any): any {
       const filteredReportItems = (row.report_items || []).map(
@@ -198,11 +194,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       return {
         ...row,
         report_items: filteredReportItems,
-        children_reports: (row.children_reports || []).map(filterRow), // rekursiv
+        children_reports: (row.children_reports || []).map(filterRow),
       };
     }
 
-    // 🔹 Ikkala endpointni qo‘shib yuboramiz
     const rows = [
       ...(tableRowsData?.results || []),
       ...(rupblic?.results || []),
@@ -211,7 +206,19 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     return rows.map(filterRow);
   }, [tableRowsData, rupblic, activeLeafIds]);
 
-  console.log(filteredRows);
+  // 🔹 Individual alohida
+  const filteredIndividualRows = useMemo(() => {
+    if (!individualReports?.results) return [];
+    return individualReports.results.map((row: any) => ({
+      ...row,
+      report_items: (row.report_items || []).map((reportItem: any) => ({
+        ...reportItem,
+        statement_columns: (reportItem.statement_columns || []).filter(
+          (col: any) => activeLeafIds.includes(col.statement_column_id)
+        ),
+      })),
+    }));
+  }, [individualReports, activeLeafIds]);
 
   const handlePrint = () => {
     if (tableRef.current) {
@@ -274,7 +281,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
             {activeTab === col.title && (
               <>
                 <div>
-                  <ReportChartItem activeTab={activeTab} reportName={reportName} />
+                  <ReportChartItem
+                    activeTab={activeTab}
+                    reportName={reportName}
+                  />
                 </div>
                 <div>
                   <EmployeeAnalysisSum
@@ -350,49 +360,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Region" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Barcha regionlar</SelectItem>
-                        <SelectItem value="toshkent_shahri">
-                          Toshkent shahri
-                        </SelectItem>
-                        <SelectItem value="toshkent_viloyati">
-                          Toshkent viloyati
-                        </SelectItem>
-                        <SelectItem value="andijon_viloyati">
-                          Andijon viloyati
-                        </SelectItem>
-                        <SelectItem value="fargona_viloyati">
-                          Farg'ona viloyati
-                        </SelectItem>
-                        <SelectItem value="namangan_viloyati">
-                          Namangan viloyati
-                        </SelectItem>
-                        <SelectItem value="samarqand_viloyati">
-                          Samarqand viloyati
-                        </SelectItem>
-                        <SelectItem value="buxoro_viloyati">
-                          Buxoro viloyati
-                        </SelectItem>
-                        <SelectItem value="xorazm_viloyati">
-                          Xorazm viloyati
-                        </SelectItem>
-                        <SelectItem value="surxondaryo_viloyati">
-                          Surxondaryo viloyati
-                        </SelectItem>
-                        <SelectItem value="qashqadaryo_viloyati">
-                          Qashqadaryo viloyati
-                        </SelectItem>
-                        <SelectItem value="jizzax_viloyati">
-                          Jizzax viloyati
-                        </SelectItem>
-                        <SelectItem value="sirdaryo_viloyati">
-                          Sirdaryo viloyati
-                        </SelectItem>
-                        <SelectItem value="navoiy_viloyati">
-                          Navoiy viloyati
-                        </SelectItem>
-                        <SelectItem value="qoraqalpogiston">
-                          Qoraqalpog'iston Respublikasi
-                        </SelectItem>
+                        {regions.map((region) => (
+                          <SelectItem key={region.value} value={region.value}>
+                            {region.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
@@ -404,14 +376,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Hisobot turi" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Barcha hisobotlar</SelectItem>
-                        <SelectItem value="daily">Kunlik</SelectItem>
-                        <SelectItem value="weekly">Haftalik</SelectItem>
-                        <SelectItem value="monthly">Oylik</SelectItem>
-                        <SelectItem value="quarterly">
-                          Choraklik (3 oy)
-                        </SelectItem>
-                        <SelectItem value="yearly">Yillik</SelectItem>
+                        {periods.map((period) => (
+                          <SelectItem key={period.value} value={period.value}>
+                            {period.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <Input
@@ -434,12 +403,21 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     <TableColumn
                       ref={tableRef}
                       data={col?.children}
-                      rows={filteredRows}
+                      rows={filteredRows} // reganal + republic
                       onRowClick={(row: ReportRow) => setSelectedRow(row)}
                       selectedRow={selectedRow}
-                      userCheckTable={userCheckTable}
-                      tableRowsData={allReports}
-                      statement_id={id}
+                      individualRows={filteredIndividualRows} // individual qo‘shildi ✅
+                      setSelectedOrganizationReport={
+                        setSelectedOrganizationReport
+                      }
+                      setSelectedPeriodReport={setSelectedPeriodReport}
+                      setSelectedStatusReport={setSelectedStatusReport}
+                      setSearchTermReport={setSearchTermReport}
+                      selectedOrganizationReport={selectedOrganizationReport}
+                      selectedPeriodReport={selectedPeriodReport}
+                      selectedStatusReport={selectedStatusReport}
+                      searchTermReport={searchTermReport}
+                      allReports={allReports}
                     />
                   )}
                 </div>

@@ -12,7 +12,6 @@ import { useNavigate } from "react-router-dom";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
-  useGetAllReportsQuery,
   useSendReportMutation,
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
@@ -28,7 +27,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "react-i18next";
-import { skipToken } from "@reduxjs/toolkit/query";
 import {
   Select,
   SelectContent,
@@ -37,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { periods, regions, statuses } from "@/services/constants";
 
 const TableColumn = forwardRef(
   (
@@ -45,8 +44,16 @@ const TableColumn = forwardRef(
       rows = [],
       onRowClick,
       selectedRow,
-      userCheckTable,
-      statement_id,
+      allReports,
+      individualRows = [],
+      setSelectedOrganizationReport,
+      setSelectedPeriodReport,
+      setSelectedStatusReport,
+      setSearchTermReport,
+      selectedOrganizationReport,
+      selectedPeriodReport,
+      selectedStatusReport,
+      searchTermReport,
     }: any,
     ref
   ) => {
@@ -60,39 +67,11 @@ const TableColumn = forwardRef(
     const [deleteReport] = useDeleteReportMutation();
     const [acceptReport, { isLoading: isAccepting }] =
       useAcceptReportMutation();
-    const [selectedOrganization, setSelectedOrganization] = useState("");
-    const [selectedPeriod, setSelectedPeriod] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("");
-    const [searchTerm, setSearchTerm] = useState("");
     const [acceptedReports, setAcceptedReports] = useState(new Set());
-
-    // useGetAllReportsQuery hook'unu her zaman çağırın, skipToken ile koşullu yapın
-    const {
-      data: report,
-      isLoading,
-      error,
-    } = useGetAllReportsQuery(
-      statement_id
-        ? {
-            statement: statement_id,
-            status: `status=${selectedStatus}`,
-            organization__region: selectedOrganization,
-            statement__period: selectedPeriod,
-            search: searchTerm,
-          }
-        : skipToken
-    );
 
     useImperativeHandle(ref, () => ({
       getTable: () => tableRef.current?.innerHTML,
     }));
-
-    // Loading ve error durumlarını hook çağrılarından SONRA kontrol edin
-    if (isLoading) return <h1>loading...</h1>;
-    if (error) return <h1>error</h1>;
-
-    console.log(statement_id);
-    console.log(report);
 
     const getMaxDepth = (items: any[]): number => {
       return items.reduce((max: number, item: any) => {
@@ -141,15 +120,6 @@ const TableColumn = forwardRef(
 
     const headerRows = renderHeaderRows();
 
-    // ✅ Toggle row funksiyasi qo‘shildi
-    const toggleRow = (row: any) => {
-      if (selectedRow?.id === row.id) {
-        onRowClick(null); // ikkinchi marta bosilsa yopiladi
-      } else {
-        onRowClick(row); // detail ochiladi
-      }
-    };
-
     return (
       <>
         <div className="overflow-x-auto" ref={tableRef} id="printableTable">
@@ -175,14 +145,6 @@ const TableColumn = forwardRef(
                       {cell.title}
                     </th>
                   ))}
-                  {rowIndex === 0 && (
-                    <th
-                      className="border border-black px-2 py-1 text-center"
-                      rowSpan={maxDepth}
-                    >
-                      Amallar
-                    </th>
-                  )}
                 </tr>
               ))}
             </thead>
@@ -190,10 +152,7 @@ const TableColumn = forwardRef(
               {rows.map((row: any, rowIndex: number) => (
                 <Fragment key={row.id}>
                   {/* Asosiy row */}
-                  <tr
-                    // onClick={() => onRowClick(row)}
-                    className="cursor-pointer hover:bg-gray-100"
-                  >
+                  <tr className="cursor-pointer hover:bg-gray-100">
                     <td className="border border-black px-2 py-1 text-center"></td>
                     {row.report_items?.map((reportItem: any) =>
                       reportItem.statement_columns?.map((col: any) =>
@@ -207,8 +166,6 @@ const TableColumn = forwardRef(
                         ))
                       )
                     )}
-
-                    <td className="border border-black px-2 py-1 text-center"></td>
                   </tr>
 
                   {/* Faqat children_reports mavjud bo'lsa qo'shiladi */}
@@ -236,31 +193,6 @@ const TableColumn = forwardRef(
                               ))
                             )
                           )}
-
-                          <td className="border border-black px-2 py-1 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Button
-                                className="bg-[#09B86F] hover:bg-[#09B86F]"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(
-                                    `/resource-management/update/${row?.id}`
-                                  );
-                                }}
-                              >
-                                <Edit2 />
-                              </Button>
-                              <Button
-                                className="bg-[#09B86F] hover:bg-[#09B86F]"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteReport(row.id);
-                                }}
-                              >
-                                <Trash2 />
-                              </Button>
-                            </div>
-                          </td>
                         </tr>
                       )
                     )}
@@ -277,80 +209,71 @@ const TableColumn = forwardRef(
                 type="text"
                 placeholder="Qidiruv..."
                 className="w-[260px] text-xl min-h-[40px] border-black"
-                value={searchTerm}
-                onChange={(e: any) => setSearchTerm(e.target.value)}
+                value={searchTermReport}
+                onChange={(e: any) => setSearchTermReport(e.target.value)}
               />
             </div>
 
             <div>
               <Select
-                value={selectedOrganization}
-                onValueChange={(value) => setSelectedOrganization(value)}
+                value={selectedOrganizationReport}
+                onValueChange={(value) => setSelectedOrganizationReport(value)}
               >
                 <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                   <SelectValue placeholder="Region" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tashkent">Tashkent</SelectItem>
-                  <SelectItem value="namangan">Namangan</SelectItem>
-                  <SelectItem value="andijon">Andijon</SelectItem>
-                  <SelectItem value="fargona">Fergana</SelectItem>
-                  <SelectItem value="buxoro">Bukhara</SelectItem>
-                  <SelectItem value="samarqand">Samarkand</SelectItem>
-                  <SelectItem value="navoiy">Navoi</SelectItem>
-                  <SelectItem value="qashqadaryo">Qashqadarya</SelectItem>
-                  <SelectItem value="surxondaryo">Surxondaryo</SelectItem>
-                  <SelectItem value="xorazm">Khorezm</SelectItem>
-                  <SelectItem value="sirdaryo">Sirdaryo</SelectItem>
-                  <SelectItem value="jizzax">Jizzakh</SelectItem>
-                  <SelectItem value="qoraqalpog'iston">
-                    Karakalpakstan
-                  </SelectItem>
+                  {regions.map((region) => (
+                    <SelectItem key={region.value} value={region.value}>
+                      {region.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Select
-                value={selectedPeriod}
-                onValueChange={(value) => setSelectedPeriod(value)}
+                value={selectedPeriodReport}
+                onValueChange={(value) => setSelectedPeriodReport(value)}
               >
                 <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                   <SelectValue placeholder="Hisobot turi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Kunlik</SelectItem>
-                  <SelectItem value="weekly">Haftalik</SelectItem>
-                  <SelectItem value="monthly">Oylik</SelectItem>
-                  <SelectItem value="quarterly">Choraklik (3 oy)</SelectItem>
-                  <SelectItem value="yearly">Yillik</SelectItem>
+                  {periods.map((period) => (
+                    <SelectItem key={period.value} value={period.value}>
+                      {period.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Select
-                value={selectedStatus}
-                onValueChange={(value) => setSelectedStatus(value)}
+                value={selectedStatusReport}
+                onValueChange={(value) => setSelectedStatusReport(value)}
               >
                 <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                   <SelectValue placeholder="Hisobot holati" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="saved">Qoralama</SelectItem>
-                  <SelectItem value="sent">Jo'natilgan</SelectItem>
-                  <SelectItem value="cancelled">Qaytarilgan</SelectItem>
-                  <SelectItem value="accepted">Qabul qilingan</SelectItem>
+                  {statuses.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Button
                 onClick={() => {
-                  setSelectedOrganization("");
-                  setSelectedPeriod("");
-                  setSelectedStatus("");
-                  setSearchTerm("");
+                  setSelectedOrganizationReport("");
+                  setSelectedPeriodReport("");
+                  setSelectedStatusReport("");
+                  setSearchTermReport("");
                 }}
                 className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
               >
@@ -379,13 +302,15 @@ const TableColumn = forwardRef(
               </TableRow>
             </TableHeader>
             <TableBody>
-              {report?.map((item: any) => (
+              {allReports?.map((item: any) => (
                 <TableRow
                   key={item.id}
                   className={`h-[50px] cursor-pointer hover:bg-gray-100 ${
                     selectedRow?.id === item.id ? "bg-gray-200" : ""
                   }`}
-                  onClick={() => toggleRow(item)}
+                  onClick={() =>
+                    onRowClick?.(selectedRow?.id === item.id ? null : item)
+                  }
                 >
                   <TableCell className="w-[20%] text-lg font-[300] border-none">
                     {item?.organization_name}
@@ -427,7 +352,7 @@ const TableColumn = forwardRef(
         </div>
 
         {/* Detal ko'rinish */}
-        {userCheckTable && selectedRow && (
+        {selectedRow && (
           <>
             <div className="flex items-center justify-between my-5">
               <div className="flex items-center gap-2"></div>
@@ -583,7 +508,7 @@ const TableColumn = forwardRef(
                           className="bg-[#09B86F] hover:bg-[#09B86F]"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log(selectedRow);
+                            deleteReport(selectedRow.id);
                           }}
                         >
                           <Trash2 />
@@ -591,6 +516,30 @@ const TableColumn = forwardRef(
                       </div>
                     </td>
                   </tr>
+
+                  {/* 🔥 individualReportsni chiqaramiz */}
+                  {individualRows?.length > 0 &&
+                    individualRows.map((indRow: any, indIndex: number) => (
+                      <tr key={indRow.id || indIndex}>
+                        <td className="border border-black px-2 py-1 text-center">
+                        </td>
+                        {indRow.report_items?.map((reportItem: any) =>
+                          reportItem.statement_columns?.map((col: any) =>
+                            col.inners?.map((inner: any, i: number) => (
+                              <td
+                                key={inner.id || i}
+                                className="border min-w-[380px] border-black px-2 py-1 text-center"
+                              >
+                                {inner.value}
+                              </td>
+                            ))
+                          )
+                        )}
+                        <td className="border border-black px-2 py-1 text-center">
+                          -
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
 
