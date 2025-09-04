@@ -129,6 +129,16 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
+    getIndividual: builder.query<
+      any,
+      { deadline: string; statement: string; organization: string }
+    >({
+      query: ({ deadline, statement, organization }) => ({
+        url: `/individual/?deadline=${deadline}&statement=${statement}&organization=${organization}`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
 
     // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
@@ -280,6 +290,7 @@ export const {
   useGetPlanByIdQuery,
   useGetRepoblicReportQuery,
   useGetReganalReportQuery,
+  useGetIndividualQuery,
 
   // POST
   useCreateReportMutation,
