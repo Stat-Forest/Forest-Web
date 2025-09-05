@@ -254,7 +254,7 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
           </ResponsiveContainer>
         )}
         {activeTab === "3-ilova" && (
-          <ResponsiveContainer width="100%" height={600}>
+          <ResponsiveContainer width="100%" height={500}>
             <BarChart
               data={chartData}
               margin={{ top: 10, right: 20, left: 0, bottom: 30 }}

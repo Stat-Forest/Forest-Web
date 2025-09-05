@@ -81,18 +81,18 @@ function EmployeeAnalysisSum({ activeTab, reportName }: any) {
         key={label + i}
         className="bg-gray-100 h-[140px] rounded-xl py-6 px-4 flex flex-col justify-between"
       >
-        <h3 className="text-md font-medium text-gray-700">{label}</h3>
+        <h3 className="text-xs font-medium text-gray-700">{label}</h3>
         {typeof value === "object" && value !== null ? (
           <div className="mt-2 space-y-1">
             {Object.entries(value).map(([subKey, subVal], j) => (
-              <div key={subKey + j} className="flex justify-between text-sm">
+              <div key={subKey + j} className="flex justify-between text-lg">
                 <span className="text-gray-600">{subKey}</span>
                 <span className="font-semibold">{String(subVal)}</span>
               </div>
             ))}
           </div>
         ) : (
-          <h2 className="text-xl font-bold text-gray-900">{value}</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{value}</h2>
         )}
       </div>
     ));
