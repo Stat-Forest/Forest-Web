@@ -10,6 +10,7 @@ import ForgetPassword from "./views/Auth/ForgetPassword";
 import Login from "./views/Auth/Login";
 import CheckCode from "./views/Auth/CheckCode";
 import ChangePassword from "./views/Auth/changePassword";
+import { TestModeCarousel } from "./components/TestModeCarousel";
 
 export const user_role = import.meta.env.USER_ROLE;
 
@@ -22,6 +23,7 @@ function App() {
 
   return (
     <>
+     <TestModeCarousel />
       <Routes>
         <Route path="/auth" element={<Auth/>}>
           <Route index element={<Login />} />
