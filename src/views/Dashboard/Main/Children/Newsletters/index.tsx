@@ -2,7 +2,7 @@ import NewsletterTable from "@/components/Table/TableReports/NewsletterTable";
 import { useGetDeadlinesReportQuery } from "@/services/reportsApi";
 
 function Newsletters() {
-  const { data, isLoading, error } = useGetDeadlinesReportQuery();
+  const { data, isLoading, error } = useGetDeadlinesReportQuery({statement:""});
 
   return (
     <div className="px-5 w-full">

@@ -33,7 +33,6 @@ const CheckCode = () => {
         }
         verifyCode({ email, code }).unwrap()
             .then((res) => {
-                console.log(res);
                 encryptData("token", res.access, "token");
                        
                 navigate("/auth/change-password");

@@ -252,11 +252,8 @@ function AllUpdateReportItem() {
       report_items,
     };
 
-    console.log(payload);
-
     try {
       await updateReport(payload).unwrap();
-      console.log("✅ Yangilandi");
       removeCookie("reportId");
       navigate(-1);
       setFormErrors([]);
@@ -340,7 +337,9 @@ function AllUpdateReportItem() {
                   const planValue = planItem ? planItem.plan_value : "";
                   return (
                     <TableRow key={col.id}>
-                      <TableCell className="whitespace-normal break-words">{col.fullParentChain}</TableCell>
+                      <TableCell className="whitespace-normal break-words">
+                        {col.fullParentChain}
+                      </TableCell>
                       <TableCell>
                         <Input
                           type="text"
@@ -356,7 +355,9 @@ function AllUpdateReportItem() {
                 if (lowerTitle.includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
-                      <TableCell className="whitespace-normal break-words">{col.fullParentChain}</TableCell>
+                      <TableCell className="whitespace-normal break-words">
+                        {col.fullParentChain}
+                      </TableCell>
                       <TableCell>
                         <select
                           value={selectedOrganizationId}
@@ -381,7 +382,9 @@ function AllUpdateReportItem() {
 
                 return (
                   <TableRow key={col.id}>
-                    <TableCell className="whitespace-normal break-words">{col.fullParentChain}</TableCell>
+                    <TableCell className="whitespace-normal break-words">
+                      {col.fullParentChain}
+                    </TableCell>
                     <TableCell>
                       <Input
                         type="text"

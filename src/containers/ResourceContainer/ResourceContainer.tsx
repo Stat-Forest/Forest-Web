@@ -53,7 +53,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>("");
 
   const [selectedOrganizationReport, setSelectedOrganizationReport] =
@@ -61,8 +61,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedPeriodReport, setSelectedPeriodReport] = useState("");
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
-  const { data: deadline } = useGetDeadlinesReportQuery();
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const { data: deadline } = useGetDeadlinesReportQuery({statement: id || ""}, { skip: !id });
 
   const {
     data: tableHeadersData = [],
@@ -136,8 +136,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   useEffect(() => {
     setSearchTerm("");
-    setSelectedRegion("all");
-    setSelectedPeriod("all");
+    setSelectedRegion("");
+    setSelectedPeriod("");
     setSelectedYear("");
   }, [id]);
 
@@ -384,7 +384,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Hisobot turi" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Barcha hisobotlar</SelectItem>
+                        <SelectItem value=" ">Barcha hisobotlar</SelectItem>
                         {deadline?.results?.map((item: any) => (
                           <SelectItem key={item.id} value={item.id}>
                             {item.submit_at}

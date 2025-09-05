@@ -18,7 +18,6 @@ export const encryptData = (name: string, data: unknown, key: string): void => {
       key
     ).toString();
     localStorage.setItem(name, encrypted);
-    console.log(`encryptData: ${name} muvaffaqiyatli saqlandi`);
   } catch (error) {
     console.error("encryptData: Xatolik yuz berdi", error);
   }

@@ -240,12 +240,9 @@ function AllCreateReportItem() {
     });
 
     const payload = { deadline: selectedDeadlineId, report_items };
-    console.log("👉 Yuborilmoqda:", payload);
-    console.log("👉 report_items soni:", report_items.length);
 
     try {
       await createReportItem(payload).unwrap();
-      console.log("✅ Yuborildi");
       removeCookie("reportId");
       navigate(-1);
       setFormValues({});

@@ -39,8 +39,8 @@ export const reportApi = createApi({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
       providesTags: ["Reports"],
     }),
-    getDeadlinesReport: builder.query<any, void>({
-      query: () => ({ url: `/deadlines/`, method: "GET" }),
+    getDeadlinesReport: builder.query<any, {statement:string}>({
+      query: ({statement}) => ({ url: `/deadlines/?statement=${statement}`, method: "GET" }),
       providesTags: ["Reports"],
     }),
     getReportItemsReport: builder.query<any, void>({

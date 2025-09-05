@@ -13,8 +13,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { token, user } = useSelector((state: any) => state.auth);
 
-  console.log(token, user)
-
   if (!token) {
     return <Navigate to="/auth" />;
   }
