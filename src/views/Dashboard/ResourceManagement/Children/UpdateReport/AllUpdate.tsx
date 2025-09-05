@@ -340,7 +340,7 @@ function AllUpdateReportItem() {
                   const planValue = planItem ? planItem.plan_value : "";
                   return (
                     <TableRow key={col.id}>
-                      <TableCell>{col.fullParentChain}</TableCell>
+                      <TableCell className="whitespace-normal break-words">{col.fullParentChain}</TableCell>
                       <TableCell>
                         <Input
                           type="text"
@@ -356,7 +356,7 @@ function AllUpdateReportItem() {
                 if (lowerTitle.includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
-                      <TableCell>{col.fullParentChain}</TableCell>
+                      <TableCell className="whitespace-normal break-words">{col.fullParentChain}</TableCell>
                       <TableCell>
                         <select
                           value={selectedOrganizationId}
@@ -381,7 +381,7 @@ function AllUpdateReportItem() {
 
                 return (
                   <TableRow key={col.id}>
-                    <TableCell>{col.fullParentChain}</TableCell>
+                    <TableCell className="whitespace-normal break-words">{col.fullParentChain}</TableCell>
                     <TableCell>
                       <Input
                         type="text"
