@@ -8,61 +8,62 @@ function ResponsibleRepresentatives() {
   const [hasMore, setHasMore] = useState(true);
 
   const { data, isLoading, isFetching, error } = useGetUsersReportQuery({
-    user_id: "",
     page,
   });
 
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
+  // 🔥 Data yig‘ish
   useEffect(() => {
-    if (data && data.results) {
-      setAllData((prevData) => [...prevData, ...data.results]);
-      if (!data.next) {
-        setHasMore(false);
-      }
+    if (data?.results) {
+      setAllData((prev) => {
+        if (page === 1) return data.results;
+        const newItems = data.results.filter(
+          (item: any) => !prev.some((p) => p.user_number === item.user_number)
+        );
+        return [...prev, ...newItems];
+      });
+      setHasMore(Boolean(data.next));
     }
-  }, [data]);
+  }, [data, page]);
 
+  // 🔥 IntersectionObserver
   useEffect(() => {
-    const handleScroll = () => {
-      if (!scrollContainerRef.current || isFetching || !hasMore) return;
+    if (!observerRef.current || !hasMore || isFetching) return;
 
-      const { scrollTop, scrollHeight, clientHeight } =
-        scrollContainerRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-      if (scrollTop + clientHeight >= scrollHeight - 10) {
-        setPage((prev) => prev + 1);
-      }
-    };
-
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener("scroll", handleScroll);
-    }
+    observer.observe(observerRef.current);
 
     return () => {
-      if (container) {
-        container.removeEventListener("scroll", handleScroll);
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current);
       }
     };
-  }, [isFetching, hasMore]);
+  }, [hasMore, isFetching]);
 
   return (
-    <div
-      className="px-5 w-full h-[80vh] overflow-y-auto"
-      ref={scrollContainerRef}
-    >
+    <div className="px-5 w-full">
       {isLoading && page === 1 && <h1>Yuklanmoqda...</h1>}
       {error && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
+
       <div className="w-full border border-[silver] rounded-xl px-3 py-5">
         <ResponsibleRepresentativesTable data={allData} />
       </div>
-      {isFetching && <h1 className="text-center py-3">Yuklanmoqda...</h1>}
-      {!hasMore && (
-        <h1 className="text-center py-3 text-gray-500">
-          Barcha ma'lumotlar yuklandi
-        </h1>
+
+      {isFetching && page > 1 && (
+        <h1 className="text-center py-3">Yuklanmoqda...</h1>
       )}
+
+      {/* 👇 Trigger element */}
+      <div ref={observerRef} className="h-10" />
     </div>
   );
 }
