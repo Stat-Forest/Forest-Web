@@ -18,13 +18,11 @@ import ScrollToTop from "@/routes/ScrollToTop";
 import CreatedPlans from "./Main/Children/CreatedPlans";
 import UpdateReportItem from "./ResourceManagement/Children/UpdateReport";
 import UpdatePlans from "./Main/Children/UpdatePlans";
-import { TestModeCarousel } from "@/components/TestModeCarousel";
 // import { routes } from "@/routes/routes";
 
 function Dashboard() {
   return (
     <>
-    <TestModeCarousel/>
       <div className="flex h-screen overflow-hidden">
       <div className="w-[310px] bg-white fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
         <Sidebar />
