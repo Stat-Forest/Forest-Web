@@ -24,7 +24,6 @@ function MainDetail() {
     search: searchTerm,
   });
 
-  console.log(data);
   return (
     <div className="px-5 w-full">
       {isLoading && <h1>Yuklanmoqda...</h1>}

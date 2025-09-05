@@ -200,9 +200,7 @@ const DefaultCreate = () => {
     };
 
     try {
-      console.log(payload);
-      const res = await createReportItem(payload).unwrap();
-      console.log("Yuborildi:", res);
+      await createReportItem(payload).unwrap();
       removeCookie("reportId");
       setFormValues({});
       setSelectedDeadlineId("");
