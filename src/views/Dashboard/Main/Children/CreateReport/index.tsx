@@ -214,7 +214,9 @@ function CreateReport() {
                   <TableBody>
                     {plan_cols.map((item: any, index: number) => (
                       <TableRow key={index}>
-                        <TableCell>{item.parent}</TableCell>
+                        <TableCell className="whitespace-normal break-words">
+                          {item.parent}
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
