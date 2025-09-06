@@ -309,7 +309,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       user_role === "hududiy_boshqarma") && (
                         <button
                           className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
-                          onClick={() => navigate("/resource-management/create")}
+                          onClick={() => navigate(`/resource-management/create/${reportName}`)}
                         >
                           Yangi hisobot yaratish
                         </button>
