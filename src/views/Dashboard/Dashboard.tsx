@@ -62,7 +62,7 @@ function Dashboard() {
               element={<ResourceManagement />}
             />
             <Route
-              path="resource-management/create"
+              path="resource-management/create/:reportName"
               element={<CreateReportItem />}
             />
 
