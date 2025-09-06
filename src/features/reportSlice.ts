@@ -16,7 +16,7 @@ interface ReportState {
 const initialState: ReportState = {
   emptyColumns: [],
   reportId: getCookie("reportId") || null, // Qo‘shilgan qism
-  reportName: "",
+  reportName: getCookie("reportName") || undefined,
 };
 
 const reportSlice = createSlice({
