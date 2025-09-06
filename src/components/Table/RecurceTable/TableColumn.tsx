@@ -123,11 +123,8 @@ const TableColumn = forwardRef(
         0
       );
     };
-    
 
     const headerRows = renderHeaderRows();
-
-    
 
     return (
       <>
@@ -158,55 +155,105 @@ const TableColumn = forwardRef(
               ))}
             </thead>
             <tbody>
-              {rows.map((row: any, rowIndex: number) => (
-                <Fragment key={row.id}>
-                  {/* Asosiy row */}
-                  <tr className="cursor-pointer hover:bg-gray-100">
-                    <td className="border border-black px-2 py-1 text-center"></td>
-                    {row.report_items?.map((reportItem: any) =>
-                      reportItem.statement_columns?.map((col: any) =>
-                        col.inners?.map((inner: any) => (
+              {rows.map((row: any, rowIndex: number) => {
+                const maxInners = Math.max(
+                  ...row.report_items.map((reportItem: any) =>
+                    Math.max(
+                      ...reportItem.statement_columns.map(
+                        (col: any) => col.inners?.length || 0
+                      )
+                    )
+                  )
+                );
+
+                return (
+                  <Fragment key={row.id}>
+                    {/* 🔹 Parent row */}
+                    {Array.from({ length: maxInners }).map((_, innerIndex) => (
+                      <tr
+                        key={innerIndex}
+                        className="cursor-pointer hover:bg-gray-100"
+                      >
+                        {/* TR faqat birinchi qatorda chiqadi */}
+                        {innerIndex === 0 && (
                           <td
-                            key={inner.id}
-                            className="border min-w-[380px] border-black px-2 py-1 text-center font-bold"
+                            className="border border-black px-2 py-1 text-center"
+                            rowSpan={maxInners}
                           >
-                            {inner.value}
+                            {rowIndex + 1}
                           </td>
-                        ))
-                      )
-                    )}
-                  </tr>
+                        )}
 
-                  {/* Faqat children_reports mavjud bo'lsa qo'shiladi */}
-                  {row.children_reports?.length > 0 &&
-                    row.children_reports.map(
-                      (child: any, childIndex: number) => (
-                        <tr
-                          key={child.id || childIndex}
-                          onClick={() => onRowClick(child)}
-                          className="cursor-pointer hover:bg-gray-100"
-                        >
-                          <td className="border border-black px-2 py-1 text-center">
-                            {rowIndex + 1}.{childIndex + 1}
-                          </td>
+                        {row.report_items?.map((reportItem: any) =>
+                          reportItem.statement_columns?.map((col: any) => (
+                            <td
+                              key={col.id}
+                              className="border min-w-[380px] border-black px-2 py-1 text-center font-bold"
+                            >
+                              {col.inners?.[innerIndex]?.value || ""}
+                            </td>
+                          ))
+                        )}
+                      </tr>
+                    ))}
 
-                          {child.report_items?.map((reportItem: any) =>
-                            reportItem.statement_columns?.map((col: any) =>
-                              col.inners?.map((inner: any) => (
-                                <td
-                                  key={inner.id}
-                                  className="border min-w-[380px] border-black px-2 py-1 text-center"
-                                >
-                                  {inner.value}
-                                </td>
-                              ))
+                    {/* 🔥 Children rows */}
+                    {row.children_reports?.length > 0 &&
+                      row.children_reports.map(
+                        (child: any, childIndex: number) => {
+                          const childMaxInners = Math.max(
+                            ...child.report_items.map((reportItem: any) =>
+                              Math.max(
+                                ...reportItem.statement_columns.map(
+                                  (col: any) => col.inners?.length || 0
+                                )
+                              )
                             )
-                          )}
-                        </tr>
-                      )
-                    )}
-                </Fragment>
-              ))}
+                          );
+
+                          return (
+                            <Fragment key={child.id || childIndex}>
+                              {Array.from({ length: childMaxInners }).map(
+                                (_, innerIndex) => (
+                                  <tr
+                                    key={innerIndex}
+                                    onClick={() => onRowClick(child)}
+                                    className="cursor-pointer hover:bg-gray-100"
+                                  >
+                                    {/* Child TR faqat birinchi qatorda chiqadi */}
+                                    {innerIndex === 0 && (
+                                      <td
+                                        className="border border-black px-2 py-1 text-center"
+                                        rowSpan={childMaxInners}
+                                      >
+                                        {rowIndex + 1}.{childIndex + 1}
+                                      </td>
+                                    )}
+
+                                    {child.report_items?.map(
+                                      (reportItem: any) =>
+                                        reportItem.statement_columns?.map(
+                                          (col: any) => (
+                                            <td
+                                              key={col.id}
+                                              className="border min-w-[380px] border-black px-2 py-1 text-center"
+                                            >
+                                              {col.inners?.[innerIndex]
+                                                ?.value || ""}
+                                            </td>
+                                          )
+                                        )
+                                    )}
+                                  </tr>
+                                )
+                              )}
+                            </Fragment>
+                          );
+                        }
+                      )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -367,7 +414,6 @@ const TableColumn = forwardRef(
               <div className="flex items-center gap-2"></div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
-                  
                   {(user_role === "tashkilot_rahbari" ||
                     user_role === "bolim_admin" ||
                     user_role === "super_admin") && (
@@ -421,7 +467,7 @@ const TableColumn = forwardRef(
                           }).unwrap();
 
                           // Qabul qilingan hisobotlarni ro'yxatga qo'shish
-                          setAcceptedReports((prev) => {
+                          setAcceptedReports((prev: any) => {
                             const newSet = new Set(prev);
                             newSet.add(selectedRow.id);
                             return newSet;
@@ -448,21 +494,19 @@ const TableColumn = forwardRef(
                     </Button>
                   )}
                   <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
-                          Export
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56 mt-2 mr-2">
-                        <DropdownMenuItem>
-                          Hisobotni export qilib olish
-                        </DropdownMenuItem>
+                    <DropdownMenuTrigger asChild>
+                      <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
+                        Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 mt-2 mr-2">
+                      <DropdownMenuItem>
+                        Hisobotni export qilib olish
+                      </DropdownMenuItem>
 
-                        <DropdownMenuItem>
-                          Hisobotni chop etish
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      <DropdownMenuItem>Hisobotni chop etish</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -501,71 +545,132 @@ const TableColumn = forwardRef(
                   ))}
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="border border-black px-2 py-1 text-center">
-                      1
-                    </td>
-                    {selectedRow.report_items?.map((reportItem: any) =>
-                      reportItem.statement_columns?.map((col: any) =>
-                        col.inners?.map((inner: any, index: number) => (
-                          <td
-                            key={inner.id || index}
-                            className="border min-w-[380px] border-black px-2 py-1 text-center"
-                          >
-                            {inner.value}
-                          </td>
-                        ))
+                  {/* 🔹 Selected Row */}
+                  {selectedRow.report_items?.map(
+                    (reportItem: any, reportIndex: number) => {
+                      const maxInners = Math.max(
+                        ...reportItem.statement_columns.map(
+                          (col: any) => col.inners?.length || 0
+                        )
+                      );
+
+                      return (
+                        <Fragment key={reportIndex}>
+                          {Array.from({ length: maxInners }).map(
+                            (_, innerIndex) => (
+                              <tr key={innerIndex}>
+                                {/* T/R faqat birinchi qatorda chiqsin */}
+                                {innerIndex === 0 && (
+                                  <td
+                                    className="border border-black px-2 py-1 text-center"
+                                    rowSpan={maxInners}
+                                  >
+                                    1
+                                  </td>
+                                )}
+
+                                {reportItem.statement_columns?.map(
+                                  (col: any) => (
+                                    <td
+                                      key={col.id}
+                                      className="border min-w-[350px] border-black px-2 py-1 text-center"
+                                    >
+                                      {col.inners?.[innerIndex]?.value || ""}
+                                    </td>
+                                  )
+                                )}
+
+                                {/* Amallar faqat birinchi qatorda chiqsin */}
+                                {innerIndex === 0 && (
+                                  <td
+                                    className="border border-black px-2 py-1 text-center"
+                                    rowSpan={maxInners}
+                                  >
+                                    <div className="flex items-center justify-center gap-2">
+                                      <Button
+                                        className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(
+                                            `/resource-management/update/${selectedRow?.id}`
+                                          );
+                                        }}
+                                      >
+                                        <Edit2 />
+                                      </Button>
+                                      <Button
+                                        className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteReport(selectedRow.id);
+                                        }}
+                                      >
+                                        <Trash2 />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                )}
+                              </tr>
+                            )
+                          )}
+                        </Fragment>
+                      );
+                    }
+                  )}
+
+                  {/* 🔥 Individual Rows */}
+                  {individualRows?.length > 0 &&
+                    individualRows.map((indRow: any) =>
+                      indRow.report_items?.map(
+                        (reportItem: any, reportIndex: number) => {
+                          const maxInners = Math.max(
+                            ...reportItem.statement_columns.map(
+                              (col: any) => col.inners?.length || 0
+                            )
+                          );
+
+                          return (
+                            <Fragment key={reportIndex}>
+                              {Array.from({ length: maxInners }).map(
+                                (_, innerIndex) => (
+                                  <tr key={innerIndex}>
+                                    {/* T/R bo‘sh, faqat birinchi qatorda chiqsin */}
+                                    {innerIndex === 0 && (
+                                      <td
+                                        className="border border-black px-2 py-1 text-center"
+                                        rowSpan={maxInners}
+                                      ></td>
+                                    )}
+
+                                    {reportItem.statement_columns?.map(
+                                      (col: any) => (
+                                        <td
+                                          key={col.id}
+                                          className="border min-w-[120px] border-black px-2 py-1 text-center"
+                                        >
+                                          {col.inners?.[innerIndex]?.value ||
+                                            ""}
+                                        </td>
+                                      )
+                                    )}
+
+                                    {/* Amallar ustuni bo‘sh */}
+                                    {innerIndex === 0 && (
+                                      <td
+                                        className="border border-black px-2 py-1 text-center"
+                                        rowSpan={maxInners}
+                                      >
+                                        -
+                                      </td>
+                                    )}
+                                  </tr>
+                                )
+                              )}
+                            </Fragment>
+                          );
+                        }
                       )
                     )}
-                    <td className="border border-black px-2 py-1 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          className="bg-[#09B86F] hover:bg-[#09B86F]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(
-                              `/resource-management/update/${selectedRow?.id}`
-                            );
-                          }}
-                        >
-                          <Edit2 />
-                        </Button>
-                        <Button
-                          className="bg-[#09B86F] hover:bg-[#09B86F]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteReport(selectedRow.id);
-                          }}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* 🔥 individualReportsni chiqaramiz */}
-                  {individualRows?.length > 0 &&
-                    individualRows.map((indRow: any, indIndex: number) => (
-                      <tr key={indRow.id || indIndex}>
-                        <td className="border border-black px-2 py-1 text-center">
-                        </td>
-                        {indRow.report_items?.map((reportItem: any) =>
-                          reportItem.statement_columns?.map((col: any) =>
-                            col.inners?.map((inner: any, i: number) => (
-                              <td
-                                key={inner.id || i}
-                                className="border min-w-[380px] border-black px-2 py-1 text-center"
-                              >
-                                {inner.value}
-                              </td>
-                            ))
-                          )
-                        )}
-                        <td className="border border-black px-2 py-1 text-center">
-                          -
-                        </td>
-                      </tr>
-                    ))}
                 </tbody>
               </table>
 
