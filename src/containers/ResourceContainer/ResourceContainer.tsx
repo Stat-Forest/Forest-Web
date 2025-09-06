@@ -105,6 +105,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     });
   };
 
+  console.log(selectedRow);
+  
   const {
     data: rupblic,
     isLoading: isRepublicLoading,
@@ -116,8 +118,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isLoading: isIndividualLoading,
     isError: isIndividualError,
   } = useGetIndividualQuery(
-    { statement: id || "", deadline: "", organization: "" },
-    { skip: !id }
+    { statement: id || "", deadline: selectedRow?.deadline || "", organization: selectedRow?.organization || "" },
+    { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
   );
 
   const isLoading =

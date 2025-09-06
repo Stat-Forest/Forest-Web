@@ -21,6 +21,7 @@ import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
 import { useNavigate } from "react-router-dom";
 import InfiniteSelect from "@/components/ui/InfiniteSelect";
+import { useTranslation } from "react-i18next";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -51,8 +52,7 @@ function findEmptyChildrenColumnIds(
 function AllCreateReportItem() {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
-  const [selectedOrganizationId, setSelectedOrganizationId] =
-    useState<string>("");
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
@@ -66,6 +66,7 @@ function AllCreateReportItem() {
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const {t} = useTranslation();
 
   const {
     data: organizationsData,
@@ -291,7 +292,7 @@ function AllCreateReportItem() {
 
       <div className="flex flex-col gap-4 sm:flex-row">
         <div>
-          <label className="block mb-1 text-sm font-medium">Deadline:</label>
+          <label className="block mb-1 text-sm font-medium">{t("deadline")}:</label>
           <InfiniteSelect
             placeholder="Tanlang"
             fetchData={fetchReportDeadlines}

@@ -25,4 +25,6 @@ export interface ReportRow {
   sent_by_full_name?: string;
   sent_by_org_name?: string;
   sent_by_role?: string;
+  deadline: string;
+  organization: string;
 }

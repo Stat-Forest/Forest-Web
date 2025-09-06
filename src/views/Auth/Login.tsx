@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { authApi } from "@/services/authApi";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 declare global {
   interface Window {
@@ -35,6 +36,7 @@ function Login() {
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const {t} = useTranslation();
 
   // E-IMZO klientini ishga tushirish
   useEffect(() => {
@@ -64,7 +66,7 @@ function Login() {
         const currentVersion = major * 100 + minor;
 
         if (currentVersion < requiredVersion) {
-          setError("Iltimos, E-IMZO dasturini yangilang");
+          setError(t("eimzoError1"));
           setIsLoading(false);
         } else {
           installApiKeys();
@@ -74,7 +76,7 @@ function Login() {
         if (r) {
           setError(r);
         } else {
-          setError("E-IMZO bilan ulanib bo'lmadi");
+          setError(t("eimzoError2"));
         }
         setIsLoading(false);
       }
@@ -88,7 +90,7 @@ function Login() {
         if (r) {
           setError(r);
         } else {
-          setError("API kalitlarini o'rnatib bo'lmadi");
+          setError(t("eimzoError3"));
         }
         setIsLoading(false);
       }
@@ -106,7 +108,7 @@ function Login() {
         return {
           id: itemId,
           value: itemId,
-          label: expired ? `${v.CN} (muddati tugagan)` : v.CN,
+          label: expired ? `${v.CN} ${t("expired")}` : v.CN,
           disabled: expired,
           vo: v
         };
@@ -116,7 +118,7 @@ function Login() {
         if (items.length > 0) {
           setSelectedKey(firstId);
         } else {
-          setError("E-IMZO kalitlari topilmadi");
+          setError(t("notFoundEImzo"));
         }
         setIsLoading(false);
       },
@@ -124,7 +126,7 @@ function Login() {
         if (r) {
           setError(r);
         } else {
-          setError("Kalitlarni yuklab bo'lmadi");
+          setError(t("cannotFindKeys"));
         }
         setIsLoading(false);
       }
@@ -132,13 +134,13 @@ function Login() {
   };
   const handleEimzoLogin = async () => {
     if (!selectedKey) {
-      setError("Iltimos, sertifikatni tanlang");
+      setError(t("selectCertificate"));
       return;
     }
 
     const selectedItem = eimzoKeys.find(item => item.id === selectedKey);
     if (!selectedItem) {
-      setError("Noto'g'ri tanlangan sertifikat");
+      setError(t("invalidSelectedCertificate"));
       return;
     }
 
@@ -153,8 +155,8 @@ function Login() {
           (id: string) => resolve(id),
           (r: any) => {
             const errorMsg = r?.includes("BadPaddingException")
-              ? "Noto'g'ri parol"
-              : r || "Kalitni yuklab bo'lmadi";
+              ? t("inCorrectPass")
+              : r || t("cannotFindKeys");
             setError(errorMsg);
             reject(new Error(errorMsg));
           }
@@ -165,13 +167,13 @@ function Login() {
       const pkcs7 = await new Promise<string>((resolve, reject) => {
         window.EIMZOClient.createPkcs7(
           keyId,
-          "Tasdiqlaymiz",
+          t("confirmation"),
           null,
           (signature: string) => resolve(signature),
           (r: any) => {
             const errorMsg = r?.includes("BadPaddingException")
-              ? "Noto'g'ri parol"
-              : r || "Imzo yaratib bo'lmadi";
+              ? t("inCorrectPass")
+              : r || t("cannotCreateSignature");
             setError(errorMsg);
             reject(new Error(errorMsg));
           }
@@ -195,7 +197,7 @@ function Login() {
     } catch (error: any) {
       console.error("E-IMZO orqali kirish muvaffaqiyatsiz:", error);
 
-      let errorMessage = "E-IMZO orqali kirish muvaffaqiyatsiz. Iltimos, qayta urinib ko'ring.";
+      let errorMessage = "" + (error?.message || t("eImzoErr"));
       if (typeof error === "object" && "status" in error && error.status === 404) {
         errorMessage = "E-IMZO login endpointi topilmadi. Iltimos, tizim administratoriga murojaat qiling.";
       }
@@ -233,12 +235,12 @@ function Login() {
   return (
     <>
     <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
-      <h2 className="text-[30px] font-bold">Tizimga kirish</h2>
+      <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
 
       <Tabs defaultValue="login" className="w-full">
         <TabsList className="w-full gap-3">
-          <TabsTrigger value="eimzo" className="flex-1">E-IMZO orqali</TabsTrigger>
-          <TabsTrigger value="login" className="flex-1">Login orqali</TabsTrigger>
+          <TabsTrigger value="eimzo" className="flex-1">{t("eImzoLogin")}</TabsTrigger>
+          <TabsTrigger value="login" className="flex-1">{t("login")}</TabsTrigger>
         </TabsList>
 
         {/* E-IMZO orqali kirish */}
@@ -284,7 +286,7 @@ function Login() {
         <TabsContent value="login" className="pt-6">
           <form onSubmit={checkAuthHandler} className="flex flex-col gap-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -294,7 +296,7 @@ function Login() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Parol</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 name="password"
@@ -303,11 +305,11 @@ function Login() {
                 required
               />
               <div className="flex justify-end">
-            <Link to={"/auth/forget-password"} type="button" className="text-[#09B86F] text-[15px] font-medium">Забыли пароль?</Link>
+            <Link to={"/auth/forget-password"} type="button" className="text-[#09B86F] text-[15px] font-medium">{t("forgotPassword")}</Link>
               </div>
             </div>
             <Button type="submit" className="bg-green-600 text-white h-[45px]">
-              Kirish
+              {t("enter")}
             </Button>
             {error && <p className="text-red-600">{error}</p>}
           </form>
