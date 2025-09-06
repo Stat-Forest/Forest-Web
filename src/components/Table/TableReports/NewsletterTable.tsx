@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -8,13 +8,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 function NewsletterTable({ data }: any) {
   const { t } = useTranslation();
-  const [openRowIndex, setOpenRowIndex] = useState<number | null>(null);
+  // const [openRowIndex, setOpenRowIndex] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   const toggleRow = (index: number) => {
-    setOpenRowIndex((prev) => (prev === index ? null : index));
+    // setOpenRowIndex((prev) => (prev === index ? null : index));
+    navigate(`/resource-management/${data?.results[index]?.statement?.id}`);    
   };
 
   return (
@@ -57,7 +60,7 @@ function NewsletterTable({ data }: any) {
               </TableCell>
             </TableRow>
 
-            {openRowIndex === index && (
+            {/* {openRowIndex === index && (
               <TableRow className="bg-gray-50">
                 <TableCell colSpan={4} className="border-t p-4">
                   <div>
@@ -74,7 +77,7 @@ function NewsletterTable({ data }: any) {
                   </div>
                 </TableCell>
               </TableRow>
-            )}
+            )} */}
           </React.Fragment>
         ))}
       </TableBody>

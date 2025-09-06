@@ -30,7 +30,6 @@ function CreatedPlans() {
 
   // Reset data when filters change
   useEffect(() => {
-    setAllData([]);
     setPage(1);
   }, [debouncedSearchTerm, debouncedSearchYear]);
 
