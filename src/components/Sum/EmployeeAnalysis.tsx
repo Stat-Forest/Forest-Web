@@ -10,18 +10,34 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function EmployeeAnalysisSum({ activeTab, reportName }: any) {
+  console.log(reportName);
+  
   const [sumData, setSumData] = useState<Record<string, any>>({});
 
   const { data: employeeAnalysisSum, isLoading: isEmployeeAnalysisLoading } =
-    useGetEmployeeAnalysisSumQuery();
-  const { data: financeIncomeSum, isLoading: isFinaceIncomeLoading } =
-    useGetIncomeSumQuery();
-  const { data: employeeReportSum, isLoading: isEmployeeReportSumLoading } =
-    useGetEmployeeReportSumQuery();
-  const { data: financeFundSum, isLoading: isFinaceFundSumLoading } =
-    useGetFinanceFundSumQuery();
-  const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
-    useGetLandAcquisitionSumQuery();
+  useGetEmployeeAnalysisSumQuery(undefined, {
+    skip: reportName !== "Xodimlar hisobi taxlili",
+  });
+
+const { data: financeIncomeSum, isLoading: isFinaceIncomeLoading } =
+  useGetIncomeSumQuery(undefined, {
+    skip: reportName !== "Daromad",
+  });
+
+const { data: employeeReportSum, isLoading: isEmployeeReportSumLoading } =
+  useGetEmployeeReportSumQuery(undefined, {
+    skip: reportName !== "Xodimlar hisobi",
+  });
+
+const { data: financeFundSum, isLoading: isFinaceFundSumLoading } =
+  useGetFinanceFundSumQuery(undefined, {
+    skip: reportName !== "Jamg'arma",
+  });
+
+const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
+  useGetLandAcquisitionSumQuery(undefined, {
+    skip: reportName !== "Yer o'zlashtirish",
+  });
 
   const isLoading =
     isEmployeeAnalysisLoading ||
@@ -31,20 +47,22 @@ function EmployeeAnalysisSum({ activeTab, reportName }: any) {
     isLandAcquisitionLoading;
 
   let data;
-  if (reportName === "Xodimlar tahlili") {
+  if (reportName === "Xodimlar hisobi taxlili") {  // qilindi
     data = employeeAnalysisSum;
-  } else if (reportName === "Daromad turlari bo‘yicha") {
+  } else if (reportName === "Daromad") { // qilindi
     data = financeIncomeSum;
-  } else if (reportName === "Xodimlar hisoboti") {
+  } else if (reportName === "Xodimlar hisobi") { // qilindi
     data = employeeReportSum;
-  } else if (reportName === "Moliya jamg‘armalari") {
+  } else if (reportName === "Jamg'arma") { // qilindi
     data = financeFundSum;
-  } else if (reportName === "Yer uchastkalarini egallash") {
+  } else if (reportName === "Yer o'zlashtirish") { // qilindi
     data = landAcquisition;
   } else {
     data = null;
   }
 
+  console.log(data);
+  
   useEffect(() => {
     if (data) {
       let ilovaData: Record<string, any> = {};
@@ -71,7 +89,7 @@ function EmployeeAnalysisSum({ activeTab, reportName }: any) {
         key={label + i}
         className="bg-gray-100 h-[140px] rounded-xl py-6 px-4 flex flex-col justify-between"
       >
-        <h3 className="text-xs font-medium text-gray-700">{label}</h3>
+        <h3 className={`font-medium text-gray-700 ${label.length > 150 ? "text-[10px]": "text-xs"}`}>{label}</h3>
         {typeof value === "object" && value !== null ? (
           <div className="mt-2 space-y-1 overflow-y-auto max-h-[100px] pr-1">
             {renderEntries(value)} {/* recursive chaqiryapmiz */}

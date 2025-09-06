@@ -1,7 +1,9 @@
 import { NavLink, Outlet } from "react-router-dom";
 import AuthHeader from "@/components/Header/AuthHeader";
+import { useTranslation } from "react-i18next";
 
 function Auth() {
+  const { t } = useTranslation();
   return (
     <div
       className="w-full h-screen"
@@ -23,7 +25,7 @@ function Auth() {
         {/* <Login /> */}
         <div>
           <span className="text-[14px] text-white">
-            © 2025 "Urmontexnoservis" DUK, Texnik qo‘llab-quvvatlash:
+            © 2025 "Urmontexnoservis" DUK, {t("auth_bottom")}
             <NavLink
               className={"text-[#09B86F] px-2"}
               to={"tel:+998 95 195 99 29"}
