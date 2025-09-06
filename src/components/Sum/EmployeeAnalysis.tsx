@@ -23,7 +23,6 @@ function EmployeeAnalysisSum({ activeTab, reportName }: any) {
   const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
     useGetLandAcquisitionSumQuery();
 
-  // umumiy loading holatini yig'ish
   const isLoading =
     isEmployeeAnalysisLoading ||
     isFinaceIncomeLoading ||
@@ -43,38 +42,29 @@ function EmployeeAnalysisSum({ activeTab, reportName }: any) {
   } else if (reportName === "Yer uchastkalarini egallash") {
     data = landAcquisition;
   } else {
-    data = employeeAnalysisSum;
+    data = null;
   }
 
   useEffect(() => {
-    if (data && data.length > 0) {
+    if (data) {
       let ilovaData: Record<string, any> = {};
 
-      if (activeTab === "4-ilova") {
-        ilovaData = data[0]["4-ilova"] || {};
-      } else if (activeTab === "5-ilova") {
-        ilovaData = data[0]["5-ilova"] || {};
-      } else if (activeTab === "Daromad turlari bo‘yicha") {
-        ilovaData = data[0]["Daromad turlari bo‘yicha"] || {};
-      } else if (activeTab === "Tushumlar bo‘yicha") {
-        ilovaData = data[0]["Tushumlar bo‘yicha"] || {};
-      } else if (activeTab === "1-ilova") {
-        ilovaData = data[0]["1-ilova"] || {};
-      } else if (activeTab === "2-ilova") {
-        ilovaData = data[0]["2-ilova"] || {};
-      } else if (activeTab === "3-ilova") {
-        ilovaData = data[0]["3-ilova"] || {};
-      } else if (activeTab === "Jamg'arma") {
-        ilovaData = data[0]["Jamg'arma"] || {};
+      // massiv yoki object farqi
+      if (Array.isArray(data)) {
+        ilovaData = data[0]?.[activeTab] || {};
       } else {
-        ilovaData = data[0] || {};
+        ilovaData = data[activeTab] || {};
       }
+
+      console.log("Backend data:", data);
+      console.log("ActiveTab:", activeTab);
+      console.log("Selected ilovaData:", ilovaData);
 
       setSumData(ilovaData);
     }
   }, [data, activeTab]);
 
-  // recursive renderer
+  // ✅ Recursive renderer
   const renderEntries = (obj: Record<string, any>) => {
     return Object.entries(obj).map(([label, value], i) => (
       <div
@@ -83,13 +73,8 @@ function EmployeeAnalysisSum({ activeTab, reportName }: any) {
       >
         <h3 className="text-xs font-medium text-gray-700">{label}</h3>
         {typeof value === "object" && value !== null ? (
-          <div className="mt-2 space-y-1">
-            {Object.entries(value).map(([subKey, subVal], j) => (
-              <div key={subKey + j} className="flex justify-between text-lg">
-                <span className="text-gray-600">{subKey}</span>
-                <span className="font-semibold">{String(subVal)}</span>
-              </div>
-            ))}
+          <div className="mt-2 space-y-1 overflow-y-auto max-h-[100px] pr-1">
+            {renderEntries(value)} {/* recursive chaqiryapmiz */}
           </div>
         ) : (
           <h2 className="text-2xl font-bold text-gray-900">{value}</h2>
