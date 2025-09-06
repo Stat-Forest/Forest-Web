@@ -13,12 +13,13 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { Button } from "../ui/button";
+import { useTranslation } from "react-i18next";
 
 function AuthHeader() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentLang = useSelector((state: RootState) => state.language.lang);
-
+  const {t} = useTranslation();
   const handleChangeLang = (lang: string) => {
     i18n.changeLanguage(lang);
     localStorage.setItem("lang", lang);
@@ -36,7 +37,7 @@ function AuthHeader() {
         <h2 className="font-extrabold text-[20px] text-white">STAT-URMON</h2>
       </div>
       <div className="mr-10 flex justify-end gap-2">
-        <Button onClick={()=> navigate("")} className="text-white font-semibold text-[15px] bg-[#09B86F] rounded-[10px] py-[21px] hover:bg-[#09A95F] cursor-pointer">Statistika</Button>
+        <Button onClick={()=> navigate("")} className="text-white font-semibold text-[15px] bg-[#09B86F] rounded-[10px] py-[21px] hover:bg-[#09A95F] cursor-pointer">{t("auth_statistics")}</Button>
         <Select value={currentLang} onValueChange={handleChangeLang}>
         <SelectTrigger className="w-[120px] min-h-[42px] shadow-none bg-accent">
           <SelectValue />
