@@ -11,6 +11,7 @@ import Login from "./views/Auth/Login";
 import CheckCode from "./views/Auth/CheckCode";
 import ChangePassword from "./views/Auth/changePassword";
 import { TestModeCarousel } from "./components/TestModeCarousel";
+import AppWrapper from "./components/AppWrapper";
 
 export const user_role = import.meta.env.USER_ROLE;
 
@@ -22,10 +23,10 @@ function App() {
   }, [reportIds]);
 
   return (
-    <>
-     <TestModeCarousel />
+    <AppWrapper>
+      <TestModeCarousel />
       <Routes>
-        <Route path="/auth" element={<Auth/>}>
+        <Route path="/auth" element={<Auth />}>
           <Route index element={<Login />} />
           <Route path="forget-password" element={<ForgetPassword />} />
           <Route path="check-code" element={<CheckCode />} />
@@ -41,7 +42,7 @@ function App() {
         />
         <Route path="/unauthorized" element={<Navigate to="/auth" replace />} />
       </Routes>
-    </>
+    </AppWrapper>
   );
 }
 

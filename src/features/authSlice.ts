@@ -1,14 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { authApi } from "@/services/authApi";
+import { authApi, User } from "@/services/authApi";
 import { encryptData, decryptData } from "@/utils/crypto";
-
-interface User {
-  email: string;
-  user_id: string;
-  role: string;
-  access: string;
-  refresh: string;
-}
 
 interface AuthState {
   user: User | null;
@@ -35,16 +27,10 @@ const authSlice = createSlice({
     // Oddiy login
     builder.addMatcher(
       authApi.endpoints.login.matchFulfilled,
-      (state, action: PayloadAction<any>) => {
+      (state, action: PayloadAction<User>) => {
         const payload = action.payload;
         state.token = payload.access;
-        state.user = {
-          email: payload.email,
-          user_id: payload.user_id,
-          role: payload.role,
-          access: payload.access,
-          refresh: payload.refresh,
-        };
+        state.user = payload;
         encryptData("token", payload.access, "token");
         encryptData("user", payload, "user");
       }
@@ -53,16 +39,10 @@ const authSlice = createSlice({
     // EIMZO login
     builder.addMatcher(
       authApi.endpoints.eimzoLogin.matchFulfilled,
-      (state, action: PayloadAction<any>) => {
+      (state, action: PayloadAction<User>) => {
         const payload = action.payload;
         state.token = payload.access;
-        state.user = {
-          email: payload.email,
-          user_id: payload.user_id,
-          role: payload.role,
-          access: payload.access,
-          refresh: payload.refresh,
-        };
+        state.user = payload;
         encryptData("token", payload.access, "token");
         encryptData("user", payload, "user");
       }
