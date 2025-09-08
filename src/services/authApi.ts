@@ -16,42 +16,42 @@ export interface User {
   refresh: string;
 }
 
-// Login response
+// ✅ Login response
 interface LoginResponse extends User {}
 
-// Refresh response
+// ✅ Refresh response
 interface RefreshResponse {
   access: string;
 }
 
-// VerifyCode response
+// ✅ VerifyCode response
 export interface VerifyCodeResponse {
   access: string;
   refresh: string;
 }
 
-// ChangePassword response
+// ✅ ChangePassword response
 interface ChangePasswordResponse {
   message: string;
 }
 
-// SendEmail response
+// ✅ SendEmail response
 interface SendEmailResponse {
   message: string;
 }
 
-// SetNewPassword response
+// ✅ SetNewPassword response
 interface SetNewPasswordResponse {
   message: string;
 }
 
-// Oddiy baseQuery
+// --- BaseQuery ---
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${base_url}/authentications`,
   prepareHeaders,
 });
 
-// Refresh bilan custom baseQuery
+// --- Refresh bilan custom baseQuery ---
 const baseQueryWithReauth = async (
   args: string | FetchArgs,
   api: any,
@@ -64,7 +64,6 @@ const baseQueryWithReauth = async (
     const refreshToken = user?.refresh;
 
     if (refreshToken) {
-      // Refresh token yuborish
       const refreshResult = await rawBaseQuery(
         {
           url: "/token/refresh/",
@@ -78,12 +77,10 @@ const baseQueryWithReauth = async (
       if (refreshResult.data) {
         const newAccess = (refreshResult.data as RefreshResponse).access;
 
-        // Userni yangilash
         const updatedUser: User = { ...(user as User), access: newAccess };
         encryptData("token", newAccess, "token");
         encryptData("user", updatedUser, "user");
 
-        // Retry original request
         result = await rawBaseQuery(args, api, extraOptions);
       } else {
         api.dispatch(logout());
@@ -129,10 +126,10 @@ export const authApi = createApi({
       }),
     }),
 
-    // ✅ Parolni o‘zgartirish
+    // ✅ Parolni o‘zgartirish (confirm_password qo‘shildi)
     changePassword: builder.mutation<
       ChangePasswordResponse,
-      { old_password: string; new_password: string }
+      { old_password: string; new_password: string; confirm_password: string }
     >({
       query: (credentials) => ({
         url: "/change-password/",
@@ -170,10 +167,15 @@ export const authApi = createApi({
       }),
     }),
 
-    // ✅ Yangi parol o‘rnatish
+    // ✅ Yangi parol o‘rnatish (email + code majburiy qildim)
     setNewPassword: builder.mutation<
       SetNewPasswordResponse,
-      { email: string; password: string; code: string }
+      {
+        email: string;
+        password: string;
+        confirm_password: string;
+        code: string;
+      }
     >({
       query: (data) => ({
         url: "/forgot-password/new-password/",
