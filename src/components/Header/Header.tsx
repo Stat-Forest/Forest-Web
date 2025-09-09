@@ -85,7 +85,10 @@ function Header() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button className="bg-[#09B86F] h-[42px] w-[170px] hover:bg-[#09B86F]">
+          <Button
+            className="bg-[#09B86F] h-[42px] w-[170px] hover:bg-[#09B86F]"
+            onClick={() => navigate("/video")}
+          >
             <VideoIcon />
             {t("item_65")}
           </Button>
