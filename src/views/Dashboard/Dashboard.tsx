@@ -18,21 +18,22 @@ import ScrollToTop from "@/routes/ScrollToTop";
 import CreatedPlans from "./Main/Children/CreatedPlans";
 import UpdateReportItem from "./ResourceManagement/Children/UpdateReport";
 import UpdatePlans from "./Main/Children/UpdatePlans";
+import Video from "../Video";
 // import { routes } from "@/routes/routes";
 
 function Dashboard() {
   return (
     <>
       <div className="flex h-screen overflow-hidden">
-      <div className="w-[310px] bg-white fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
-        <Sidebar />
-      </div>
-      <div className="flex-1 ml-[310px] overflow-y-auto">
-        <ScrollToTop />
-        <Header />
-        <Suspense fallback={<div>Yuklanmoqda...</div>}>
-          <Routes>
-            {/* {routes.map((item) => (
+        <div className="w-[310px] bg-white fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
+          <Sidebar />
+        </div>
+        <div className="flex-1 ml-[310px] overflow-y-auto">
+          <ScrollToTop />
+          <Header />
+          <Suspense fallback={<div>Yuklanmoqda...</div>}>
+            <Routes>
+              {/* {routes.map((item) => (
               <Route key={item.id} path={item.path} element={<item.element />}>
                 {item.children?.map((child:any) => (
                   <Route
@@ -43,49 +44,50 @@ function Dashboard() {
                 ))}
               </Route>
             ))} */}
-            <Route path="main" element={<Main />}>
-              <Route path="send-report" element={<MainDetail />} />
-              <Route path="returned-report" element={<ReturnedReport />} />
-              <Route path="received-report" element={<ReceivedReport />} />
+              <Route path="main" element={<Main />}>
+                <Route path="send-report" element={<MainDetail />} />
+                <Route path="returned-report" element={<ReturnedReport />} />
+                <Route path="received-report" element={<ReceivedReport />} />
+                <Route
+                  path="responsible-representative"
+                  element={<ResponsibleRepresentatives />}
+                />
+                <Route path="draft" element={<Draft />} />
+                <Route path="newsletter" element={<Newsletters />} />
+                <Route path="created-plans" element={<CreatedPlans />} />
+              </Route>
+              <Route path="plan/create-report" element={<CreateReport />} />
+              <Route path="plan-update/:id" element={<UpdatePlans />} />
               <Route
-                path="responsible-representative"
-                element={<ResponsibleRepresentatives />}
+                path="resource-management/:id"
+                element={<ResourceManagement />}
               />
-              <Route path="draft" element={<Draft />} />
-              <Route path="newsletter" element={<Newsletters />} />
-              <Route path="created-plans" element={<CreatedPlans />} />
-            </Route>
-            <Route path="plan/create-report" element={<CreateReport />} />
-            <Route path="plan-update/:id" element={<UpdatePlans />} />
-            <Route
-              path="resource-management/:id"
-              element={<ResourceManagement />}
-            />
-            <Route
-              path="resource-management/create/:reportName"
-              element={<CreateReportItem />}
-            />
+              <Route
+                path="resource-management/create/:reportName"
+                element={<CreateReportItem />}
+              />
 
-            <Route
-              path="resource-management/update/:id"
-              element={<UpdateReportItem />}
-            />
+              <Route
+                path="resource-management/update/:id"
+                element={<UpdateReportItem />}
+              />
 
-            <Route
-              path="receipt-information"
-              element={<ReceiptInformation />}
-            />
+              <Route
+                path="receipt-information"
+                element={<ReceiptInformation />}
+              />
 
-            <Route
-              path="support-information"
-              element={<SupportInformation />}
-            />
+              <Route
+                path="support-information"
+                element={<SupportInformation />}
+              />
+              <Route path="/video" element={<Video />} />
 
-            <Route path="*" element={<Navigate to="/main" replace />} />
-          </Routes>
-        </Suspense>
+              <Route path="*" element={<Navigate to="/main" replace />} />
+            </Routes>
+          </Suspense>
+        </div>
       </div>
-    </div>
     </>
   );
 }
