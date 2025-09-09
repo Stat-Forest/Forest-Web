@@ -28,7 +28,7 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
       } catch {
         dispatch(logout());
       }
-    }, 1000000); // har 30 sekundda yangilash
+    }, 30000); // har 30 sekundda yangilash
 
     return () => clearInterval(interval);
   }, [user, refreshToken, dispatch]);

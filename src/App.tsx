@@ -12,6 +12,7 @@ import CheckCode from "./views/Auth/CheckCode";
 import ChangePassword from "./views/Auth/changePassword";
 import { TestModeCarousel } from "./components/TestModeCarousel";
 import AppWrapper from "./components/AppWrapper";
+import Video from "./views/Video";
 
 export const user_role = import.meta.env.USER_ROLE;
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="check-code" element={<CheckCode />} />
           <Route path="change-password" element={<ChangePassword />} />
         </Route>
+        <Route path="/video" element={<Video />} />
         <Route
           path="/*"
           element={
