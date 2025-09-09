@@ -25,12 +25,12 @@ function Auth() {
         {/* <Login /> */}
         <div>
           <span className="text-[14px] text-white">
-            © 2025 "Urmontexnoservis" DUK, {t("auth_bottom")}
+            © 2025 "O'rmonlarni raqamlashtirish markazi davlat muassasasi" {t("auth_bottom")}
             <NavLink
               className={"text-[#09B86F] px-2"}
-              to={"tel:+998 95 195 99 29"}
+              to={"tel:+998 71 207 07 70"}
             >
-              +998 95 195 99 29
+              +998 71 207 07 70 (ichki raqami: 1073)
             </NavLink>
           </span>
         </div>
