@@ -28,7 +28,7 @@ function NewsletterTable({ data }: any) {
             T/r:
           </TableHead>
           <TableHead className="text-[#717171] border-none text-lg w-[20%]">
-            {t("item_13")}
+            {t("item_83")}
           </TableHead>
           <TableHead className="text-[#717171] border-none text-lg w-[20%]">
             {t("item_14")}
