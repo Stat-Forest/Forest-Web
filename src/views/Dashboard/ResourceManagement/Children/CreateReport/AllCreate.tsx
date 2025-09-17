@@ -292,11 +292,11 @@ function AllCreateReportItem() {
 
       <div className="flex flex-col gap-4 sm:flex-row">
         <div>
-          <label className="block mb-1 text-sm font-medium">{t("deadline")}:</label>
+          <label className="block mb-1 text-lg font-medium">{t("deadline")}:</label>
           <InfiniteSelect
             placeholder="Tanlang"
             fetchData={fetchReportDeadlines}
-            className="border-none w-[300px] text-base"
+            className="border-2 border-black w-[300px] text-lg"
             name="deadline"
             value={selectedDeadlineId}
             onValueChange={setSelectedDeadlineId}
@@ -360,7 +360,7 @@ function AllCreateReportItem() {
                             setSelectedOrganizationId(e.target.value);
                             handleInputChange(col.id, e.target.value);
                           }}
-                          className="w-full border rounded px-2 py-1"
+                          className="w-full border-2 border-black rounded px-2 py-1"
                           required
                         >
                           <option value="">Tanlang</option>
