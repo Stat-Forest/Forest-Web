@@ -36,7 +36,10 @@ function Login() {
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const {t} = useTranslation();
+  const { t } = useTranslation();
+
+  // yangi: password maydoni ko'rinishi uchun state
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // E-IMZO klientini ishga tushirish
   useEffect(() => {
@@ -53,10 +56,14 @@ function Login() {
 
     // E-IMZO API kalitlari
     window.EIMZOClient.API_KEYS = [
-      'localhost', '96D0C1491615C82B9A54D9989779DF825B690748224C2B04F500F370D51827CE2644D8D4A82C18184D73AB8530BB8ED537269603F61DB0D03D2104ABF789970B',
-      '127.0.0.1', 'A7BCFA5D490B351BE0754130DF03A068F855DB4333D43921125B9CF2670EF6A40370C646B90401955E1F7BC9CDBF59CE0B2C5467D820BE189C845D0B79CFC96F',
-      'null', 'E0A205EC4E7B78BBB56AFF83A733A1BB9FD39D562E67978CC5E7D73B0951DB1954595A20672A63332535E13CC6EC1E1FC8857BB09E0855D7E76E411B6FA16E9D',
-      'ruxsatnoma-urmon.uz', '57081C44AC4FD8FA104A4A4E359524F6632FB589618B4C9A380D176CEC4789407135BE5C4417898FA172596031A95562B4B021C67BFE53D4FB1B53B811E6DF17'
+      "localhost",
+      "96D0C1491615C82B9A54D9989779DF825B690748224C2B04F500F370D51827CE2644D8D4A82C18184D73AB8530BB8ED537269603F61DB0D03D2104ABF789970B",
+      "127.0.0.1",
+      "A7BCFA5D490B351BE0754130DF03A068F855DB4333D43921125B9CF2670EF6A40370C646B90401955E1F7BC9CDBF59CE0B2C5467D820BE189C845D0B79CFC96F",
+      "null",
+      "E0A205EC4E7B78BBB56AFF83A733A1BB9FD39D562E67978CC5E7D73B0951DB1954595A20672A63332535E13CC6EC1E1FC8857BB09E0855D7E76E411B6FA16E9D",
+      "ruxsatnoma-urmon.uz",
+      "57081C44AC4FD8FA104A4A4E359524F6632FB589618B4C9A380D176CEC4789407135BE5C4417898FA172596031A95562B4B021C67BFE53D4FB1B53B811E6DF17",
     ];
 
     // Versiyani tekshirish
@@ -110,7 +117,7 @@ function Login() {
           value: itemId,
           label: expired ? `${v.CN} ${t("expired")}` : v.CN,
           disabled: expired,
-          vo: v
+          vo: v,
         };
       },
       (items: EimzoKey[], firstId: string) => {
@@ -138,7 +145,7 @@ function Login() {
       return;
     }
 
-    const selectedItem = eimzoKeys.find(item => item.id === selectedKey);
+    const selectedItem = eimzoKeys.find((item) => item.id === selectedKey);
     if (!selectedItem) {
       setError(t("invalidSelectedCertificate"));
       return;
@@ -198,8 +205,13 @@ function Login() {
       console.error("E-IMZO orqali kirish muvaffaqiyatsiz:", error);
 
       let errorMessage = "" + (error?.message || t("eImzoErr"));
-      if (typeof error === "object" && "status" in error && error.status === 404) {
-        errorMessage = "E-IMZO login endpointi topilmadi. Iltimos, tizim administratoriga murojaat qiling.";
+      if (
+        typeof error === "object" &&
+        "status" in error &&
+        error.status === 404
+      ) {
+        errorMessage =
+          "E-IMZO login endpointi topilmadi. Iltimos, tizim administratoriga murojaat qiling.";
       }
 
       setError(errorMessage);
@@ -207,9 +219,6 @@ function Login() {
       setIsLoading(false);
     }
   };
-
-
-
 
   const checkAuthHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -234,89 +243,162 @@ function Login() {
 
   return (
     <>
-    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
-      <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
+      <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
+        <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
 
-      <Tabs defaultValue="login" className="w-full">
-        <TabsList className="w-full gap-3">
-          <TabsTrigger value="eimzo" className="flex-1">{t("eImzoLogin")}</TabsTrigger>
-          <TabsTrigger value="login" className="flex-1">{t("login")}</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="w-full gap-3">
+            <TabsTrigger value="eimzo" className="flex-1">
+              {t("eImzoLogin")}
+            </TabsTrigger>
+            <TabsTrigger value="login" className="flex-1">
+              {t("login")}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* E-IMZO orqali kirish */}
-        <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
-          {isLoading ? (
-            <p>Yuklanmoqda...</p>
-          ) : eimzoKeys.length > 0 ? (
-            <>
-              <select
-                value={selectedKey}
-                onChange={(e) => setSelectedKey(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="" disabled>Sertifikatni tanlang</option>
-                {eimzoKeys.map((key) => (
-                  <option
-                    key={key.id}
-                    value={key.id}
-                    disabled={key.disabled}
-                    className={key.disabled ? "text-gray-400" : ""}
-                  >
-                    {key.label}
+          {/* E-IMZO orqali kirish */}
+          <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
+            {isLoading ? (
+              <p>Yuklanmoqda...</p>
+            ) : eimzoKeys.length > 0 ? (
+              <>
+                <select
+                  value={selectedKey}
+                  onChange={(e) => setSelectedKey(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="" disabled>
+                    Sertifikatni tanlang
                   </option>
-                ))}
-              </select>
+                  {eimzoKeys.map((key) => (
+                    <option
+                      key={key.id}
+                      value={key.id}
+                      disabled={key.disabled}
+                      className={key.disabled ? "text-gray-400" : ""}
+                    >
+                      {key.label}
+                    </option>
+                  ))}
+                </select>
 
-              <Button
-                onClick={handleEimzoLogin}
-                className="bg-green-600 text-white h-[45px]"
-                disabled={!selectedKey || isLoading}
-              >
-                {isLoading ? "Ishlanmoqda..." : "Kirish"}
-              </Button>
-            </>
-          ) : (
-            <p>Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.</p>
-          )}
+                <Button
+                  onClick={handleEimzoLogin}
+                  className="bg-green-600 text-white h-[45px]"
+                  disabled={!selectedKey || isLoading}
+                >
+                  {isLoading ? "Ishlanmoqda..." : "Kirish"}
+                </Button>
+              </>
+            ) : (
+              <p>Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.</p>
+            )}
 
-          {error && <p className="text-red-600">{error}</p>}
-        </TabsContent>
-
-        {/* Oddiy login */}
-        <TabsContent value="login" className="pt-6">
-          <form onSubmit={checkAuthHandler} className="flex flex-col gap-4">
-            <div>
-              <Label htmlFor="email">{t("email")}</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="email@example.com"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">{t("password")}</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="********"
-                required
-              />
-              <div className="flex justify-end">
-            <Link to={"/auth/forget-password"} type="button" className="text-[#09B86F] text-[15px] font-medium">{t("forgotPassword")}</Link>
-              </div>
-            </div>
-            <Button type="submit" className="bg-green-600 text-white h-[45px]">
-              {t("enter")}
-            </Button>
             {error && <p className="text-red-600">{error}</p>}
-          </form>
-        </TabsContent>
-      </Tabs>
-    </div>
-      </>
+          </TabsContent>
+
+          {/* Oddiy login */}
+          <TabsContent value="login" className="pt-6">
+            <form onSubmit={checkAuthHandler} className="flex flex-col gap-4">
+              <div>
+                <Label htmlFor="email">{t("email")}</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">{t("password")}</Label>
+
+                {/* password input + eye tugma uchun wrapper */}
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
+                    required
+                    className="pr-10" // o'ng tomonda joy qoldirish uchun
+                  />
+
+                  {/* eye tugma */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    className="absolute inset-y-0 right-2 flex items-center px-2"
+                  >
+                    {showPassword ? (
+                      // eye-off SVG
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 3l18 18M10.5 10.5a2.5 2.5 0 113.5 3.5M21 12c-1.5 4.5-6 7.5-9 7.5a9.3 9.3 0 01-4-.9"
+                        />
+                      </svg>
+                    ) : (
+                      // eye SVG
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"
+                        />
+                        <path
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 15a3 3 0 100-6 3 3 0 000 6z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex justify-end">
+                  <Link
+                    to={"/auth/forget-password"}
+                    type="button"
+                    className="text-[#09B86F] text-[15px] font-medium"
+                  >
+                    {t("forgotPassword")}
+                  </Link>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="bg-green-600 text-white h-[45px]"
+              >
+                {t("enter")}
+              </Button>
+              {error && <p className="text-red-600">{error}</p>}
+            </form>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 }
 
