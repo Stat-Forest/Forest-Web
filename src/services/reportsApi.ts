@@ -29,6 +29,7 @@ export const reportApi = createApi({
         search,
       }) =>
         `/?statement=${statement}&${status}&organization__region=${organization__region}&statement__period=${statement__period}&search=${search}`,
+      providesTags: ["Reports"],
     }),
 
     getReportById: builder.query({
@@ -39,8 +40,11 @@ export const reportApi = createApi({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
       providesTags: ["Reports"],
     }),
-    getDeadlinesReport: builder.query<any, {statement:string}>({
-      query: ({statement}) => ({ url: `/deadlines/?statement=${statement}`, method: "GET" }),
+    getDeadlinesReport: builder.query<any, { statement: string; page: number; perPage: number }>({
+      query: ({ statement, page, perPage }) => ({
+        url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}`,
+        method: "GET",
+      }),
       providesTags: ["Reports"],
     }),
     getReportItemsReport: builder.query<any, void>({

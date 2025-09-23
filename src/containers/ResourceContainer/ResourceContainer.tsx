@@ -62,7 +62,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
-  const { data: deadline } = useGetDeadlinesReportQuery({statement: id || ""}, { skip: !id });
+  const [deadlinePage, setDeadlinePage] = useState(1);
+  const perPage = 5;
+
+  const { data: deadline, isLoading: deadlineLoading } =
+    useGetDeadlinesReportQuery(
+      { statement: id || "", page: deadlinePage, perPage },
+      { skip: !id }
+    );
 
   const {
     data: tableHeadersData = [],
@@ -80,22 +87,24 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   } = useGetAllReportsQuery(
     id
       ? {
-        statement: id,
-        status: `status=${selectedStatusReport}`,
-        organization__region: selectedOrganizationReport,
-        statement__period: selectedPeriodReport,
-        search: searchTermReport,
-      }
+          statement: id,
+          status: `status=${selectedStatusReport}`,
+          organization__region: selectedOrganizationReport,
+          statement__period: selectedPeriodReport,
+          search: searchTermReport,
+        }
       : skipToken
   );
 
-
-  const [getRegionalReport, {
-    data: tableRowsData = [],
-    isLoading: isRowsLoading,
-    isError: isErrorRows,
-    isFetching: isRowsFetching
-  }] = useLazyGetReganalReportQuery();
+  const [
+    getRegionalReport,
+    {
+      data: tableRowsData = [],
+      isLoading: isRowsLoading,
+      isError: isErrorRows,
+      isFetching: isRowsFetching,
+    },
+  ] = useLazyGetReganalReportQuery();
 
   const handleSearchRegional = () => {
     getRegionalReport({
@@ -106,7 +115,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   };
 
   console.log(selectedRow);
-  
+
   const {
     data: rupblic,
     isLoading: isRepublicLoading,
@@ -118,7 +127,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isLoading: isIndividualLoading,
     isError: isIndividualError,
   } = useGetIndividualQuery(
-    { statement: id || "", deadline: selectedRow?.deadline || "", organization: selectedRow?.organization || "" },
+    {
+      statement: id || "",
+      deadline: selectedRow?.deadline || "",
+      organization: selectedRow?.organization || "",
+    },
     { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
   );
 
@@ -127,7 +140,8 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isRowsLoading ||
     isRepublicLoading ||
     isAllReportLoading ||
-    isIndividualLoading;
+    isIndividualLoading ||
+    deadlineLoading;
 
   const isError =
     isErrorHeaders ||
@@ -182,21 +196,27 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   // 🔹 filteredRows: faqat reganal + republic
   const filteredRows = useMemo(() => {
     function filterRow(row: any): any {
-      const filteredReportItems = (row.report_items || []).map((reportItem: any) => {
-        // mavjud ustunlar
-        let filteredColumns = reportItem.statement_columns || [];
+      const filteredReportItems = (row.report_items || []).map(
+        (reportItem: any) => {
+          // mavjud ustunlar
+          let filteredColumns = reportItem.statement_columns || [];
 
-        // 🔹 barcha activeLeafIds bo‘yicha bo‘sh ustunlarni qo‘shamiz
-        const normalizedColumns = activeLeafIds.map((colId) => {
-          const found = filteredColumns.find((c: any) => c.statement_column_id === colId);
-          return found || { statement_column_id: colId, value: "-", inners: [] };
-        });
+          // 🔹 barcha activeLeafIds bo‘yicha bo‘sh ustunlarni qo‘shamiz
+          const normalizedColumns = activeLeafIds.map((colId) => {
+            const found = filteredColumns.find(
+              (c: any) => c.statement_column_id === colId
+            );
+            return (
+              found || { statement_column_id: colId, value: "-", inners: [] }
+            );
+          });
 
-        return {
-          ...reportItem,
-          statement_columns: normalizedColumns,
-        };
-      });
+          return {
+            ...reportItem,
+            statement_columns: normalizedColumns,
+          };
+        }
+      );
 
       return {
         ...row,
@@ -207,10 +227,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
     let rows: any[] = [];
     if (tableRowsData?.results?.length > 0) {
-      rows = [
-        ...(tableRowsData?.results || []),
-        ...(rupblic?.results || []),
-      ];
+      rows = [...(tableRowsData?.results || []), ...(rupblic?.results || [])];
     }
 
     return rows.map(filterRow);
@@ -309,13 +326,15 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     {(user_role === "tashkilot_hodimi" ||
                       user_role === "super_admin" ||
                       user_role === "hududiy_boshqarma") && (
-                        <button
-                          className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
-                          onClick={() => navigate(`/resource-management/create/${reportName}`)}
-                        >
-                          Yangi hisobot yaratish
-                        </button>
-                      )}
+                      <button
+                        className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
+                        onClick={() =>
+                          navigate(`/resource-management/create/${reportName}`)
+                        }
+                      >
+                        Yangi hisobot yaratish
+                      </button>
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
@@ -386,14 +405,66 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         <SelectValue placeholder="Hisobot turi" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value=" ">Barcha hisobotlar</SelectItem>
-                        {deadline?.results?.map((item: any) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.submit_at}
-                          </SelectItem>
-                        ))}
+                        {deadline?.results?.length > 0 ? (
+                          <>
+                            <SelectItem value=" ">Barcha hisobotlar</SelectItem>
+                            {deadline.results.map((item: any) => (
+                              <SelectItem
+                                key={item.id}
+                                value={item.id.toString()}
+                              >
+                                {new Date(item.submit_at).toLocaleDateString(
+                                  "uz-UZ"
+                                )}
+                              </SelectItem>
+                            ))}
+
+                            {/* ✅ Pagination Controls */}
+                            <div className="flex items-center justify-between px-2 py-1 border-t">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={deadlinePage === 1}
+                                onClick={() =>
+                                  setDeadlinePage((p) => Math.max(p - 1, 1))
+                                }
+                              >
+                                Oldingi
+                              </Button>
+                              <span className="text-xs text-gray-500">
+                                {deadlinePage} /{" "}
+                                {Math.ceil(deadline.count / perPage)}
+                              </span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={
+                                  deadlinePage ===
+                                  Math.ceil(deadline.count / perPage)
+                                }
+                                onClick={() =>
+                                  setDeadlinePage((p) =>
+                                    Math.min(
+                                      p + 1,
+                                      Math.ceil(deadline.count / perPage)
+                                    )
+                                  )
+                                }
+                              >
+                                Keyingi
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            Deadline mavjud emas
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
+
                     <Input
                       className="w-full border border-[black] md:w-[150px]"
                       type="number"
@@ -417,13 +488,25 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       rows={filteredRows}
                       onRowClick={(row: ReportRow) => {
                         // 🔹 Normalize qilamiz
-                        const normalizedReportItems = (row.report_items || []).map((reportItem: any) => {
-                          const normalizedColumns = activeLeafIds.map((colId) => {
-                            const found = (reportItem.statement_columns || []).find(
-                              (c: any) => c.statement_column_id === colId
-                            );
-                            return found || { statement_column_id: colId, value: "-", inners: [] };
-                          });
+                        const normalizedReportItems = (
+                          row.report_items || []
+                        ).map((reportItem: any) => {
+                          const normalizedColumns = activeLeafIds.map(
+                            (colId) => {
+                              const found = (
+                                reportItem.statement_columns || []
+                              ).find(
+                                (c: any) => c.statement_column_id === colId
+                              );
+                              return (
+                                found || {
+                                  statement_column_id: colId,
+                                  value: "-",
+                                  inners: [],
+                                }
+                              );
+                            }
+                          );
 
                           return {
                             ...reportItem,
@@ -440,7 +523,9 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       }}
                       selectedRow={selectedRow}
                       individualRows={filteredIndividualRows}
-                      setSelectedOrganizationReport={setSelectedOrganizationReport}
+                      setSelectedOrganizationReport={
+                        setSelectedOrganizationReport
+                      }
                       setSelectedPeriodReport={setSelectedPeriodReport}
                       setSelectedStatusReport={setSelectedStatusReport}
                       setSearchTermReport={setSearchTermReport}
