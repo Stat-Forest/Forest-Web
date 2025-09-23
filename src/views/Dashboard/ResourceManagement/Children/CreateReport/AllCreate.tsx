@@ -12,16 +12,22 @@ import { Input } from "@/components/ui/input";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
-  fetchReportDeadlines,
   useCreateReportMutation,
   useGetStatementColumnsReportQuery,
   reportApi,
+  useGetDeadlinesReportQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
 import { useNavigate } from "react-router-dom";
-import InfiniteSelect from "@/components/ui/InfiniteSelect";
 import { useTranslation } from "react-i18next";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -51,8 +57,9 @@ function findEmptyChildrenColumnIds(
 
 function AllCreateReportItem() {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>("");
+  const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>(""); // ✅ deadline
+  const [selectedOrganizationId, setSelectedOrganizationId] =
+    useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
@@ -66,7 +73,7 @@ function AllCreateReportItem() {
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const {
     data: organizationsData,
@@ -80,6 +87,19 @@ function AllCreateReportItem() {
     error: headersError,
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds as string, lang, isUser: "true" },
+    { skip: !reportIds }
+  );
+
+  // 🔹 Deadline state
+  const [deadlinePage, setDeadlinePage] = useState(1);
+  const perPage = 5;
+
+  const {
+    data: deadlineData,
+    isLoading: deadlineLoading,
+    error: deadlineError,
+  } = useGetDeadlinesReportQuery(
+    { statement: reportIds as string, page: deadlinePage, perPage },
     { skip: !reportIds }
   );
 
@@ -121,7 +141,7 @@ function AllCreateReportItem() {
     }
   }, [currentStep, allEmptyColumnsByStep]);
 
-  // 🔹 PLAN MA'LUMOTLARI (BARCHA STEP UCHUN)
+  // 🔹 PLAN MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
 
@@ -187,7 +207,6 @@ function AllCreateReportItem() {
     setFormErrors([]);
 
     const errors: string[] = [];
-
     if (!selectedDeadlineId) {
       errors.push("Iltimos, deadline tanlang");
     }
@@ -259,9 +278,9 @@ function AllCreateReportItem() {
     }
   };
 
-  if (isHeaderLoading || isOrgLoading)
+  if (isHeaderLoading || isOrgLoading || deadlineLoading)
     return <p className="p-4 text-lg">Yuklanmoqda...</p>;
-  if (headersError || orgError)
+  if (headersError || orgError || deadlineError)
     return (
       <div className="text-red-500 p-4">
         <p>Xatolik yuz berdi</p>
@@ -290,20 +309,78 @@ function AllCreateReportItem() {
         </div>
       )}
 
+      {/* ✅ DEADLINE SELECT */}
+      {/* ✅ DEADLINE SELECT */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div>
-          <label className="block mb-1 text-lg font-medium">{t("deadline")}:</label>
-          <InfiniteSelect
-            placeholder="Tanlang"
-            fetchData={fetchReportDeadlines}
-            className="border-2 border-black w-[300px] text-lg"
-            name="deadline"
+          <label className="block mb-1 text-lg font-medium">
+            {t("deadline")}:
+          </label>
+          <Select
             value={selectedDeadlineId}
-            onValueChange={setSelectedDeadlineId}
-          />
+            onValueChange={(val) => setSelectedDeadlineId(val)}
+          >
+            <SelectTrigger className="w-[300px]">
+              <SelectValue placeholder="Deadline tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {deadlineData?.results?.length > 0 ? (
+                <>
+                  {deadlineData.results.map((item: any) => {
+                    const date = new Date(item.submit_at);
+                    const formatted = date.toLocaleDateString("uz-UZ");
+                    return (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {formatted}
+                      </SelectItem>
+                    );
+                  })}
+
+                  {/* ✅ Pagination Controls */}
+                  <div className="flex items-center justify-between px-2 py-1 border-t">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={deadlinePage === 1}
+                      onClick={() => setDeadlinePage((p) => Math.max(p - 1, 1))}
+                    >
+                      Oldingi
+                    </Button>
+                    <span className="text-xs text-gray-500">
+                      {deadlinePage} / {Math.ceil(deadlineData.count / perPage)}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        deadlinePage === Math.ceil(deadlineData.count / perPage)
+                      }
+                      onClick={() =>
+                        setDeadlinePage((p) =>
+                          Math.min(
+                            p + 1,
+                            Math.ceil(deadlineData.count / perPage)
+                          )
+                        )
+                      }
+                    >
+                      Keyingi
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="p-2 text-center text-muted-foreground text-sm">
+                  Deadline mavjud emas
+                </div>
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
+      {/* ✅ QOLGAN KOD — TABLE STEP */}
       {currentEmptyColumns.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="mb-4 flex justify-between">
@@ -330,10 +407,7 @@ function AllCreateReportItem() {
                   const planValue = planItem ? planItem.plan_value : "";
                   return (
                     <TableRow key={col.id}>
-                      <TableCell className="whitespace-normal break-words">
-                        {col.fullParentChain}
-                      </TableCell>
-
+                      <TableCell>{col.fullParentChain}</TableCell>
                       <TableCell>
                         <Input
                           type="text"
@@ -349,10 +423,7 @@ function AllCreateReportItem() {
                 if (lowerTitle.includes("tashkilot")) {
                   return (
                     <TableRow key={col.id}>
-                      <TableCell className="whitespace-normal break-words">
-                        {col.fullParentChain}
-                      </TableCell>
-
+                      <TableCell>{col.fullParentChain}</TableCell>
                       <TableCell>
                         <select
                           value={selectedOrganizationId}
@@ -360,7 +431,7 @@ function AllCreateReportItem() {
                             setSelectedOrganizationId(e.target.value);
                             handleInputChange(col.id, e.target.value);
                           }}
-                          className="w-full border-2 border-black rounded px-2 py-1"
+                          className="w-full border rounded px-2 py-1"
                           required
                         >
                           <option value="">Tanlang</option>
@@ -377,10 +448,7 @@ function AllCreateReportItem() {
 
                 return (
                   <TableRow key={col.id}>
-                    <TableCell className="whitespace-normal break-words">
-                      {col.fullParentChain}
-                    </TableCell>
-
+                    <TableCell>{col.fullParentChain}</TableCell>
                     <TableCell>
                       <Input
                         type="text"
@@ -401,6 +469,7 @@ function AllCreateReportItem() {
         <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
       )}
 
+      {/* ✅ STEP BOSHQARISH */}
       <div className="flex justify-between items-center pt-4">
         <div className="space-x-2">
           <Button
