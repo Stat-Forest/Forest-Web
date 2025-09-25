@@ -1,111 +1,316 @@
 import CreatedPlantable from "@/components/Table/TableReports/CreatedPlanTable";
-import { useState, useRef, useEffect, useCallback } from "react";
-import { useGetPlanListReportQuery } from "@/services/reportsApi";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import {
+  useGetPlanListReportQuery,
+  useGetStatementsReportQuery,
+} from "@/services/reportsApi";
 import { useDebounce } from "@/utils/useDebounce";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RootState } from "@/app/store";
+import { useSelector } from "react-redux";
+import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import { Input } from "@/components/ui/input";
 
 function CreatedPlans() {
+  const lang = useSelector((state: RootState) => state.language.lang);
   const [page, setPage] = useState(1);
-  const [allData, setAllData] = useState<any[]>([]);
+  const perPage = 20;
   const [searchTerm, setSearchTerm] = useState("");
   const [searchYear, setSearchYear] = useState("");
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [selectedStatement, setSelectedStatement] = useState<string>("");
+  const [selectedOrganization, setSelectedOrganization] = useState<string>("");
+  const [organizationSearch, setOrganizationSearch] = useState("");
   const debouncedSearchYear = useDebounce(searchYear, 500);
+  const debouncedOrganizationSearch = useDebounce(organizationSearch, 300);
 
   const { data, isLoading, isFetching, isError } = useGetPlanListReportQuery({
     columnId: "",
-    organization: "",
-    statement: "",
+    organization: selectedOrganization,
+    statement: selectedStatement,
     page,
-    search: searchTerm,
-    year: searchYear,
+    perPage,
+    search: "",
+    year: debouncedSearchYear,
   });
 
-  useEffect(() => {
-    if (data?.results?.length) {
-      setAllData((prev) => [...prev, ...data.results]);
-    }
-  }, [data]);
+  const {
+    data: statementsData,
+    isLoading: isStatementsLoading,
+    error: statementsError,
+  } = useGetStatementsReportQuery({ lang });
 
-  // Reset data when filters change
+  const {
+    data: organizationData,
+    isLoading: isOrganizationLoading,
+    error: organizationError,
+  } = useGetOrganizationReportsQuery();
+
+  // Filter organizations based on search
+  const filteredOrganizations =
+    organizationData?.filter((org: any) =>
+      org.name
+        ?.toLowerCase()
+        .includes(debouncedOrganizationSearch.toLowerCase())
+    ) || [];
+
+  const totalPages = Math.ceil((data?.count || 0) / perPage);
+  const startItem = (page - 1) * perPage + 1;
+  const endItem = Math.min(page * perPage, data?.count || 0);
+
+  // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearchTerm, debouncedSearchYear]);
+  }, [
+    searchYear,
+    selectedStatement,
+    selectedOrganization,
+  ]);
 
-  const observerRef = useRef<HTMLDivElement | null>(null);
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
 
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const target = entries[0];
-      if (target.isIntersecting && !isFetching && data?.next) {
-        setPage((prev) => prev + 1);
-      }
-    },
-    [data?.next, isFetching]
-  );
+  const handlePrevPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: "0px",
-      threshold: 1.0,
-    });
+  // Clear filters function
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSearchYear("");
+    setSelectedStatement("");
+    setSelectedOrganization("");
+    setOrganizationSearch("");
+    setPage(1);
+  };
 
-    if (observerRef.current) {
-      observer.observe(observerRef.current);
+  // Check if any filter is active
+  const isAnyFilterActive =
+    searchTerm || searchYear || selectedStatement || selectedOrganization;
+
+  // Render page numbers
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
-    return () => {
-      if (observerRef.current) {
-        observer.unobserve(observerRef.current);
-      }
-    };
-  }, [handleObserver]);
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <Button
+          key={i}
+          onClick={() => setPage(i)}
+          variant={page === i ? "default" : "outline"}
+          className={`mx-1 min-w-[40px] ${
+            page === i ? "bg-blue-600 text-white" : ""
+          }`}
+          disabled={isFetching}
+        >
+          {i}
+        </Button>
+      );
+    }
+
+    return pages;
+  };
 
   return (
-    <div className="w-full px-5">
-      <div className="flex items-center gap-5 mb-6">
-        <div>
-          <Input
-            type="text"
-            placeholder="Qidiruv..."
-            className="w-[260px] text-xl min-h-[40px] border-black"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div>
-          <Input
-            type="text"
-            placeholder="Yili..."
-            className="w-[260px] text-xl min-h-[40px] border-black"
-            value={searchYear}
-            onChange={(e) => setSearchYear(e.target.value)}
-          />
-        </div>
+    <div className="w-full px-5 pb-10">
+      {/* Filter Section */}
+      <div className="mb-5 flex items-center gap-3 flex-wrap">
+        {/* Statement Filter */}
+        <Select
+          value={selectedStatement}
+          onValueChange={(value) => setSelectedStatement(value)}
+          disabled={isStatementsLoading}
+        >
+          <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
+            <SelectValue
+              placeholder={
+                isStatementsLoading ? "Yuklanmoqda..." : "Bo'limni tanlang"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {statementsData?.results?.map((parent: any) =>
+              parent.children?.map((child: any) => (
+                <SelectItem key={child.id} value={child.id.toString()}>
+                  {child.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+
+        {/* Organization Filter with Search */}
+        <Select
+          value={selectedOrganization}
+          onValueChange={(value) => setSelectedOrganization(value)}
+          disabled={isOrganizationLoading}
+        >
+          <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
+            <SelectValue
+              placeholder={
+                isOrganizationLoading ? "Yuklanmoqda..." : "Tashkilotni tanlang"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {/* Search Input for Organizations */}
+            <div className="p-2 border-b">
+              <Input
+                placeholder="Tashkilot nomi bo'yicha qidirish..."
+                value={organizationSearch}
+                onChange={(e) => setOrganizationSearch(e.target.value)}
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {filteredOrganizations.length > 0 ? (
+              filteredOrganizations.map((org: any) => (
+                <SelectItem key={org.id} value={org.id.toString()}>
+                  {org.name}
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-center text-gray-500">
+                Tashkilot topilmadi
+              </div>
+            )}
+          </SelectContent>
+        </Select>
+
+        {/* Year Filter */}
+        <Input
+          type="text"
+          placeholder="Yil bo'yicha qidirish..."
+          className="w-[200px] text-xl min-h-[40px] border-black"
+          value={searchYear}
+          onChange={(e) => setSearchYear(e.target.value)}
+        />
+
+        {/* Clear Filters Button */}
+        <Button
+          onClick={handleClearFilters}
+          variant="outline"
+          disabled={!isAnyFilterActive}
+        >
+          Tozalash
+        </Button>
       </div>
 
-      {isLoading && (
-        <h1 className="text-center text-lg">Boshlang‘ich yuklanmoqda...</h1>
-      )}
-
-      {isError && (
-        <h1 className="text-center text-red-500">Xatolik yuz berdi</h1>
-      )}
-
-      {!isLoading && !isError && (
-        <>
-          <CreatedPlantable data={allData} />
-          <div
-            ref={observerRef}
-            className="h-[50px] flex justify-center items-center"
-          >
-            {isFetching && (
-              <span className="text-[#09B86F]">Yuklanmoqda...</span>
+      {/* Loading & Error States */}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <h1 className="text-center text-lg">Boshlang'ich yuklanmoqda...</h1>
+        </div>
+      ) : isError ? (
+        <div className="flex justify-center items-center h-40">
+          <h1 className="text-center text-red-500">
+            Ma'lumotlarni yuklashda xatolik yuz berdi!
+          </h1>
+        </div>
+      ) : statementsError ? (
+        <div className="flex justify-center items-center h-40">
+          <h1 className="text-center text-red-500">
+            Bo'limlarni yuklashda xatolik yuz berdi!
+          </h1>
+        </div>
+      ) : organizationError ? (
+        <div className="flex justify-center items-center h-40">
+          <h1 className="text-center text-red-500">
+            Tashkilotlarni yuklashda xatolik yuz berdi!
+          </h1>
+        </div>
+      ) : (
+        <div className="w-full border border-[silver] rounded-xl px-3 py-5">
+          {/* Count info */}
+          <div className="mb-3 text-sm text-gray-600">
+            Umumiy yozuvlar soni: {data?.count || 0} ta
+            {data?.results?.length > 0 && (
+              <span>
+                {" "}
+                (Ko'rsatilayapti: {startItem}-{endItem})
+              </span>
             )}
           </div>
-        </>
+
+          {data?.results?.length > 0 ? (
+            <>
+              <CreatedPlantable
+                data={data.results}
+                currentPage={page}
+                perPage={perPage}
+              />
+
+              {/* Pagination Controls */}
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
+                <div className="text-sm text-gray-600">
+                  {startItem}-{endItem} of {data?.count || 0} yozuvlar
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handlePrevPage}
+                    disabled={page === 1 || isFetching}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Oldingi
+                  </Button>
+
+                  <div className="flex items-center">{renderPageNumbers()}</div>
+
+                  <Button
+                    onClick={handleNextPage}
+                    disabled={page >= totalPages || isFetching}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Keyingi
+                  </Button>
+                </div>
+
+                <div className="text-sm text-gray-600">
+                  Sahifa {page} / {totalPages}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-center items-center h-40">
+              <h1 className="text-gray-500">
+                {isAnyFilterActive
+                  ? "Filter bo'yicha ma'lumot topilmadi"
+                  : "Ma'lumot topilmadi"}
+              </h1>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Secondary loading indicator */}
+      {isFetching && !isLoading && (
+        <div className="flex justify-center items-center mt-4">
+          <span className="text-[#09B86F]">Yuklanmoqda...</span>
+        </div>
       )}
     </div>
   );
