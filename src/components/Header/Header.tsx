@@ -1,5 +1,4 @@
-import { LogOut, Search, User2, VideoIcon } from "lucide-react";
-import { Input } from "../ui/input";
+import { LogOut, User2, VideoIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Select,
@@ -75,14 +74,7 @@ function Header() {
   return (
     <>
       <div className="h-[70px] shadow flex items-center justify-between px-3">
-        <div className="w-[30%] border-1 border-silver flex items-center bg-white rounded-lg gap-1 px-2">
-          <Search className="text-[#A4A4A4]" />
-          <Input
-            placeholder={t("item_79")}
-            className="border-none h-[42px]"
-            style={{ fontSize: "17px" }}
-          />
-        </div>
+        <div></div>
 
         <div className="flex items-center gap-3">
           <Button
