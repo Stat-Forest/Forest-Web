@@ -40,9 +40,17 @@ export const reportApi = createApi({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
       providesTags: ["Reports"],
     }),
-    getDeadlinesReport: builder.query<any, { statement: string; page: number; perPage: number }>({
-      query: ({ statement, page, perPage }) => ({
-        url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}`,
+    getDeadlinesReport: builder.query<
+      any,
+      {
+        statement: string;
+        page: number;
+        perPage: number;
+        statement__period: string;
+      }
+    >({
+      query: ({ statement, page, perPage, statement__period }) => ({
+        url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -105,10 +113,11 @@ export const reportApi = createApi({
         page: any;
         search: string;
         year: string;
+        perPage: number;
       }
     >({
-      query: ({ columnId, organization, statement, page, search, year }) => ({
-        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}`,
+      query: ({ columnId, organization, statement, page, search, year, perPage }) => ({
+        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}&per_page=${perPage}`,
         method: "GET",
       }),
       providesTags: ["Reports"],

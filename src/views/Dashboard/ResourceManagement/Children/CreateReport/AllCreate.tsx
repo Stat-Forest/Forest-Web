@@ -99,7 +99,7 @@ function AllCreateReportItem() {
     isLoading: deadlineLoading,
     error: deadlineError,
   } = useGetDeadlinesReportQuery(
-    { statement: reportIds as string, page: deadlinePage, perPage },
+    { statement: reportIds as string, page: deadlinePage, perPage, statement__period: "" },
     { skip: !reportIds }
   );
 

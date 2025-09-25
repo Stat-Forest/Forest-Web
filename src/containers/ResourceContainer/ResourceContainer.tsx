@@ -67,7 +67,12 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   const { data: deadline, isLoading: deadlineLoading } =
     useGetDeadlinesReportQuery(
-      { statement: id || "", page: deadlinePage, perPage },
+      {
+        statement: id || "",
+        page: deadlinePage,
+        perPage,
+        statement__period: "",
+      },
       { skip: !id }
     );
 

@@ -10,74 +10,65 @@ import {
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-function NewsletterTable({ data }: any) {
+interface NewsletterTableProps {
+  data: any[];
+  currentPage: number;
+  perPage: number;
+}
+
+function NewsletterTable({ data, currentPage, perPage }: NewsletterTableProps) {
   const { t } = useTranslation();
-  // const [openRowIndex, setOpenRowIndex] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  const toggleRow = (index: number) => {
-    // setOpenRowIndex((prev) => (prev === index ? null : index));
-    navigate(`/resource-management/${data?.results[index]?.statement?.id}`);    
+  const toggleRow = (id: number) => {
+    navigate(`/resource-management/${id}`);
+  };
+
+  // Global raqamni hisoblash: (currentPage - 1) * perPage + index + 1
+  const getGlobalIndex = (index: number) => {
+    return (currentPage - 1) * perPage + index + 1;
   };
 
   return (
     <Table className="w-full">
       <TableHeader>
         <TableRow className="bg-[#eaeaea] h-[50px]">
-          <TableHead className="w-[4%] text-lg text-[#717171] border-none rounded-tl-lg rounded-bl-lg">
-            T/r:
+          <TableHead className="text-[#717171] border-none text-left pl-5 text-lg w-[10%]">
+            №
           </TableHead>
-          <TableHead className="text-[#717171] border-none text-lg w-[20%]">
+          <TableHead className="text-[#717171] border-none text-left text-lg w-[30%]">
             {t("item_83")}
           </TableHead>
-          <TableHead className="text-[#717171] border-none text-lg w-[20%]">
+          <TableHead className="text-[#717171] border-none text-lg text-left w-[20%]">
             {t("item_14")}
           </TableHead>
-          <TableHead className="text-[#717171] border-none text-lg w-[20%]">
+          <TableHead className="text-[#717171] border-none text-lg w-[20%] text-left">
             {t("item_17")}
           </TableHead>
         </TableRow>
       </TableHeader>
 
       <TableBody>
-        {data?.results?.map((item: any, index: number) => (
-          <React.Fragment key={index}>
+        {data?.map((item, index) => (
+          <React.Fragment key={item.id || index}>
             <TableRow
               className="h-[50px] cursor-pointer hover:bg-gray-100"
-              onClick={() => toggleRow(index)}
+              onClick={() => toggleRow(item?.statement?.id)}
             >
-              <TableCell className="text-lg font-[300] border-none">
-                {index + 1}
+              {/* ✅ Global raqam: 1-20, 21-40, 41-60, ... */}
+              <TableCell className="text-base font-[300] border-none">
+                {getGlobalIndex(index)}
               </TableCell>
               <TableCell className="text-base font-[300] border-none">
-                {item?.statement?.name}
+                {item?.statement?.name || "-"}
               </TableCell>
               <TableCell className="text-base font-[300] border-none">
-                {item?.statement?.period}
+                {item?.statement?.period || "-"}
               </TableCell>
               <TableCell className="text-base font-[300] border-none">
-                {item?.submit_at}
+                {item?.submit_at || "-"}
               </TableCell>
             </TableRow>
-
-            {/* {openRowIndex === index && (
-              <TableRow className="bg-gray-50">
-                <TableCell colSpan={4} className="border-t p-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Tashkilotlar:</h4>
-                    <ul className="list-disc ml-5 space-y-1">
-                      {item.organizations?.length > 0 ? (
-                        item.organizations.map((org: any, idx: number) => (
-                          <li key={idx}>{org.name}</li>
-                        ))
-                      ) : (
-                        <p className="text-gray-500">Tashkilotlar yo'q</p>
-                      )}
-                    </ul>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )} */}
           </React.Fragment>
         ))}
       </TableBody>

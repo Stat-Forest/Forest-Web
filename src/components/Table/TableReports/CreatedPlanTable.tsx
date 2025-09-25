@@ -14,7 +14,17 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function CreatedPlantable({ data }: any) {
+interface CreatedPlantableProps {
+  data: any[];
+  currentPage: number;
+  perPage: number;
+}
+
+function CreatedPlantable({
+  data,
+  currentPage,
+  perPage,
+}: CreatedPlantableProps) {
   const [deletePlan] = useDeletePlanMutation();
   const { t } = useTranslation();
   const [loadingId, setLoadingId] = useState<number | null>(null);
@@ -36,17 +46,25 @@ function CreatedPlantable({ data }: any) {
     setOpenRow((prev) => (prev === index ? null : index));
   };
 
+  // Global raqamni hisoblash: (currentPage - 1) * perPage + index + 1
+  const getGlobalIndex = (index: number) => {
+    return (currentPage - 1) * perPage + index + 1;
+  };
+
   return (
     <Table className="w-full">
       <TableHeader>
         <TableRow className="bg-[#eaeaea] h-[50px]">
-          <TableHead className="w-[20%] text-lg pl-2 text-[#717171] text-left rounded-tl-lg rounded-bl-lg border-none">
+          <TableHead className="w-[5%] text-lg pl-2 text-[#717171] text-left rounded-tl-lg rounded-bl-lg border-none">
+            №
+          </TableHead>
+          <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
             {t("item_12")}
           </TableHead>
           <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
             {t("item_83")}
           </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
+          <TableHead className="text-[#717171] text-lg w-[15%] text-left border-none">
             {t("item_14")}
           </TableHead>
           <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
@@ -63,25 +81,33 @@ function CreatedPlantable({ data }: any) {
               className="h-[50px] cursor-pointer hover:bg-gray-100"
               onClick={() => toggleRow(index)}
             >
+              {/* Global raqam: 1-20, 21-40, 41-60, ... */}
+              <TableCell className="w-[5%] text-base font-[300] border-none">
+                {getGlobalIndex(index)}
+              </TableCell>
               <TableCell className="w-[20%] text-lg font-[300] border-none">
-                {item?.organization}
+                {item?.organization || "N/A"}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.statement}
+                {item?.statement || "N/A"}
+              </TableCell>
+              <TableCell className="w-[15%] text-base font-[300] border-none">
+                {item?.year || "N/A"}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.year}
-              </TableCell>
-              <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.created_at}
+                {item?.created_at || "N/A"}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
                 <div className="flex items-center justify-center gap-2">
                   <Button
-                    onClick={() => navigate(`/plan-update/${item.id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/plan-update/${item.id}`);
+                    }}
                     className="bg-[#09B86F] hover:bg-[#09B86F]"
+                    size="sm"
                   >
-                    <Edit2 />
+                    <Edit2 size={16} />
                   </Button>
                   <Button
                     className="bg-[#09B86F] hover:bg-[#09B86F]"
@@ -90,11 +116,12 @@ function CreatedPlantable({ data }: any) {
                       handleDelete(item?.id);
                     }}
                     disabled={loadingId === item?.id}
+                    size="sm"
                   >
                     {loadingId === item?.id ? (
-                      <Loader2 className="animate-spin" />
+                      <Loader2 className="animate-spin" size={16} />
                     ) : (
-                      <Trash2 />
+                      <Trash2 size={16} />
                     )}
                   </Button>
                   <Button
@@ -103,8 +130,13 @@ function CreatedPlantable({ data }: any) {
                       e.stopPropagation();
                       toggleRow(index);
                     }}
+                    size="sm"
                   >
-                    {openRow === index ? <ChevronUp /> : <ChevronDown />}
+                    {openRow === index ? (
+                      <ChevronUp size={16} />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
                   </Button>
                 </div>
               </TableCell>
@@ -112,17 +144,17 @@ function CreatedPlantable({ data }: any) {
 
             {openRow === index && (
               <TableRow className="bg-gray-50 transition-all duration-300">
-                <TableCell colSpan={5} className="p-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-1 gap-4">
+                <TableCell colSpan={6} className="p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {item?.plan_items?.map((plan: any, idx: number) => (
                       <div
                         key={plan.id || idx}
                         className="p-3 border rounded-md shadow-sm bg-white"
                       >
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-gray-700 break-words whitespace-pre-wrap">
                           {plan?.column_parent_name} {plan.column_name}
                         </p>
-                        <p className="text-base text-black">
+                        <p className="text-base text-black break-words whitespace-pre-wrap">
                           {plan.plan_value}
                         </p>
                       </div>
