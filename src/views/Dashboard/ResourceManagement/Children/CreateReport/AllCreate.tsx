@@ -57,7 +57,7 @@ function findEmptyChildrenColumnIds(
 
 function AllCreateReportItem() {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>(""); // ✅ deadline
+  const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
@@ -99,7 +99,12 @@ function AllCreateReportItem() {
     isLoading: deadlineLoading,
     error: deadlineError,
   } = useGetDeadlinesReportQuery(
-    { statement: reportIds as string, page: deadlinePage, perPage, statement__period: "" },
+    {
+      statement: reportIds as string,
+      page: deadlinePage,
+      perPage,
+      statement__period: "",
+    },
     { skip: !reportIds }
   );
 
@@ -121,7 +126,7 @@ function AllCreateReportItem() {
     setCurrentStep(0);
   }, [allEmptyColumnsByStepMemo]);
 
-  // Boshlang‘ich qiymatlar
+  // Boshlang'ich qiymatlar
   useEffect(() => {
     if (allEmptyColumnsByStep[currentStep]?.length > 0) {
       const initialValues: Record<string, string> = {};
@@ -284,6 +289,9 @@ function AllCreateReportItem() {
     return (
       <div className="text-red-500 p-4">
         <p>Xatolik yuz berdi</p>
+        <p className="text-sm">
+          {String(deadlineError || headersError || orgError)}
+        </p>
       </div>
     );
 
@@ -291,6 +299,18 @@ function AllCreateReportItem() {
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title ?? `Qadam ${currentStep + 1}`;
+
+  // 🔹 Deadline matnini formatlash funksiyasi
+  const formatDeadlineText = (submitAt: string) => {
+    if (!submitAt) return "Noma'lum";
+
+    if (submitAt.includes("CHORAK")) {
+      // "2025-CHORAK_1" -> "2025 yil 1-chorak"
+      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
+    }
+
+    return submitAt;
+  };
 
   return (
     <form
@@ -309,8 +329,7 @@ function AllCreateReportItem() {
         </div>
       )}
 
-      {/* ✅ DEADLINE SELECT */}
-      {/* ✅ DEADLINE SELECT */}
+      {/* ✅ TO'G'RILANGAN DEADLINE SELECT */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div>
           <label className="block mb-1 text-lg font-medium">
@@ -321,54 +340,72 @@ function AllCreateReportItem() {
             onValueChange={(val) => setSelectedDeadlineId(val)}
           >
             <SelectTrigger className="w-[300px]">
-              <SelectValue placeholder="Deadline tanlang" />
+              <SelectValue
+                placeholder={
+                  deadlineLoading
+                    ? "Yuklanmoqda..."
+                    : deadlineError
+                    ? "Xatolik yuz berdi"
+                    : "Deadline tanlang"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              {deadlineData?.results?.length > 0 ? (
+              {deadlineLoading ? (
+                <div className="p-2 text-center text-muted-foreground text-sm">
+                  Yuklanmoqda...
+                </div>
+              ) : deadlineError ? (
+                <div className="p-2 text-center text-red-500 text-sm">
+                  Ma'lumotlarni yuklashda xatolik
+                </div>
+              ) : deadlineData?.results?.length > 0 ? (
                 <>
-                  {deadlineData.results.map((item: any) => {
-                    const date = new Date(item.submit_at);
-                    const formatted = date.toLocaleDateString("uz-UZ");
-                    return (
-                      <SelectItem key={item.id} value={item.id.toString()}>
-                        {formatted}
-                      </SelectItem>
-                    );
-                  })}
+                  {deadlineData.results.map((item: any) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {formatDeadlineText(item.submit_at)}
+                    </SelectItem>
+                  ))}
 
                   {/* ✅ Pagination Controls */}
-                  <div className="flex items-center justify-between px-2 py-1 border-t">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={deadlinePage === 1}
-                      onClick={() => setDeadlinePage((p) => Math.max(p - 1, 1))}
-                    >
-                      Oldingi
-                    </Button>
-                    <span className="text-xs text-gray-500">
-                      {deadlinePage} / {Math.ceil(deadlineData.count / perPage)}
-                    </span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={
-                        deadlinePage === Math.ceil(deadlineData.count / perPage)
-                      }
-                      onClick={() =>
-                        setDeadlinePage((p) =>
-                          Math.min(
-                            p + 1,
-                            Math.ceil(deadlineData.count / perPage)
+                  {deadlineData.count > perPage && (
+                    <div className="flex items-center justify-between px-2 py-1 border-t">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={deadlinePage === 1}
+                        onClick={() =>
+                          setDeadlinePage((p) => Math.max(p - 1, 1))
+                        }
+                      >
+                        Oldingi
+                      </Button>
+                      <span className="text-xs text-gray-500">
+                        {deadlinePage} /{" "}
+                        {Math.ceil(deadlineData.count / perPage)}
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          deadlinePage >=
+                          Math.ceil(deadlineData.count / perPage)
+                        }
+                        onClick={() =>
+                          setDeadlinePage((p) =>
+                            Math.min(
+                              p + 1,
+                              Math.ceil(deadlineData.count / perPage)
+                            )
                           )
-                        )
-                      }
-                    >
-                      Keyingi
-                    </Button>
-                  </div>
+                        }
+                      >
+                        Keyingi
+                      </Button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="p-2 text-center text-muted-foreground text-sm">
@@ -466,7 +503,7 @@ function AllCreateReportItem() {
           </Table>
         </div>
       ) : (
-        <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
+        <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
       )}
 
       {/* ✅ STEP BOSHQARISH */}
