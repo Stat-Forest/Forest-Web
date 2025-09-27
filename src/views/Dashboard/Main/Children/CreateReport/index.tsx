@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
@@ -38,6 +39,8 @@ function CreateReport() {
   const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
+
+  const { t } = useTranslation();
 
   const {
     data: organization,
@@ -114,10 +117,10 @@ function CreateReport() {
     <div className="px-5 py-5 w-full mb-30">
       <div>
         <Button
-          className="min-w-[50px] min-h-[25px]"
+          className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
           onClick={() => navigate(-1)}
         >
-          <ChevronLeft /> orqaga qaytish
+          <ChevronLeft /> {t("back")}
         </Button>
       </div>
       <form onSubmit={createReportHandler} className="grid grid-cols-1 gap-3">

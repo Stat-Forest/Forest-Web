@@ -125,5 +125,6 @@
   "resetPassword":"Parolni tiklash",
   "enterNewPassword":"Yangi parolni kiriting",
   "confirmNewPassword":"Yangi parolni tasdiqlang",
-  "deadline":"Muddati"
+  "deadline":"Muddati",
+  "back":"Orqaga qaytish"
 }

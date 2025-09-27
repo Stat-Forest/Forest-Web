@@ -23,6 +23,8 @@ import { removeCookie } from "@/utils/cookie";
 import { useNavigate, useParams } from "react-router-dom";
 import InfiniteSelect from "@/components/ui/InfiniteSelect";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { ChevronLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -69,6 +71,8 @@ function AllUpdateReportItem() {
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+
+  const { t } = useTranslation();
 
   // mavjud reportni olish
   const {
@@ -282,59 +286,114 @@ function AllUpdateReportItem() {
     tableHeadersData?.[currentStep]?.title ?? `Qadam ${currentStep + 1}`;
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 ${
-        isSubmitting ? "opacity-50 pointer-events-none" : ""
-      }`}
-    >
-      {formErrors.length > 0 && (
-        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-          <ul>
-            {formErrors.map((error, idx) => (
-              <li key={idx}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div>
-          <label className="block mb-1 text-sm font-medium">Deadline:</label>
-          <InfiniteSelect
-            placeholder="Tanlang"
-            fetchData={fetchReportDeadlines}
-            className="border-none w-[300px] text-base"
-            name="deadline"
-            value={selectedDeadlineId}
-            onValueChange={setSelectedDeadlineId}
-          />
-        </div>
+    <>
+      <div>
+        <Button
+          className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeft /> {t("back")}
+        </Button>
       </div>
 
-      {currentEmptyColumns.length > 0 ? (
-        <div className="overflow-x-auto">
-          <div className="mb-4 flex justify-between">
-            <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
-            <span className="text-sm text-gray-500">
-              {currentStep + 1} / {totalSteps}
-            </span>
+      <form
+        onSubmit={handleSubmit}
+        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 ${
+          isSubmitting ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        {formErrors.length > 0 && (
+          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
+            <ul>
+              {formErrors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </ul>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ustun nomi</TableHead>
-                <TableHead className="min-w-[300px]">Qiymat</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentEmptyColumns.map((col) => {
-                const lowerTitle = col.title.toLowerCase();
-                if (lowerTitle.includes("reja")) {
-                  const planItem = planItems.find(
-                    (item) => item.columnId === col.id
-                  );
-                  const planValue = planItem ? planItem.plan_value : "";
+        )}
+
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div>
+            <label className="block mb-1 text-sm font-medium">Deadline:</label>
+            <InfiniteSelect
+              placeholder="Tanlang"
+              fetchData={fetchReportDeadlines}
+              className="border-none w-[300px] text-base"
+              name="deadline"
+              value={selectedDeadlineId}
+              onValueChange={setSelectedDeadlineId}
+            />
+          </div>
+        </div>
+
+        {currentEmptyColumns.length > 0 ? (
+          <div className="overflow-x-auto">
+            <div className="mb-4 flex justify-between">
+              <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
+              <span className="text-sm text-gray-500">
+                {currentStep + 1} / {totalSteps}
+              </span>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ustun nomi</TableHead>
+                  <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentEmptyColumns.map((col) => {
+                  const lowerTitle = col.title.toLowerCase();
+                  if (lowerTitle.includes("reja")) {
+                    const planItem = planItems.find(
+                      (item) => item.columnId === col.id
+                    );
+                    const planValue = planItem ? planItem.plan_value : "";
+                    return (
+                      <TableRow key={col.id}>
+                        <TableCell className="whitespace-normal break-words">
+                          {col.fullParentChain}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={planValue}
+                            disabled
+                            className="bg-gray-100 cursor-not-allowed"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  if (lowerTitle.includes("tashkilot")) {
+                    return (
+                      <TableRow key={col.id}>
+                        <TableCell className="whitespace-normal break-words">
+                          {col.fullParentChain}
+                        </TableCell>
+                        <TableCell>
+                          <select
+                            value={selectedOrganizationId}
+                            onChange={(e) => {
+                              setSelectedOrganizationId(e.target.value);
+                              handleInputChange(col.id, e.target.value);
+                            }}
+                            className="w-full border rounded px-2 py-1"
+                            required
+                          >
+                            <option value="">Tanlang</option>
+                            {organizationsData?.map((item: any) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
                   return (
                     <TableRow key={col.id}>
                       <TableCell className="whitespace-normal break-words">
@@ -343,98 +402,54 @@ function AllUpdateReportItem() {
                       <TableCell>
                         <Input
                           type="text"
-                          value={planValue}
-                          disabled
-                          className="bg-gray-100 cursor-not-allowed"
+                          value={formValues[col.id] || ""}
+                          onChange={(e) =>
+                            handleInputChange(col.id, e.target.value)
+                          }
+                          required
                         />
                       </TableCell>
                     </TableRow>
                   );
-                }
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
+        )}
 
-                if (lowerTitle.includes("tashkilot")) {
-                  return (
-                    <TableRow key={col.id}>
-                      <TableCell className="whitespace-normal break-words">
-                        {col.fullParentChain}
-                      </TableCell>
-                      <TableCell>
-                        <select
-                          value={selectedOrganizationId}
-                          onChange={(e) => {
-                            setSelectedOrganizationId(e.target.value);
-                            handleInputChange(col.id, e.target.value);
-                          }}
-                          className="w-full border rounded px-2 py-1"
-                          required
-                        >
-                          <option value="">Tanlang</option>
-                          {organizationsData?.map((item: any) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
-                      </TableCell>
-                    </TableRow>
-                  );
-                }
-
-                return (
-                  <TableRow key={col.id}>
-                    <TableCell className="whitespace-normal break-words">
-                      {col.fullParentChain}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={formValues[col.id] || ""}
-                        onChange={(e) =>
-                          handleInputChange(col.id, e.target.value)
-                        }
-                        required
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <p>Ushbu qadamda to‘ldirish uchun ustunlar yo‘q.</p>
-      )}
-
-      <div className="flex justify-between items-center pt-4">
-        <div className="space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-            disabled={currentStep === 0 || isSubmitting}
-          >
-            Oldingi
-          </Button>
-          {currentStep < totalSteps - 1 && (
+        <div className="flex justify-between items-center pt-4">
+          <div className="space-x-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
-              }
-              disabled={isSubmitting}
+              onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+              disabled={currentStep === 0 || isSubmitting}
             >
-              Keyingi
+              Oldingi
+            </Button>
+            {currentStep < totalSteps - 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
+                }
+                disabled={isSubmitting}
+              >
+                Keyingi
+              </Button>
+            )}
+          </div>
+          {currentStep === totalSteps - 1 && (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "⏳ Yangilanmoqda..." : "Yangilash"}
             </Button>
           )}
         </div>
-        {currentStep === totalSteps - 1 && (
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "⏳ Yangilanmoqda..." : "Yangilash"}
-          </Button>
-        )}
-      </div>
-    </form>
+      </form>
+    </>
   );
 }
 
