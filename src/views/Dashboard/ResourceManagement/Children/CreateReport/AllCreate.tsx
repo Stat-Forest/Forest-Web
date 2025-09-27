@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ChevronLeft } from "lucide-react";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -313,230 +314,246 @@ function AllCreateReportItem() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 ${
-        isSubmitting ? "opacity-50 pointer-events-none" : ""
-      }`}
-    >
-      {formErrors.length > 0 && (
-        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-          <ul>
-            {formErrors.map((error, idx) => (
-              <li key={idx}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ✅ TO'G'RILANGAN DEADLINE SELECT */}
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div>
-          <label className="block mb-1 text-lg font-medium">
-            {t("deadline")}:
-          </label>
-          <Select
-            value={selectedDeadlineId}
-            onValueChange={(val) => setSelectedDeadlineId(val)}
-          >
-            <SelectTrigger className="w-[300px]">
-              <SelectValue
-                placeholder={
-                  deadlineLoading
-                    ? "Yuklanmoqda..."
-                    : deadlineError
-                    ? "Xatolik yuz berdi"
-                    : "Deadline tanlang"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {deadlineLoading ? (
-                <div className="p-2 text-center text-muted-foreground text-sm">
-                  Yuklanmoqda...
-                </div>
-              ) : deadlineError ? (
-                <div className="p-2 text-center text-red-500 text-sm">
-                  Ma'lumotlarni yuklashda xatolik
-                </div>
-              ) : deadlineData?.results?.length > 0 ? (
-                <>
-                  {deadlineData.results.map((item: any) => (
-                    <SelectItem key={item.id} value={item.id.toString()}>
-                      {formatDeadlineText(item.submit_at)}
-                    </SelectItem>
-                  ))}
-
-                  {/* ✅ Pagination Controls */}
-                  {deadlineData.count > perPage && (
-                    <div className="flex items-center justify-between px-2 py-1 border-t">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={deadlinePage === 1}
-                        onClick={() =>
-                          setDeadlinePage((p) => Math.max(p - 1, 1))
-                        }
-                      >
-                        Oldingi
-                      </Button>
-                      <span className="text-xs text-gray-500">
-                        {deadlinePage} /{" "}
-                        {Math.ceil(deadlineData.count / perPage)}
-                      </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={
-                          deadlinePage >=
-                          Math.ceil(deadlineData.count / perPage)
-                        }
-                        onClick={() =>
-                          setDeadlinePage((p) =>
-                            Math.min(
-                              p + 1,
-                              Math.ceil(deadlineData.count / perPage)
-                            )
-                          )
-                        }
-                      >
-                        Keyingi
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="p-2 text-center text-muted-foreground text-sm">
-                  Deadline mavjud emas
-                </div>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+    <>
+      <div className="p-6">
+        <Button
+          className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeft /> {t("back")}
+        </Button>
       </div>
-
-      {/* ✅ QOLGAN KOD — TABLE STEP */}
-      {currentEmptyColumns.length > 0 ? (
-        <div className="overflow-x-auto">
-          <div className="mb-4 flex justify-between">
-            <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
-            <span className="text-sm text-gray-500">
-              {currentStep + 1} / {totalSteps}
-            </span>
+      <form
+        onSubmit={handleSubmit}
+        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 ${
+          isSubmitting ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        {formErrors.length > 0 && (
+          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
+            <ul>
+              {formErrors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </ul>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ustun nomi</TableHead>
-                <TableHead className="min-w-[300px]">Qiymat</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentEmptyColumns.map((col) => {
-                const lowerTitle = col.title.toLowerCase();
+        )}
 
-                if (lowerTitle.includes("reja")) {
-                  const planItem = planItems.find(
-                    (item) => item.columnId === col.id
-                  );
-                  const planValue = planItem ? planItem.plan_value : "";
+        {/* ✅ TO'G'RILANGAN DEADLINE SELECT */}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div>
+            <label className="block mb-1 text-lg font-medium">
+              {t("deadline")}:
+            </label>
+            <Select
+              value={selectedDeadlineId}
+              onValueChange={(val) => setSelectedDeadlineId(val)}
+            >
+              <SelectTrigger className="w-[300px]">
+                <SelectValue
+                  placeholder={
+                    deadlineLoading
+                      ? "Yuklanmoqda..."
+                      : deadlineError
+                      ? "Xatolik yuz berdi"
+                      : "Deadline tanlang"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {deadlineLoading ? (
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    Yuklanmoqda...
+                  </div>
+                ) : deadlineError ? (
+                  <div className="p-2 text-center text-red-500 text-sm">
+                    Ma'lumotlarni yuklashda xatolik
+                  </div>
+                ) : deadlineData?.results?.length > 0 ? (
+                  <>
+                    {deadlineData.results.map((item: any) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {formatDeadlineText(item.submit_at)}
+                      </SelectItem>
+                    ))}
+
+                    {/* ✅ Pagination Controls */}
+                    {deadlineData.count > perPage && (
+                      <div className="flex items-center justify-between px-2 py-1 border-t">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={deadlinePage === 1}
+                          onClick={() =>
+                            setDeadlinePage((p) => Math.max(p - 1, 1))
+                          }
+                        >
+                          Oldingi
+                        </Button>
+                        <span className="text-xs text-gray-500">
+                          {deadlinePage} /{" "}
+                          {Math.ceil(deadlineData.count / perPage)}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            deadlinePage >=
+                            Math.ceil(deadlineData.count / perPage)
+                          }
+                          onClick={() =>
+                            setDeadlinePage((p) =>
+                              Math.min(
+                                p + 1,
+                                Math.ceil(deadlineData.count / perPage)
+                              )
+                            )
+                          }
+                        >
+                          Keyingi
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    Deadline mavjud emas
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* ✅ QOLGAN KOD — TABLE STEP */}
+        {currentEmptyColumns.length > 0 ? (
+          <div className="overflow-x-auto">
+            <div className="mb-4 flex justify-between">
+              <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
+              <span className="text-sm text-gray-500">
+                {currentStep + 1} / {totalSteps}
+              </span>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ustun nomi</TableHead>
+                  <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentEmptyColumns.map((col) => {
+                  const lowerTitle = col.title.toLowerCase();
+
+                  if (lowerTitle.includes("reja")) {
+                    const planItem = planItems.find(
+                      (item) => item.columnId === col.id
+                    );
+                    const planValue = planItem ? planItem.plan_value : "";
+                    return (
+                      <TableRow key={col.id}>
+                        <TableCell className="whitespace-normal break-words">
+                          {col.fullParentChain}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={planValue}
+                            disabled
+                            className="bg-gray-100 cursor-not-allowed"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  if (lowerTitle.includes("tashkilot")) {
+                    return (
+                      <TableRow key={col.id}>
+                        <TableCell className="whitespace-normal break-words">
+                          {col.fullParentChain}
+                        </TableCell>
+                        <TableCell>
+                          <select
+                            value={selectedOrganizationId}
+                            onChange={(e) => {
+                              setSelectedOrganizationId(e.target.value);
+                              handleInputChange(col.id, e.target.value);
+                            }}
+                            className="w-full border rounded px-2 py-1"
+                            required
+                          >
+                            <option value="">Tanlang</option>
+                            {organizationsData?.map((item: any) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
                   return (
                     <TableRow key={col.id}>
-                      <TableCell>{col.fullParentChain}</TableCell>
+                      <TableCell className="whitespace-normal break-words">
+                        {col.fullParentChain}
+                      </TableCell>
                       <TableCell>
                         <Input
                           type="text"
-                          value={planValue}
-                          disabled
-                          className="bg-gray-100 cursor-not-allowed"
+                          value={formValues[col.id] || ""}
+                          onChange={(e) =>
+                            handleInputChange(col.id, e.target.value)
+                          }
+                          required
                         />
                       </TableCell>
                     </TableRow>
                   );
-                }
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+        )}
 
-                if (lowerTitle.includes("tashkilot")) {
-                  return (
-                    <TableRow key={col.id}>
-                      <TableCell>{col.fullParentChain}</TableCell>
-                      <TableCell>
-                        <select
-                          value={selectedOrganizationId}
-                          onChange={(e) => {
-                            setSelectedOrganizationId(e.target.value);
-                            handleInputChange(col.id, e.target.value);
-                          }}
-                          className="w-full border rounded px-2 py-1"
-                          required
-                        >
-                          <option value="">Tanlang</option>
-                          {organizationsData?.map((item: any) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
-                      </TableCell>
-                    </TableRow>
-                  );
-                }
-
-                return (
-                  <TableRow key={col.id}>
-                    <TableCell>{col.fullParentChain}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={formValues[col.id] || ""}
-                        onChange={(e) =>
-                          handleInputChange(col.id, e.target.value)
-                        }
-                        required
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
-      )}
-
-      {/* ✅ STEP BOSHQARISH */}
-      <div className="flex justify-between items-center pt-4">
-        <div className="space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-            disabled={currentStep === 0 || isSubmitting}
-          >
-            Oldingi
-          </Button>
-          {currentStep < totalSteps - 1 && (
+        {/* ✅ STEP BOSHQARISH */}
+        <div className="flex justify-between items-center pt-4">
+          <div className="space-x-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
-              }
-              disabled={isSubmitting}
+              onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+              disabled={currentStep === 0 || isSubmitting}
             >
-              Keyingi
+              Oldingi
+            </Button>
+            {currentStep < totalSteps - 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
+                }
+                disabled={isSubmitting}
+              >
+                Keyingi
+              </Button>
+            )}
+          </div>
+          {currentStep === totalSteps - 1 && (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "⏳ Yuborilmoqda..." : "Yuborish"}
             </Button>
           )}
         </div>
-        {currentStep === totalSteps - 1 && (
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "⏳ Yuborilmoqda..." : "Yuborish"}
-          </Button>
-        )}
-      </div>
-    </form>
+      </form>
+    </>
   );
 }
 
