@@ -8,8 +8,24 @@ import {
 } from "@/components/ui/table";
 import { useTranslation } from "react-i18next";
 
-function ResponsibleRepresentativesTable({ data }: any) {
+interface ResponsibleRepresentativesTableProps {
+  data: any[];
+  currentPage: number;
+  perPage: number;
+}
+
+function ResponsibleRepresentativesTable({
+  data,
+  currentPage,
+  perPage,
+}: ResponsibleRepresentativesTableProps) {
   const { t } = useTranslation();
+
+  // Global raqamni hisoblash: (currentPage - 1) * perPage + index + 1
+  const getGlobalIndex = (index: number) => {
+    return (currentPage - 1) * perPage + index + 1;
+  };
+
   return (
     <Table className="w-full">
       <TableHeader>
@@ -41,13 +57,13 @@ function ResponsibleRepresentativesTable({ data }: any) {
         {data?.map((item: any, index: number) => (
           <TableRow className="h-[50px]" key={item.user_number || index}>
             <TableCell className="w-[4%] text-lg font-[300] border-none">
-              {index + 1}
+              {getGlobalIndex(index)}
             </TableCell>
             <TableCell className="w-[12%] text-base font-[300] border-none">
-              {item?.first_name}
+              {item?.first_name || "-"}
             </TableCell>
             <TableCell className="w-[12%] text-base font-[300] border-none">
-              {item?.last_name}
+              {item?.last_name || "-"}
             </TableCell>
             <TableCell className="w-[18%] text-base font-[300] border-none">
               {item?.organization_name || "-"}
@@ -59,7 +75,7 @@ function ResponsibleRepresentativesTable({ data }: any) {
               {item?.phone_number || "-"}
             </TableCell>
             <TableCell className="w-[14%] text-right text-base font-[400] border-none">
-              {item?.role_display}
+              {item?.role_display || "-"}
             </TableCell>
           </TableRow>
         ))}

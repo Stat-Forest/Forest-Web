@@ -67,11 +67,7 @@ function CreatedPlans() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [
-    searchYear,
-    selectedStatement,
-    selectedOrganization,
-  ]);
+  }, [searchYear, selectedStatement, selectedOrganization]);
 
   // Pagination handlers
   const handleNextPage = () => {
