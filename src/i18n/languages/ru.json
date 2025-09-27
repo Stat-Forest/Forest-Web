@@ -118,5 +118,6 @@
   "resetPassword":"Сброс пароля",
   "enterNewPassword":"Введите новый пароль",
   "confirmNewPassword":"Подтвердите новый пароль",
-  "deadline":"Срок действия"
+  "deadline":"Срок действия",
+  "back":"Назад"
 }
