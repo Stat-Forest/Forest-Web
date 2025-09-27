@@ -35,7 +35,9 @@ function Sidebar() {
     data: user,
     isLoading: userLoading,
     error: userError,
-  } = useGetUsersReportQuery(user_id ? { user_id, page: "" } : skipToken);
+  } = useGetUsersReportQuery(
+    user_id ? { user_id, page: "", perPage: 10 } : skipToken
+  );
 
   if (sidebarLoading || userLoading) {
     return (
@@ -118,7 +120,8 @@ function Sidebar() {
             </div>
           </div>
           <h3 className="font-bold text-white">
-            {user?.results[0]?.first_name || ""} {user?.results[0]?.last_name || ""}
+            {user?.results[0]?.first_name || ""}{" "}
+            {user?.results[0]?.last_name || ""}
           </h3>
           <div className="flex items-center gap-2">
             <span className="text-[#E8E8E8] text-[14px] font-light">

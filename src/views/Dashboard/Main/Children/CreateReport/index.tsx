@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
 
@@ -112,6 +112,14 @@ function CreateReport() {
 
   return (
     <div className="px-5 py-5 w-full mb-30">
+      <div>
+        <Button
+          className="min-w-[50px] min-h-[25px]"
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeft /> orqaga qaytish
+        </Button>
+      </div>
       <form onSubmit={createReportHandler} className="grid grid-cols-1 gap-3">
         {/* ORGANIZATION */}
         <div className="w-full">

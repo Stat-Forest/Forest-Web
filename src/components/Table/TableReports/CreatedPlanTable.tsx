@@ -13,6 +13,8 @@ import { Edit2, Trash2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 interface CreatedPlantableProps {
   data: any[];
@@ -30,6 +32,8 @@ function CreatedPlantable({
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [openRow, setOpenRow] = useState<number | null>(null);
   const navigate = useNavigate();
+
+   const user_role = useSelector((state: RootState) => state.auth.user?.role);
 
   const handleDelete = async (id: number) => {
     setLoadingId(id);
@@ -97,49 +101,51 @@ function CreatedPlantable({
               <TableCell className="w-[20%] text-base font-[300] border-none">
                 {item?.created_at || "N/A"}
               </TableCell>
-              <TableCell className="w-[20%] text-base font-[300] border-none">
-                <div className="flex items-center justify-center gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/plan-update/${item.id}`);
-                    }}
-                    className="bg-[#09B86F] hover:bg-[#09B86F]"
-                    size="sm"
-                  >
-                    <Edit2 size={16} />
-                  </Button>
-                  <Button
-                    className="bg-[#09B86F] hover:bg-[#09B86F]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(item?.id);
-                    }}
-                    disabled={loadingId === item?.id}
-                    size="sm"
-                  >
-                    {loadingId === item?.id ? (
-                      <Loader2 className="animate-spin" size={16} />
-                    ) : (
-                      <Trash2 size={16} />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleRow(index);
-                    }}
-                    size="sm"
-                  >
-                    {openRow === index ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    )}
-                  </Button>
-                </div>
-              </TableCell>
+              {(user_role == "super_admin" || user_role == "bolim_admin") && (
+                <TableCell className="w-[20%] text-base font-[300] border-none">
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/plan-update/${item.id}`);
+                      }}
+                      className="bg-[#09B86F] hover:bg-[#09B86F]"
+                      size="sm"
+                    >
+                      <Edit2 size={16} />
+                    </Button>
+                    <Button
+                      className="bg-[#09B86F] hover:bg-[#09B86F]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item?.id);
+                      }}
+                      disabled={loadingId === item?.id}
+                      size="sm"
+                    >
+                      {loadingId === item?.id ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        <Trash2 size={16} />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRow(index);
+                      }}
+                      size="sm"
+                    >
+                      {openRow === index ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </Button>
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
 
             {openRow === index && (
