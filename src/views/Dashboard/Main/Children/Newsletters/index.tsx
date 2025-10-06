@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/select";
 import { periods } from "@/services/constants";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 function Newsletters() {
   const [page, setPage] = useState(1);
   const perPage = 20;
+  const { t, i18n } = useTranslation();
   const [selectedStatement, setSelectedStatement] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
 
@@ -111,7 +113,7 @@ function Newsletters() {
           <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
             <SelectValue
               placeholder={
-                isStatementsLoading ? "Yuklanmoqda..." : "Bo'limni tanlang"
+                isStatementsLoading ? "Yuklanmoqda..." : t("selectChapter")
               }
             />
           </SelectTrigger>
@@ -131,12 +133,12 @@ function Newsletters() {
           onValueChange={(value) => setSelectedPeriod(value)}
         >
           <SelectTrigger className="w-[300px] text-xl min-h-[40px] border border-black">
-            <SelectValue placeholder="Hisobot davri" />
+            <SelectValue placeholder={t("item_14")} />
           </SelectTrigger>
           <SelectContent>
             {periods?.map((child: any) => (
               <SelectItem key={child.id} value={child.value}>
-                {child.label}
+                {i18n.language === "uz"? child.label_uz : child.label_ru}
               </SelectItem>
             ))}
           </SelectContent>
@@ -147,7 +149,7 @@ function Newsletters() {
           variant="outline"
           disabled={!selectedStatement && !selectedPeriod}
         >
-          Tozalash
+          {t("reset")}
         </Button>
       </div>
 
@@ -172,11 +174,11 @@ function Newsletters() {
         <div className="w-full border border-[silver] rounded-xl px-3 py-5">
           {/* Count info table ustida */}
           <div className="mb-3 text-sm text-gray-600">
-            Umumiy yozuvlar soni: {data?.count || 0} ta
+            {t("totalRecords", { count: data?.count || 0 })}
             {data?.results?.length > 0 && (
               <span>
                 {" "}
-                (Ko'rsatilayapti: {startItem}-{endItem})
+                ({t("shown", { count: startItem, count2: endItem })})
               </span>
             )}
           </div>
@@ -192,7 +194,7 @@ function Newsletters() {
               {/* 📌 Pagination Controls */}
               <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
                 <div className="text-sm text-gray-600">
-                  {startItem}-{endItem} of {data?.count || 0} yozuvlar
+                  {t("records", { start: startItem, end: endItem, total: data?.count || 0 })}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -202,7 +204,7 @@ function Newsletters() {
                     variant="outline"
                     size="sm"
                   >
-                    Oldingi
+                    {t("before")}
                   </Button>
 
                   <div className="flex items-center">{renderPageNumbers()}</div>
@@ -213,12 +215,12 @@ function Newsletters() {
                     variant="outline"
                     size="sm"
                   >
-                    Keyingi
+                    {t("next")}
                   </Button>
                 </div>
 
                 <div className="text-sm text-gray-600">
-                  Sahifa {page} / {totalPages}
+                  {t("page")} {page} / {totalPages}
                 </div>
               </div>
             </>

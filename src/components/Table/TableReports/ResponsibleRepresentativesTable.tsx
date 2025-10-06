@@ -31,7 +31,7 @@ function ResponsibleRepresentativesTable({
       <TableHeader>
         <TableRow className="bg-[#eaeaea] h-[50px]">
           <TableHead className="w-[4%] text-left text-lg text-[#717171]">
-            T/r
+            №
           </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[12%]">
             {t("item_19") /* First name */}

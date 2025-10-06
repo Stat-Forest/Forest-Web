@@ -17,34 +17,34 @@ export const regions = [
 ];
 
 export const periods = [
-  { value: "daily", label: "Kunlik" },
-  { value: "weekly", label: "Haftalik" },
-  { value: "monthly", label: "Oylik" },
-  { value: "quarterly", label: "Choraklik (3 oy)" },
-  { value: "yearly", label: "Yillik" },
+  { value: "daily", label_uz: "Kunlik", label_ru: "Ежедневный" },
+  { value: "weekly", label_uz: "Haftalik", label_ru: "Еженедельный" },
+  { value: "monthly", label_uz: "Oylik", label_ru: "Ежемесячный" },
+  { value: "quarterly", label_uz: "Choraklik (3 oy)", label_ru: "Ежеквартальный (3 месяца)" },
+  { value: "yearly", label_uz: "Yillik", label_ru: "Ежегодный" },
 ];
 
 export const statuses = [
-  { value: "saved", label: "Qoralama" },
-  { value: "sent", label: "Jo‘natilgan" },
-  { value: "cancelled", label: "Qaytarilgan" },
-  { value: "accepted", label: "Qabul qilingan" },
+  { value: "saved", label_uz: "Qoralama", label_ru: "Черновик" },
+  { value: "sent", label_uz: "Jo‘natilgan", label_ru: "Отправлено" },
+  { value: "cancelled", label_uz: "Qaytarilgan", label_ru: "Возвращено" },
+  { value: "accepted", label_uz: "Qabul qilingan", label_ru: "Принято" },
 ];
 
 export const regions2 = [
-  { value: "all", label: "Barcha regionlar" },
-  { value: "tashkent", label: "Toshkent" },
-  { value: "andijon", label: "Andijon" },
-  { value: "fargona", label: "Fargʻona" },
-  { value: "namangan", label: "Namangan" },
-  { value: "samarqand", label: "Samarqand" },
-  { value: "buxoro", label: "Buxoro" },
-  { value: "navoiy", label: "Navoiy" },
-  { value: "qashqadaryo", label: "Qashqadaryo" },
-  { value: "surxondaryo", label: "Surxondaryo" },
-  { value: "jizzax", label: "Jizzax" },
-  { value: "sirdaryo", label: "Sirdaryo" },
-  { value: "xorazm", label: "Xorazm" },
-  { value: "qoraqalpog‘iston", label: "Qoraqalpog‘iston" },
-  { value: "republic", label: "Respublika tashkilotlari" },
+  { value: "all", label: "Barcha regionlar", label2: "Все регионы" },
+  { value: "tashkent", label: "Toshkent", label2: "Ташкент" },
+  { value: "andijon", label: "Andijon", label2: "Андижан" },
+  { value: "fargona", label: "Fargʻona", label2: "Фергана" },
+  { value: "namangan", label: "Namangan", label2: "Наманган" },
+  { value: "samarqand", label: "Samarqand", label2: "Самарканд" },
+  { value: "buxoro", label: "Buxoro", label2: "Бухара" },
+  { value: "navoiy", label: "Navoiy", label2: "Навои" },
+  { value: "qashqadaryo", label: "Qashqadaryo", label2: "Кашкадарья" },
+  { value: "surxondaryo", label: "Surxondaryo", label2: "Сурхандарья" },
+  { value: "jizzax", label: "Jizzax", label2: "Джизак" },
+  { value: "sirdaryo", label: "Sirdaryo", label2: "Сырдарья" },
+  { value: "xorazm", label: "Xorazm", label2: "Хорезм" },
+  { value: "qoraqalpog‘iston", label: "Qoraqalpog‘iston", label2: "Каракалпакстан" },
+  { value: "republic", label: "Respublika tashkilotlari", label2: "Республиканские организации" },
 ];

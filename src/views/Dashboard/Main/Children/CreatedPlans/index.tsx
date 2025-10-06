@@ -17,10 +17,12 @@ import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 
 function CreatedPlans() {
   const lang = useSelector((state: RootState) => state.language.lang);
   const [page, setPage] = useState(1);
+  const { t } = useTranslation();
   const perPage = 20;
   const [searchTerm, setSearchTerm] = useState("");
   const [searchYear, setSearchYear] = useState("");
@@ -64,7 +66,7 @@ function CreatedPlans() {
   const startItem = (page - 1) * perPage + 1;
   const endItem = Math.min(page * perPage, data?.count || 0);
 
-  // Reset to page 1 when filters change
+  // {t("reset")} to page 1 when filters change
   useEffect(() => {
     setPage(1);
   }, [searchYear, selectedStatement, selectedOrganization]);
@@ -140,7 +142,7 @@ function CreatedPlans() {
           <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
             <SelectValue
               placeholder={
-                isStatementsLoading ? "Yuklanmoqda..." : "Bo'limni tanlang"
+                isStatementsLoading ? "Yuklanmoqda..." : t("selectChapter")
               }
             />
           </SelectTrigger>
@@ -164,7 +166,7 @@ function CreatedPlans() {
           <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
             <SelectValue
               placeholder={
-                isOrganizationLoading ? "Yuklanmoqda..." : "Tashkilotni tanlang"
+                isOrganizationLoading ? "Yuklanmoqda..." : t("selectOrganization")
               }
             />
           </SelectTrigger>
@@ -172,7 +174,7 @@ function CreatedPlans() {
             {/* Search Input for Organizations */}
             <div className="p-2 border-b">
               <Input
-                placeholder="Tashkilot nomi bo'yicha qidirish..."
+                placeholder={t("searchByOrganizationName")}
                 value={organizationSearch}
                 onChange={(e) => setOrganizationSearch(e.target.value)}
                 className="w-full"
@@ -197,7 +199,7 @@ function CreatedPlans() {
         {/* Year Filter */}
         <Input
           type="text"
-          placeholder="Yil bo'yicha qidirish..."
+          placeholder={t("searchByYear")}
           className="w-[200px] text-xl min-h-[40px] border-black"
           value={searchYear}
           onChange={(e) => setSearchYear(e.target.value)}
@@ -209,7 +211,7 @@ function CreatedPlans() {
           variant="outline"
           disabled={!isAnyFilterActive}
         >
-          Tozalash
+          {t("reset")}
         </Button>
       </div>
 
@@ -240,11 +242,11 @@ function CreatedPlans() {
         <div className="w-full border border-[silver] rounded-xl px-3 py-5">
           {/* Count info */}
           <div className="mb-3 text-sm text-gray-600">
-            Umumiy yozuvlar soni: {data?.count || 0} ta
+            {t("totalRecords", { count: data?.count || 0 })}
             {data?.results?.length > 0 && (
               <span>
                 {" "}
-                (Ko'rsatilayapti: {startItem}-{endItem})
+                ({t("shown", { count: startItem, count2: endItem })})
               </span>
             )}
           </div>
@@ -260,7 +262,7 @@ function CreatedPlans() {
               {/* Pagination Controls */}
               <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
                 <div className="text-sm text-gray-600">
-                  {startItem}-{endItem} of {data?.count || 0} yozuvlar
+                  {t("records", { start: startItem, end: endItem, total: data?.count || 0 })}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -270,7 +272,7 @@ function CreatedPlans() {
                     variant="outline"
                     size="sm"
                   >
-                    Oldingi
+                    {t("before")}
                   </Button>
 
                   <div className="flex items-center">{renderPageNumbers()}</div>
@@ -281,12 +283,12 @@ function CreatedPlans() {
                     variant="outline"
                     size="sm"
                   >
-                    Keyingi
+                    {t("next")}
                   </Button>
                 </div>
 
                 <div className="text-sm text-gray-600">
-                  Sahifa {page} / {totalPages}
+                  {t("page")} {page} / {totalPages}
                 </div>
               </div>
             </>

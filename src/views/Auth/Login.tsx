@@ -291,7 +291,7 @@ function Login() {
                 </Button>
               </>
             ) : (
-              <p>Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.</p>
+              <p>{t("notFoundSertificate")}</p>
             )}
 
             {error && <p className="text-red-600">{error}</p>}
