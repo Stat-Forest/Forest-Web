@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 function SupportInformation() {
   const { t } = useTranslation();
@@ -76,8 +77,8 @@ function SupportInformation() {
             5. {t("item_65")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
-            <p>{t("item_76")}</p>
-            <p>{t("item_77")}</p>
+            <Link to={"/video"} className="underline text-blue-500 block">{t("item_76")}</Link>
+            <Link to={"/video"} className="underline text-blue-500 block">{t("item_77")}</Link>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

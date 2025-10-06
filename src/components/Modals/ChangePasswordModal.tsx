@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   open: boolean;
@@ -19,7 +20,7 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-
+  const { t } = useTranslation();
   const [changePassword, { isLoading }] = useChangePasswordMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,24 +61,24 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent  className="p-8">
         <DialogHeader>
-          <DialogTitle>Parolni o‘zgartirish</DialogTitle>
+          <DialogTitle>{t("item_81")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="password"
-            placeholder="Joriy parol"
+            placeholder={t("currentPassword")}
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
           />
           <Input
             type="password"
-            placeholder="Yangi parol"
+            placeholder={t("newPassword")}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
           <Input
             type="password"
-            placeholder="Yangi parolni tasdiqlash"
+            placeholder={t("confirmPassword")}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
@@ -85,7 +86,7 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <Button type="submit" disabled={isLoading} className="w-full bg-[#09B86F] min-h-[40px]">
-            {isLoading ? "Yuborilmoqda..." : "Parolni o‘zgartirish"}
+            {isLoading ? "Yuborilmoqda..." : t("changePassword")}
           </Button>
         </form>
       </DialogContent>

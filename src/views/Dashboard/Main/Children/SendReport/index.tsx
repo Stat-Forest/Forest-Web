@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/select";
 import { useGetAllReportsQuery } from "@/services/reportsApi";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 function MainDetail() {
   const [selectedOrganization, setSelectedOrganization] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
 
   const { data, isLoading, error } = useGetAllReportsQuery({
     statement: "",
@@ -33,7 +35,7 @@ function MainDetail() {
           <div>
             <Input
               type="text"
-              placeholder="Qidiruv..."
+              placeholder={`${t("item_79")}...`}
               className="w-[260px] text-xl min-h-[40px] border-black"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -46,7 +48,7 @@ function MainDetail() {
               onValueChange={(value) => setSelectedOrganization(value)}
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder="Region" />
+                <SelectValue placeholder={`${t("region")}`} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="tashkent">Tashkent</SelectItem>
@@ -72,14 +74,14 @@ function MainDetail() {
               onValueChange={(value) => setSelectedPeriod(value)}
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder="Hisobot turi" />
+                <SelectValue placeholder={`${t("reportType")}`} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">Kunlik</SelectItem>
-                <SelectItem value="weekly">Haftalik</SelectItem>
-                <SelectItem value="monthly">Oylik</SelectItem>
-                <SelectItem value="quarterly">Choraklik (3 oy)</SelectItem>
-                <SelectItem value="yearly">Yillik</SelectItem>
+                <SelectItem value="daily">{t("daily")}</SelectItem>
+                <SelectItem value="weekly">{t("weekly")}</SelectItem>
+                <SelectItem value="monthly">{t("monthly")}</SelectItem>
+                <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
+                <SelectItem value="yearly">{t("yearly")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -93,7 +95,7 @@ function MainDetail() {
               }}
               className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
             >
-              Reset
+              {t("reset")}
             </Button>
           </div>
         </div>

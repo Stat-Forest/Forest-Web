@@ -66,7 +66,7 @@ const TableColumn = forwardRef(
     // Tüm hook'ları bileşenin en başında çağırın
     const tableRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [sendReport, { isLoading: isSending }] = useSendReportMutation();
     const user_role = useSelector((state: RootState) => state.auth.user?.role);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -138,7 +138,7 @@ const TableColumn = forwardRef(
                       className="border border-black px-2 py-1 text-center"
                       rowSpan={maxDepth}
                     >
-                      T/R
+                      №
                     </th>
                   )}
                   {row.map((cell: any, cellIndex: number) => (
@@ -263,7 +263,7 @@ const TableColumn = forwardRef(
             <div>
               <Input
                 type="text"
-                placeholder="Qidiruv..."
+                placeholder={`${t("item_79")}...`}
                 className="w-[260px] text-xl min-h-[40px] border-black"
                 value={searchTermReport}
                 onChange={(e: any) => setSearchTermReport(e.target.value)}
@@ -294,12 +294,13 @@ const TableColumn = forwardRef(
                 onValueChange={(value) => setSelectedPeriodReport(value)}
               >
                 <SelectTrigger className="w-[200px] text-xl min-h-[40px] border-black">
-                  <SelectValue placeholder="Hisobot turi" />
+                  <SelectValue placeholder={`${t("reportType")}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {periods.map((period) => (
                     <SelectItem key={period.value} value={period.value}>
-                      {period.label}
+                      {i18n.language === "uz" ? period.label_uz : period.label_ru}
+
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -312,12 +313,12 @@ const TableColumn = forwardRef(
                 onValueChange={(value) => setSelectedStatusReport(value)}
               >
                 <SelectTrigger className="w-[200px] text-xl min-h-[40px] border-black">
-                  <SelectValue placeholder="Hisobot holati" />
+                  <SelectValue placeholder={t("item_28")} />
                 </SelectTrigger>
                 <SelectContent>
                   {statuses.map((status) => (
                     <SelectItem key={status.value} value={status.value}>
-                      {status.label}
+                      {i18n.language === "uz" ? status.label_uz : status.label_ru}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -333,7 +334,7 @@ const TableColumn = forwardRef(
                 }}
                 className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
               >
-                Reset
+                {t("reset")}
               </Button>
             </div>
           </div>
@@ -393,12 +394,12 @@ const TableColumn = forwardRef(
                       }`}
                     >
                       {item?.status == "accepted"
-                        ? "Qabul qilingan"
+                        ? t("received")
                         : item.status == "cancelled"
-                        ? "Qaytarilgan"
+                        ? t("returned")
                         : item.status == "saved"
-                        ? "Qoralama"
-                        : "Jo'natilgan"}
+                        ? t("draft")
+                        : t("sended")}
                     </span>
                   </TableCell>
                 </TableRow>
@@ -421,7 +422,7 @@ const TableColumn = forwardRef(
                       onClick={() => setIsCancelModalOpen(true)}
                       className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
                     >
-                      Qayta ishlash
+                      {t("recycle")}
                     </Button>
                   )}
                   {(user_role == "tashkilot_rahbari" ||
@@ -448,7 +449,7 @@ const TableColumn = forwardRef(
                       disabled={isSending}
                       className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]"
                     >
-                      {isSending ? "Yuborilmoqda..." : "Yuborish"}
+                      {isSending ? t("sending") : t("send2")}
                     </Button>
                   )}
 
@@ -520,7 +521,7 @@ const TableColumn = forwardRef(
                           rowSpan={maxDepth}
                           className="border border-black px-2 py-1 text-center"
                         >
-                          T/R
+                        №
                         </th>
                       )}
                       {row.map((cell: any, cellIndex: number) => (

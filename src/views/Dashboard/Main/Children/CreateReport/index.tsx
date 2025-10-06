@@ -218,8 +218,8 @@ function CreateReport() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Ustun nomi</TableHead>
-                      <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                      <TableHead>{t("columnName")}</TableHead>
+                      <TableHead className="min-w-[300px]">{t("value")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
