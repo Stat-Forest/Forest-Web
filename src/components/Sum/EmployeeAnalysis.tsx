@@ -8,9 +8,11 @@ import {
 import { ChartNoAxesColumn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 function EmployeeAnalysisSum({ activeTab, reportName }: any) {
   console.log(reportName);
+  const { t } = useTranslation();
   
   const [sumData, setSumData] = useState<Record<string, any>>({});
 
@@ -105,7 +107,7 @@ const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
     <div className="bg-white shadow px-5 py-4 rounded-2xl mb-6">
       <div className="flex items-end gap-2 pb-3">
         <ChartNoAxesColumn color="#09B86F" fontWeight={800} />
-        <h2>Jadval bo'yicha qisqacha ma'lumot</h2>
+        <h2>{t("tableSummary")}</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

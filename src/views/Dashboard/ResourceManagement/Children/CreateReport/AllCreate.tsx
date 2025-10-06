@@ -356,7 +356,7 @@ function AllCreateReportItem() {
                       ? "Yuklanmoqda..."
                       : deadlineError
                       ? "Xatolik yuz berdi"
-                      : "Deadline tanlang"
+                      : t("selectDeadline")
                   }
                 />
               </SelectTrigger>
@@ -389,7 +389,7 @@ function AllCreateReportItem() {
                             setDeadlinePage((p) => Math.max(p - 1, 1))
                           }
                         >
-                          Oldingi
+                          {t("before")}
                         </Button>
                         <span className="text-xs text-gray-500">
                           {deadlinePage} /{" "}
@@ -412,7 +412,7 @@ function AllCreateReportItem() {
                             )
                           }
                         >
-                          Keyingi
+                          {t("next")}
                         </Button>
                       </div>
                     )}
@@ -439,8 +439,8 @@ function AllCreateReportItem() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ustun nomi</TableHead>
-                  <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                  <TableHead>{t("columnName")}</TableHead>
+                  <TableHead className="min-w-[300px]">{t("value")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -531,7 +531,7 @@ function AllCreateReportItem() {
               onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
               disabled={currentStep === 0 || isSubmitting}
             >
-              Oldingi
+              {t("before")}
             </Button>
             {currentStep < totalSteps - 1 && (
               <Button
@@ -542,7 +542,7 @@ function AllCreateReportItem() {
                 }
                 disabled={isSubmitting}
               >
-                Keyingi
+                {t("next")}
               </Button>
             )}
           </div>

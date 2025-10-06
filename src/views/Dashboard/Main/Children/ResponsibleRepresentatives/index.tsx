@@ -2,6 +2,7 @@ import { useState } from "react";
 import ResponsibleRepresentativesTable from "@/components/Table/TableReports/ResponsibleRepresentativesTable";
 import { useGetUsersReportQuery } from "@/services/reportsApi";
 import { Button } from "@/components/ui/button";
+import { t } from "i18next";
 
 function ResponsibleRepresentatives() {
   const [page, setPage] = useState(1);
@@ -74,11 +75,11 @@ function ResponsibleRepresentatives() {
         <div className="w-full border border-[silver] rounded-xl px-3 py-5">
           {/* Count info */}
           <div className="mb-3 text-sm text-gray-600">
-            Umumiy foydalanuvchilar soni: {data?.count || 0} ta
+            {t("users", { count: data?.count || 0 })}
             {data?.results?.length > 0 && (
               <span>
                 {" "}
-                (Ko'rsatilayapti: {startItem}-{endItem})
+                ({t("shown", { count: startItem, count2: endItem })})
               </span>
             )}
           </div>
@@ -104,7 +105,7 @@ function ResponsibleRepresentatives() {
                     variant="outline"
                     size="sm"
                   >
-                    Oldingi
+                    {t("before")}
                   </Button>
 
                   <div className="flex items-center">{renderPageNumbers()}</div>
@@ -115,12 +116,12 @@ function ResponsibleRepresentatives() {
                     variant="outline"
                     size="sm"
                   >
-                    Keyingi
+                    {t("next")}
                   </Button>
                 </div>
 
                 <div className="text-sm text-gray-600">
-                  Sahifa {page} / {totalPages}
+                  {t("page")} {page} / {totalPages}
                 </div>
               </div>
             </>

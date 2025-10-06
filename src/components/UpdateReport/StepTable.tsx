@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 
 type StepTableProps = {
   columns: { id: string; title: string; fullParentChain: string }[];
@@ -28,12 +29,13 @@ export default function StepTable({
   setSelectedOrganizationId,
   organizationsData,
 }: StepTableProps) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Ustun nomi</TableHead>
-          <TableHead className="min-w-[300px]">Qiymat</TableHead>
+          <TableHead>{t("columnName")}</TableHead>
+          <TableHead className="min-w-[300px]">{t("value")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

@@ -74,12 +74,12 @@ function TableReports({ data }: any) {
                   }`}
                 >
                   {item?.status == "accepted"
-                    ? "Qabul qilingan"
+                    ? t("received")
                     : item.status == "cancelled"
-                    ? "Qaytarilgan"
+                    ? t("returned")
                     : item.status == "saved"
-                    ? "Qoralama"
-                    : "Jo'natilgan"}
+                    ? t("draft")
+                    : t("sended")}
                 </span>
               </TableCell>
             </TableRow>
