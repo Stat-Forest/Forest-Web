@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { Plus, Minus } from "lucide-react";
 import { removeCookie } from "@/utils/cookie";
+import { useTranslation } from "react-i18next";
 
 const DefaultCreate = () => {
   // Change formValues to store arrays of values for each column
@@ -42,7 +43,7 @@ const DefaultCreate = () => {
   const [currentStep, setCurrentStep] = useState<number>(0);
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
-
+  const { t } = useTranslation();
   const {
     data: organizationsData,
     isLoading: isOrgLoading,
@@ -62,6 +63,7 @@ const DefaultCreate = () => {
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
+    
 
   useEffect(() => {
     if (tableHeadersData.length > 0) {
@@ -261,8 +263,8 @@ const DefaultCreate = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ustun nomi</TableHead>
-                <TableHead className="min-w-[400px]">Qiymat</TableHead>
+                <TableHead>{t("columnName")}</TableHead>
+                <TableHead className="min-w-[400px]">{t("value")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -378,7 +380,7 @@ const DefaultCreate = () => {
             onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
             disabled={currentStep === 0}
           >
-            Oldingi
+            {t("before")}
           </Button>
           {currentStep < totalSteps - 1 && (
             <Button
@@ -388,7 +390,7 @@ const DefaultCreate = () => {
                 setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
               }
             >
-              Keyingi
+              {t("next")}
             </Button>
           )}
         </div>

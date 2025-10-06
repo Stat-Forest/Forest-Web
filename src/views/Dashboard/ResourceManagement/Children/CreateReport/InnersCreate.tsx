@@ -20,6 +20,7 @@ import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
 import { useNavigate } from "react-router-dom";
 import InfiniteSelect from "@/components/ui/InfiniteSelect";
+import { useTranslation } from "react-i18next";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -57,7 +58,7 @@ function InnersCreateReportItem() {
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formErrors, setFormErrors] = useState<string[]>([]);
-
+  const { t } = useTranslation();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
@@ -241,8 +242,8 @@ function InnersCreateReportItem() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ustun nomi</TableHead>
-                <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                <TableHead>{t("columnName")}</TableHead>
+                <TableHead className="min-w-[300px]">{t("value")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -313,7 +314,7 @@ function InnersCreateReportItem() {
             onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
             disabled={currentStep === 0 || isSubmitting}
           >
-            Oldingi
+            {t("before")}
           </Button>
           {currentStep < totalSteps - 1 && (
             <Button
@@ -324,7 +325,7 @@ function InnersCreateReportItem() {
               }
               disabled={isSubmitting}
             >
-              Keyingi
+              {t("next")}
             </Button>
           )}
         </div>

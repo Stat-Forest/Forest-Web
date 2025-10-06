@@ -40,6 +40,7 @@ import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
 import { regions2 } from "@/services/constants";
+import { useTranslation } from "react-i18next";
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +50,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const lang = useSelector((state: RootState) => state.language.lang);
+  const { t , i18n} = useTranslation();  
 
   const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
@@ -337,13 +339,13 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                           navigate(`/resource-management/create/${reportName}`)
                         }
                       >
-                        Yangi hisobot yaratish
+                        {t("createNewReport")}
                       </button>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="py-2.5 font-semibold w-full md:w-[100px] rounded bg-[#09B86F] border-1 text-[white]">
-                          Export
+                          {t("export")}
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56 mt-2 mr-2">
@@ -379,24 +381,24 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   </div>
 
                   {/* Search & Filters */}
-                  <div className="flex flex-wrap gap-3 w-full md:w-auto">
-                    <Input
-                      placeholder="Qidiruv"
+                  <div className="flex flex-wrap gap-3 w-full md:w-auto ">
+                    <Input                    
+                      placeholder={`${t("item_79")}...`}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full md:w-[250px]"
+                      className="w-full md:w-[250px] border-black min-h-[40px]"
                     />
                     <Select
                       value={selectedRegion}
                       onValueChange={setSelectedRegion}
                     >
                       <SelectTrigger className="w-full md:w-[220px] text-xl min-h-[40px] border-black">
-                        <SelectValue placeholder="Region" />
+                        <SelectValue placeholder={`${t("region")}`} />
                       </SelectTrigger>
                       <SelectContent>
                         {regions2.map((region) => (
                           <SelectItem key={region.value} value={region.value}>
-                            {region.label}
+                            {i18n.language === "uz" ? region.label : region.label2}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -407,12 +409,12 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       onValueChange={setSelectedPeriod}
                     >
                       <SelectTrigger className="w-full md:w-[220px] text-xl min-h-[40px] border-black">
-                        <SelectValue placeholder="Hisobot turi" />
+                        <SelectValue placeholder={`${t("reportType")}`} />
                       </SelectTrigger>
                       <SelectContent>
                         {deadline?.results?.length > 0 ? (
                           <>
-                            <SelectItem value=" ">Barcha hisobotlar</SelectItem>
+                            <SelectItem value=" ">{`${t("allReports")}`}</SelectItem>
                             {deadline.results.map((item: any) => (
                               <SelectItem
                                 key={item.id}
@@ -435,7 +437,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                                   setDeadlinePage((p) => Math.max(p - 1, 1))
                                 }
                               >
-                                Oldingi
+                                {t("before")}
                               </Button>
                               <span className="text-xs text-gray-500">
                                 {deadlinePage} /{" "}
@@ -458,7 +460,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                                   )
                                 }
                               >
-                                Keyingi
+                                {t("next")}
                               </Button>
                             </div>
                           </>
@@ -473,11 +475,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     <Input
                       className="w-full border border-[black] md:w-[150px]"
                       type="number"
-                      placeholder="Yili"
+                      placeholder={`${t("year")}`}
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
                     />
-                    <Button onClick={handleSearchRegional}>Qidiruv</Button>
+                    <Button onClick={handleSearchRegional}>{t("item_79")}</Button>
                   </div>
                 </div>
 

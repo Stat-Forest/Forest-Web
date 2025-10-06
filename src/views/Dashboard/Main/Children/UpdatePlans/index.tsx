@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function UpdatePlans() {
   const { id } = useParams();
@@ -36,6 +37,7 @@ function UpdatePlans() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [year, setYear] = useState<number>(2025);
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
 
   // ==== Queries & Mutations ====
   const { data: organization } = useGetOrganizationReportsQuery();
@@ -152,7 +154,7 @@ function UpdatePlans() {
 
             {/* STATEMENT (read-only) */}
             <div className="w-full">
-              <Label className="pb-1.5 text-md block">Hisobot turi</Label>
+              <Label className="pb-1.5 text-md block">{`${t("reportType")}`}</Label>
               <Input
                 value={existingPlan?.statement || ""}
                 readOnly
@@ -167,8 +169,8 @@ function UpdatePlans() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Ustun nomi</TableHead>
-                      <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                      <TableHead>{t("columnName")}</TableHead>
+                      <TableHead className="min-w-[300px]">{t("value")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -337,8 +337,8 @@ function AllUpdateReportItem() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ustun nomi</TableHead>
-                  <TableHead className="min-w-[300px]">Qiymat</TableHead>
+                  <TableHead>{t("columnName")}</TableHead>
+                  <TableHead className="min-w-[300px]">{t("value")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -427,7 +427,7 @@ function AllUpdateReportItem() {
               onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
               disabled={currentStep === 0 || isSubmitting}
             >
-              Oldingi
+              {t("before")}
             </Button>
             {currentStep < totalSteps - 1 && (
               <Button
@@ -438,7 +438,7 @@ function AllUpdateReportItem() {
                 }
                 disabled={isSubmitting}
               >
-                Keyingi
+                {t("next")}
               </Button>
             )}
           </div>

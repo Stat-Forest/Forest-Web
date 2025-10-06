@@ -21,7 +21,7 @@ function ReportChartItem({
   } else if (reportName === "Yer uchastkalarini egallash") {
     return <div>Land Acquisition Chart</div>;
   } else {
-    return <div>Default Chart</div>;
+    return <div></div>;
   }
 }
 
