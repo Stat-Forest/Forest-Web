@@ -164,5 +164,7 @@
   "newPassword": "Yangi parol",
   "confirmPassword": "Yangi parolni tasdiqlang",
   "changePassword": "Parolni o'zgartirish",
-  "notFoundSertificate":"Sertifikatlar topilmadi. E-IMZO dasturini tekshiring."
+  "notFoundSertificate":"Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.",
+  "compny_name":"O'rmon xo'jaligini raqamlashtirish markazi davlat muassasasi",
+  "phone_extension":"ichki raqami"
 }
