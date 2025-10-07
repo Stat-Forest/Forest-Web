@@ -27,6 +27,8 @@ import { Loader2 } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { RootState } from "@/app/store";
+import { useSelector } from "react-redux";
 
 function UpdatePlans() {
   const { id } = useParams();
@@ -35,12 +37,14 @@ function UpdatePlans() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
   const [statement, setStatement] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
-  const [year, setYear] = useState<number>(2025);
+  const [year, setYear] = useState<number | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const { t } = useTranslation();
 
+  const lang = useSelector((state: RootState) => state.language.lang);
+
   // ==== Queries & Mutations ====
-  const { data: organization } = useGetOrganizationReportsQuery();
+  const { data: organization } = useGetOrganizationReportsQuery({lang});
   const { data: existingPlan, isLoading: isPlanLoading } = useGetPlanByIdQuery(
     id ? id : skipToken
   );

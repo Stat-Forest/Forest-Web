@@ -52,7 +52,7 @@ function CreatedPlans() {
     data: organizationData,
     isLoading: isOrganizationLoading,
     error: organizationError,
-  } = useGetOrganizationReportsQuery();
+  } = useGetOrganizationReportsQuery({lang});
 
   // Filter organizations based on search
   const filteredOrganizations =
