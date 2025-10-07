@@ -167,5 +167,10 @@
   "notFoundSertificate":"Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.",
   "compny_name":"O'rmon xo'jaligini raqamlashtirish markazi davlat muassasasi",
   "phone_extension":"ichki raqami",
-  "statments_name":"Bo'lim"
+  "statments_name":"Bo'lim",
+  "new_report":"Yangi hisobot",
+  "import":"Import qilish",
+  "noDeadlines":"Muddati mavjud emas",
+  "exportExcel":"Hisobotni Excel ga eksport qilish",
+  "printReport":"Hisobotni chop etish"
 }

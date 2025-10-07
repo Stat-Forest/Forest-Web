@@ -159,5 +159,10 @@
   "notFoundSertificate": "Сертификаты не найдены. Проверьте программу E-IMZO.",
   "compny_name": "Государственное учреждение Центр цифровизации лесного хозяйства",
   "phone_extension": "внутренний номер",
-  "statments_name": "Отдел"
+  "statments_name": "Отдел",
+  "new_report": "Новый отчёт",
+  "import": "Импортировать",
+  "noDeadlines": "Сроки отсутствуют",
+  "exportExcel": "Экспортировать отчёт в Excel",
+  "printReport": "Распечатать отчёт"
 }

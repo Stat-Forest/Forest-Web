@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { read, utils, writeFileXLSX } from "xlsx";
 
 function RecurceTable() {
   const [htmlContent, setHtmlContent] = useState("");
   const tableRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { t } = useTranslation();
 
   // ✅ Excel faylni import qilish
   const importFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,10 +68,10 @@ function RecurceTable() {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <Button onClick={() => alert("Yangi xisobot qo‘shish logikasi")}>
-          Yangi xisobot
+          {t('new_report')}
         </Button>
         <div className="flex gap-2">
-          <Button onClick={() => fileInputRef.current?.click()}>Import</Button>
+          <Button onClick={() => fileInputRef.current?.click()}>{t('import')}</Button>
           <input
             ref={fileInputRef}
             type="file"
