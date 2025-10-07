@@ -370,11 +370,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                             }
                           }}
                         >
-                          Hisobotni export qilib olish
+                          {t("exportExcel")}
                         </DropdownMenuItem>
 
                         <DropdownMenuItem onClick={handlePrint}>
-                          Hisobotni chop etish
+                          {t("printReport")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -466,7 +466,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                           </>
                         ) : (
                           <div className="p-2 text-center text-muted-foreground text-sm">
-                            Deadline mavjud emas
+                            {t('noDeadlines')}
                           </div>
                         )}
                       </SelectContent>
