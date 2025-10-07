@@ -35,7 +35,7 @@ function CreateReport() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statement, setStatement] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
-  const [year, setYear] = useState<number>(2025);
+  const [year, setYear] = useState<number | undefined>(undefined);
   const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
@@ -126,10 +126,10 @@ function CreateReport() {
       <form onSubmit={createReportHandler} className="grid grid-cols-1 gap-3">
         {/* ORGANIZATION */}
         <div className="w-full">
-          <Label className="pb-1.5 text-md block">Organizatsiya</Label>
+          <Label className="pb-1.5 text-md block">{t('item_12')}</Label>
           <Select value={selectedOrg ?? ""} onValueChange={setSelectedOrg}>
             <SelectTrigger className="w-full min-h-[45px]">
-              <SelectValue placeholder="Tanlang" />
+              <SelectValue placeholder={t('selectOrganization')} />
             </SelectTrigger>
             <SelectContent>
               <div className="p-2">
@@ -166,10 +166,10 @@ function CreateReport() {
 
         {/* STATEMENT */}
         <div className="w-full">
-          <Label className="pb-1.5 text-md block">Hisobot formasi</Label>
+          <Label className="pb-1.5 text-md block">{t('statments_name')}</Label>
           <Select value={statement ?? ""} onValueChange={setStatement}>
             <SelectTrigger className="w-full min-h-[45px]">
-              <SelectValue placeholder="Tanlang" />
+              <SelectValue placeholder={t('selectChapter')} />
             </SelectTrigger>
             <SelectContent>
               {statment_loading && (
@@ -193,7 +193,7 @@ function CreateReport() {
 
         {/* YEAR */}
         <div className="w-full">
-          <Label className="pb-1.5 text-md">Yil</Label>
+          <Label className="pb-1.5 text-md block">{t('year')}</Label>
           <Input
             name="year"
             className="min-h-[45px]"

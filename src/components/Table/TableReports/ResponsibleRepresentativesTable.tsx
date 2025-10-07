@@ -42,6 +42,9 @@ function ResponsibleRepresentativesTable({
           <TableHead className="text-[#717171] text-left text-lg w-[18%]">
             {t("item_12") /* Organization */}
           </TableHead>
+          <TableHead className="text-[#717171] text-left text-lg w-[18%]">
+            {t("statments_name") /* Organization */}
+          </TableHead>
           <TableHead className="text-[#717171] text-left text-lg w-[10%]">
             {t("item_21") /* Nationality */}
           </TableHead>
@@ -67,6 +70,9 @@ function ResponsibleRepresentativesTable({
             </TableCell>
             <TableCell className="w-[18%] text-base font-[300] border-none">
               {item?.organization_name || "-"}
+            </TableCell>
+            <TableCell className="w-[18%] text-base font-[300] border-none">
+              {item?.statments_name || "-"}
             </TableCell>
             <TableCell className="w-[10%] text-base font-[300] border-none">
               {item?.nationality || "-"}
