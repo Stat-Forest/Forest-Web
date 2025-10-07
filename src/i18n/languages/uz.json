@@ -10,7 +10,7 @@
   "item_9": "Axborot-tahlil, ijro intizomi",
   "item_10": "Malumotnoma olish",
   "item_11": "Yordam va ma'lumot",
-  "item_12": "Tashkilot nomi",
+  "item_12": "Tashkilot",
   "item_14": "Hisobot davri",
   "item_15": "Topshirilgan muddati",
   "item_16": "Joriy holati",
@@ -166,5 +166,6 @@
   "changePassword": "Parolni o'zgartirish",
   "notFoundSertificate":"Sertifikatlar topilmadi. E-IMZO dasturini tekshiring.",
   "compny_name":"O'rmon xo'jaligini raqamlashtirish markazi davlat muassasasi",
-  "phone_extension":"ichki raqami"
+  "phone_extension":"ichki raqami",
+  "statments_name":"Bo'lim"
 }
