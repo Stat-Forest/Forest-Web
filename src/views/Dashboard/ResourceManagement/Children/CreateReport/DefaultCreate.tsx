@@ -48,7 +48,7 @@ const DefaultCreate = () => {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
-  } = useGetOrganizationReportsQuery();
+  } = useGetOrganizationReportsQuery({lang});
 
   const {
     data: tableHeadersData = [],

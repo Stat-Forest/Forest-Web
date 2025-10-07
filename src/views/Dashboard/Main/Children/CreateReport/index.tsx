@@ -46,7 +46,7 @@ function CreateReport() {
     data: organization,
     isLoading: organization_loading,
     error: organization_error,
-  } = useGetOrganizationReportsQuery();
+  } = useGetOrganizationReportsQuery({ lang });
 
   const {
     data: statment,

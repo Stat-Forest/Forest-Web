@@ -9,8 +9,8 @@ export const generalApi = createApi({
   }),
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
-    getOrganizationReports: builder.query<any, void>({
-      query: () => `/organization/`,
+    getOrganizationReports: builder.query<any, {lang:string}>({
+      query: ({lang}) => `/organization/?lang=${lang}`,
     }),
   }),
 });
