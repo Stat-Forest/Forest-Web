@@ -81,12 +81,12 @@ function CreateReport() {
     e.preventDefault();
 
     if (!selectedOrg || !statement || !year) {
-      alert("Iltimos, barcha maydonlarni to‘ldiring!");
+      alert(t("must_select_all"));
       return;
     }
 
     if (Object.values(values).some((val) => val === "")) {
-      alert("Barcha ustunlarga qiymat kiriting!");
+      alert(t("must_fill_all"));
       return;
     }
 
@@ -104,12 +104,12 @@ function CreateReport() {
 
     try {
       await createReport(payload).unwrap();
-      alert("Hisobot muvaffaqiyatli yaratildi!");
+      alert(t('report_created_successfully'));
       navigate("/main");
       resetForm();
     } catch (error) {
       console.error("Yaratishda xatolik:", error);
-      alert("Hisobotni yaratishda xatolik yuz berdi!");
+      alert(t("error_occurred"));
     }
   };
 
@@ -142,11 +142,11 @@ function CreateReport() {
               </div>
 
               {organization_loading && (
-                <div className="text-center text-sm py-2">Yuklanmoqda...</div>
+                <div className="text-center text-sm py-2">{t("loading")}</div>
               )}
               {organization_error && (
                 <div className="text-center text-sm text-red-500 py-2">
-                  Xatolik yuz berdi
+                  {t("error_occurred")}
                 </div>
               )}
               {filteredOrganizations?.length > 0 ? (
@@ -157,7 +157,7 @@ function CreateReport() {
                 ))
               ) : (
                 <div className="text-center text-sm text-gray-500 py-2">
-                  Hech narsa topilmadi
+                 {t("noThingsFound")}
                 </div>
               )}
             </SelectContent>
@@ -173,11 +173,11 @@ function CreateReport() {
             </SelectTrigger>
             <SelectContent>
               {statment_loading && (
-                <div className="text-center text-sm py-2">Yuklanmoqda...</div>
+                <div className="text-center text-sm py-2">{t("loading")}</div>
               )}
               {statment_error && (
                 <div className="text-center text-sm text-red-500 py-2">
-                  Xatolik yuz berdi
+                  {t("error_occurred")}
                 </div>
               )}
               {statment?.results.flatMap((item: any) =>
@@ -208,10 +208,10 @@ function CreateReport() {
         {statement && (
           <>
             {plan_cols_loading ? (
-              <div className="text-center py-4">Jadval yuklanmoqda...</div>
+              <div className="text-center py-4">{t('table_loading')}</div>
             ) : plan_cols_error ? (
               <div className="text-center text-red-500 py-4">
-                Ustunlarni olishda xatolik yuz berdi.
+                {t("data_loading_error_4")}
               </div>
             ) : plan_cols.length > 0 ? (
               <div className="w-full overflow-x-auto">
@@ -245,7 +245,7 @@ function CreateReport() {
               </div>
             ) : (
               <div className="text-center text-sm text-gray-500 py-4">
-                Jadval bo‘sh.
+               {t("noColumnsFound")}
               </div>
             )}
           </>
@@ -260,7 +260,7 @@ function CreateReport() {
               className="min-h-[40px] min-w-[130px] bg-[#09B86F] text-md flex items-center gap-2"
             >
               {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
-              Yuborish
+              {t('submit')}
             </Button>
           </div>
         )}
