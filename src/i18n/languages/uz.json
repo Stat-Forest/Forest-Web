@@ -179,5 +179,14 @@
   "data_loading_error_3": "Tashkilotlarni yuklashda xatolik yuz berdi!",
   "loading": "Yuklanmoqda...",
   "noOrganizationsFound": "Tashkilot topilmadi",
-  "noDataFound": "Ma'lumot topilmadi"
+  "noDataFound": "Ma'lumot topilmadi",
+  "submit": "Yuborish",
+  "noColumnsFound": "Jadval bo‘sh.",
+  "data_loading_error_4": "Ustunlarni olishda xatolik yuz berdi.",
+  "table_loading": "Jadval yuklanmoqda...",
+  "error_occurred": "Xatolik yuz berdi",
+  "noThingsFound": "Hech narsa topilmadi",
+  "report_created_successfully": "Hisobot muvaffaqiyatli yaratildi!",
+  "must_fill_all": "Barcha ustunlarga qiymat kiriting!",
+  "must_select_all": "Iltimos, barcha maydonlarni to‘ldiring!"
 }
