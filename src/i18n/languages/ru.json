@@ -164,5 +164,12 @@
   "import": "Импортировать",
   "noDeadlines": "Сроки отсутствуют",
   "exportExcel": "Экспортировать отчёт в Excel",
-  "printReport": "Распечатать отчёт"
+  "printReport": "Распечатать отчёт",
+  "start_loading": "Начальная загрузка...",
+  "data_loading_error": "Ошибка загрузки данных!",
+  "data_loading_error_2": "Ошибка загрузки отделов!",
+  "data_loading_error_3": "Ошибка загрузки организаций!",
+  "loading": "Загрузка...",
+  "noOrganizationsFound": "Организация не найдена",
+  "noDataFound": "Данные не найдены"
 }
