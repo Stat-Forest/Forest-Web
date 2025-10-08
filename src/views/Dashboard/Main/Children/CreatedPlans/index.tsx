@@ -190,7 +190,7 @@ function CreatedPlans() {
               ))
             ) : (
               <div className="p-2 text-center text-gray-500">
-                Tashkilot topilmadi
+                {t("noOrganizationsFound")}
               </div>
             )}
           </SelectContent>
@@ -218,24 +218,24 @@ function CreatedPlans() {
       {/* Loading & Error States */}
       {isLoading ? (
         <div className="flex justify-center items-center h-40">
-          <h1 className="text-center text-lg">Boshlang'ich yuklanmoqda...</h1>
+          <h1 className="text-center text-lg">{t('start_loading')}</h1>
         </div>
       ) : isError ? (
         <div className="flex justify-center items-center h-40">
           <h1 className="text-center text-red-500">
-            Ma'lumotlarni yuklashda xatolik yuz berdi!
+            {t("data_loading_error")}
           </h1>
         </div>
       ) : statementsError ? (
         <div className="flex justify-center items-center h-40">
           <h1 className="text-center text-red-500">
-            Bo'limlarni yuklashda xatolik yuz berdi!
+            {t("data_loading_error_2")}
           </h1>
         </div>
       ) : organizationError ? (
         <div className="flex justify-center items-center h-40">
           <h1 className="text-center text-red-500">
-            Tashkilotlarni yuklashda xatolik yuz berdi!
+            {t("data_loading_error_3")}
           </h1>
         </div>
       ) : (
@@ -296,8 +296,8 @@ function CreatedPlans() {
             <div className="flex justify-center items-center h-40">
               <h1 className="text-gray-500">
                 {isAnyFilterActive
-                  ? "Filter bo'yicha ma'lumot topilmadi"
-                  : "Ma'lumot topilmadi"}
+                  ? t("noDataFound")
+                  : t("noDataFound")}
               </h1>
             </div>
           )}
@@ -307,7 +307,7 @@ function CreatedPlans() {
       {/* Secondary loading indicator */}
       {isFetching && !isLoading && (
         <div className="flex justify-center items-center mt-4">
-          <span className="text-[#09B86F]">Yuklanmoqda...</span>
+          <span className="text-[#09B86F]">{t("loading")}</span>
         </div>
       )}
     </div>
