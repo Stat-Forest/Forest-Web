@@ -2,6 +2,7 @@
 import AllCreateReportItem from "./AllCreate";
 import InnersCreateReportItem from "./InnersCreate";
 import { useParams } from "react-router-dom";
+import PlantCreate from "./PlantCreate";
 
 function CreateReportItem() {
   // const reportName = useSelector((state: any) => state.report.reportName);
@@ -9,6 +10,8 @@ function CreateReportItem() {
 
   if (reportName === "Xuquqbuzarlik") {
     return <InnersCreateReportItem />;
+  } else if (reportName === "Ko‘chat va Nihol") {
+    return <PlantCreate />;
   } else {
     return <AllCreateReportItem />;
   }
