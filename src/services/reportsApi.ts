@@ -77,7 +77,10 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
-    getUsersReport: builder.query<any, { user_id?: string; page: any; perPage: number }>({
+    getUsersReport: builder.query<
+      any,
+      { user_id?: string; page: any; perPage: number }
+    >({
       query: ({ user_id = "", page, perPage }) => ({
         url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}`,
         method: "GET",
@@ -89,8 +92,11 @@ export const reportApi = createApi({
         method: "GET",
       }),
     }),
-    getPlantsReport: builder.query<any, void>({
-      query: () => ({ url: `/plants/`, method: "GET" }),
+    getPlantsReport: builder.query<any, { statement: string; lang: string; parent: string; page: number; perPage: number; }>({
+      query: ({ statement, lang, parent, page, perPage }) => ({
+        url: `/plants/?statement=${statement}&lang=${lang}&parent=${parent}&page=${page}&per_page=${perPage}`,
+        method: "GET",
+      }),
     }),
     getRepoblicReport: builder.query<any, void>({
       query: () => ({ url: `/republic/`, method: "GET" }),
@@ -116,7 +122,15 @@ export const reportApi = createApi({
         perPage: number;
       }
     >({
-      query: ({ columnId, organization, statement, page, search, year, perPage }) => ({
+      query: ({
+        columnId,
+        organization,
+        statement,
+        page,
+        search,
+        year,
+        perPage,
+      }) => ({
         url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}&per_page=${perPage}`,
         method: "GET",
       }),
@@ -164,20 +178,6 @@ export const reportApi = createApi({
         body: newReport,
       }),
     }),
-    submitReportFeedback: builder.mutation({
-      query: (data) => ({
-        url: `/feedback/`,
-        method: "POST",
-        body: data,
-      }),
-    }),
-    generatePdfReport: builder.mutation({
-      query: (params) => ({
-        url: `/generate-pdf/`,
-        method: "POST",
-        body: params,
-      }),
-    }),
     sendReport: builder.mutation({
       query: ({ id }) => ({
         url: `/send/`,
@@ -205,6 +205,14 @@ export const reportApi = createApi({
         method: "POST",
         body: payload,
       }),
+    }),
+    plantCreate: builder.mutation({
+      query: (payload) => ({
+        url: `/plant/create/`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Reports"],
     }),
 
     // ==== 🟦 PUT endpoints ====
@@ -312,12 +320,11 @@ export const {
 
   // POST
   useCreateReportMutation,
-  useSubmitReportFeedbackMutation,
-  useGeneratePdfReportMutation,
   usePlanCreateMutation,
   useSendReportMutation,
   useCancelReportMutation,
   useAcceptReportMutation,
+  usePlantCreateMutation,
 
   // PUT
   useUpdateReportMutation,
