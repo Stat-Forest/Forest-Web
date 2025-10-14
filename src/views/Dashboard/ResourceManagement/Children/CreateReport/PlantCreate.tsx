@@ -58,11 +58,14 @@ function findEmptyChildrenColumnIds(
 }
 
 function PlantCreate() {
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
+  // 🔹 YANGI: formGroups state - har bir form uchun alohida qiymatlar va plant
+  const [formGroups, setFormGroups] = useState<
+    { values: Record<string, string>; plantId: string }[]
+  >([{ values: {}, plantId: "" }]);
+
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
-  const [selectedPlantId, setSelectedPlantId] = useState<string>(""); // 🔹 Yangi: Har bir step uchun plant
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
@@ -71,9 +74,6 @@ function PlantCreate() {
   const [planItems, setPlanItems] = useState<
     { columnId: string; plan_value: string; fullParentChain: string }[]
   >([]);
-  const [selectedPlantsByStep, setSelectedPlantsByStep] = useState<
-    Record<number, string>
-  >({}); // 🔹 Har bir step uchun tanlangan plant
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -151,38 +151,6 @@ function PlantCreate() {
     setCurrentStep(0);
   }, [allEmptyColumnsByStepMemo]);
 
-  // 🔹 STEP O'ZGARGANDA YANGI PLANT TANLASH
-  useEffect(() => {
-    // Har bir step uchun alohida plant tanlash
-    if (!selectedPlantsByStep[currentStep]) {
-      // Agar bu step uchun plant tanlanmagan bo'lsa, bo'sh qilamiz
-      setSelectedPlantId("");
-    } else {
-      // Agar oldin tanlangan bo'lsa, o'shasini ko'rsatamiz
-      setSelectedPlantId(selectedPlantsByStep[currentStep]);
-    }
-  }, [currentStep, selectedPlantsByStep]);
-
-  // Boshlang'ich qiymatlar
-  useEffect(() => {
-    if (allEmptyColumnsByStep[currentStep]?.length > 0) {
-      const initialValues: Record<string, string> = {};
-      allEmptyColumnsByStep[currentStep].forEach((col) => {
-        if (
-          !col.title.toLowerCase().includes("tashkilot nomi") &&
-          !col.title.toLowerCase().includes("reja")
-        ) {
-          if (!formValues[col.id]) {
-            initialValues[col.id] = "";
-          }
-        }
-      });
-      if (Object.keys(initialValues).length > 0) {
-        setFormValues((prev) => ({ ...prev, ...initialValues }));
-      }
-    }
-  }, [currentStep, allEmptyColumnsByStep]);
-
   // 🔹 PLAN MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
@@ -240,18 +208,34 @@ function PlantCreate() {
   const [createReportItem, { isLoading: isSubmitting }] =
     usePlantCreateMutation();
 
-  const handleInputChange = (id: string, value: string) => {
-    setFormValues((prev) => ({ ...prev, [id]: value }));
+  // 🔹 YANGI: Input o'zgartirish funksiyasi
+  const handleInputChange = (formIndex: number, id: string, value: string) => {
+    setFormGroups((prev) =>
+      prev.map((form, idx) =>
+        idx === formIndex
+          ? { ...form, values: { ...form.values, [id]: value } }
+          : form
+      )
+    );
   };
 
-  // 🔹 YANGI: Plant tanlash funksiyasi
-  const handlePlantChange = (plantId: string) => {
-    setSelectedPlantId(plantId);
-    // Har bir step uchun tanlangan plant ni saqlaymiz
-    setSelectedPlantsByStep((prev) => ({
-      ...prev,
-      [currentStep]: plantId,
-    }));
+  // 🔹 YANGI: Plant o'zgartirish funksiyasi
+  const handlePlantChange = (formIndex: number, plantId: string) => {
+    setFormGroups((prev) =>
+      prev.map((form, idx) => (idx === formIndex ? { ...form, plantId } : form))
+    );
+  };
+
+  // 🔹 YANGI: Form qo'shish funksiyasi
+  const handleAddForm = () => {
+    setFormGroups((prev) => [...prev, { values: {}, plantId: "" }]);
+  };
+
+  // 🔹 YANGI: Form o'chirish funksiyasi
+  const handleRemoveForm = (formIndex: number) => {
+    if (formGroups.length > 1) {
+      setFormGroups((prev) => prev.filter((_, idx) => idx !== formIndex));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -271,21 +255,28 @@ function PlantCreate() {
       errors.push("Iltimos, tashkilot nomini tanlang");
     }
 
-    // 🔹 Har bir step uchun plant tanlanganligini tekshiramiz
-    Object.entries(selectedPlantsByStep).forEach(([step, plantId]) => {
-      if (!plantId) {
-        errors.push(`Iltimos, ${parseInt(step) + 1}-qadam uchun plant tanlang`);
+    // 🔹 Har bir form uchun plant tanlanganligini tekshiramiz
+    formGroups.forEach((form, index) => {
+      if (!form.plantId) {
+        errors.push(`Iltimos, ${index + 1}-form uchun plant tanlang`);
       }
     });
 
-    allEmptyColumnsByStep[currentStep]?.forEach((col) => {
-      if (
-        !col.title.toLowerCase().includes("reja") &&
-        !col.title.toLowerCase().includes("tashkilot nomi") &&
-        (!formValues[col.id] || formValues[col.id].toString().trim() === "")
-      ) {
-        errors.push(`"${col.fullParentChain}" uchun qiymat kiritish shart`);
-      }
+    // 🔹 Har bir form uchun majburiy maydonlarni tekshiramiz
+    formGroups.forEach((form, formIndex) => {
+      allEmptyColumnsByStep[currentStep]?.forEach((col) => {
+        if (
+          !col.title.toLowerCase().includes("reja") &&
+          !col.title.toLowerCase().includes("tashkilot nomi") &&
+          (!form.values[col.id] || form.values[col.id].toString().trim() === "")
+        ) {
+          errors.push(
+            `${formIndex + 1}-form uchun "${
+              col.fullParentChain
+            }" qiymati kiritish shart`
+          );
+        }
+      });
     });
 
     if (errors.length > 0) {
@@ -295,41 +286,35 @@ function PlantCreate() {
 
     // 🔹 YANGI: Backend strukturasiga mos report_items yaratish
     const report_items = allEmptyColumnsByStep.flatMap(
-      (stepColumns, stepIndex) => {
-        const stepPlantId = selectedPlantsByStep[stepIndex];
-
+      (stepColumns) => {
         return stepColumns.map((col) => {
           const isOrganizationColumn = col.title
             .toLowerCase()
             .includes("tashkilot nomi");
           const isRejaColumn = col.title.toLowerCase().includes("reja");
 
-          let rawValue: string = "";
-
           if (isOrganizationColumn) {
-            rawValue = selectedOrganizationId || "";
             return {
               statement_column: col.id,
-              inners: [{ value: rawValue }],
+              inners: [{ value: selectedOrganizationId || "" }],
             };
           } else if (isRejaColumn) {
             const planItem = planItems.find((item) => item.columnId === col.id);
-            rawValue = planItem ? planItem.plan_value : "";
+            const planValue = planItem ? planItem.plan_value : "";
             return {
               statement_column: col.id,
-              inners: [{ value: rawValue }],
+              inners: [{ value: planValue }],
             };
           } else {
-            rawValue = formValues[col.id] || "";
-            // 🔹 Plant bilan bog'liq columnlar uchun plant ID qo'shamiz
+            // 🔹 Har bir form uchun alohida inner yaratamiz
+            const inners = formGroups.map((form) => ({
+              ...(form.plantId && { plant: form.plantId }),
+              value: form.values[col.id] || "",
+            }));
+
             return {
               statement_column: col.id,
-              inners: [
-                {
-                  ...(stepPlantId && { plant: stepPlantId }),
-                  value: rawValue,
-                },
-              ],
+              inners,
             };
           }
         });
@@ -342,10 +327,9 @@ function PlantCreate() {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
       navigate(-1);
-      setFormValues({});
+      setFormGroups([{ values: {}, plantId: "" }]);
       setCurrentStep(0);
       setFormErrors([]);
-      setSelectedPlantsByStep({});
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
@@ -409,104 +393,140 @@ function PlantCreate() {
             </ul>
           </div>
         )}
-        <div className="flex gap-6">
-          {/* ✅ DEADLINE SELECT */}
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div>
-              <label className="block mb-1 text-lg font-medium">
-                {t("deadline")}:
-              </label>
-              <Select
-                value={selectedDeadlineId}
-                onValueChange={(val) => setSelectedDeadlineId(val)}
-              >
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue
-                    placeholder={
-                      deadlineLoading
-                        ? "Yuklanmoqda..."
-                        : deadlineError
-                        ? "Xatolik yuz berdi"
-                        : t("selectDeadline")
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {deadlineLoading ? (
-                    <div className="p-2 text-center text-muted-foreground text-sm">
-                      Yuklanmoqda...
-                    </div>
-                  ) : deadlineError ? (
-                    <div className="p-2 text-center text-red-500 text-sm">
-                      Ma'lumotlarni yuklashda xatolik
-                    </div>
-                  ) : deadlineData?.results?.length > 0 ? (
-                    <>
-                      {deadlineData.results.map((item: any) => (
-                        <SelectItem key={item.id} value={item.id.toString()}>
-                          {formatDeadlineText(item.submit_at)}
-                        </SelectItem>
-                      ))}
 
-                      {/* ✅ Deadline Pagination Controls */}
-                      {deadlineData.count > deadlinePerPage && (
-                        <div className="flex items-center justify-between px-2 py-1 border-t">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={deadlinePage === 1}
-                            onClick={() =>
-                              setDeadlinePage((p) => Math.max(p - 1, 1))
-                            }
-                          >
-                            {t("before")}
-                          </Button>
-                          <span className="text-xs text-gray-500">
-                            {deadlinePage} /{" "}
-                            {Math.ceil(deadlineData.count / deadlinePerPage)}
-                          </span>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              deadlinePage >=
-                              Math.ceil(deadlineData.count / deadlinePerPage)
-                            }
-                            onClick={() =>
-                              setDeadlinePage((p) =>
-                                Math.min(
-                                  p + 1,
-                                  Math.ceil(
-                                    deadlineData.count / deadlinePerPage
-                                  )
-                                )
+        <div className="flex gap-6 items-end">
+          {/* ✅ DEADLINE SELECT */}
+          <div>
+            <label className="block mb-1 text-lg font-medium">
+              {t("deadline")}:
+            </label>
+            <Select
+              value={selectedDeadlineId}
+              onValueChange={(val) => setSelectedDeadlineId(val)}
+            >
+              <SelectTrigger className="w-[300px]">
+                <SelectValue
+                  placeholder={
+                    deadlineLoading
+                      ? "Yuklanmoqda..."
+                      : deadlineError
+                      ? "Xatolik yuz berdi"
+                      : t("selectDeadline")
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {deadlineLoading ? (
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    Yuklanmoqda...
+                  </div>
+                ) : deadlineError ? (
+                  <div className="p-2 text-center text-red-500 text-sm">
+                    Ma'lumotlarni yuklashda xatolik
+                  </div>
+                ) : deadlineData?.results?.length > 0 ? (
+                  <>
+                    {deadlineData.results.map((item: any) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {formatDeadlineText(item.submit_at)}
+                      </SelectItem>
+                    ))}
+
+                    {/* ✅ Deadline Pagination Controls */}
+                    {deadlineData.count > deadlinePerPage && (
+                      <div className="flex items-center justify-between px-2 py-1 border-t">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={deadlinePage === 1}
+                          onClick={() =>
+                            setDeadlinePage((p) => Math.max(p - 1, 1))
+                          }
+                        >
+                          {t("before")}
+                        </Button>
+                        <span className="text-xs text-gray-500">
+                          {deadlinePage} /{" "}
+                          {Math.ceil(deadlineData.count / deadlinePerPage)}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            deadlinePage >=
+                            Math.ceil(deadlineData.count / deadlinePerPage)
+                          }
+                          onClick={() =>
+                            setDeadlinePage((p) =>
+                              Math.min(
+                                p + 1,
+                                Math.ceil(deadlineData.count / deadlinePerPage)
                               )
-                            }
-                          >
-                            {t("next")}
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="p-2 text-center text-muted-foreground text-sm">
-                      Deadline mavjud emas
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+                            )
+                          }
+                        >
+                          {t("next")}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    Deadline mavjud emas
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* ✅ CURRENT STEP PLANT SELECT */}
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div>
+          {/* ✅ ADD FORM BUTTON */}
+          <div>
+            <Button type="button" onClick={handleAddForm}>
+              Add
+            </Button>
+          </div>
+        </div>
+
+        {/* ✅ FORM GROUPS */}
+        {formGroups.map((form, formIndex) => (
+          <div
+            key={formIndex}
+            className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
+          >
+            <div className="mb-4 flex justify-between items-center">
+              <h2 className="text-lg font-semibold">
+                {currentStepTitle} – {formIndex + 1}-form
+              </h2>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500">
+                  {currentStep + 1} / {totalSteps}
+                </span>
+                {formGroups.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleRemoveForm(formIndex)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* ✅ FORM SPECIFIC PLANT SELECT */}
+            <div className="mb-4">
               <label className="block mb-1 text-lg font-medium">
-                {currentStepTitle} uchun Plant:
+                {formIndex + 1}-form uchun Plant:
               </label>
-              <Select value={selectedPlantId} onValueChange={handlePlantChange}>
+              <Select
+                value={form.plantId}
+                onValueChange={(plantId) =>
+                  handlePlantChange(formIndex, plantId)
+                }
+              >
                 <SelectTrigger className="w-[300px]">
                   <SelectValue
                     placeholder={
@@ -530,7 +550,6 @@ function PlantCreate() {
                   ) : plantsData?.results?.length > 0 ? (
                     <>
                       {plantsData.results.flatMap((category: any) => [
-                        // Kategoriya (parent) ni chiqaramiz - disabled qilib qo'yamiz
                         <SelectItem
                           key={category.id}
                           value={category.id}
@@ -539,7 +558,6 @@ function PlantCreate() {
                         >
                           {category.name}
                         </SelectItem>,
-                        // Children larni chiqaramiz
                         ...category.children.map((child: any) => (
                           <SelectItem
                             key={child.id}
@@ -599,34 +617,78 @@ function PlantCreate() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </div>
 
-        {/* ✅ STEP TABLE */}
-        {currentEmptyColumns.length > 0 ? (
-          <div className="overflow-x-auto">
-            <div className="mb-4 flex justify-between">
-              <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
-              <span className="text-sm text-gray-500">
-                {currentStep + 1} / {totalSteps}
-              </span>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("columnName")}</TableHead>
-                  <TableHead className="min-w-[300px]">{t("value")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentEmptyColumns.map((col) => {
-                  const lowerTitle = col.title.toLowerCase();
+            {/* ✅ TABLE */}
+            {currentEmptyColumns.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("columnName")}</TableHead>
+                    <TableHead className="min-w-[300px]">
+                      {t("value")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentEmptyColumns.map((col) => {
+                    const lowerTitle = col.title.toLowerCase();
 
-                  if (lowerTitle.includes("reja")) {
-                    const planItem = planItems.find(
-                      (item) => item.columnId === col.id
-                    );
-                    const planValue = planItem ? planItem.plan_value : "";
+                    if (lowerTitle.includes("reja")) {
+                      const planItem = planItems.find(
+                        (item) => item.columnId === col.id
+                      );
+                      const planValue = planItem ? planItem.plan_value : "";
+                      return (
+                        <TableRow key={col.id}>
+                          <TableCell className="whitespace-normal break-words">
+                            {col.fullParentChain}
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="text"
+                              value={planValue}
+                              disabled
+                              className="bg-gray-100 cursor-not-allowed"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+
+                    if (lowerTitle.includes("tashkilot nomi")) {
+                      // ❗ faqat birinchi formda ko'rinadi
+                      if (formIndex !== 0) return null;
+                      return (
+                        <TableRow key={col.id}>
+                          <TableCell className="whitespace-normal break-words">
+                            {col.fullParentChain}
+                          </TableCell>
+                          <TableCell>
+                            <select
+                              value={selectedOrganizationId}
+                              onChange={(e) => {
+                                setSelectedOrganizationId(e.target.value);
+                                handleInputChange(
+                                  formIndex,
+                                  col.id,
+                                  e.target.value
+                                );
+                              }}
+                              className="w-full border rounded px-2 py-1"
+                              required
+                            >
+                              <option value="">Tanlang</option>
+                              {organizationsData?.map((item: any) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </select>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+
                     return (
                       <TableRow key={col.id}>
                         <TableCell className="whitespace-normal break-words">
@@ -635,67 +697,27 @@ function PlantCreate() {
                         <TableCell>
                           <Input
                             type="text"
-                            value={planValue}
-                            disabled
-                            className="bg-gray-100 cursor-not-allowed"
+                            value={form.values[col.id] || ""}
+                            onChange={(e) =>
+                              handleInputChange(
+                                formIndex,
+                                col.id,
+                                e.target.value
+                              )
+                            }
+                            required
                           />
                         </TableCell>
                       </TableRow>
                     );
-                  }
-
-                  if (lowerTitle.includes("tashkilot nomi")) {
-                    return (
-                      <TableRow key={col.id}>
-                        <TableCell className="whitespace-normal break-words">
-                          {col.fullParentChain}
-                        </TableCell>
-                        <TableCell>
-                          <select
-                            value={selectedOrganizationId}
-                            onChange={(e) => {
-                              setSelectedOrganizationId(e.target.value);
-                              handleInputChange(col.id, e.target.value);
-                            }}
-                            className="w-full border rounded px-2 py-1"
-                            required
-                          >
-                            <option value="">Tanlang</option>
-                            {organizationsData?.map((item: any) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </select>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  }
-
-                  return (
-                    <TableRow key={col.id}>
-                      <TableCell className="whitespace-normal break-words">
-                        {col.fullParentChain}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={formValues[col.id] || ""}
-                          onChange={(e) =>
-                            handleInputChange(col.id, e.target.value)
-                          }
-                          required
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+            )}
           </div>
-        ) : (
-          <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
-        )}
+        ))}
 
         {/* ✅ STEP BOSHQARISH */}
         <div className="flex justify-between items-center pt-4">
@@ -731,14 +753,14 @@ function PlantCreate() {
         {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
           <h3 className="font-semibold mb-2">Tanlangan Plantlar:</h3>
-          {Object.entries(selectedPlantsByStep).map(([step, plantId]) => {
+          {formGroups.map((form, index) => {
             const plant = plantsData?.results
               ?.flatMap((category: any) => category.children || [])
-              .find((child: any) => child.id === plantId);
+              .find((child: any) => child.id === form.plantId);
 
             return (
-              <div key={step} className="text-sm">
-                {parseInt(step) + 1}-qadam: {plant?.name || "Tanlanmagan"}
+              <div key={index} className="text-sm">
+                {index + 1}-form: {plant?.name || "Tanlanmagan"}
               </div>
             );
           })}
