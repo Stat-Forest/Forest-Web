@@ -12,7 +12,7 @@ import CheckCode from "./views/Auth/CheckCode";
 import ChangePassword from "./views/Auth/changePassword";
 import { TestModeCarousel } from "./components/TestModeCarousel";
 import AppWrapper from "./components/AppWrapper";
-import Landing from "./views/Landing";
+// import Landing from "./views/Landing";
 
 export const user_role = import.meta.env.USER_ROLE;
 
@@ -33,7 +33,7 @@ function App() {
           <Route path="check-code" element={<CheckCode />} />
           <Route path="change-password" element={<ChangePassword />} />
         </Route>
-        <Route path="/" element={<Landing />} />
+        {/* <Route path="/" element={<Landing />} /> */}
         <Route
           path="/*"
           element={
