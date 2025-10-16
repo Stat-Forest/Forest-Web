@@ -1,4 +1,4 @@
-import { LogOut, User2, VideoIcon } from "lucide-react";
+import { LogOut, User2, VideoIcon, Bell } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Select,
@@ -26,9 +26,24 @@ import ChangePasswordModal from "../Modals/ChangePasswordModal";
 // RTK Query APIs
 import { authApi } from "@/services/authApi";
 import { reportApi } from "@/services/reportsApi";
-import { generalApi } from "@/services/generalApi";
+import {
+  generalApi,
+  useGetNotificationReportsQuery,
+} from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
+
+// UI Components for notifications
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
+import { Card, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Separator } from "../ui/separator";
 
 // persistor
 import { persistor } from "@/app/store";
@@ -43,8 +58,14 @@ function Header({ onLogout }: HeaderProps) {
   const location = useLocation();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const currentLang = useSelector((state: RootState) => state.language.lang);
+
+  // Notification data
+  const { data, error, isLoading } = useGetNotificationReportsQuery({
+    lang: currentLang,
+  });
 
   const handleLogout = () => {
     // 🔐 Redux auth ni tozalaymiz
@@ -60,7 +81,7 @@ function Header({ onLogout }: HeaderProps) {
     // 🧹 Redux persist ni tozalaymiz
     persistor.purge();
 
-    // ⏩ Login sahifasiga yo‘naltiramiz
+    // ⏩ Login sahifasiga yo'naltiramiz
     navigate("/login");
 
     // 🔔 Agar onLogout prop kelsa, uni ishga tushiramiz
@@ -83,6 +104,70 @@ function Header({ onLogout }: HeaderProps) {
         <div></div>
 
         <div className="flex items-center gap-3">
+          {/* Notification Button with Sheet */}
+          <Sheet open={notificationOpen} onOpenChange={setNotificationOpen}>
+            <SheetTrigger asChild>
+              <Button
+                className="h-[42px] w-[42px] bg-transparent border-1 text-gray-600 hover:text-[#09B86F] hover:bg-gray-100 relative"
+                variant="outline"
+              >
+                <Bell size={20} />
+                {data?.results?.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {data.results.length}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle></SheetTitle>
+              </SheetHeader>
+
+              <div className="m-2">
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <p className="text-gray-500">{t("loading")}</p>
+                  </div>
+                ) : error ? (
+                  <div className="flex justify-center items-center h-40">
+                    <p className="text-red-500">{t("error")}</p>
+                  </div>
+                ) : data?.results?.length ? (
+                  <div className="space-y-4 overflow-y-auto flex flex-col">
+                    {data.results.map((notification: any, index: number) => (
+                      <Card
+                        key={notification.id}
+                        className="hover:shadow-lg transition-shadow duration-300"
+                      >
+                        <CardContent className="pt-3">
+                          <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                            {notification.text}
+                          </p>
+                          <Separator className="my-2" />
+                          <div className="flex justify-between items-center">
+                            <Badge variant="secondary" className="text-sm">
+                              {notification.date}
+                            </Badge>
+                            <span className="text-gray-400 text-sm">
+                              #{index + 1}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex justify-center items-center h-40">
+                    <p className="text-gray-500">
+                      Bildirishnomalar mavjud emas.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <Button
             className="bg-[#09B86F] h-[42px] w-[170px] hover:bg-[#09B86F]"
             onClick={() => navigate("/video")}

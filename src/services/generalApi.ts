@@ -9,11 +9,14 @@ export const generalApi = createApi({
   }),
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====
-    getOrganizationReports: builder.query<any, {lang:string}>({
-      query: ({lang}) => `/organization/?lang=${lang}`,
+    getOrganizationReports: builder.query<any, { lang: string }>({
+      query: ({ lang }) => `/organization/?lang=${lang}`,
     }),
-    getAnnouncementsReports: builder.query<any, {lang:string}>({
-      query: ({lang}) => `/announcements/?lang=${lang}`,
+    getAnnouncementsReports: builder.query<any, { lang: string }>({
+      query: ({ lang }) => `/announcements/?lang=${lang}`,
+    }),
+    getNotificationReports: builder.query<any, { lang: string }>({
+      query: ({ lang }) => `/notifications/?lang=${lang}`,
     }),
   }),
 });
@@ -22,4 +25,5 @@ export const {
   // GET
   useGetOrganizationReportsQuery,
   useGetAnnouncementsReportsQuery,
+  useGetNotificationReportsQuery,
 } = generalApi;
