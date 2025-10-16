@@ -58,10 +58,13 @@ function findEmptyChildrenColumnIds(
 }
 
 function PlantCreate() {
-  // 🔹 YANGI: formGroups state - har bir form uchun alohida qiymatlar va plant
+  // 🔹 YANGI: formGroups state - har bir step uchun alohida form guruhlari
   const [formGroups, setFormGroups] = useState<
-    { values: Record<string, string>; plantId: string }[]
-  >([{ values: {}, plantId: "" }]);
+    {
+      step: number;
+      forms: { values: Record<string, string>; plantId: string }[];
+    }[]
+  >([]);
 
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
@@ -74,6 +77,7 @@ function PlantCreate() {
   const [planItems, setPlanItems] = useState<
     { columnId: string; plan_value: string; fullParentChain: string }[]
   >([]);
+  const [usedPlantIds, setUsedPlantIds] = useState<Set<string>>(new Set()); // 🔹 Tanlangan plantlarni kuzatish
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -149,6 +153,17 @@ function PlantCreate() {
   useEffect(() => {
     setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
     setCurrentStep(0);
+
+    // 🔹 YANGI: Har bir step uchun boshlang'ich form guruhini yaratish
+    if (allEmptyColumnsByStepMemo.length > 0) {
+      const initialFormGroups = allEmptyColumnsByStepMemo.map(
+        (_: any, stepIndex: number) => ({
+          step: stepIndex,
+          forms: [{ values: {}, plantId: "" }], // Har bir stepda boshlang'ich 1 forma
+        })
+      );
+      setFormGroups(initialFormGroups);
+    }
   }, [allEmptyColumnsByStepMemo]);
 
   // 🔹 PLAN MA'LUMOTLARI
@@ -209,33 +224,80 @@ function PlantCreate() {
     usePlantCreateMutation();
 
   // 🔹 YANGI: Input o'zgartirish funksiyasi
-  const handleInputChange = (formIndex: number, id: string, value: string) => {
+  const handleInputChange = (
+    stepIndex: number,
+    formIndex: number,
+    id: string,
+    value: string
+  ) => {
     setFormGroups((prev) =>
-      prev.map((form, idx) =>
-        idx === formIndex
-          ? { ...form, values: { ...form.values, [id]: value } }
-          : form
+      prev.map((group) =>
+        group.step === stepIndex
+          ? {
+              ...group,
+              forms: group.forms.map((form, idx) =>
+                idx === formIndex
+                  ? { ...form, values: { ...form.values, [id]: value } }
+                  : form
+              ),
+            }
+          : group
       )
     );
   };
 
   // 🔹 YANGI: Plant o'zgartirish funksiyasi
-  const handlePlantChange = (formIndex: number, plantId: string) => {
+  const handlePlantChange = (
+    stepIndex: number,
+    formIndex: number,
+    plantId: string
+  ) => {
     setFormGroups((prev) =>
-      prev.map((form, idx) => (idx === formIndex ? { ...form, plantId } : form))
+      prev.map((group) =>
+        group.step === stepIndex
+          ? {
+              ...group,
+              forms: group.forms.map((form, idx) =>
+                idx === formIndex ? { ...form, plantId } : form
+              ),
+            }
+          : group
+      )
+    );
+
+    // 🔹 Tanlangan plantlarni yangilash
+    setUsedPlantIds((prev) => {
+      const newUsed = new Set(prev);
+      if (plantId) {
+        newUsed.add(plantId);
+      }
+      return newUsed;
+    });
+  };
+
+  // 🔹 YANGI: Form qo'shish funksiyasi (faqat joriy step uchun)
+  const handleAddForm = (stepIndex: number) => {
+    setFormGroups((prev) =>
+      prev.map((group) =>
+        group.step === stepIndex
+          ? { ...group, forms: [...group.forms, { values: {}, plantId: "" }] }
+          : group
+      )
     );
   };
 
-  // 🔹 YANGI: Form qo'shish funksiyasi
-  const handleAddForm = () => {
-    setFormGroups((prev) => [...prev, { values: {}, plantId: "" }]);
-  };
-
-  // 🔹 YANGI: Form o'chirish funksiyasi
-  const handleRemoveForm = (formIndex: number) => {
-    if (formGroups.length > 1) {
-      setFormGroups((prev) => prev.filter((_, idx) => idx !== formIndex));
-    }
+  // 🔹 YANGI: Form o'chirish funksiyasi (faqat joriy step uchun)
+  const handleRemoveForm = (stepIndex: number, formIndex: number) => {
+    setFormGroups((prev) =>
+      prev.map((group) =>
+        group.step === stepIndex
+          ? {
+              ...group,
+              forms: group.forms.filter((_, idx) => idx !== formIndex),
+            }
+          : group
+      )
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -255,27 +317,36 @@ function PlantCreate() {
       errors.push("Iltimos, tashkilot nomini tanlang");
     }
 
-    // 🔹 Har bir form uchun plant tanlanganligini tekshiramiz
-    formGroups.forEach((form, index) => {
-      if (!form.plantId) {
-        errors.push(`Iltimos, ${index + 1}-form uchun plant tanlang`);
-      }
+    // 🔹 Har bir step va har bir form uchun plant tanlanganligini tekshiramiz
+    formGroups.forEach((group) => {
+      group.forms.forEach((form, formIndex) => {
+        if (!form.plantId) {
+          errors.push(
+            `Iltimos, ${group.step + 1}-qadam ${
+              formIndex + 1
+            }-form uchun plant tanlang`
+          );
+        }
+      });
     });
 
     // 🔹 Har bir form uchun majburiy maydonlarni tekshiramiz
-    formGroups.forEach((form, formIndex) => {
-      allEmptyColumnsByStep[currentStep]?.forEach((col) => {
-        if (
-          !col.title.toLowerCase().includes("reja") &&
-          !col.title.toLowerCase().includes("tashkilot nomi") &&
-          (!form.values[col.id] || form.values[col.id].toString().trim() === "")
-        ) {
-          errors.push(
-            `${formIndex + 1}-form uchun "${
-              col.fullParentChain
-            }" qiymati kiritish shart`
-          );
-        }
+    formGroups.forEach((group) => {
+      group.forms.forEach((form, formIndex) => {
+        allEmptyColumnsByStep[group.step]?.forEach((col) => {
+          if (
+            !col.title.toLowerCase().includes("reja") &&
+            !col.title.toLowerCase().includes("tashkilot nomi") &&
+            (!form.values[col.id] ||
+              form.values[col.id].toString().trim() === "")
+          ) {
+            errors.push(
+              `${group.step + 1}-qadam ${formIndex + 1}-form uchun "${
+                col.fullParentChain
+              }" qiymati kiritish shart`
+            );
+          }
+        });
       });
     });
 
@@ -284,9 +355,15 @@ function PlantCreate() {
       return;
     }
 
-    // 🔹 YANGI: Backend strukturasiga mos report_items yaratish
+    // 🔹 YANGI: Backend strukturasiga mos report_items yaratish - HAR BIR FORM UCHUN ALOHIDA
     const report_items = allEmptyColumnsByStep.flatMap(
-      (stepColumns) => {
+      (stepColumns, stepIndex) => {
+        const currentFormGroup = formGroups.find(
+          (group) => group.step === stepIndex
+        );
+
+        if (!currentFormGroup) return [];
+
         return stepColumns.map((col) => {
           const isOrganizationColumn = col.title
             .toLowerCase()
@@ -294,20 +371,28 @@ function PlantCreate() {
           const isRejaColumn = col.title.toLowerCase().includes("reja");
 
           if (isOrganizationColumn) {
+            // Tashkilot nomi - faqat bir marta
             return {
               statement_column: col.id,
               inners: [{ value: selectedOrganizationId || "" }],
             };
           } else if (isRejaColumn) {
+            // 🔹 YANGI: Reja - HAR BIR FORM UCHUN ALOHIDA
             const planItem = planItems.find((item) => item.columnId === col.id);
             const planValue = planItem ? planItem.plan_value : "";
+
+            const inners = currentFormGroup.forms.map((form) => ({
+              ...(form.plantId && { plant: form.plantId }),
+              value: planValue, // Har bir form uchun reja qiymati
+            }));
+
             return {
               statement_column: col.id,
-              inners: [{ value: planValue }],
+              inners,
             };
           } else {
-            // 🔹 Har bir form uchun alohida inner yaratamiz
-            const inners = formGroups.map((form) => ({
+            // 🔹 Boshqa maydonlar - HAR BIR FORM UCHUN ALOHIDA
+            const inners = currentFormGroup.forms.map((form) => ({
               ...(form.plantId && { plant: form.plantId }),
               value: form.values[col.id] || "",
             }));
@@ -327,9 +412,17 @@ function PlantCreate() {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
       navigate(-1);
-      setFormGroups([{ values: {}, plantId: "" }]);
+      // Reset form groups
+      const initialFormGroups = allEmptyColumnsByStepMemo.map(
+        (_: any, stepIndex: number) => ({
+          step: stepIndex,
+          forms: [{ values: {}, plantId: "" }],
+        })
+      );
+      setFormGroups(initialFormGroups);
       setCurrentStep(0);
       setFormErrors([]);
+      setUsedPlantIds(new Set());
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
@@ -356,6 +449,9 @@ function PlantCreate() {
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title ?? `Qadam ${currentStep + 1}`;
+  const currentFormGroup = formGroups.find(
+    (group) => group.step === currentStep
+  );
 
   // 🔹 Deadline matnini formatlash funksiyasi
   const formatDeadlineText = (submitAt: string) => {
@@ -480,244 +576,261 @@ function PlantCreate() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* ✅ ADD FORM BUTTON */}
-          <div>
-            <Button type="button" onClick={handleAddForm}>
-              Add
-            </Button>
-          </div>
         </div>
 
-        {/* ✅ FORM GROUPS */}
-        {formGroups.map((form, formIndex) => (
-          <div
-            key={formIndex}
-            className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
-          >
-            <div className="mb-4 flex justify-between items-center">
-              <h2 className="text-lg font-semibold">
-                {currentStepTitle} – {formIndex + 1}-form
-              </h2>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-500">
-                  {currentStep + 1} / {totalSteps}
-                </span>
-                {formGroups.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleRemoveForm(formIndex)}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* ✅ FORM SPECIFIC PLANT SELECT */}
-            <div className="mb-4">
-              <label className="block mb-1 text-lg font-medium">
-                {formIndex + 1}-form uchun Plant:
-              </label>
-              <Select
-                value={form.plantId}
-                onValueChange={(plantId) =>
-                  handlePlantChange(formIndex, plantId)
-                }
+        {/* ✅ CURRENT STEP FORM GROUPS */}
+        {currentFormGroup && (
+          <div className="space-y-6">
+            {currentFormGroup.forms.map((form, formIndex) => (
+              <div
+                key={formIndex}
+                className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
               >
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue
-                    placeholder={
-                      plantsLoading
-                        ? "Yuklanmoqda..."
-                        : plantsError
-                        ? "Xatolik yuz berdi"
-                        : "Tanlang"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {plantsLoading ? (
-                    <div className="p-2 text-center text-muted-foreground text-sm">
-                      Yuklanmoqda...
-                    </div>
-                  ) : plantsError ? (
-                    <div className="p-2 text-center text-red-500 text-sm">
-                      Ma'lumotlarni yuklashda xatolik
-                    </div>
-                  ) : plantsData?.results?.length > 0 ? (
-                    <>
-                      {plantsData.results.flatMap((category: any) => [
-                        <SelectItem
-                          key={category.id}
-                          value={category.id}
-                          disabled
-                          className="font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
-                        >
-                          {category.name}
-                        </SelectItem>,
-                        ...category.children.map((child: any) => (
-                          <SelectItem
-                            key={child.id}
-                            value={child.id}
-                            className="pl-6"
-                          >
-                            {child.name}
-                          </SelectItem>
-                        )),
-                      ])}
+                <div className="mb-4 flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">
+                    {currentStepTitle} – {formIndex + 1}-form
+                  </h2>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">
+                      {currentStep + 1} / {totalSteps}
+                    </span>
+                    {currentFormGroup.forms.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveForm(currentStep, formIndex)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
 
-                      {/* ✅ Plants Pagination Controls */}
-                      {plantsData.count > plantsPerPage && (
-                        <div className="flex items-center justify-between px-2 py-1 border-t">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={plantsPage === 1}
-                            onClick={() =>
-                              setPlantsPage((p) => Math.max(p - 1, 1))
-                            }
-                          >
-                            {t("before")}
-                          </Button>
-                          <span className="text-xs text-gray-500">
-                            {plantsPage} /{" "}
-                            {Math.ceil(plantsData.count / plantsPerPage)}
-                          </span>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              plantsPage >=
-                              Math.ceil(plantsData.count / plantsPerPage)
-                            }
-                            onClick={() =>
-                              setPlantsPage((p) =>
-                                Math.min(
-                                  p + 1,
+                {/* ✅ FORM SPECIFIC PLANT SELECT */}
+                <div className="mb-4">
+                  <label className="block mb-1 text-lg font-medium">
+                    {formIndex + 1}-form uchun Plant:
+                  </label>
+                  <Select
+                    value={form.plantId}
+                    onValueChange={(plantId) =>
+                      handlePlantChange(currentStep, formIndex, plantId)
+                    }
+                  >
+                    <SelectTrigger className="w-[300px]">
+                      <SelectValue
+                        placeholder={
+                          plantsLoading
+                            ? "Yuklanmoqda..."
+                            : plantsError
+                            ? "Xatolik yuz berdi"
+                            : "Tanlang"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {plantsLoading ? (
+                        <div className="p-2 text-center text-muted-foreground text-sm">
+                          Yuklanmoqda...
+                        </div>
+                      ) : plantsError ? (
+                        <div className="p-2 text-center text-red-500 text-sm">
+                          Ma'lumotlarni yuklashda xatolik
+                        </div>
+                      ) : plantsData?.results?.length > 0 ? (
+                        <>
+                          {plantsData.results.flatMap((category: any) => [
+                            <SelectItem
+                              key={category.id}
+                              value={category.id}
+                              disabled
+                              className="font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
+                            >
+                              {category.name}
+                            </SelectItem>,
+                            ...category.children.map((child: any) => (
+                              <SelectItem
+                                key={child.id}
+                                value={child.id}
+                                className="pl-6"
+                                disabled={
+                                  usedPlantIds.has(child.id) &&
+                                  form.plantId !== child.id
+                                } // 🔹 Tanlangan plantlarni bloklash
+                              >
+                                {child.name}
+                                {usedPlantIds.has(child.id) && " (Tanlangan)"}
+                              </SelectItem>
+                            )),
+                          ])}
+
+                          {/* ✅ Plants Pagination Controls */}
+                          {plantsData.count > plantsPerPage && (
+                            <div className="flex items-center justify-between px-2 py-1 border-t">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={plantsPage === 1}
+                                onClick={() =>
+                                  setPlantsPage((p) => Math.max(p - 1, 1))
+                                }
+                              >
+                                {t("before")}
+                              </Button>
+                              <span className="text-xs text-gray-500">
+                                {plantsPage} /{" "}
+                                {Math.ceil(plantsData.count / plantsPerPage)}
+                              </span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={
+                                  plantsPage >=
                                   Math.ceil(plantsData.count / plantsPerPage)
-                                )
-                              )
-                            }
-                          >
-                            {t("next")}
-                          </Button>
+                                }
+                                onClick={() =>
+                                  setPlantsPage((p) =>
+                                    Math.min(
+                                      p + 1,
+                                      Math.ceil(
+                                        plantsData.count / plantsPerPage
+                                      )
+                                    )
+                                  )
+                                }
+                              >
+                                {t("next")}
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="p-2 text-center text-muted-foreground text-sm">
+                          Plant mavjud emas
                         </div>
                       )}
-                    </>
-                  ) : (
-                    <div className="p-2 text-center text-muted-foreground text-sm">
-                      Plant mavjud emas
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* ✅ TABLE */}
-            {currentEmptyColumns.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("columnName")}</TableHead>
-                    <TableHead className="min-w-[300px]">
-                      {t("value")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentEmptyColumns.map((col) => {
-                    const lowerTitle = col.title.toLowerCase();
-
-                    if (lowerTitle.includes("reja")) {
-                      const planItem = planItems.find(
-                        (item) => item.columnId === col.id
-                      );
-                      const planValue = planItem ? planItem.plan_value : "";
-                      return (
-                        <TableRow key={col.id}>
-                          <TableCell className="whitespace-normal break-words">
-                            {col.fullParentChain}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="text"
-                              value={planValue}
-                              disabled
-                              className="bg-gray-100 cursor-not-allowed"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    }
-
-                    if (lowerTitle.includes("tashkilot nomi")) {
-                      // ❗ faqat birinchi formda ko'rinadi
-                      if (formIndex !== 0) return null;
-                      return (
-                        <TableRow key={col.id}>
-                          <TableCell className="whitespace-normal break-words">
-                            {col.fullParentChain}
-                          </TableCell>
-                          <TableCell>
-                            <select
-                              value={selectedOrganizationId}
-                              onChange={(e) => {
-                                setSelectedOrganizationId(e.target.value);
-                                handleInputChange(
-                                  formIndex,
-                                  col.id,
-                                  e.target.value
-                                );
-                              }}
-                              className="w-full border rounded px-2 py-1"
-                              required
-                            >
-                              <option value="">Tanlang</option>
-                              {organizationsData?.map((item: any) => (
-                                <option key={item.id} value={item.id}>
-                                  {item.name}
-                                </option>
-                              ))}
-                            </select>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    }
-
-                    return (
-                      <TableRow key={col.id}>
-                        <TableCell className="whitespace-normal break-words">
-                          {col.fullParentChain}
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="text"
-                            value={form.values[col.id] || ""}
-                            onChange={(e) =>
-                              handleInputChange(
-                                formIndex,
-                                col.id,
-                                e.target.value
-                              )
-                            }
-                            required
-                          />
-                        </TableCell>
+                {/* ✅ TABLE */}
+                {currentEmptyColumns.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("columnName")}</TableHead>
+                        <TableHead className="min-w-[300px]">
+                          {t("value")}
+                        </TableHead>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            ) : (
-              <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
-            )}
+                    </TableHeader>
+                    <TableBody>
+                      {currentEmptyColumns.map((col) => {
+                        const lowerTitle = col.title.toLowerCase();
+
+                        if (lowerTitle.includes("reja")) {
+                          const planItem = planItems.find(
+                            (item) => item.columnId === col.id
+                          );
+                          const planValue = planItem ? planItem.plan_value : "";
+                          return (
+                            <TableRow key={col.id}>
+                              <TableCell className="whitespace-normal break-words">
+                                {col.fullParentChain}
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  type="text"
+                                  value={planValue}
+                                  disabled
+                                  className="bg-gray-100 cursor-not-allowed"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+
+                        if (lowerTitle.includes("tashkilot nomi")) {
+                          // ❗ faqat birinchi formda ko'rinadi
+                          if (formIndex !== 0) return null;
+                          return (
+                            <TableRow key={col.id}>
+                              <TableCell className="whitespace-normal break-words">
+                                {col.fullParentChain}
+                              </TableCell>
+                              <TableCell>
+                                <select
+                                  value={selectedOrganizationId}
+                                  onChange={(e) => {
+                                    setSelectedOrganizationId(e.target.value);
+                                    handleInputChange(
+                                      currentStep,
+                                      formIndex,
+                                      col.id,
+                                      e.target.value
+                                    );
+                                  }}
+                                  className="w-full border rounded px-2 py-1"
+                                  required
+                                >
+                                  <option value="">Tanlang</option>
+                                  {organizationsData?.map((item: any) => (
+                                    <option key={item.id} value={item.id}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+
+                        return (
+                          <TableRow key={col.id}>
+                            <TableCell className="whitespace-normal break-words">
+                              {col.fullParentChain}
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="text"
+                                value={form.values[col.id] || ""}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    currentStep,
+                                    formIndex,
+                                    col.id,
+                                    e.target.value
+                                  )
+                                }
+                                required
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+                )}
+              </div>
+            ))}
+
+            {/* ✅ ADD FORM BUTTON (faqat joriy step uchun) */}
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                onClick={() => handleAddForm(currentStep)}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                + Yangi Form Qo'shish
+              </Button>
+            </div>
           </div>
-        ))}
+        )}
 
         {/* ✅ STEP BOSHQARISH */}
         <div className="flex justify-between items-center pt-4">
@@ -753,17 +866,20 @@ function PlantCreate() {
         {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
           <h3 className="font-semibold mb-2">Tanlangan Plantlar:</h3>
-          {formGroups.map((form, index) => {
-            const plant = plantsData?.results
-              ?.flatMap((category: any) => category.children || [])
-              .find((child: any) => child.id === form.plantId);
+          {formGroups.map((group) =>
+            group.forms.map((form, formIndex) => {
+              const plant = plantsData?.results
+                ?.flatMap((category: any) => category.children || [])
+                .find((child: any) => child.id === form.plantId);
 
-            return (
-              <div key={index} className="text-sm">
-                {index + 1}-form: {plant?.name || "Tanlanmagan"}
-              </div>
-            );
-          })}
+              return (
+                <div key={`${group.step}-${formIndex}`} className="text-sm">
+                  {group.step + 1}-qadam {formIndex + 1}-form:{" "}
+                  {plant?.name || "Tanlanmagan"}
+                </div>
+              );
+            })
+          )}
         </div>
       </form>
     </>

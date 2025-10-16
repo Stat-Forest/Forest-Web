@@ -147,7 +147,7 @@ export const reportApi = createApi({
       }
     >({
       query: ({ organization_id, statement_id, year, column }) => ({
-        url: `/plan-items/?plan_organization=${organization_id}&column=${column}&plan_statement=${statement_id}&plan_year=${year}`,
+        url: `/plan-items/?plan__organization=${organization_id}&column=${column}&plan__statement=${statement_id}&plan__year=${year}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
