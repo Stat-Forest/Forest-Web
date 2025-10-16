@@ -10,7 +10,7 @@ function CreateReportItem() {
 
   if (reportName === "Xuquqbuzarlik") {
     return <InnersCreateReportItem />;
-  } else if (reportName === "Ko‘chat va Nihol") {
+  } else if (reportName === "Ko‘chat va Nihol" || reportName === "Urug' xarakati Reja") {
     return <PlantCreate />;
   } else {
     return <AllCreateReportItem />;
