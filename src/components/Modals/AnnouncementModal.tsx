@@ -13,6 +13,7 @@ interface AnnouncementModalProps {
     desc: string;
     image: string;
     lnk: string;
+    created_at: string;
   };
   onClose: () => void;
 }
@@ -36,14 +37,17 @@ export default function AnnouncementModal({
             className="rounded-md object-cover w-full h-48"
           />
           <p className="text-gray-600">{data.desc}</p>
-          <a
-            href={data.lnk}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            Saytga o‘tish →
-          </a>
+          <div className="flex justify-between items-center">
+            <a
+              href={data.lnk}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Saytga o‘tish →
+            </a>
+            <span className="text-gray-500 text-xs">{data.created_at}</span>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
