@@ -12,10 +12,14 @@ export const generalApi = createApi({
     getOrganizationReports: builder.query<any, {lang:string}>({
       query: ({lang}) => `/organization/?lang=${lang}`,
     }),
+    getAnnouncementsReports: builder.query<any, {lang:string}>({
+      query: ({lang}) => `/announcements/?lang=${lang}`,
+    }),
   }),
 });
 
 export const {
   // GET
   useGetOrganizationReportsQuery,
+  useGetAnnouncementsReportsQuery,
 } = generalApi;
