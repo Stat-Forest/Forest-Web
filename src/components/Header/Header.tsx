@@ -13,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/features/authSlice";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -24,17 +23,21 @@ import { setLanguage } from "@/features/languageSlice";
 import { useState } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
 
-// 🔁 Import all RTK Query APIs
+// RTK Query APIs
 import { authApi } from "@/services/authApi";
 import { reportApi } from "@/services/reportsApi";
 import { generalApi } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
 
-// 🧹 Import persistor for redux-persist
+// persistor
 import { persistor } from "@/app/store";
 
-function Header() {
+interface HeaderProps {
+  onLogout?: () => void; // ✅ tashqaridan logout paytida ishlaydigan callback
+}
+
+function Header({ onLogout }: HeaderProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,21 +47,24 @@ function Header() {
   const currentLang = useSelector((state: RootState) => state.language.lang);
 
   const handleLogout = () => {
-    // 🔐 Remove token & user from redux and localStorage
+    // 🔐 Redux auth ni tozalaymiz
     dispatch(logout());
 
-    // 🔁 Clear RTK Query caches
+    // 🔁 RTK Query cache larni tozalaymiz
     dispatch(authApi.util.resetApiState());
     dispatch(reportApi.util.resetApiState());
     dispatch(generalApi.util.resetApiState());
     dispatch(statistikApi.util.resetApiState());
     dispatch(sumApi.util.resetApiState());
 
-    // 🧹 Clear persisted redux state
+    // 🧹 Redux persist ni tozalaymiz
     persistor.purge();
 
-    // ↪️ Navigate to login
+    // ⏩ Login sahifasiga yo‘naltiramiz
     navigate("/login");
+
+    // 🔔 Agar onLogout prop kelsa, uni ishga tushiramiz
+    if (onLogout) onLogout();
   };
 
   const handleChangeLang = (lang: string) => {
