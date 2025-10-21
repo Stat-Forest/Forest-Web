@@ -133,7 +133,8 @@ function AllCreateReportItem() {
       const initialValues: Record<string, string> = {};
       allEmptyColumnsByStep[currentStep].forEach((col) => {
         if (
-          !col.title.toLowerCase().includes("tashkilot") &&
+          !col.title.toLowerCase().includes("tashkilot nomi") &&
+          !col.title.toLowerCase().includes("Названия регионов") &&
           !col.title.toLowerCase().includes("reja")
         ) {
           if (!formValues[col.id]) {
@@ -218,7 +219,7 @@ function AllCreateReportItem() {
     }
     if (
       allEmptyColumnsByStep[currentStep]?.some((col) =>
-        col.title.toLowerCase().includes("tashkilot")
+        col.title.toLowerCase().includes("tashkilot nomi") || col.title.toLowerCase().includes("Названия регионов")
       ) &&
       !selectedOrganizationId
     ) {
@@ -228,7 +229,8 @@ function AllCreateReportItem() {
     allEmptyColumnsByStep[currentStep]?.forEach((col) => {
       if (
         !col.title.toLowerCase().includes("reja") &&
-        !col.title.toLowerCase().includes("tashkilot") &&
+        !col.title.toLowerCase().includes("tashkilot nomi") &&
+        !col.title.toLowerCase().includes("Названия регионов") &&
         (!formValues[col.id] || formValues[col.id].toString().trim() === "")
       ) {
         errors.push(`"${col.fullParentChain}" uchun qiymat kiritish shart`);
@@ -245,7 +247,7 @@ function AllCreateReportItem() {
     const report_items = allColumns.map((col) => {
       const isOrganizationColumn = col.title
         .toLowerCase()
-        .includes("tashkilot");
+        .includes("tashkilot nomi") || col.title.toLowerCase().includes("Названия регионов");
       const isRejaColumn = col.title.toLowerCase().includes("reja");
 
       let rawValue: string = "";
@@ -469,7 +471,7 @@ function AllCreateReportItem() {
                     );
                   }
 
-                  if (lowerTitle.includes("tashkilot")) {
+                  if (lowerTitle.includes("tashkilot nomi") || lowerTitle.includes("Названия регионов")) {
                     return (
                       <TableRow key={col.id}>
                         <TableCell className="whitespace-normal break-words">

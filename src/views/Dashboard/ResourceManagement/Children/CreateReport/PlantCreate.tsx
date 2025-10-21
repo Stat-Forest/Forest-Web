@@ -310,7 +310,7 @@ function PlantCreate() {
     }
     if (
       allEmptyColumnsByStep[currentStep]?.some((col) =>
-        col.title.toLowerCase().includes("tashkilot nomi")
+        col.title.toLowerCase().includes("tashkilot nomi") || col.title.toLowerCase().includes("Названия регионов")
       ) &&
       !selectedOrganizationId
     ) {
@@ -337,6 +337,7 @@ function PlantCreate() {
           if (
             !col.title.toLowerCase().includes("reja") &&
             !col.title.toLowerCase().includes("tashkilot nomi") &&
+            !col.title.toLowerCase().includes("Названия регионов") &&
             (!form.values[col.id] ||
               form.values[col.id].toString().trim() === "")
           ) {
@@ -367,7 +368,7 @@ function PlantCreate() {
         return stepColumns.map((col) => {
           const isOrganizationColumn = col.title
             .toLowerCase()
-            .includes("tashkilot nomi");
+            .includes("tashkilot nomi" ) || col.title.toLowerCase().includes("Названия регионов");
           const isRejaColumn = col.title.toLowerCase().includes("reja");
 
           if (isOrganizationColumn) {
@@ -753,7 +754,7 @@ function PlantCreate() {
                           );
                         }
 
-                        if (lowerTitle.includes("tashkilot nomi")) {
+                        if (lowerTitle.includes("tashkilot nomi") || lowerTitle.includes("Названия регионов")) {
                           // ❗ faqat birinchi formda ko'rinadi
                           if (formIndex !== 0) return null;
                           return (
