@@ -4,8 +4,20 @@ interface LanguageState {
   lang: string;
 }
 
+// localStorage'dan tilni o'qish, mavjud bo'lmasa "uz" qaytarish
+const getInitialLanguage = (): string => {
+  const savedLang = localStorage.getItem("lang");
+  if (savedLang) {
+    return savedLang;
+  }
+  
+  // Agar localStorage'da til saqlanmagan bo'lsa, "uz" ni default qil
+  localStorage.setItem("lang", "uz");
+  return "uz";
+};
+
 const initialState: LanguageState = {
-  lang: localStorage.getItem("lang") || "uz",
+  lang: getInitialLanguage(),
 };
 
 export const languageSlice = createSlice({

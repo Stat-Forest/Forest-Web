@@ -89,14 +89,14 @@ function Header({ onLogout }: HeaderProps) {
   };
 
   const handleChangeLang = (lang: string) => {
-    i18n.changeLanguage(lang);
-    localStorage.setItem("lang", lang);
-    dispatch(setLanguage(lang));
+  i18n.changeLanguage(lang);
+  localStorage.setItem("lang", lang); // ✅ To'g'ri
+  dispatch(setLanguage(lang)); // ✅ To'g'ri
 
-    const currentPath = location.pathname.split("/");
-    currentPath[1] = lang;
-    navigate(currentPath.join("/"));
-  };
+  const currentPath = location.pathname.split("/");
+  currentPath[1] = lang;
+  navigate(currentPath.join("/"));
+};
 
   return (
     <>
