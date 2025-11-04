@@ -50,7 +50,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const lang = useSelector((state: RootState) => state.language.lang);
-  const { t , i18n} = useTranslation();  
+  const { t, i18n } = useTranslation();
 
   const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
@@ -120,8 +120,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       deadline: selectedPeriod,
     });
   };
-
-  console.log(selectedRow);
 
   const {
     data: rupblic,
@@ -205,7 +203,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     function filterRow(row: any): any {
       const filteredReportItems = (row.report_items || []).map(
         (reportItem: any) => {
-          // mavjud ustunlar
           let filteredColumns = reportItem.statement_columns || [];
 
           // 🔹 barcha activeLeafIds bo‘yicha bo‘sh ustunlarni qo‘shamiz
@@ -254,19 +251,229 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     }));
   }, [individualReports, activeLeafIds]);
 
+  // 🔹 Yangi: Export uchun ma'lumotlarni tayyorlash
+  const getExportData = () => {
+    if (!tableRef.current) {
+      alert("Jadval ma'lumotlari topilmadi!");
+      return null;
+    }
+
+    try {
+      // Header qatorlarini olish
+      const headerRows = tableRef.current.getHeaderRows?.() || [];
+
+      // Body ma'lumotlarini tayyorlash
+      const bodyRows = filteredRows.map((row: ReportRow, index: number) => {
+        const rowData = [index + 1]; // TR raqami
+
+        // Har bir row uchun report_items bo'yicha ma'lumotlarni yig'amiz
+        row.report_items?.forEach((reportItem: any) => {
+          reportItem.statement_columns?.forEach((col: any) => {
+            // Faqat active tabdagi columnlarni qo'shamiz
+            if (activeLeafIds.includes(col.statement_column_id)) {
+              // Agar innerlar bo'lsa, ularni qo'shamiz
+              if (col.inners && col.inners.length > 0) {
+                col.inners.forEach((inner: any) => {
+                  rowData.push(inner.value ?? "-");
+                });
+              } else {
+                rowData.push(col.value ?? "-");
+              }
+            }
+          });
+        });
+
+        return rowData;
+      });
+
+      return { headerRows, bodyRows };
+    } catch (error) {
+      console.error("Export data tayyorlashda xatolik:", error);
+      return null;
+    }
+  };
+
+  // 🔹 Yangi: To'g'ri print funksiyasi
   const handlePrint = () => {
     if (tableRef.current) {
-      const printContents = tableRef.current.getTable();
-      const printWindow = window.open("", "", "height=600,width=800");
-      if (printWindow) {
-        printWindow.document.write(
-          "<html><head><title>Hisobot</title></head><body>"
-        );
-        printWindow.document.write(printContents);
-        printWindow.document.write("</body></html>");
-        printWindow.document.close();
-        printWindow.print();
+      const printContents =
+        tableRef.current.getPrintableTable?.() || tableRef.current.getTable?.();
+
+      if (!printContents) {
+        alert("Chop etish uchun ma'lumotlar topilmadi!");
+        return;
       }
+
+      const printWindow = window.open("", "_blank", "width=1200,height=800");
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${reportName} - Hisobot</title>
+              <style>
+                body { 
+                  font-family: 'Arial', sans-serif; 
+                  margin: 25px;
+                  direction: ${i18n.dir()};
+                  color: #000;
+                }
+                table { 
+                  width: 100%; 
+                  border-collapse: collapse; 
+                  margin-bottom: 30px;
+                  font-size: 12px;
+                }
+                th, td { 
+                  border: 1px solid #000; 
+                  padding: 10px 8px; 
+                  text-align: center;
+                  vertical-align: middle;
+                }
+                th { 
+                  background-color: #f8f9fa; 
+                  font-weight: bold;
+                  font-size: 11px;
+                }
+                .print-header {
+                  text-align: center;
+                  margin-bottom: 30px;
+                  border-bottom: 3px solid #000;
+                  padding-bottom: 15px;
+                }
+                .print-title {
+                  font-size: 22px;
+                  font-weight: bold;
+                  margin-bottom: 8px;
+                  text-transform: uppercase;
+                }
+                .print-subtitle {
+                  font-size: 16px;
+                  color: #444;
+                  margin-bottom: 5px;
+                }
+                .print-date {
+                  font-size: 14px;
+                  color: #666;
+                }
+                .print-section {
+                  margin-bottom: 20px;
+                }
+                .print-section-title {
+                  font-size: 16px;
+                  font-weight: bold;
+                  margin-bottom: 10px;
+                  background-color: #f0f0f0;
+                  padding: 8px 12px;
+                  border-left: 4px solid #09B86F;
+                }
+                @media print {
+                  body { margin: 15mm; }
+                  .no-print { display: none !important; }
+                  table { page-break-inside: auto; }
+                  tr { page-break-inside: avoid; page-break-after: auto; }
+                  thead { display: table-header-group; }
+                  tfoot { display: table-footer-group; }
+                }
+                .print-actions {
+                  position: fixed;
+                  bottom: 20px;
+                  right: 20px;
+                  background: white;
+                  padding: 15px;
+                  border-radius: 8px;
+                  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                  border: 1px solid #ddd;
+                }
+                .print-btn {
+                  padding: 10px 20px;
+                  background: #09B86F;
+                  color: white;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  margin: 0 5px;
+                }
+                .print-btn.close {
+                  background: #FF5445;
+                }
+                .print-btn:hover {
+                  opacity: 0.9;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="print-header">
+                <div class="print-title">${reportName}</div>
+                <div class="print-subtitle">${activeTab}</div>
+                <div class="print-date">${new Date().toLocaleDateString(
+                  "uz-UZ",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "long",
+                  }
+                )}</div>
+              </div>
+              
+              <div class="print-section">
+                <div class="print-section-title">Hisobot ma'lumotlari</div>
+                ${printContents}
+              </div>
+
+              <div class="print-actions no-print">
+                <button onclick="window.print()" class="print-btn">
+                  ${t("print")}
+                </button>
+                <button onclick="window.close()" class="print-btn close">
+                  ${t("close")}
+                </button>
+              </div>
+
+              <script>
+                // Avtomatik print
+                setTimeout(() => {
+                  window.print();
+                }, 1000);
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      } else {
+        alert(
+          "Pop-up bloklandi. Iltimas, brauzeringizda pop-up'larni ruxsat bering."
+        );
+      }
+    }
+  };
+
+  // 🔹 Yangi: Excel export funksiyasi
+  const handleExportExcel = () => {
+    const exportData = getExportData();
+
+    if (!exportData) {
+      alert("Eksport qilish uchun ma'lumotlar topilmadi!");
+      return;
+    }
+
+    const { headerRows, bodyRows } = exportData;
+
+    if (headerRows.length === 0 || bodyRows.length === 0) {
+      alert("Eksport qilish uchun yetarli ma'lumotlar mavjud emas!");
+      return;
+    }
+
+    try {
+      const fileName = `${reportName}_${activeTab}_${new Date().toLocaleDateString(
+        "uz-UZ"
+      )}`;
+      exportToExcel(headerRows, bodyRows, fileName);
+    } catch (error) {
+      console.error("Excel export xatosi:", error);
+      alert("Excel faylni yuklab olishda xatolik yuz berdi!");
     }
   };
 
@@ -282,7 +489,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       <div className="flex justify-center items-center h-[80vh]">
         <Alert variant="destructive">
           <AlertTitle>Xatolik yuz berdi</AlertTitle>
-          <AlertDescription>Qayta urinib ko‘ring.</AlertDescription>
+          <AlertDescription>Qayta urinib ko'ring.</AlertDescription>
         </Alert>
       </div>
     );
@@ -349,27 +556,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56 mt-2 mr-2">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            const headerRows =
-                              tableRef.current?.getHeaderRows?.();
-                            const bodyRows = filteredRows.map(
-                              (row: ReportRow, index: number) => [
-                                index + 1,
-                                ...row.report_items.map(
-                                  (item: any) => item.value ?? "-"
-                                ),
-                                "✏️🗑️",
-                              ]
-                            );
-
-                            if (headerRows && bodyRows) {
-                              exportToExcel(headerRows, bodyRows);
-                            } else {
-                              alert("Jadvalni eksport qilishda xatolik!");
-                            }
-                          }}
-                        >
+                        <DropdownMenuItem onClick={handleExportExcel}>
                           {t("exportExcel")}
                         </DropdownMenuItem>
 
@@ -382,7 +569,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
                   {/* Search & Filters */}
                   <div className="flex flex-wrap gap-3 w-full md:w-auto ">
-                    <Input                    
+                    <Input
                       placeholder={`${t("item_79")}...`}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -398,7 +585,9 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       <SelectContent>
                         {regions2.map((region) => (
                           <SelectItem key={region.value} value={region.value}>
-                            {i18n.language === "uz" ? region.label : region.label2}
+                            {i18n.language === "uz"
+                              ? region.label
+                              : region.label2}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -414,7 +603,9 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       <SelectContent>
                         {deadline?.results?.length > 0 ? (
                           <>
-                            <SelectItem value=" ">{`${t("allReports")}`}</SelectItem>
+                            <SelectItem value=" ">{`${t(
+                              "allReports"
+                            )}`}</SelectItem>
                             {deadline.results.map((item: any) => (
                               <SelectItem
                                 key={item.id}
@@ -466,7 +657,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                           </>
                         ) : (
                           <div className="p-2 text-center text-muted-foreground text-sm">
-                            {t('noDeadlines')}
+                            {t("noDeadlines")}
                           </div>
                         )}
                       </SelectContent>
@@ -479,7 +670,9 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
                     />
-                    <Button onClick={handleSearchRegional}>{t("item_79")}</Button>
+                    <Button onClick={handleSearchRegional}>
+                      {t("item_79")}
+                    </Button>
                   </div>
                 </div>
 

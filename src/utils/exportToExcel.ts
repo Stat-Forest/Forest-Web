@@ -1,113 +1,109 @@
-// src/utils/exportToExcel.ts
+// utils/exportToExcel.js
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
-export const exportToExcel = (headerRows: any[][], bodyRows: any[][]) => {
-  const worksheet = XLSX.utils.aoa_to_sheet([]);
+export const exportToExcel = (headerRows, bodyRows, fileName = "report") => {
+  try {
+    // Workbook yaratish
+    const wb = XLSX.utils.book_new();
 
-  // 1. Sarlavhalarni joylash
-  headerRows.forEach((row, rowIndex) => {
-    let colIndex = 0;
+    // Header va body ma'lumotlarini birlashtirish
+    const excelData = [];
 
-    row.forEach((cell: any) => {
-      while (worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: colIndex })]) {
-        colIndex++;
-      }
-
-      const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
-
-      worksheet[cellRef] = {
-        v: cell.title,
-        t: "s",
-        s: {
-          alignment: {
-            horizontal: "center",
-            vertical: "center",
-            wrapText: true,
-          },
-          font: { bold: true },
-        },
-      };
-
-      const colSpan = cell.colSpan || 1;
-      const rowSpan = cell.rowSpan || 1;
-
-      if (colSpan > 1 || rowSpan > 1) {
-        if (!worksheet["!merges"]) worksheet["!merges"] = [];
-        worksheet["!merges"].push({
-          s: { r: rowIndex, c: colIndex },
-          e: { r: rowIndex + rowSpan - 1, c: colIndex + colSpan - 1 },
-        });
-      }
-
-      colIndex += colSpan;
+    // Header qatorlarini qo'shish
+    headerRows.forEach((headerRow) => {
+      excelData.push(headerRow);
     });
-  });
 
-  // 2. Body data yozish
-  const rowOffset = headerRows.length;
-  bodyRows.forEach((row, rIndex) => {
-    row.forEach((value, cIndex) => {
-      const ref = XLSX.utils.encode_cell({
-        r: rowOffset + rIndex,
-        c: cIndex,
-      });
-
-      worksheet[ref] = {
-        v: value,
-        t: typeof value === "number" ? "n" : "s",
-        s: {
-          alignment: {
-            horizontal: "center",
-            vertical: "center",
-            wrapText: true,
-          },
-        },
-      };
+    // Body qatorlarini qo'shish
+    bodyRows.forEach((bodyRow) => {
+      excelData.push(bodyRow);
     });
-  });
 
-  // 3. Border
-  const maxCols = Math.max(
-    ...[...headerRows.map((r) => r.length), ...bodyRows.map((r) => r.length)]
-  );
-  const totalRows = rowOffset + bodyRows.length;
+    // Worksheet yaratish
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-  const range = {
-    s: { r: 0, c: 0 },
-    e: { r: totalRows - 1, c: maxCols - 1 },
-  };
+    // Styl uchun cell range
+    const range = XLSX.utils.decode_range(ws["!ref"]);
 
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell = worksheet[XLSX.utils.encode_cell({ r: R, c: C })];
-      if (!cell) continue;
-      if (!cell.s) cell.s = {};
-      cell.s.border = {
-        top: { style: "thin", color: { rgb: "000000" } },
-        bottom: { style: "thin", color: { rgb: "000000" } },
-        left: { style: "thin", color: { rgb: "000000" } },
-        right: { style: "thin", color: { rgb: "000000" } },
-      };
+    // Header qatorlariga style berish
+    for (let row = range.s.r; row < headerRows.length; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (ws[cellAddress]) {
+          // Header style
+          if (!ws[cellAddress].s) {
+            ws[cellAddress].s = {};
+          }
+          ws[cellAddress].s = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "09B86F" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } },
+            },
+          };
+        }
+      }
     }
+
+    // Body qatorlariga style berish
+    for (let row = headerRows.length; row <= range.e.r; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (ws[cellAddress]) {
+          if (!ws[cellAddress].s) {
+            ws[cellAddress].s = {};
+          }
+          ws[cellAddress].s = {
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } },
+            },
+            alignment: { horizontal: "center", vertical: "center" },
+          };
+        }
+      }
+    }
+
+    // Column enlarini sozlash
+    const colWidths = [];
+    if (excelData[0]) {
+      excelData[0].forEach((_, colIndex) => {
+        let maxLength = 15; // Minimal kenglik
+        excelData.forEach((row) => {
+          if (row[colIndex] && row[colIndex].toString().length > maxLength) {
+            maxLength = row[colIndex].toString().length;
+          }
+        });
+        colWidths.push({ wch: Math.min(maxLength + 2, 50) }); // Maksimal 50
+      });
+      ws["!cols"] = colWidths;
+    }
+
+    // Worksheetni workbookga qo'shish
+    XLSX.utils.book_append_sheet(wb, ws, "Hisobot");
+
+    // Faylni yuklab olish
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${fileName.replace(/[^a-z0-9]/gi, "_")}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error("Excel export error:", error);
+    throw new Error("Excel faylni yaratishda xatolik yuz berdi");
   }
-
-  // 4. Style
-  worksheet["!cols"] = new Array(maxCols).fill({ wch: 25 });
-  worksheet["!rows"] = new Array(totalRows).fill({ hpt: 40 });
-
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Hisobot");
-
-  const buffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-    cellStyles: true,
-  });
-
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-
-  saveAs(blob, "hisobot.xlsx");
 };
