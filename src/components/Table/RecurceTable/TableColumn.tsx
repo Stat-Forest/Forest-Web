@@ -1,4 +1,3 @@
-// TableColumn.tsx
 import {
   Fragment,
   forwardRef,
@@ -63,7 +62,6 @@ const TableColumn = forwardRef(
     }: any,
     ref
   ) => {
-    // Tüm hook'ları bileşenin en başında çağırın
     const tableRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
@@ -75,8 +73,36 @@ const TableColumn = forwardRef(
       useAcceptReportMutation();
     const [acceptedReports, setAcceptedReports] = useState(new Set());
 
+    // 🔹 Yangi: Print uchun to'liq jadvalni olish
+    const getPrintableTable = () => {
+      return tableRef.current?.innerHTML;
+    };
+
+    // 🔹 Yangi: Header qatorlarini olish
+    const getHeaderRows = () => {
+      const headerRows = renderHeaderRows();
+
+      // Header ma'lumotlarini tekis massivga aylantiramiz
+      const flatHeaders: string[][] = [];
+
+      headerRows.forEach((row) => {
+        const flatRow: string[] = [];
+        row.forEach((cell: any) => {
+          // Har bir cellni uning colspan miqdorida takrorlaymiz
+          for (let i = 0; i < cell.colSpan; i++) {
+            flatRow.push(cell.title);
+          }
+        });
+        flatHeaders.push(flatRow);
+      });
+
+      return flatHeaders;
+    };
+
     useImperativeHandle(ref, () => ({
       getTable: () => tableRef.current?.innerHTML,
+      getPrintableTable,
+      getHeaderRows,
     }));
 
     const getMaxDepth = (items: any[]): number => {
@@ -299,8 +325,9 @@ const TableColumn = forwardRef(
                 <SelectContent>
                   {periods.map((period) => (
                     <SelectItem key={period.value} value={period.value}>
-                      {i18n.language === "uz" ? period.label_uz : period.label_ru}
-
+                      {i18n.language === "uz"
+                        ? period.label_uz
+                        : period.label_ru}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -318,7 +345,9 @@ const TableColumn = forwardRef(
                 <SelectContent>
                   {statuses.map((status) => (
                     <SelectItem key={status.value} value={status.value}>
-                      {i18n.language === "uz" ? status.label_uz : status.label_ru}
+                      {i18n.language === "uz"
+                        ? status.label_uz
+                        : status.label_ru}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -521,7 +550,7 @@ const TableColumn = forwardRef(
                           rowSpan={maxDepth}
                           className="border border-black px-2 py-1 text-center"
                         >
-                        №
+                          №
                         </th>
                       )}
                       {row.map((cell: any, cellIndex: number) => (
@@ -635,7 +664,7 @@ const TableColumn = forwardRef(
                               {Array.from({ length: maxInners }).map(
                                 (_, innerIndex) => (
                                   <tr key={innerIndex}>
-                                    {/* T/R bo‘sh, faqat birinchi qatorda chiqsin */}
+                                    {/* T/R bo'ish, faqat birinchi qatorda chiqsin */}
                                     {innerIndex === 0 && (
                                       <td
                                         className="border border-black px-2 py-1 text-center"
@@ -655,7 +684,7 @@ const TableColumn = forwardRef(
                                       )
                                     )}
 
-                                    {/* Amallar ustuni bo‘sh */}
+                                    {/* Amallar ustuni bo'sh */}
                                     {innerIndex === 0 && (
                                       <td
                                         className="border border-black px-2 py-1 text-center"
