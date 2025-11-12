@@ -171,5 +171,6 @@
   "data_loading_error_3": "Ошибка загрузки организаций!",
   "loading": "Загрузка...",
   "noOrganizationsFound": "Организация не найдена",
-  "noDataFound": "Данные не найдены"
+  "noDataFound": "Данные не найдены",
+  "user_role": "Роль пользователя"
 }

@@ -188,5 +188,6 @@
   "noThingsFound": "Hech narsa topilmadi",
   "report_created_successfully": "Hisobot muvaffaqiyatli yaratildi!",
   "must_fill_all": "Barcha ustunlarga qiymat kiriting!",
-  "must_select_all": "Iltimos, barcha maydonlarni to‘ldiring!"
+  "must_select_all": "Iltimos, barcha maydonlarni to‘ldiring!",
+  "user_role": "Foydalanuvchi roli"
 }
