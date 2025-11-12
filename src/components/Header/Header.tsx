@@ -42,8 +42,6 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 import { Card, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
 
 // persistor
 import { persistor } from "@/app/store";
@@ -135,7 +133,7 @@ function Header({ onLogout }: HeaderProps) {
                   </div>
                 ) : data?.results?.length ? (
                   <div className="space-y-4 overflow-y-auto flex flex-col">
-                    {data.results.map((notification: any, index: number) => (
+                    {data.results.map((notification: any) => (
                       <Card
                         key={notification.id}
                         className="hover:shadow-lg transition-shadow duration-300"
@@ -144,15 +142,6 @@ function Header({ onLogout }: HeaderProps) {
                           <p className="text-gray-700 whitespace-pre-line leading-relaxed">
                             {notification.text}
                           </p>
-                          <Separator className="my-2" />
-                          <div className="flex justify-between items-center">
-                            <Badge variant="secondary" className="text-sm">
-                              {notification.date}
-                            </Badge>
-                            <span className="text-gray-400 text-sm">
-                              #{index + 1}
-                            </span>
-                          </div>
                         </CardContent>
                       </Card>
                     ))}
