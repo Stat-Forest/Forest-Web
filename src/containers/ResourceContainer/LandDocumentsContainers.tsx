@@ -1,0 +1,299 @@
+"use client";
+
+import { useGetLandDocumentsReportsQuery } from "@/services/generalApi";
+import { Loader } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/utils/useDebounce";
+
+function LandDocumentsContainers() {
+  const { t } = useTranslation();
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [documentType, setDocumentType] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const {
+    data: landDocumentsData,
+    isLoading,
+    isFetching,
+    isError,
+  } = useGetLandDocumentsReportsQuery({
+    ordering: "date_created",
+    page,
+    per_page: perPage,
+    search: debouncedSearchTerm,
+  });
+
+  // ✅ To‘liq ishlaydigan download funksiyasi
+  const handleDownload = async (doc: any) => {
+    if (!doc.file_url) {
+      alert("Fayl manzili topilmadi!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("access_token");
+
+      const response = await fetch(doc.file_url, {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const fileExtension = doc.file_url.split(".").pop()?.split("?")[0];
+      const fileName = `${doc.name || "document"}.${fileExtension || "pdf"}`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Faylni yuklab bo‘lmadi. Fayl yangi oynada ochiladi.");
+      window.open(doc.file_url, "_blank");
+    }
+  };
+
+  // Filtlarni o‘zgartirganda sahifa 1 ga qaytadi
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, documentType]);
+
+  const totalPages = Math.ceil((landDocumentsData?.count || 0) / perPage);
+  const startItem = (page - 1) * perPage + 1;
+  const endItem = Math.min(page * perPage, landDocumentsData?.count || 0);
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setDocumentType("");
+    setPage(1);
+  };
+
+  const isAnyFilterActive = searchTerm || documentType;
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <Button
+          key={i}
+          onClick={() => setPage(i)}
+          variant={page === i ? "default" : "outline"}
+          className={`mx-1 min-w-[40px] ${
+            page === i ? "bg-blue-600 text-white" : ""
+          }`}
+          disabled={isFetching}
+        >
+          {i}
+        </Button>
+      );
+    }
+
+    return pages;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return <div className="text-red-500 text-center p-4">{t("error")}</div>;
+  }
+
+  return (
+    <div className="w-full px-5 pb-10">
+      {/* 🔍 Filter */}
+      <div className="my-5 flex items-center gap-3 flex-wrap">
+        <Input
+          type="text"
+          placeholder={`${t("search")}...`}
+          className="w-[260px] text-xl min-h-[40px] border-black"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        <Button
+          onClick={handleClearFilters}
+          variant="outline"
+          disabled={!isAnyFilterActive}
+          className="min-h-[40px]"
+        >
+          {t("reset")}
+        </Button>
+
+        <div className="ml-auto">
+          <Button className="bg-blue-600 text-white hover:bg-blue-700 min-h-[40px]">
+            {t("new_document")}
+          </Button>
+        </div>
+      </div>
+
+      <div className="w-full border border-[silver] rounded-xl px-3 py-5">
+        <div className="mb-3 text-sm text-gray-600">
+          {t("totalRecords", { count: landDocumentsData?.count || 0 })}
+          {landDocumentsData?.results?.length > 0 && (
+            <span> ({t("shown", { count: startItem, count2: endItem })})</span>
+          )}
+        </div>
+
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow className="bg-[#eaeaea] h-[50px]">
+              <TableHead className="w-[20%] text-lg text-[#717171] text-left border-none pl-2 rounded-tl-lg rounded-bl-lg">
+                {t("name")}
+              </TableHead>
+              <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+                {t("date")}
+              </TableHead>
+              <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+                {t("document_type")}
+              </TableHead>
+              <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+                {t("organization")}
+              </TableHead>
+              <TableHead className="text-right pr-2 text-[#717171] text-lg w-[20%] border-none rounded-tr-lg rounded-br-lg">
+                {t("actions")}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {landDocumentsData?.results?.map((doc: any) => (
+              <TableRow key={doc.id} className="h-[50px] hover:bg-gray-100">
+                <TableCell className="text-lg font-[300] border-none">
+                  {doc.name}
+                </TableCell>
+                <TableCell className="text-base font-[300] border-none">
+                  {doc.date}
+                </TableCell>
+                <TableCell className="text-base font-[300] border-none">
+                  {doc.document_type_display}
+                </TableCell>
+                <TableCell className="text-base font-[300] border-none">
+                  {doc.organization_name || doc.organization}
+                </TableCell>
+                <TableCell className="text-right text-base font-[400] border-none">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(doc.file_url, "_blank")}
+                      disabled={!doc.file_url}
+                    >
+                      {t("view")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(doc)}
+                      disabled={!doc.file_url}
+                    >
+                      {t("download")}
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {/* 📄 Pagination */}
+        {landDocumentsData?.results?.length > 0 ? (
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
+            <div className="text-sm text-gray-600">
+              {t("records", {
+                start: startItem,
+                end: endItem,
+                total: landDocumentsData?.count || 0,
+              })}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handlePrevPage}
+                disabled={page === 1 || isFetching}
+                variant="outline"
+                size="sm"
+              >
+                {t("before")}
+              </Button>
+
+              <div className="flex items-center">{renderPageNumbers()}</div>
+
+              <Button
+                onClick={handleNextPage}
+                disabled={page >= totalPages || isFetching}
+                variant="outline"
+                size="sm"
+              >
+                {t("next")}
+              </Button>
+            </div>
+
+            <div className="text-sm text-gray-600">
+              {t("page")} {page} / {totalPages}
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-40">
+            <h1 className="text-gray-500">
+              {isAnyFilterActive ? t("noDataFound") : t("noDataAvailable")}
+            </h1>
+          </div>
+        )}
+      </div>
+
+      {isFetching && !isLoading && (
+        <div className="flex justify-center items-center mt-4">
+          <span className="text-[#09B86F]">{t("loading")}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default LandDocumentsContainers;

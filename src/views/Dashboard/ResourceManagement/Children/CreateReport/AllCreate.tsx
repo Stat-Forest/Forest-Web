@@ -138,7 +138,7 @@ function AllCreateReportItem() {
           !col.title.toLowerCase().includes("reja")
         ) {
           if (!formValues[col.id]) {
-            initialValues[col.id] = "1";
+            initialValues[col.id] = "";
           }
         }
       });

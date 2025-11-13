@@ -18,6 +18,13 @@ export const generalApi = createApi({
     getNotificationReports: builder.query<any, { lang: string }>({
       query: ({ lang }) => `/notifications/?lang=${lang}`,
     }),
+    getLandDocumentsReports: builder.query<
+      any,
+      { ordering: string; page: number; per_page: number; search: string }
+    >({
+      query: ({ ordering, page, per_page, search }) =>
+        `/land-documents/?ordering=${ordering}&page=${page}&per_page=${per_page}&search=${search}`,
+    }),
   }),
 });
 
@@ -26,4 +33,5 @@ export const {
   useGetOrganizationReportsQuery,
   useGetAnnouncementsReportsQuery,
   useGetNotificationReportsQuery,
+  useGetLandDocumentsReportsQuery,
 } = generalApi;
