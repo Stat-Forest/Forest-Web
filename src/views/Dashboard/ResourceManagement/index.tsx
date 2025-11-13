@@ -6,6 +6,7 @@ import { RootState } from "@/app/store";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setReportName } from "@/features/reportSlice";
+import LandDocumentsContainers from "@/containers/ResourceContainer/LandDocumentsContainers";
 
 function ResourceManagement() {
   const { id } = useParams<{ id: string }>();
@@ -47,7 +48,13 @@ function ResourceManagement() {
         </div>
       </div>
 
-      <ResourceContainer reportName={childTitle} />
+      {childTitle == "Yer hujjatlarini kiritish" ||
+      id == "05ec4fd3-6193-4211-9850-f3991be60a62" ||
+      childTitle == "Ввод земельных документов" ? (
+        <LandDocumentsContainers />
+      ) : (
+        <ResourceContainer reportName={childTitle} />
+      )}
     </div>
   );
 }
