@@ -2,7 +2,7 @@ import i18n from "@/i18n";
 import { useDispatch } from "react-redux";
 import { setLanguage } from "@/features/languageSlice";
 import { useLocation, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.svg";
+import logo from "@/assets/logo.png";
 import {
   Select,
   SelectContent,
