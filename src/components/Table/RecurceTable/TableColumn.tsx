@@ -445,7 +445,7 @@ const TableColumn = forwardRef(
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
                   {(user_role === "tashkilot_rahbari" ||
-                    user_role === "bolim_admin" ) && (
+                    user_role === "bolim_admin") && (
                     <Button
                       onClick={() => setIsCancelModalOpen(true)}
                       className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
@@ -453,7 +453,7 @@ const TableColumn = forwardRef(
                       {t("recycle")}
                     </Button>
                   )}
-                  {(user_role == "tashkilot_rahbari" ) && (
+                  {user_role == "tashkilot_rahbari" && (
                     <Button
                       onClick={async () => {
                         if (!selectedRow?.id) {
@@ -480,7 +480,7 @@ const TableColumn = forwardRef(
                     </Button>
                   )}
 
-                  {(user_role == "bolim_admin" ) && (
+                  {user_role == "bolim_admin" && (
                     <Button
                       onClick={async () => {
                         if (!selectedRow?.id) {

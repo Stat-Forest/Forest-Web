@@ -28,9 +28,9 @@ function Auth() {
             © 2025 "{t('compny_name')}" {t("auth_bottom")}
             <NavLink
               className={"text-[#09B86F] px-2"}
-              to={"tel:+998 71 207 07 70"}
+              to={"tel:+998 71 207 88 77 (1010)"}
             >
-              +998 71 207 07 70 ({t('phone_extension')}: 1073)
+              +998 71 207 88 77 ({t('phone_extension')}: 1010)
             </NavLink>
           </span>
         </div>
