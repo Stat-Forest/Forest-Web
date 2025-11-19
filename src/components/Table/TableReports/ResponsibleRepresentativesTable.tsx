@@ -72,7 +72,7 @@ function ResponsibleRepresentativesTable({
               {item?.organization_name || "-"}
             </TableCell>
             <TableCell className="w-[18%] text-base font-[300] border-none">
-              {item?.statments_name || "-"}
+              {item?.statement_name || "-"}
             </TableCell>
             <TableCell className="w-[10%] text-base font-[300] border-none">
               {item?.nationality || "-"}
