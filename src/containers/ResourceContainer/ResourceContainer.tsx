@@ -59,12 +59,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [activeTab, setActiveTab] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
+  //@ts-ignore
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedOrganizationReport, setSelectedOrganizationReport] = useState("");
   const [selectedPeriodReport, setSelectedPeriodReport] = useState("");
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  //@ts-ignore
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
@@ -82,18 +84,18 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     { statementId: id || "", lang, isUser: "" },
     { skip: !id }
   );
-
   const { data: allReports = [], isLoading: isAllReportLoading } = useGetAllReportsQuery(
     id
       ? {
         statement: id,
-        status: selectedStatusReport ? `status=${selectedStatusReport}` : "",
-        organization__region: selectedOrganizationReport || undefined,
-        statement__period: selectedPeriodReport || undefined,
-        search: searchTermReport || undefined,
+        status: selectedStatusReport || "",
+        organization__region: selectedOrganizationReport || "",
+        statement__period: selectedPeriodReport || "",
+        search: searchTermReport || "",
       }
       : skipToken
   );
+
 
   const [getRegionalReport, { data: tableRowsData = [], isLoading: isRowsLoading, isFetching: isRowsFetching }] =
     useLazyGetReganalReportQuery();
@@ -315,10 +317,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const handleSearchRegional = () => {
     getRegionalReport({
       statement: id || "",
-      region: selectedRegion || undefined,
-      deadline: selectedPeriod || undefined,
+      region: selectedRegion || "",
+      deadline: selectedPeriod || "",
     });
   };
+
 
   if (isLoading) {
     return (
@@ -444,7 +447,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     ref={tableRef}
                     data={col.children}
                     rows={filteredRows}
-                    onRowClick={(row) => {
+                    onRowClick={(row:any) => {
                       const normalized = {
                         ...row,
                         report_items: (row.report_items || []).map((item: any) => ({
