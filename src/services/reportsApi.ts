@@ -85,21 +85,25 @@ export const reportApi = createApi({
         url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}`,
         method: "GET",
       }),
+      providesTags: ["Reports"],
     }),
     getPlanColumnsReport: builder.query<any, { search: string }>({
       query: ({ search }) => ({
         url: `/plan-columns/?statement=${search}`,
         method: "GET",
       }),
+      providesTags: ["Reports"],
     }),
     getPlantsReport: builder.query<any, { statement: string; lang: string; parent: string; page: number; perPage: number; }>({
       query: ({ statement, lang, parent, page, perPage }) => ({
         url: `/plants/?statement=${statement}&lang=${lang}&parent=${parent}&page=${page}&per_page=${perPage}`,
         method: "GET",
       }),
+      providesTags: ["Reports"],
     }),
     getRepoblicReport: builder.query<any, void>({
       query: () => ({ url: `/republic/`, method: "GET" }),
+      providesTags: ["Reports"],
     }),
     getReganalReport: builder.query<
       any,
@@ -109,6 +113,7 @@ export const reportApi = createApi({
         url: `/regional/?statement=${statement}&region=${region}&deadline=${deadline}`,
         method: "GET",
       }),
+      providesTags: ["Reports"],
     }),
     getPlanListReport: builder.query<
       any,
@@ -177,6 +182,7 @@ export const reportApi = createApi({
         method: "POST",
         body: newReport,
       }),
+      invalidatesTags: ["Reports"],
     }),
     sendReport: builder.mutation({
       query: ({ id }) => ({
@@ -184,6 +190,7 @@ export const reportApi = createApi({
         method: "POST",
         body: { id },
       }),
+      invalidatesTags: ["Reports"],
     }),
     acceptReport: builder.mutation({
       query: ({ id }) => ({
@@ -191,6 +198,7 @@ export const reportApi = createApi({
         method: "POST",
         body: { id },
       }),
+      invalidatesTags: ["Reports"],
     }),
     cancelReport: builder.mutation({
       query: ({ id, cancel_reason }) => ({
@@ -198,6 +206,7 @@ export const reportApi = createApi({
         method: "POST",
         body: { id, cancel_reason },
       }),
+      invalidatesTags: ["Reports"],
     }),
     PlanCreate: builder.mutation({
       query: (payload) => ({
@@ -205,6 +214,7 @@ export const reportApi = createApi({
         method: "POST",
         body: payload,
       }),
+      invalidatesTags: ["Reports"],
     }),
     plantCreate: builder.mutation({
       query: (payload) => ({
@@ -222,6 +232,7 @@ export const reportApi = createApi({
         method: "PUT",
         body: rest,
       }),
+      invalidatesTags: ["Reports"], 
     }),
 
     updateReportStatus: builder.mutation({
@@ -230,6 +241,7 @@ export const reportApi = createApi({
         method: "PUT",
         body: { status },
       }),
+      invalidatesTags: ["Reports"],
     }),
     updatePlan: builder.mutation<any, { id: string; data: any }>({
       query: ({ id, data }) => ({
@@ -245,6 +257,7 @@ export const reportApi = createApi({
         method: "PUT",
         body: { summary },
       }),
+      invalidatesTags: ["Reports"],
     }),
     updateReportOwner: builder.mutation({
       query: ({ id, ownerId }) => ({
@@ -252,6 +265,7 @@ export const reportApi = createApi({
         method: "PUT",
         body: { owner_id: ownerId },
       }),
+      invalidatesTags: ["Reports"], 
     }),
 
     // ==== 🟥 DELETE endpoint ====
@@ -260,6 +274,7 @@ export const reportApi = createApi({
         url: `/${id}/delete/`,
         method: "DELETE",
       }),
+      invalidatesTags: ["Reports"],
     }),
     deletePlan: builder.mutation({
       query: (id: string | number) => ({
