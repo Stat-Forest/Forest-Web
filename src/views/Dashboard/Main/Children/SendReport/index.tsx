@@ -27,7 +27,7 @@ function MainDetail() {
     error: reportsError,
   } = useGetAllReportsQuery({
     statement: selectedStatement,
-    status: `status=saved`,
+    status: `status=sent`,
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,
