@@ -31,7 +31,7 @@ function ReturnedReport() {
     error: reportsError,
   } = useGetAllReportsQuery({
     statement: selectedStatement,
-    status: `status=saved`,
+    status: `status=cancelled`,
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,

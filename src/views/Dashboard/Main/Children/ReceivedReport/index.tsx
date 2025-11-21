@@ -27,7 +27,7 @@ function ReceivedReport() {
     error: reportsError,
   } = useGetAllReportsQuery({
     statement: selectedStatement,
-    status: `status=saved`,
+    status: `status=accepted`,
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,
