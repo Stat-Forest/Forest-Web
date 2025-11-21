@@ -80,7 +80,7 @@ function AllCreateReportItem() {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
-  } = useGetOrganizationReportsQuery({lang});
+  } = useGetOrganizationReportsQuery({ lang });
 
   const {
     data: tableHeadersData = [],
@@ -202,24 +202,84 @@ function AllCreateReportItem() {
     };
   }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, dispatch]);
 
-  const [createReportItem, { isLoading: isSubmitting }] =
-    useCreateReportMutation();
+  const [
+    createReportItem,
+    { isLoading: isSubmitting, error: createReportError },
+  ] = useCreateReportMutation();
+
+  // 🔹 ERROR LARNI BOSHQARISH
+  useEffect(() => {
+    const errors: string[] = [];
+
+    // Backend xatoliklarini qo'shish
+    if (createReportError) {
+      const errorData = (createReportError as any)?.data;
+
+      if (typeof errorData === "string") {
+        errors.push(errorData);
+      } else if (errorData?.message) {
+        errors.push(errorData.message);
+      } else if (
+        errorData?.non_field_errors &&
+        Array.isArray(errorData.non_field_errors)
+      ) {
+        errors.push(...errorData.non_field_errors);
+      } else if (errorData && typeof errorData === "object") {
+        // Field xatoliklarini formatlash
+        Object.keys(errorData).forEach((field) => {
+          if (Array.isArray(errorData[field])) {
+            errorData[field].forEach((errMsg: string) => {
+              errors.push(`${field}: ${errMsg}`);
+            });
+          } else if (typeof errorData[field] === "string") {
+            errors.push(`${field}: ${errorData[field]}`);
+          }
+        });
+      } else {
+        errors.push("Ma'lumotlarni yuborishda noma'lum xatolik yuz berdi");
+      }
+    }
+
+    // Boshqa API xatoliklari
+    if (headersError) {
+      errors.push("Ustunlar ma'lumotlarini yuklashda xatolik yuz berdi");
+    }
+
+    if (orgError) {
+      errors.push("Tashkilotlar ma'lumotlarini yuklashda xatolik yuz berdi");
+    }
+
+    if (deadlineError) {
+      errors.push("Deadline ma'lumotlarini yuklashda xatolik yuz berdi");
+    }
+
+    if (errors.length > 0) {
+      setFormErrors(errors);
+    }
+  }, [createReportError, headersError, orgError, deadlineError]);
 
   const handleInputChange = (id: string, value: string) => {
     setFormValues((prev) => ({ ...prev, [id]: value }));
+    // Agar xatoliklar bo'lsa va foydalanuvchi qiymat o'zgartirsa, xatoliklarni tozalash
+    if (formErrors.length > 0) {
+      setFormErrors([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormErrors([]);
 
+    // Frontend validatsiya
     const errors: string[] = [];
     if (!selectedDeadlineId) {
       errors.push("Iltimos, deadline tanlang");
     }
     if (
-      allEmptyColumnsByStep[currentStep]?.some((col) =>
-        col.title.toLowerCase().includes("tashkilot nomi") || col.title.toLowerCase().includes("Названия регионов")
+      allEmptyColumnsByStep[currentStep]?.some(
+        (col) =>
+          col.title.toLowerCase().includes("tashkilot nomi") ||
+          col.title.toLowerCase().includes("Названия регионов")
       ) &&
       !selectedOrganizationId
     ) {
@@ -245,9 +305,9 @@ function AllCreateReportItem() {
     const allColumns = allEmptyColumnsByStep.flat();
 
     const report_items = allColumns.map((col) => {
-      const isOrganizationColumn = col.title
-        .toLowerCase()
-        .includes("tashkilot nomi") || col.title.toLowerCase().includes("Названия регионов");
+      const isOrganizationColumn =
+        col.title.toLowerCase().includes("tashkilot nomi") ||
+        col.title.toLowerCase().includes("Названия регионов");
       const isRejaColumn = col.title.toLowerCase().includes("reja");
 
       let rawValue: string = "";
@@ -277,26 +337,13 @@ function AllCreateReportItem() {
       setCurrentStep(0);
       setFormErrors([]);
     } catch (err: any) {
-      const errorMessage =
-        err?.data?.message ||
-        err?.message ||
-        "Ma'lumotlarni yuborishda xatolik yuz berdi";
-      setFormErrors((prev) => [...prev, errorMessage]);
+      // Error useEffect da qayta ishlanadi, shuning uchun bu yerda hech narsa qilish shart emas
       console.error("Yuborishda xatolik:", err);
     }
   };
 
   if (isHeaderLoading || isOrgLoading || deadlineLoading)
     return <p className="p-4 text-lg">Yuklanmoqda...</p>;
-  if (headersError || orgError || deadlineError)
-    return (
-      <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi</p>
-        <p className="text-sm">
-          {String(deadlineError || headersError || orgError)}
-        </p>
-      </div>
-    );
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
   const totalSteps = allEmptyColumnsByStep.length;
@@ -331,11 +378,15 @@ function AllCreateReportItem() {
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
+        {/* ✅ BARCHA XATOLIKLARNI KO'RSATISH */}
         {formErrors.length > 0 && (
-          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-            <ul>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <h3 className="font-bold text-lg mb-2">Xatoliklar:</h3>
+            <ul className="list-disc list-inside space-y-1">
               {formErrors.map((error, idx) => (
-                <li key={idx}>{error}</li>
+                <li key={idx} className="text-sm">
+                  {error}
+                </li>
               ))}
             </ul>
           </div>
@@ -471,7 +522,10 @@ function AllCreateReportItem() {
                     );
                   }
 
-                  if (lowerTitle.includes("tashkilot nomi") || lowerTitle.includes("Названия регионов")) {
+                  if (
+                    lowerTitle.includes("tashkilot nomi") ||
+                    lowerTitle.includes("Названия регионов")
+                  ) {
                     return (
                       <TableRow key={col.id}>
                         <TableCell className="whitespace-normal break-words">
@@ -512,6 +566,13 @@ function AllCreateReportItem() {
                             handleInputChange(col.id, e.target.value)
                           }
                           required
+                          className={
+                            formErrors.some((err) =>
+                              err.includes(col.fullParentChain)
+                            )
+                              ? "border-red-500"
+                              : ""
+                          }
                         />
                       </TableCell>
                     </TableRow>
