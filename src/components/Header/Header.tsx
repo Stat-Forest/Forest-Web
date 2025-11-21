@@ -45,6 +45,7 @@ import { Card, CardContent } from "../ui/card";
 
 // persistor
 import { persistor } from "@/app/store";
+import { NavLink } from "react-router-dom";
 
 interface HeaderProps {
   onLogout?: () => void; // ✅ tashqaridan logout paytida ishlaydigan callback
@@ -87,19 +88,29 @@ function Header({ onLogout }: HeaderProps) {
   };
 
   const handleChangeLang = (lang: string) => {
-  i18n.changeLanguage(lang);
-  localStorage.setItem("lang", lang); // ✅ To'g'ri
-  dispatch(setLanguage(lang)); // ✅ To'g'ri
+    i18n.changeLanguage(lang);
+    localStorage.setItem("lang", lang); // ✅ To'g'ri
+    dispatch(setLanguage(lang)); // ✅ To'g'ri
 
-  const currentPath = location.pathname.split("/");
-  currentPath[1] = lang;
-  navigate(currentPath.join("/"));
-};
+    const currentPath = location.pathname.split("/");
+    currentPath[1] = lang;
+    navigate(currentPath.join("/"));
+  };
 
   return (
     <>
       <div className="h-[70px] shadow flex items-center justify-between px-3">
-        <div></div>
+        <div>
+          <span className="text-[18px]">
+            {t("technical_inquiries")}:
+            <NavLink
+              className={"text-[#09B86F] px-2"}
+              to={"tel:+998 71 207 88 77 (1010)"}
+            >
+              +998 71 207 88 77 ({t("phone_extension")}: 1010)
+            </NavLink>
+          </span>
+        </div>
 
         <div className="flex items-center gap-3">
           {/* Notification Button with Sheet */}
