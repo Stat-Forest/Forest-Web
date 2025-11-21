@@ -172,5 +172,6 @@
   "loading": "Загрузка...",
   "noOrganizationsFound": "Организация не найдена",
   "noDataFound": "Данные не найдены",
-  "user_role": "Роль пользователя"
+  "user_role": "Роль пользователя",
+  "technical_inquiries": "По техническим вопросам"
 }
