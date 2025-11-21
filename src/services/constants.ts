@@ -32,7 +32,6 @@ export const statuses = [
 ];
 
 export const regions2 = [
-  { value: "all", label: "Barcha regionlar", label2: "Все регионы" },
   { value: "tashkent", label: "Toshkent", label2: "Ташкент" },
   { value: "andijon", label: "Andijon", label2: "Андижан" },
   { value: "fargona", label: "Fargʻona", label2: "Фергана" },
