@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, MessageSquareWarning, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   useAcceptReportMutation,
@@ -441,7 +441,17 @@ const TableColumn = forwardRef(
         {selectedRow && (
           <>
             <div className="flex items-center justify-between my-5">
-              <div className="flex items-center gap-2"></div>
+              <div className="flex items-center gap-2">
+                {selectedRow.status === "cancelled" && (
+                  <span className="text-xl flex items-center gap-2 font-[500]">
+                    <MessageSquareWarning color="#FF5445" size={36} />{" "}
+                    Qaytarilish sababi:{" "}
+                    <span className="text-red-500">
+                      {selectedRow?.cancel_reason || "Noma'lum"}
+                    </span>
+                  </span>
+                )}
+              </div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
                   {(user_role === "tashkilot_rahbari" ||
