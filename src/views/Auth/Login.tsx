@@ -8,25 +8,13 @@ import { authApi } from "@/services/authApi";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Credentials, EimzoKey } from "@/types/auth";
 
 declare global {
   interface Window {
     EIMZOClient: any;
     dates: any;
   }
-}
-
-interface EimzoKey {
-  id: string;
-  value: string;
-  label: string;
-  disabled: boolean;
-  vo: any;
-}
-
-interface Credentials {
-  email: string;
-  password: string;
 }
 
 function Login() {
@@ -37,11 +25,9 @@ function Login() {
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
-
-  // yangi: password maydoni ko'rinishi uchun state
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  // E-IMZO klientini ishga tushirish
+  // -------- E-IMZO START ---------------
   useEffect(() => {
     if (window.EIMZOClient) {
       initializeEimzo();
@@ -54,7 +40,6 @@ function Login() {
     setIsLoading(true);
     setError(null);
 
-    // E-IMZO API kalitlari
     window.EIMZOClient.API_KEYS = [
       "localhost",
       "96D0C1491615C82B9A54D9989779DF825B690748224C2B04F500F370D51827CE2644D8D4A82C18184D73AB8530BB8ED537269603F61DB0D03D2104ABF789970B",
@@ -66,13 +51,12 @@ function Login() {
       "57081C44AC4FD8FA104A4A4E359524F6632FB589618B4C9A380D176CEC4789407135BE5C4417898FA172596031A95562B4B021C67BFE53D4FB1B53B811E6DF17",
     ];
 
-    // Versiyani tekshirish
     window.EIMZOClient.checkVersion(
       (major: number, minor: number) => {
-        const requiredVersion = 3 * 100 + 37; // 3.37
-        const currentVersion = major * 100 + minor;
+        const required = 3 * 100 + 37;
+        const current = major * 100 + minor;
 
-        if (currentVersion < requiredVersion) {
+        if (current < required) {
           setError(t("eimzoError1"));
           setIsLoading(false);
         } else {
@@ -80,11 +64,7 @@ function Login() {
         }
       },
       (r: any) => {
-        if (r) {
-          setError(r);
-        } else {
-          setError(t("eimzoError2"));
-        }
+        setError(r || t("eimzoError2"));
         setIsLoading(false);
       }
     );
@@ -94,11 +74,7 @@ function Login() {
     window.EIMZOClient.installApiKeys(
       () => loadEimzoKeys(),
       (r: any) => {
-        if (r) {
-          setError(r);
-        } else {
-          setError(t("eimzoError3"));
-        }
+        setError(r || t("eimzoError3"));
         setIsLoading(false);
       }
     );
@@ -122,55 +98,40 @@ function Login() {
       },
       (items: EimzoKey[], firstId: string) => {
         setEimzoKeys(items);
-        if (items.length > 0) {
-          setSelectedKey(firstId);
-        } else {
-          setError(t("notFoundEImzo"));
-        }
+        if (items.length > 0) setSelectedKey(firstId);
+        else setError(t("notFoundEImzo"));
         setIsLoading(false);
       },
       (r: any) => {
-        if (r) {
-          setError(r);
-        } else {
-          setError(t("cannotFindKeys"));
-        }
+        setError(r || t("cannotFindKeys"));
         setIsLoading(false);
       }
     );
   };
+
   const handleEimzoLogin = async () => {
-    if (!selectedKey) {
-      setError(t("selectCertificate"));
-      return;
-    }
+    if (!selectedKey) return setError(t("selectCertificate"));
 
     const selectedItem = eimzoKeys.find((item) => item.id === selectedKey);
-    if (!selectedItem) {
-      setError(t("invalidSelectedCertificate"));
-      return;
-    }
+    if (!selectedItem) return setError(t("invalidSelectedCertificate"));
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // 1. Kalitni yuklash
       const keyId = await new Promise<string>((resolve, reject) => {
         window.EIMZOClient.loadKey(
           selectedItem.vo,
           (id: string) => resolve(id),
           (r: any) => {
-            const errorMsg = r?.includes("BadPaddingException")
+            const msg = r?.includes("BadPaddingException")
               ? t("inCorrectPass")
               : r || t("cannotFindKeys");
-            setError(errorMsg);
-            reject(new Error(errorMsg));
+            reject(msg);
           }
         );
       });
 
-      // 2. Imzo yaratish
       const pkcs7 = await new Promise<string>((resolve, reject) => {
         window.EIMZOClient.createPkcs7(
           keyId,
@@ -178,16 +139,14 @@ function Login() {
           null,
           (signature: string) => resolve(signature),
           (r: any) => {
-            const errorMsg = r?.includes("BadPaddingException")
+            const msg = r?.includes("BadPaddingException")
               ? t("inCorrectPass")
               : r || t("cannotCreateSignature");
-            setError(errorMsg);
-            reject(new Error(errorMsg));
+            reject(msg);
           }
         );
       });
 
-      // 3. EIMZO login va token olish
       const response = await dispatch(
         authApi.endpoints.eimzoLogin.initiate({
           pkcs7,
@@ -195,49 +154,47 @@ function Login() {
         })
       ).unwrap();
 
-      // 4. Muvaffaqiyatli login bo‘lsa, redirect
-      if (response?.access) {
-        navigate("/main");
-      } else {
-        throw new Error("Token olinmadi");
-      }
-    } catch (error: any) {
-      console.error("E-IMZO orqali kirish muvaffaqiyatsiz:", error);
-
-      let errorMessage = "" + (error?.message || t("eImzoErr"));
-      if (
-        typeof error === "object" &&
-        "status" in error &&
-        error.status === 404
-      ) {
-        errorMessage =
-          "E-IMZO login endpointi topilmadi. Iltimos, tizim administratoriga murojaat qiling.";
-      }
-
-      setError(errorMessage);
+      if (response?.access) navigate("/main");
+      else throw new Error("Token olinmadi");
+    } catch (err: any) {
+      setError(err?.message || err || t("eImzoErr"));
     } finally {
       setIsLoading(false);
     }
   };
 
+  // -------- LOGIN BY EMAIL/PASSWORD --------------
   const checkAuthHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
     if (!email || !password) {
-      console.warn("Email yoki parol bo'sh bo'lishi mumkin emas!");
+      setError("Email yoki parol bo'sh bo'lishi mumkin emas!");
       return;
     }
 
     const credentials: Credentials = { email, password };
+
     try {
       await dispatch(authApi.endpoints.login.initiate(credentials)).unwrap();
       navigate("/main");
     } catch (error: any) {
-      console.error("Login failed", error);
-      setError("Авторизация не удалась.");
+      console.error("Login failed:", error);
+
+      let msg =
+        error?.data ||
+        error?.data?.detail ||
+        error?.data?.errors ||
+        error?.data?.message ||
+        "Авторизация не удалась.";
+
+      if (Array.isArray(msg)) msg = msg.join(", ");
+      if (typeof msg === "object") msg = Object.values(msg).join(", ");
+
+      setError(msg);
     }
   };
 
@@ -256,7 +213,7 @@ function Login() {
             </TabsTrigger>
           </TabsList>
 
-          {/* E-IMZO orqali kirish */}
+          {/* ------------ EIMZO LOGIN ------------- */}
           <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
             {isLoading ? (
               <p>Yuklanmoqda...</p>
@@ -297,7 +254,7 @@ function Login() {
             {error && <p className="text-red-600">{error}</p>}
           </TabsContent>
 
-          {/* Oddiy login */}
+          {/* ------------ SIMPLE LOGIN ------------- */}
           <TabsContent value="login" className="pt-6">
             <form onSubmit={checkAuthHandler} className="flex flex-col gap-4">
               <div>
@@ -310,10 +267,10 @@ function Login() {
                   required
                 />
               </div>
+
               <div>
                 <Label htmlFor="password">{t("password")}</Label>
 
-                {/* password input + eye tugma uchun wrapper */}
                 <div className="relative">
                   <Input
                     id="password"
@@ -321,20 +278,15 @@ function Login() {
                     type={showPassword ? "text" : "password"}
                     placeholder="********"
                     required
-                    className="pr-10" // o'ng tomonda joy qoldirish uchun
+                    className="pr-10"
                   />
 
-                  {/* eye tugma */}
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                    className="absolute inset-y-0 right-2 flex items-center px-2"
+                    className="absolute inset-y-0 right-2 flex items-center"
                   >
                     {showPassword ? (
-                      // eye-off SVG
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="20"
@@ -351,7 +303,6 @@ function Login() {
                         />
                       </svg>
                     ) : (
-                      // eye SVG
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="20"
@@ -379,20 +330,21 @@ function Login() {
 
                 <div className="flex justify-end">
                   <Link
-                    to={"/auth/forget-password"}
-                    type="button"
+                    to="/auth/forget-password"
                     className="text-[#09B86F] text-[15px] font-medium"
                   >
                     {t("forgotPassword")}
                   </Link>
                 </div>
               </div>
+
               <Button
                 type="submit"
                 className="bg-green-600 text-white h-[45px]"
               >
                 {t("enter")}
               </Button>
+
               {error && <p className="text-red-600">{error}</p>}
             </form>
           </TabsContent>
