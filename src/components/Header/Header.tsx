@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { RootState } from "@/app/store";
 import { setLanguage } from "@/features/languageSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // ✅ useEffect qo'shildi
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
 
 // RTK Query APIs
@@ -48,7 +48,7 @@ import { persistor } from "@/app/store";
 import { NavLink } from "react-router-dom";
 
 interface HeaderProps {
-  onLogout?: () => void; // ✅ tashqaridan logout paytida ishlaydigan callback
+  onLogout?: () => void;
 }
 
 function Header({ onLogout }: HeaderProps) {
@@ -59,6 +59,9 @@ function Header({ onLogout }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
+  // ✅ Local storage'dan o'qilgan notification count
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
   const currentLang = useSelector((state: RootState) => state.language.lang);
 
   // Notification data
@@ -66,31 +69,54 @@ function Header({ onLogout }: HeaderProps) {
     lang: currentLang,
   });
 
-  const handleLogout = () => {
-    // 🔐 Redux auth ni tozalaymiz
-    dispatch(logout());
+  // ✅ Component yuklanganda local storage'dan notification count ni o'qiymiz
+  useEffect(() => {
+    const savedCount = localStorage.getItem("unreadNotificationCount");
+    if (savedCount) {
+      setUnreadCount(parseInt(savedCount, 10));
+    }
+  }, []);
 
-    // 🔁 RTK Query cache larni tozalaymiz
+  // ✅ Yangi notificationlar kelganda local storage'ga saqlaymiz
+  useEffect(() => {
+    if (data?.results?.length !== undefined) {
+      const count = data.results.length;
+      setUnreadCount(count);
+      localStorage.setItem("unreadNotificationCount", count.toString());
+    }
+  }, [data?.results?.length]);
+
+  // ✅ Notification ochilganda count ni 0 qilamiz
+  const handleNotificationOpen = (open: boolean) => {
+    setNotificationOpen(open);
+    if (!open) {
+      // Notification yopilganda count ni 0 qilamiz va local storage'dan o'chiramiz
+      setUnreadCount(0);
+      localStorage.removeItem("unreadNotificationCount");
+    }
+  };
+
+  const handleLogout = () => {
+    // 🔐 Logout paytida notification count ni ham tozalaymiz
+    localStorage.removeItem("unreadNotificationCount");
+
+    dispatch(logout());
     dispatch(authApi.util.resetApiState());
     dispatch(reportApi.util.resetApiState());
     dispatch(generalApi.util.resetApiState());
     dispatch(statistikApi.util.resetApiState());
     dispatch(sumApi.util.resetApiState());
 
-    // 🧹 Redux persist ni tozalaymiz
     persistor.purge();
-
-    // ⏩ Login sahifasiga yo'naltiramiz
     navigate("/login");
 
-    // 🔔 Agar onLogout prop kelsa, uni ishga tushiramiz
     if (onLogout) onLogout();
   };
 
   const handleChangeLang = (lang: string) => {
     i18n.changeLanguage(lang);
-    localStorage.setItem("lang", lang); // ✅ To'g'ri
-    dispatch(setLanguage(lang)); // ✅ To'g'ri
+    localStorage.setItem("lang", lang);
+    dispatch(setLanguage(lang));
 
     const currentPath = location.pathname.split("/");
     currentPath[1] = lang;
@@ -114,23 +140,24 @@ function Header({ onLogout }: HeaderProps) {
 
         <div className="flex items-center gap-3">
           {/* Notification Button with Sheet */}
-          <Sheet open={notificationOpen} onOpenChange={setNotificationOpen}>
+          <Sheet open={notificationOpen} onOpenChange={handleNotificationOpen}>
             <SheetTrigger asChild>
               <Button
                 className="h-[42px] w-[42px] bg-transparent border-1 text-gray-600 hover:text-[#09B86F] hover:bg-gray-100 relative"
                 variant="outline"
               >
                 <Bell size={20} />
-                {data?.results?.length > 0 && (
+                {/* ✅ Local storage'dan o'qilgan count ni ko'rsatamiz */}
+                {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                    {data.results.length}
+                    {unreadCount}
                   </span>
                 )}
               </Button>
             </SheetTrigger>
             <SheetContent className="sm:max-w-md overflow-y-auto">
               <SheetHeader>
-                <SheetTitle></SheetTitle>
+                <SheetTitle>{t("notifications")}</SheetTitle>
               </SheetHeader>
 
               <div className="m-2">
@@ -159,9 +186,7 @@ function Header({ onLogout }: HeaderProps) {
                   </div>
                 ) : (
                   <div className="flex justify-center items-center h-40">
-                    <p className="text-gray-500">
-                      Bildirishnomalar mavjud emas.
-                    </p>
+                    <p className="text-gray-500">{t("no_notifications")}</p>
                   </div>
                 )}
               </div>
