@@ -538,7 +538,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   {/* Filters */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
                     {(user_role === "tashkilot_hodimi" ||
-                      user_role === "super_admin" ||
                       user_role === "hududiy_boshqarma") && (
                       <button
                         className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
