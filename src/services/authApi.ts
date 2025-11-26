@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { base_url, prepareHeaders } from "./baseUrl";
 import { encryptData, decryptData } from "@/utils/crypto";
-import { logout, setToken, setUser } from "@/features/authSlice";
+import { logout } from "@/features/authSlice";
 
 export interface User {
   email: string;
@@ -49,7 +49,6 @@ interface SetNewPasswordResponse {
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${base_url}/authentications`,
   prepareHeaders,
-  timeout: 10000,
 });
 
 // --- Refresh bilan custom baseQuery ---
@@ -58,63 +57,35 @@ const baseQueryWithReauth = async (
   api: any,
   extraOptions: any
 ) => {
-  // Avval original so'rovni yuboramiz
   let result = await rawBaseQuery(args, api, extraOptions);
 
-  // Agar 401 xatolik bo'lsa va token eskirgan bo'lsa
   if (result.error && (result.error as FetchBaseQueryError).status === 401) {
-    console.log("Token eskirgan, yangilash urinilyapti...");
-
-    // LocalStorage'dan user ma'lumotlarini olamiz
     const user = decryptData("user", "user") as User | null;
     const refreshToken = user?.refresh;
 
     if (refreshToken) {
-      try {
-        // Refresh token bilan yangi access token so'raymiz
-        const refreshResult = await rawBaseQuery(
-          {
-            url: "/token/refresh/",
-            method: "POST",
-            body: { refresh: refreshToken },
-          },
-          api,
-          extraOptions
-        );
+      const refreshResult = await rawBaseQuery(
+        {
+          url: "/token/refresh/",
+          method: "POST",
+          body: { refresh: refreshToken },
+        },
+        api,
+        extraOptions
+      );
 
-        if (refreshResult.data) {
-          const newAccess = (refreshResult.data as RefreshResponse).access;
-          console.log("Yangi token olindi");
+      if (refreshResult.data) {
+        const newAccess = (refreshResult.data as RefreshResponse).access;
 
-          // Yangi tokenni saqlaymiz
-          const updatedUser: User = {
-            ...(user as User),
-            access: newAccess,
-          };
+        const updatedUser: User = { ...(user as User), access: newAccess };
+        encryptData("token", newAccess, "token");
+        encryptData("user", updatedUser, "user");
 
-          // LocalStorage yangilash
-          encryptData("token", newAccess, "token");
-          encryptData("user", updatedUser, "user");
-
-          // Redux state yangilash
-          api.dispatch(setToken(newAccess));
-          api.dispatch(setUser(updatedUser));
-
-          // Original so'rovni yangi token bilan qayta urinamiz
-          result = await rawBaseQuery(args, api, extraOptions);
-          console.log("Original so'rov qayta urinildi");
-        } else {
-          // Agar refresh token ham ishlamasa, logout qilamiz
-          console.error("Refresh token ham eskirgan, logout qilinmoqda");
-          api.dispatch(logout());
-        }
-      } catch (refreshError) {
-        console.error("Token yangilashda xatolik:", refreshError);
+        result = await rawBaseQuery(args, api, extraOptions);
+      } else {
         api.dispatch(logout());
       }
     } else {
-      // Agar refresh token topilmasa, logout qilamiz
-      console.error("Refresh token topilmadi, logout qilinmoqda");
       api.dispatch(logout());
     }
   }
@@ -125,7 +96,6 @@ const baseQueryWithReauth = async (
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["User", "Auth"],
   endpoints: (builder) => ({
     // ✅ Login
     login: builder.mutation<LoginResponse, { email: string; password: string }>(
@@ -135,18 +105,16 @@ export const authApi = createApi({
           method: "POST",
           body: credentials,
         }),
-        invalidatesTags: ["User", "Auth"],
       }
     ),
 
-    // ✅ Refresh token (faqat manual chaqirish uchun)
+    // ✅ Refresh token
     refreshToken: builder.mutation<RefreshResponse, { refresh: string }>({
       query: (data) => ({
         url: "/token/refresh/",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Auth"],
     }),
 
     // ✅ E-IMZO login
@@ -156,10 +124,9 @@ export const authApi = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["User", "Auth"],
     }),
 
-    // ✅ Parolni o'zgartirish
+    // ✅ Parolni o‘zgartirish (confirm_password qo‘shildi)
     changePassword: builder.mutation<
       ChangePasswordResponse,
       { old_password: string; new_password: string; confirm_password: string }
@@ -171,16 +138,15 @@ export const authApi = createApi({
       }),
     }),
 
-    // ✅ Profil ma'lumotlarini olish
+    // ✅ Profil
     getUserProfile: builder.query<User, void>({
       query: () => ({
         url: "/profile/",
         method: "GET",
       }),
-      providesTags: ["User"],
     }),
 
-    // ✅ Email yuborish (parolni unutganlar uchun)
+    // ✅ Email yuborish
     sendEmail: builder.mutation<SendEmailResponse, { email: string }>({
       query: (email) => ({
         url: "/forgot-password/send-code/",
@@ -201,7 +167,7 @@ export const authApi = createApi({
       }),
     }),
 
-    // ✅ Yangi parol o'rnatish
+    // ✅ Yangi parol o‘rnatish (email + code majburiy qildim)
     setNewPassword: builder.mutation<
       SetNewPasswordResponse,
       {
@@ -217,15 +183,6 @@ export const authApi = createApi({
         body: data,
       }),
     }),
-
-    // ✅ Logout (optional - agar backendda logout endpoint bo'lsa)
-    logout: builder.mutation<{ message: string }, void>({
-      query: () => ({
-        url: "/logout/",
-        method: "POST",
-      }),
-      invalidatesTags: ["User", "Auth"],
-    }),
   }),
 });
 
@@ -238,5 +195,4 @@ export const {
   useSendEmailMutation,
   useVerifyCodeMutation,
   useSetNewPasswordMutation,
-  useLogoutMutation,
 } = authApi;
