@@ -355,8 +355,8 @@ function AllCreateReportItem() {
     if (!submitAt) return "Noma'lum";
 
     if (submitAt.includes("CHORAK")) {
-      // "2025-CHORAK_1" -> "2025 yil 1-chorak"
-      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
+      const [year, quarter] = submitAt.split("-CHORAK_");
+      return `${year} yil ${quarter}-chorak`;
     }
 
     return submitAt;
@@ -393,11 +393,13 @@ function AllCreateReportItem() {
         )}
 
         {/* ✅ TO'G'RILANGAN DEADLINE SELECT */}
+        {/* DEADLINE SELECT */}
         <div className="flex flex-col gap-4 sm:flex-row">
           <div>
             <label className="block mb-1 text-lg font-medium">
               {t("deadline")}:
             </label>
+
             <Select
               value={selectedDeadlineId}
               onValueChange={(val) => setSelectedDeadlineId(val)}
@@ -413,68 +415,84 @@ function AllCreateReportItem() {
                   }
                 />
               </SelectTrigger>
+
               <SelectContent>
-                {deadlineLoading ? (
+                {/* LOADING */}
+                {deadlineLoading && (
                   <div className="p-2 text-center text-muted-foreground text-sm">
                     Yuklanmoqda...
                   </div>
-                ) : deadlineError ? (
+                )}
+
+                {/* ERROR */}
+                {deadlineError && (
                   <div className="p-2 text-center text-red-500 text-sm">
                     Ma'lumotlarni yuklashda xatolik
                   </div>
-                ) : deadlineData?.results?.length > 0 ? (
-                  <>
-                    {deadlineData.results.map((item: any) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
-                        {formatDeadlineText(item.submit_at)}
-                      </SelectItem>
-                    ))}
-
-                    {/* ✅ Pagination Controls */}
-                    {deadlineData.count > perPage && (
-                      <div className="flex items-center justify-between px-2 py-1 border-t">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={deadlinePage === 1}
-                          onClick={() =>
-                            setDeadlinePage((p) => Math.max(p - 1, 1))
-                          }
-                        >
-                          {t("before")}
-                        </Button>
-                        <span className="text-xs text-gray-500">
-                          {deadlinePage} /{" "}
-                          {Math.ceil(deadlineData.count / perPage)}
-                        </span>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={
-                            deadlinePage >=
-                            Math.ceil(deadlineData.count / perPage)
-                          }
-                          onClick={() =>
-                            setDeadlinePage((p) =>
-                              Math.min(
-                                p + 1,
-                                Math.ceil(deadlineData.count / perPage)
-                              )
-                            )
-                          }
-                        >
-                          {t("next")}
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-2 text-center text-muted-foreground text-sm">
-                    Deadline mavjud emas
-                  </div>
                 )}
+
+                {/* DATA */}
+                {!deadlineLoading &&
+                  !deadlineError &&
+                  deadlineData?.results?.length > 0 &&
+                  deadlineData.results.map((item: any) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {formatDeadlineText(item.submit_at)}
+                    </SelectItem>
+                  ))}
+
+                {/* AGAR BO‘SH BO‘LSA */}
+                {!deadlineLoading &&
+                  !deadlineError &&
+                  deadlineData?.results?.length === 0 && (
+                    <div className="p-2 text-center text-muted-foreground text-sm">
+                      Deadline mavjud emas
+                    </div>
+                  )}
+
+                {/* PAGINATION */}
+                {!deadlineLoading &&
+                  !deadlineError &&
+                  deadlineData?.count > perPage && (
+                    <div className="flex items-center justify-between px-2 py-1 border-t">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={deadlinePage === 1}
+                        onClick={() =>
+                          setDeadlinePage((p) => Math.max(p - 1, 1))
+                        }
+                      >
+                        {t("before")}
+                      </Button>
+
+                      <span className="text-xs text-gray-500">
+                        {deadlinePage} /{" "}
+                        {Math.ceil(deadlineData.count / perPage)}
+                      </span>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          deadlinePage >=
+                          Math.ceil(deadlineData.count / perPage)
+                        }
+                        onClick={() =>
+                          setDeadlinePage((p) =>
+                            Math.min(
+                              p + 1,
+                              Math.ceil(deadlineData.count / perPage)
+                            )
+                          )
+                        }
+                      >
+                        {t("next")}
+                      </Button>
+                    </div>
+                  )}
               </SelectContent>
             </Select>
           </div>
