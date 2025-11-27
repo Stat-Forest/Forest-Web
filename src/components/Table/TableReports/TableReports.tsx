@@ -59,7 +59,12 @@ function TableReports({ data }: any) {
                 {item?.period}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.created_at}
+                {[
+                  item?.accepted_at,
+                  item?.cancelled_at,
+                  item?.sent_at,
+                  item?.created_at,
+                ].find((v) => v != null && v !== "")}
               </TableCell>
               <TableCell className="text-right text-base font-[400] border-none">
                 <span
