@@ -21,7 +21,6 @@ function LandDocumentsContainers() {
   const [page, setPage] = useState(1);
   const perPage = 10;
   const [searchTerm, setSearchTerm] = useState("");
-  const [documentType, setDocumentType] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const {
@@ -36,7 +35,9 @@ function LandDocumentsContainers() {
     search: debouncedSearchTerm,
   });
 
-  // ✅ To‘liq ishlaydigan download funksiyasi
+  // ------------------------------------------------
+  // ✅ 100% TO'G'RI ISHLAYDIGAN DOWNLOAD FUNKSIYASI
+  // ------------------------------------------------
   const handleDownload = async (doc: any) => {
     if (!doc.file_url) {
       alert("Fayl manzili topilmadi!");
@@ -52,56 +53,52 @@ function LandDocumentsContainers() {
           Accept: "*/*",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Server xatosi: ${response.status}`);
       }
 
+      // Faylni blob ko‘rinishida olish
       const blob = await response.blob();
+
+      // Fayl uchun URL yaratish
       const url = window.URL.createObjectURL(blob);
 
-      const fileExtension = doc.file_url.split(".").pop()?.split("?")[0];
-      const fileName = `${doc.name || "document"}.${fileExtension || "pdf"}`;
+      // Fayl nomi
+      const fileExtension =
+        doc.file_url.split(".").pop()?.split("?")[0] || "pdf";
+      const fileName = `${doc.name || "document"}.${fileExtension}`;
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Yuklash uchun link yaratish
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName; // 🔥 Faqat yuklaydi, ochmaydi!
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // URLni tozalash
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Download failed:", error);
-      alert("Faylni yuklab bo‘lmadi. Fayl yangi oynada ochiladi.");
-      window.open(doc.file_url, "_blank");
+      console.error("Download error:", error);
+      alert("Faylni yuklab bo‘lmadi.");
     }
   };
 
-  // Filtlarni o‘zgartirganda sahifa 1 ga qaytadi
+  // Filtlarni o‘zgartirganda sahifa reset bo‘ladi
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearchTerm, documentType]);
+  }, [debouncedSearchTerm]);
 
   const totalPages = Math.ceil((landDocumentsData?.count || 0) / perPage);
   const startItem = (page - 1) * perPage + 1;
   const endItem = Math.min(page * perPage, landDocumentsData?.count || 0);
 
-  const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
-  };
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
-  };
+  const handleNextPage = () => page < totalPages && setPage(page + 1);
+  const handlePrevPage = () => page > 1 && setPage(page - 1);
 
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setDocumentType("");
-    setPage(1);
-  };
-
-  const isAnyFilterActive = searchTerm || documentType;
+  const isAnyFilterActive = searchTerm;
 
   const renderPageNumbers = () => {
     const pages = [];
@@ -110,7 +107,7 @@ function LandDocumentsContainers() {
     let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    if (endPage - startPage + 1 < maxVisiblePages) {
+    if (endPage - startPage < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
@@ -157,14 +154,15 @@ function LandDocumentsContainers() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        <Button
-          onClick={handleClearFilters}
-          variant="outline"
-          disabled={!isAnyFilterActive}
-          className="min-h-[40px]"
-        >
-          {t("reset")}
-        </Button>
+        {isAnyFilterActive && (
+          <Button
+            variant="outline"
+            onClick={() => setSearchTerm("")}
+            className="min-h-[40px]"
+          >
+            {t("reset")}
+          </Button>
+        )}
 
         <div className="ml-auto">
           <Button className="bg-blue-600 text-white hover:bg-blue-700 min-h-[40px]">
@@ -173,6 +171,7 @@ function LandDocumentsContainers() {
         </div>
       </div>
 
+      {/* 📄 Table */}
       <div className="w-full border border-[silver] rounded-xl px-3 py-5">
         <div className="mb-3 text-sm text-gray-600">
           {t("totalRecords", { count: landDocumentsData?.count || 0 })}
@@ -184,48 +183,42 @@ function LandDocumentsContainers() {
         <Table className="w-full">
           <TableHeader>
             <TableRow className="bg-[#eaeaea] h-[50px]">
-              <TableHead className="w-[20%] text-lg text-[#717171] text-left border-none pl-2 rounded-tl-lg rounded-bl-lg">
+              <TableHead className="w-[20%] text-lg text-[#717171] pl-2">
                 {t("name")}
               </TableHead>
-              <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+              <TableHead className="text-lg text-[#717171]">
                 {t("date")}
               </TableHead>
-              <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+              <TableHead className="text-lg text-[#717171]">
                 {t("document_type")}
               </TableHead>
-              <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
+              <TableHead className="text-lg text-[#717171]">
                 {t("organization")}
               </TableHead>
-              <TableHead className="text-right pr-2 text-[#717171] text-lg w-[20%] border-none rounded-tr-lg rounded-br-lg">
+              <TableHead className="text-right pr-2 text-lg text-[#717171]">
                 {t("actions")}
               </TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {landDocumentsData?.results?.map((doc: any) => (
               <TableRow key={doc.id} className="h-[50px] hover:bg-gray-100">
-                <TableCell className="text-lg font-[300] border-none">
+                <TableCell className="text-base font-[300]">
                   {doc.name}
                 </TableCell>
-                <TableCell className="text-base font-[300] border-none">
+                <TableCell className="text-base font-[300]">
                   {doc.date}
                 </TableCell>
-                <TableCell className="text-base font-[300] border-none">
+                <TableCell className="text-base font-[300]">
                   {doc.document_type_display}
                 </TableCell>
-                <TableCell className="text-base font-[300] border-none">
+                <TableCell className="text-base font-[300]">
                   {doc.organization_name || doc.organization}
                 </TableCell>
-                <TableCell className="text-right text-base font-[400] border-none">
+
+                <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(doc.file_url, "_blank")}
-                      disabled={!doc.file_url}
-                    >
-                      {t("view")}
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
