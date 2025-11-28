@@ -67,7 +67,7 @@ function Sidebar() {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="ml-[310px] min-w-[460px] sm:w-[460px]"
+            className="ml-[310px] bg-white/20 text-white min-w-[460px] sm:w-[460px]"
           >
             <SheetHeader>
               <SheetTitle>{t(item.name)}</SheetTitle>
@@ -77,7 +77,7 @@ function Sidebar() {
                 <NavLink
                   key={index}
                   to={`/resource-management/${child.id}`}
-                  className="text-[#9F9F9F] hover:underline flex items-center gap-1"
+                  className="text-[white] hover:underline flex items-center gap-1"
                 >
                   <FileText />
                   <h2 className="text-[17px]">{t(child.name)}</h2>
@@ -113,39 +113,39 @@ function Sidebar() {
         </div>
 
         {/* Foydalanuvchi kartochkasi */}
-        <div className="bg-[#09B86F] w-full h-[250px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
+        <div className="bg-[#09b86f89] w-full h-[250px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
           <div className="mb-2">
-            <div className="bg-white h-[50px] w-[50px] flex items-center justify-center rounded-3xl">
+            <div className="bg-white/40 h-[50px] w-[50px] flex items-center justify-center rounded-3xl">
               <User2 />
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <h3 className="font-bold text-white text-center">
+            <h3 className="font-bold text-white text-center text-lg">
               {user?.results[0]?.first_name || ""}{" "}
               {user?.results[0]?.last_name || ""}
             </h3>
             <div className="flex items-center gap-2 text-left">
-              <span className="text-[#000000] text-[13px] font-light">
+              <span className="text-[white] text-[16px] font-light">
                 {t("user_role")}: 
               </span>
-              <h3 className="font-bold text-white text-[15px]">
+              <h3 className="font-bold text-white text-[18px]">
                 {user?.results[0]?.role || ""}
               </h3>
             </div>
             <div className="flex items-center gap-2 text-left">
-              <span className="text-[#000000] text-[14px] font-light">
+              <span className="text-[white] text-[16px] font-light">
                 {t("item_78")}:
               </span>
-              <h3 className="font-bold text-white text-[14px]">
+              <h3 className="font-bold text-white text-[18px]">
                 {user?.results[0]?.user_number || ""}
               </h3>
             </div>
             {user?.results[0]?.organization_name && (
               <div className="flex items-center gap-2">
-                <span className="text-[#000000] text-[13px] font-light">
+                <span className="text-[white] text-[16px] font-light">
                   {t("item_12")}:
                 </span>
-                <h3 className="font-bold text-white text-[13px]">
+                <h3 className="font-bold text-white text-[18px]">
                   {user?.results[0]?.organization_name || ""}
                 </h3>
               </div>

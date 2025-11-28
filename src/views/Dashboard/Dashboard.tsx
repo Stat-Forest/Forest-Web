@@ -76,7 +76,7 @@ function Dashboard() {
 
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <div className="w-[310px] bg-white fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
+        <div className="w-[310px] fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
           <Sidebar />
         </div>
 
