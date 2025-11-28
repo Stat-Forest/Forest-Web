@@ -113,7 +113,7 @@ function Sidebar() {
         </div>
 
         {/* Foydalanuvchi kartochkasi */}
-        <div className="bg-[#09b86f89] w-full h-[250px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
+        <div className="bg-[#09b86f] w-full h-[250px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
           <div className="mb-2">
             <div className="bg-white/40 h-[50px] w-[50px] flex items-center justify-center rounded-3xl">
               <User2 />
