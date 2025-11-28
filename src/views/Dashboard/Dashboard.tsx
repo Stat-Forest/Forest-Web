@@ -24,6 +24,7 @@ import { useGetAnnouncementsReportsQuery } from "@/services/generalApi";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import AnnouncementModal from "@/components/Modals/AnnouncementModal";
+import LandDocumentCreate from "./ResourceManagement/Children/CreateReport/LandDocumentCreate";
 
 function Dashboard() {
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -125,6 +126,7 @@ function Dashboard() {
                 path="support-information"
                 element={<SupportInformation />}
               />
+              <Route path="/land-documents-create" element={<LandDocumentCreate />} />
               <Route path="/video" element={<Video />} />
 
               <Route path="*" element={<Navigate to="/main" replace />} />
