@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Custom Components
 import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
@@ -41,6 +41,10 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
 import { regions2 } from "@/services/constants";
 import { useTranslation } from "react-i18next";
+
+// AOS import
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
@@ -67,6 +71,34 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
+  // AOS initialization
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: "ease-in-out",
+      once: true,
+      offset: 50,
+    });
+
+    // Refresh AOS when data loads
+    AOS.refresh();
+  }, []);
+
+  // ✅ tableHeadersData ni birinchi bo'lib e'lon qilamiz
+  const {
+    data: tableHeadersData = [],
+    isLoading: isHeadersLoading,
+    isError: isErrorHeaders,
+  } = useGetStatementColumnsReportQuery(
+    { statementId: id || "", lang, isUser: "" },
+    { skip: !id }
+  );
+
+  // ✅ Endi AOS ni yangilash ma'lumotlar o'zgarganda
+  useEffect(() => {
+    AOS.refresh();
+  }, [tableHeadersData, activeTab]);
+
   const { data: deadline, isLoading: deadlineLoading } =
     useGetDeadlinesReportQuery(
       {
@@ -77,15 +109,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       },
       { skip: !id }
     );
-
-  const {
-    data: tableHeadersData = [],
-    isLoading: isHeadersLoading,
-    isError: isErrorHeaders,
-  } = useGetStatementColumnsReportQuery(
-    { statementId: id || "", lang, isUser: "" },
-    { skip: !id }
-  );
 
   const {
     data: allReports = [],
@@ -205,7 +228,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
         (reportItem: any) => {
           let filteredColumns = reportItem.statement_columns || [];
 
-          // 🔹 barcha activeLeafIds bo‘yicha bo‘sh ustunlarni qo‘shamiz
+          // 🔹 barcha activeLeafIds bo'yicha bo'sh ustunlarni qo'shamiz
           const normalizedColumns = activeLeafIds.map((colId) => {
             const found = filteredColumns.find(
               (c: any) => c.statement_column_id === colId
@@ -477,16 +500,73 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     }
   };
 
+  // Skeleton Loading Components
+  const TabSkeleton = () => (
+    <div className="flex space-x-2 overflow-x-auto pb-2" data-aos="fade-down">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <Skeleton key={index} className="h-10 w-32 rounded-md" />
+      ))}
+    </div>
+  );
+
+  const FilterSkeleton = () => (
+    <div className="flex flex-wrap gap-3 w-full md:w-auto" data-aos="fade-up">
+      <Skeleton className="h-10 w-full md:w-[250px] rounded-md" />
+      <Skeleton className="h-10 w-full md:w-[220px] rounded-md" />
+      <Skeleton className="h-10 w-full md:w-[220px] rounded-md" />
+      <Skeleton className="h-10 w-full md:w-[150px] rounded-md" />
+      <Skeleton className="h-10 w-20 rounded-md" />
+    </div>
+  );
+
+  const TableSkeleton = () => (
+    <div className="space-y-3" data-aos="fade-in">
+      {Array.from({ length: 10 }).map((_, index) => (
+        <Skeleton key={index} className="h-12 w-full rounded-md" />
+      ))}
+    </div>
+  );
+
   if (isLoading)
     return (
-      <div className="flex justify-center items-center py-10 w-full h-[20vh]">
-        <Loader2 className="animate-spin text-blue-500 w-12 h-12" />
+      <div className="py-3 space-y-4">
+        {/* Tabs Skeleton */}
+        <TabSkeleton />
+
+        {/* Chart Section Skeleton */}
+        <div className="space-y-2" data-aos="fade-up">
+          <Skeleton className="h-6 w-48 rounded-md" />
+          <Skeleton className="h-64 w-full rounded-md" />
+        </div>
+
+        {/* Analysis Section Skeleton */}
+        <div className="space-y-2" data-aos="fade-up" data-aos-delay="100">
+          <Skeleton className="h-6 w-48 rounded-md" />
+          <Skeleton className="h-32 w-full rounded-md" />
+        </div>
+
+        {/* Filters Skeleton */}
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center flex-wrap gap-3">
+            <div className="flex gap-3 w-full md:w-auto" data-aos="fade-right">
+              <Skeleton className="h-10 w-full md:w-[220px] rounded-md" />
+              <Skeleton className="h-10 w-full md:w-[150px] rounded-md" />
+            </div>
+            <FilterSkeleton />
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <TableSkeleton />
       </div>
     );
 
   if (isError) {
     return (
-      <div className="flex justify-center items-center h-[80vh]">
+      <div
+        className="flex justify-center items-center h-[80vh]"
+        data-aos="zoom-in"
+      >
         <Alert variant="destructive">
           <AlertTitle>Xatolik yuz berdi</AlertTitle>
           <AlertDescription>Qayta urinib ko'ring.</AlertDescription>
@@ -505,60 +585,96 @@ function ResourceContainer({ reportName }: { reportName: string }) {
         }}
         className="w-full"
       >
-        <TabsList className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3">
-          {tableHeadersData.map((col: ReportColumn) => (
-            <TabsTrigger
-              key={col.id}
-              value={col.title}
-              className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
-            >
-              {col.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {isHeadersLoading ? (
+          <TabSkeleton />
+        ) : (
+          <TabsList
+            className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3"
+            data-aos="fade-down"
+          >
+            {tableHeadersData.map((col: ReportColumn) => (
+              <TabsTrigger
+                key={col.id}
+                value={col.title}
+                className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
+                data-aos="fade-up"
+                data-aos-delay={100 * tableHeadersData.indexOf(col)}
+              >
+                {col.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         {tableHeadersData.map((col: ReportColumn) => (
           <TabsContent key={col.id} value={col.title}>
             {activeTab === col.title && (
               <>
-                <div>
-                  <ReportChartItem
-                    activeTab={activeTab}
-                    reportName={reportName}
-                  />
-                </div>
-                <div>
-                  <EmployeeAnalysisSum
-                    reportName={reportName}
-                    activeTab={activeTab}
-                  />
+                <div data-aos="fade-up">
+                  {isRowsLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-48 rounded-md" />
+                      <Skeleton className="h-64 w-full rounded-md" />
+                    </div>
+                  ) : (
+                    <ReportChartItem
+                      activeTab={activeTab}
+                      reportName={reportName}
+                    />
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                <div data-aos="fade-up" data-aos-delay="100">
+                  {isRowsLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-48 rounded-md" />
+                      <Skeleton className="h-32 w-full rounded-md" />
+                    </div>
+                  ) : (
+                    <EmployeeAnalysisSum
+                      reportName={reportName}
+                      activeTab={activeTab}
+                    />
+                  )}
+                </div>
+
+                <div
+                  className="flex items-center justify-between gap-3 mb-4 flex-wrap"
+                  data-aos="fade-up"
+                  data-aos-delay="200"
+                >
                   {/* Filters */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
                     {(user_role === "tashkilot_hodimi" ||
                       user_role === "hududiy_boshqarma") && (
                       <button
-                        className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded"
+                        className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#078a5a] transition-colors duration-300"
                         onClick={() =>
                           navigate(`/resource-management/create/${reportName}`)
                         }
+                        data-aos="zoom-in"
+                        data-aos-delay="300"
                       >
                         {t("createNewReport")}
                       </button>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="py-2.5 font-semibold w-full md:w-[150px] rounded bg-[#09B86F] border-1 text-[white]">
+                        <button
+                          className="py-2.5 font-semibold w-full md:w-[150px] rounded bg-[#09B86F] border-1 text-[white] hover:bg-[#078a5a] transition-colors duration-300"
+                          data-aos="zoom-in"
+                          data-aos-delay="350"
+                        >
                           {t("export")}
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56 mt-2 mr-2">
+                      <DropdownMenuContent
+                        className="w-56 mt-2 mr-2"
+                        data-aos="fade-down"
+                      >
                         <DropdownMenuItem onClick={handleExportExcel}>
                           {t("exportExcel")}
                         </DropdownMenuItem>
-
                         <DropdownMenuItem onClick={handlePrint}>
                           {t("printReport")}
                         </DropdownMenuItem>
@@ -567,118 +683,147 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   </div>
 
                   {/* Search & Filters */}
-                  <div className="flex flex-wrap gap-3 w-full md:w-auto ">
-                    <Input
-                      placeholder={`${t("item_79")}...`}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full md:w-[250px] border-black min-h-[40px]"
-                    />
-                    <Select
-                      value={selectedRegion}
-                      onValueChange={setSelectedRegion}
+                  {isRowsLoading ? (
+                    <FilterSkeleton />
+                  ) : (
+                    <div
+                      className="flex flex-wrap gap-3 w-full md:w-auto"
+                      data-aos="fade-left"
+                      data-aos-delay="400"
                     >
-                      <SelectTrigger className="w-full md:w-[220px] text-xl min-h-[40px] border-black">
-                        <SelectValue placeholder={`${t("region")}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {regions2.map((region) => (
-                          <SelectItem key={region.value} value={region.value}>
-                            {i18n.language === "uz"
-                              ? region.label
-                              : region.label2}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <Input
+                        placeholder={`${t("item_79")}...`}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full md:w-[250px] border-black min-h-[40px] focus:border-[#09B86F] transition-colors duration-300"
+                        data-aos="fade-up"
+                        data-aos-delay="500"
+                      />
+                      <Select
+                        value={selectedRegion}
+                        onValueChange={setSelectedRegion}
+                      >
+                        <SelectTrigger
+                          className="w-full md:w-[220px] text-xl min-h-[40px] border-black focus:border-[#09B86F] transition-colors duration-300"
+                          data-aos="fade-up"
+                          data-aos-delay="550"
+                        >
+                          <SelectValue placeholder={`${t("region")}`} />
+                        </SelectTrigger>
+                        <SelectContent data-aos="fade-down">
+                          {regions2.map((region) => (
+                            <SelectItem key={region.value} value={region.value}>
+                              {i18n.language === "uz"
+                                ? region.label
+                                : region.label2}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                    <Select
-                      value={selectedPeriod}
-                      onValueChange={setSelectedPeriod}
-                    >
-                      <SelectTrigger className="w-full md:w-[220px] text-xl min-h-[40px] border-black">
-                        <SelectValue placeholder={`${t("reportType")}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {deadline?.results?.length > 0 ? (
-                          <>
-                            <SelectItem value=" ">{`${t(
-                              "allReports"
-                            )}`}</SelectItem>
-                            {deadline.results.map((item: any) => (
-                              <SelectItem
-                                key={item.id}
-                                value={item.id.toString()}
-                              >
-                                {new Date(item.submit_at).toLocaleDateString(
-                                  "uz-UZ"
-                                )}
-                              </SelectItem>
-                            ))}
+                      <Select
+                        value={selectedPeriod}
+                        onValueChange={setSelectedPeriod}
+                      >
+                        <SelectTrigger
+                          className="w-full md:w-[220px] text-xl min-h-[40px] border-black focus:border-[#09B86F] transition-colors duration-300"
+                          data-aos="fade-up"
+                          data-aos-delay="600"
+                        >
+                          <SelectValue placeholder={`${t("reportType")}`} />
+                        </SelectTrigger>
+                        <SelectContent data-aos="fade-down">
+                          {deadline?.results?.length > 0 ? (
+                            <>
+                              <SelectItem value=" ">{`${t(
+                                "allReports"
+                              )}`}</SelectItem>
+                              {deadline.results.map((item: any) => (
+                                <SelectItem
+                                  key={item.id}
+                                  value={item.id.toString()}
+                                >
+                                  {new Date(item.submit_at).toLocaleDateString(
+                                    "uz-UZ"
+                                  )}
+                                </SelectItem>
+                              ))}
 
-                            {/* ✅ Pagination Controls */}
-                            <div className="flex items-center justify-between px-2 py-1 border-t">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={deadlinePage === 1}
-                                onClick={() =>
-                                  setDeadlinePage((p) => Math.max(p - 1, 1))
-                                }
-                              >
-                                {t("before")}
-                              </Button>
-                              <span className="text-xs text-gray-500">
-                                {deadlinePage} /{" "}
-                                {Math.ceil(deadline.count / perPage)}
-                              </span>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  deadlinePage ===
-                                  Math.ceil(deadline.count / perPage)
-                                }
-                                onClick={() =>
-                                  setDeadlinePage((p) =>
-                                    Math.min(
-                                      p + 1,
-                                      Math.ceil(deadline.count / perPage)
+                              {/* ✅ Pagination Controls */}
+                              <div className="flex items-center justify-between px-2 py-1 border-t">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={deadlinePage === 1}
+                                  onClick={() =>
+                                    setDeadlinePage((p) => Math.max(p - 1, 1))
+                                  }
+                                >
+                                  {t("before")}
+                                </Button>
+                                <span className="text-xs text-gray-500">
+                                  {deadlinePage} /{" "}
+                                  {Math.ceil(deadline.count / perPage)}
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={
+                                    deadlinePage ===
+                                    Math.ceil(deadline.count / perPage)
+                                  }
+                                  onClick={() =>
+                                    setDeadlinePage((p) =>
+                                      Math.min(
+                                        p + 1,
+                                        Math.ceil(deadline.count / perPage)
+                                      )
                                     )
-                                  )
-                                }
-                              >
-                                {t("next")}
-                              </Button>
+                                  }
+                                >
+                                  {t("next")}
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="p-2 text-center text-muted-foreground text-sm">
+                              {t("noDeadlines")}
                             </div>
-                          </>
-                        ) : (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            {t("noDeadlines")}
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
+                          )}
+                        </SelectContent>
+                      </Select>
 
-                    <Input
-                      className="w-full border border-[black] md:w-[150px]"
-                      type="number"
-                      placeholder={`${t("year")}`}
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(e.target.value)}
-                    />
-                    <Button onClick={handleSearchRegional}>
-                      {t("item_79")}
-                    </Button>
-                  </div>
+                      <Input
+                        className="w-full border border-[black] md:w-[150px] focus:border-[#09B86F] transition-colors duration-300"
+                        type="number"
+                        placeholder={`${t("year")}`}
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        data-aos="fade-up"
+                        data-aos-delay="650"
+                      />
+                      <Button
+                        onClick={handleSearchRegional}
+                        data-aos="zoom-in"
+                        data-aos-delay="700"
+                        className="hover:bg-[#078a5a] transition-colors duration-300"
+                      >
+                        {t("item_79")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                <div>
+                <div data-aos="fade-in" data-aos-delay="300">
                   {isRowsFetching ? (
-                    <div className="flex justify-center py-10">
-                      <Loader2 className="animate-spin text-blue-500 w-12 h-12" />
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <Skeleton className="h-6 w-48 rounded-md" />
+                        <Skeleton className="h-6 w-24 rounded-md" />
+                      </div>
+                      <TableSkeleton />
                     </div>
                   ) : (
                     <TableColumn
