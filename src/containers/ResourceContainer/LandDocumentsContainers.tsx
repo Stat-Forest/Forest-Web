@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/utils/useDebounce";
+import { useNavigate } from "react-router-dom";
 
 function LandDocumentsContainers() {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ function LandDocumentsContainers() {
   const perPage = 10;
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const navigate = useNavigate();
 
   const {
     data: landDocumentsData,
@@ -165,7 +167,10 @@ function LandDocumentsContainers() {
         )}
 
         <div className="ml-auto">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 min-h-[40px]">
+          <Button
+            onClick={() => navigate("/land-documents-create")}
+            className="bg-blue-600 text-white hover:bg-blue-700 min-h-[40px]"
+          >
             {t("new_document")}
           </Button>
         </div>

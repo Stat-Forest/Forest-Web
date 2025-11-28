@@ -12,6 +12,8 @@ import CheckCode from "./views/Auth/CheckCode";
 import ChangePassword from "./views/Auth/changePassword";
 import { TestModeCarousel } from "./components/TestModeCarousel";
 import AppWrapper from "./components/AppWrapper";
+import AOS from "aos";
+import "aos/dist/aos.css";
 // import Landing from "./views/Landing";
 
 export const user_role = import.meta.env.USER_ROLE;
@@ -22,6 +24,14 @@ function App() {
   useEffect(() => {
     document.cookie = `reportId=${reportIds}; path=/; max-age=86400`;
   }, [reportIds]);
+
+  useEffect(() => {
+    AOS.init({
+      duration: 700,
+      once: true,
+      easing: "ease-out-cubic",
+    });
+  }, []);
 
   return (
     <AppWrapper>
