@@ -176,13 +176,13 @@
   }
 }
 
-body {
+/* body {
   background: linear-gradient(rgba(0, 50, 0, 0.5), rgba(0, 50, 0, 0.5)),
     url("https://images.photowall.com/products/58341/foggy-forest-4.jpg?h=699&q=85");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-}
+} */
 
 /* HTML: <div class="loader"></div> */
 .loader {

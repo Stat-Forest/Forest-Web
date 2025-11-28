@@ -1,6 +1,12 @@
 import { RootState } from "@/app/store";
 import { useGetDashboardReportQuery } from "@/services/reportsApi";
-import { ClipboardIcon, FileText, NotebookPen, NotebookText, Users } from "lucide-react";
+import {
+  ClipboardIcon,
+  FileText,
+  NotebookPen,
+  NotebookText,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -38,24 +44,22 @@ function MainContainer() {
     return <div className="p-4 text-lg text-red-500">Xatolik yuz berdi!</div>;
   }
 
+  const cardClasses =
+    "w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300 bg-white/5 border border-gray-300 shadow";
+
   return (
     <div className="grid grid-cols-3 gap-5 py-4 px-2">
       {/* Sent Reports */}
       <div
         data-aos="fade-up"
         onClick={() => navigate("/main/send-report")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-yellow-400 to-yellow-300 shadow"
+        className={cardClasses}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-yellow-500">
           <FileText color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_1")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_1")}</h2>
           <span className="text-[22px] font-semibold text-yellow-600">
             {dashboard_data?.sent_reports || 0} ta
           </span>
@@ -67,18 +71,13 @@ function MainContainer() {
         data-aos="fade-up"
         data-aos-delay="80"
         onClick={() => navigate("/main/returned-report")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-red-500 to-red-400 shadow"
+        className={cardClasses}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center bg-red-600 shadow-md">
           <FileText color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_2")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_2")}</h2>
           <span className="text-[22px] font-semibold text-red-700">
             {dashboard_data?.returned_reports || 0} ta
           </span>
@@ -90,18 +89,13 @@ function MainContainer() {
         data-aos="fade-up"
         data-aos-delay="160"
         onClick={() => navigate("/main/received-report")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-blue-600 to-blue-400 shadow"
+        className={cardClasses}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-600">
           <FileText color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_3")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_3")}</h2>
           <span className="text-[22px] font-semibold text-blue-700">
             {dashboard_data?.accepted_reports || 0} ta
           </span>
@@ -113,18 +107,13 @@ function MainContainer() {
         data-aos="fade-up"
         data-aos-delay="240"
         onClick={() => navigate("/main/responsible-representative")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-gray-700 to-gray-500 shadow"
+        className={cardClasses}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-gray-700">
           <Users color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_4")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_4")}</h2>
           <span className="text-[22px] font-semibold text-gray-800">
             {dashboard_data?.responsible_users || 0} ta
           </span>
@@ -136,18 +125,13 @@ function MainContainer() {
         data-aos="fade-up"
         data-aos-delay="320"
         onClick={() => navigate("/main/draft")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-green-600 to-green-400 shadow"
+        className={cardClasses}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-green-600">
           <FileText color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_5")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_5")}</h2>
           <span className="text-[22px] font-semibold text-green-700">
             {dashboard_data?.draft_reports || 0} ta
           </span>
@@ -159,18 +143,13 @@ function MainContainer() {
         data-aos="fade-up"
         data-aos-delay="400"
         onClick={() => navigate("/main/newsletter")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-green-400 to-green-200 shadow"
+        className={cardClasses}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-green-300">
           <ClipboardIcon color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_6")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_6")}</h2>
           <span className="text-[22px] font-semibold text-green-700">
             {dashboard_data?.deadlines || 0} ta
           </span>
@@ -183,16 +162,13 @@ function MainContainer() {
           data-aos="fade-up"
           data-aos-delay="480"
           onClick={() => navigate("/plan/create-report")}
-          className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                     hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                     bg-gradient-to-r from-purple-600 to-purple-400 shadow"
+          className={cardClasses}
         >
           <div className="bg-purple-600 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
             <NotebookPen color="white" size={25} />
           </div>
-
           <div>
-            <h2 className="font-medium text-[18px] text-[white]">
+            <h2 className="font-medium text-[18px] text-black">
               {t("item_82")}
             </h2>
           </div>
@@ -204,18 +180,13 @@ function MainContainer() {
         data-aos="fade-up"
         data-aos-delay="560"
         onClick={() => navigate("/main/created-plans")}
-        className="w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer
-                   hover:scale-[1.03] hover:shadow-xl transition-all duration-300
-                   bg-gradient-to-r from-orange-800 to-orange-600 shadow"
+        className={cardClasses}
       >
         <div className="bg-orange-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
           <NotebookText color="white" size={25} />
         </div>
-
         <div>
-          <h2 className="font-medium text-[18px] text-[white]">
-            {t("item_7")}
-          </h2>
+          <h2 className="font-medium text-[18px] text-black">{t("item_7")}</h2>
           <span className="text-[22px] font-semibold text-orange-800">
             {dashboard_data?.plans || 0} ta
           </span>
