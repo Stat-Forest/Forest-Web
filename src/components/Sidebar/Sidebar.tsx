@@ -67,7 +67,7 @@ function Sidebar() {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="ml-[310px] bg-white/20 text-white min-w-[460px] sm:w-[460px]"
+            className="ml-[310px] bg-white text-black min-w-[460px] sm:w-[460px]"
           >
             <SheetHeader>
               <SheetTitle>{t(item.name)}</SheetTitle>
@@ -77,7 +77,7 @@ function Sidebar() {
                 <NavLink
                   key={index}
                   to={`/resource-management/${child.id}`}
-                  className="text-[white] hover:underline flex items-center gap-1"
+                  className="text-[#797777] hover:underline flex items-center gap-1"
                 >
                   <FileText />
                   <h2 className="text-[17px]">{t(child.name)}</h2>
@@ -104,7 +104,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-white/40 flex flex-col justify-between">
+    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-white flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="w-full h-[50px] rounded-full flex items-center justify-center text-black mb-3 gap-3">
