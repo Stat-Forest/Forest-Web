@@ -45,7 +45,7 @@ function MainContainer() {
   }
 
   const cardClasses =
-    "w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300 bg-white/5 border border-gray-300 shadow";
+    "w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300 bg-white/70 border-2 border-white";
 
   return (
     <div className="grid grid-cols-3 gap-5 py-4 px-2">
@@ -53,13 +53,13 @@ function MainContainer() {
       <div
         data-aos="fade-up"
         onClick={() => navigate("/main/send-report")}
-        className={cardClasses}
+        className={`${cardClasses}`}
       >
         <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-yellow-500">
           <FileText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_1")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_1")}</h2>
           <span className="text-[22px] font-semibold text-yellow-600">
             {dashboard_data?.sent_reports || 0} ta
           </span>
@@ -77,7 +77,7 @@ function MainContainer() {
           <FileText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_2")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_2")}</h2>
           <span className="text-[22px] font-semibold text-red-700">
             {dashboard_data?.returned_reports || 0} ta
           </span>
@@ -95,7 +95,7 @@ function MainContainer() {
           <FileText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_3")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_3")}</h2>
           <span className="text-[22px] font-semibold text-blue-700">
             {dashboard_data?.accepted_reports || 0} ta
           </span>
@@ -113,7 +113,7 @@ function MainContainer() {
           <Users color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_4")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_4")}</h2>
           <span className="text-[22px] font-semibold text-gray-800">
             {dashboard_data?.responsible_users || 0} ta
           </span>
@@ -131,7 +131,7 @@ function MainContainer() {
           <FileText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_5")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_5")}</h2>
           <span className="text-[22px] font-semibold text-green-700">
             {dashboard_data?.draft_reports || 0} ta
           </span>
@@ -149,7 +149,7 @@ function MainContainer() {
           <ClipboardIcon color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_6")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_6")}</h2>
           <span className="text-[22px] font-semibold text-green-700">
             {dashboard_data?.deadlines || 0} ta
           </span>
@@ -168,7 +168,7 @@ function MainContainer() {
             <NotebookPen color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[18px] text-black">
+            <h2 className="font-medium text-[22px] text-gray-800">
               {t("item_82")}
             </h2>
           </div>
@@ -186,7 +186,7 @@ function MainContainer() {
           <NotebookText color="white" size={25} />
         </div>
         <div>
-          <h2 className="font-medium text-[18px] text-black">{t("item_7")}</h2>
+          <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
           <span className="text-[22px] font-semibold text-orange-800">
             {dashboard_data?.plans || 0} ta
           </span>

@@ -8,7 +8,7 @@ function ReceiptInformation() {
   return (
     <div>
       <div className="pt-2 pl-2">
-        <h2 className="text-xl font-[500] w-[220px] text-center pb-2">
+        <h2 className="text-xl font-[500] w-[220px] text-center pb-2 text-white">
           {t("item_10")} {/* Malumotnoma olish */}
         </h2>
         <div className="w-full bg-[#E8E8E8] h-[4px] rounded-full">
@@ -20,7 +20,7 @@ function ReceiptInformation() {
         {receipt_information.map((item: any) => (
           <div
             key={item.id}
-            className="h-[130px] shadow rounded-lg flex items-center justify-between px-5 cursor-pointer"
+            className="h-[130px] shadow rounded-lg flex items-center justify-between px-5 cursor-pointer bg-white"
             onClick={() => window.open('https://my.gov.uz', '_blank')}
           >
             <div className="flex flex-col gap-5">

@@ -44,7 +44,7 @@ function ReceivedReport() {
     <div className="px-5 w-full">
       {isReportsLoading && <h1>Yuklanmoqda...</h1>}
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
-      <div className="w-full border border-[silver] rounded-xl px-3 py-5">
+      <div className="w-full border bg-white/90 border-[silver] rounded-xl px-3 py-5">
         <div className="flex items-center gap-5 mb-6">
           <div>
             <Input

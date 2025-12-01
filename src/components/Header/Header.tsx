@@ -127,7 +127,7 @@ function Header({ onLogout }: HeaderProps) {
     <>
       <div className="h-[70px] shadow flex items-center justify-between px-3">
         <div>
-          <span className="text-[18px]">
+          <span className="text-[18px] text-white">
             {t("technical_inquiries")}:
             <NavLink
               className={"text-[#09B86F] px-2"}
@@ -146,7 +146,7 @@ function Header({ onLogout }: HeaderProps) {
                 className="h-[42px] w-[42px] bg-transparent border-1 text-gray-600 hover:text-[#09B86F] hover:bg-gray-100 relative"
                 variant="outline"
               >
-                <Bell size={20} />
+                <Bell size={20} color="white" />
                 {/* ✅ Local storage'dan o'qilgan count ni ko'rsatamiz */}
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
@@ -202,7 +202,7 @@ function Header({ onLogout }: HeaderProps) {
           </Button>
 
           <Select value={currentLang} onValueChange={handleChangeLang}>
-            <SelectTrigger className="w-[120px] min-h-[42px] shadow-none">
+            <SelectTrigger className="w-[120px] text-white min-h-[42px] shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -215,7 +215,7 @@ function Header({ onLogout }: HeaderProps) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-[40px] w-[40px] rounded-full bg-transparent border-1 text-[#09B86F] hover:text-[white] hover:bg-[#09B86F]">
+              <Button className="h-[40px] w-[40px] rounded-full bg-white/20 border-1 text-[#069458] hover:text-[white] hover:bg-[#09B86F]">
                 <User2 size={38} />
               </Button>
             </DropdownMenuTrigger>
@@ -232,7 +232,7 @@ function Header({ onLogout }: HeaderProps) {
           </DropdownMenu>
 
           <Button
-            className="h-[40px] w-[40px] bg-transparent border-1 hover:bg-[#FF5445] text-[#FF5445] hover:text-[white]"
+            className="h-[40px] w-[40px] bg-white/10 border-1 hover:bg-[#FF5445] text-[#FF5445] hover:text-[white]"
             onClick={handleLogout}
           >
             <LogOut />

@@ -108,7 +108,7 @@ function UpdatePlans() {
   };
 
   return (
-    <div className="px-5 py-5 w-full mb-30">
+    <div className="px-5 py-5 w-full mb-30 bg-white/90">
       <h1 className="text-2xl font-bold mb-5">Rejani Yangilash</h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3">

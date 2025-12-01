@@ -102,7 +102,7 @@ function Newsletters() {
   };
 
   return (
-    <div className="px-5 w-full pb-10">
+    <div className="p-5 w-full pb-10 bg-white/90">
       {/* ✅ Filter Select */}
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         <Select

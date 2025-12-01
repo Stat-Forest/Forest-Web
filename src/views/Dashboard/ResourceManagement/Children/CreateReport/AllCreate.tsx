@@ -355,8 +355,8 @@ function AllCreateReportItem() {
     if (!submitAt) return "Noma'lum";
 
     if (submitAt.includes("CHORAK")) {
-      const [year, quarter] = submitAt.split("-CHORAK_");
-      return `${year} yil ${quarter}-chorak`;
+      // "2025-CHORAK_1" -> "2025 yil 1-chorak"
+      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
     }
 
     return submitAt;
@@ -374,7 +374,7 @@ function AllCreateReportItem() {
       </div>
       <form
         onSubmit={handleSubmit}
-        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 ${
+        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-white ${
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >

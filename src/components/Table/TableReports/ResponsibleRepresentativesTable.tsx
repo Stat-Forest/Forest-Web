@@ -68,10 +68,10 @@ function ResponsibleRepresentativesTable({
             <TableCell className="w-[12%] text-base font-[300] border-none">
               {item?.last_name || "-"}
             </TableCell>
-            <TableCell className="w-[18%] text-base font-[300] border-none">
+            <TableCell className="w-[18%] text-base font-[300] border-none whitespace-normal break-words">
               {item?.organization_name || "-"}
             </TableCell>
-            <TableCell className="w-[18%] text-base font-[300] border-none">
+            <TableCell className="w-[18%] text-base font-[300] border-none whitespace-normal break-words">
               {item?.statement_name || "-"}
             </TableCell>
             <TableCell className="w-[10%] text-base font-[300] border-none">

@@ -176,13 +176,12 @@
   }
 }
 
-/* body {
-  background: linear-gradient(rgba(0, 50, 0, 0.5), rgba(0, 50, 0, 0.5)),
-    url("https://images.photowall.com/products/58341/foggy-forest-4.jpg?h=699&q=85");
+body {
+  background: linear-gradient(#a7bcb075, #e7fced7d), url(./assets/bg.png);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-} */
+}
 
 /* HTML: <div class="loader"></div> */
 .loader {
@@ -206,4 +205,40 @@
   80% {
     background-position: 0% 100%, 50% 100%, 100% 0%;
   }
+}
+
+/* Individual colors */
+.neon-yellow {
+  background: #facc15;
+  background: radial-gradient(
+    circle,
+    rgba(250, 204, 21, 0.52) 0%,
+    rgba(255, 255, 255, 0.73) 100%
+  );
+}
+.neon-red {
+  background: #f53636;
+  background: linear-gradient(
+    90deg,
+    rgba(245, 54, 54, 0.40) 0%,
+    rgba(255, 255, 255, 0.62) 100%
+  );
+}
+.neon-blue {
+  background-color: #2563eb;
+}
+.neon-gray {
+  background-color: #4b5563;
+}
+.neon-green {
+  background-color: #16a34a;
+}
+.neon-lightgreen {
+  background-color: #86efac;
+}
+.neon-purple {
+  background-color: #7c3aed;
+}
+.neon-orange {
+  background-color: #ea580c;
 }

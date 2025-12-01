@@ -60,14 +60,14 @@ function Sidebar() {
       return (
         <Sheet key={item.id}>
           <SheetTrigger asChild>
-            <div className="cursor-pointer p-2 hover:bg-gray-200 rounded-md flex items-center gap-2">
+            <div className="cursor-pointer transition-transform duration-200 hover:scale-105 p-2 hover:bg-gray-200 rounded-md flex items-center gap-2">
               {item.icon && <img src={item.icon} alt="" className="w-5 h-5" />}
               <span>{t(item.name)}</span>
             </div>
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="ml-[310px] bg-white text-black min-w-[460px] sm:w-[460px]"
+            className="ml-[310px] bg-white/90 text-black min-w-[460px] sm:w-[460px]"
           >
             <SheetHeader>
               <SheetTitle>{t(item.name)}</SheetTitle>
@@ -77,7 +77,7 @@ function Sidebar() {
                 <NavLink
                   key={index}
                   to={`/resource-management/${child.id}`}
-                  className="text-[#797777] hover:underline flex items-center gap-1"
+                  className="text-[#535252] hover:underline flex items-center gap-1"
                 >
                   <FileText />
                   <h2 className="text-[17px]">{t(child.name)}</h2>
@@ -93,7 +93,7 @@ function Sidebar() {
       <NavLink
         to={item.path}
         key={item.id}
-        className="p-2 hover:bg-gray-200 rounded-md flex items-center gap-2"
+        className="p-2 hover:bg-gray-200 transition-transform duration-200 hover:scale-105 rounded-md flex items-center gap-2"
       >
         {item.default_icon && (
           <img src={item.default_icon} alt="" className="w-5 h-5" />
@@ -104,7 +104,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-white flex flex-col justify-between">
+    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-white/80 flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="w-full h-[50px] rounded-full flex items-center justify-center text-black mb-3 gap-3">
@@ -113,39 +113,41 @@ function Sidebar() {
         </div>
 
         {/* Foydalanuvchi kartochkasi */}
-        <div className="bg-[#09b86f] w-full h-[250px] rounded-2xl p-3 flex justify-center items-center flex-col gap-0.5">
-          <div className="mb-2">
+        <div className="bg-[#049156df] w-full rounded-2xl p-4 flex justify-center flex-col gap-0.5">
+          <div className="mb-2 flex gap-2">
             <div className="bg-white/40 h-[50px] w-[50px] flex items-center justify-center rounded-3xl">
               <User2 />
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <h3 className="font-bold text-white text-center text-lg">
-              {user?.results[0]?.first_name || ""}{" "}
+             <h3 className="font-bold text-white text-lg">
+              {user?.results[0]?.first_name || ""} <br />
               {user?.results[0]?.last_name || ""}
             </h3>
+          </div>
+          <div className="flex flex-col gap-2">
+
             <div className="flex items-center gap-2 text-left">
-              <span className="text-[white] text-[16px] font-light">
+              {/* <span className="text-[white] text-[16px] font-light">
                 {t("user_role")}: 
-              </span>
+              </span> */}
               <h3 className="font-bold text-white text-[18px]">
                 {user?.results[0]?.role || ""}
               </h3>
             </div>
-            <div className="flex items-center gap-2 text-left">
+            <hr />
+            {/* <div className="flex items-center gap-2 text-left">
               <span className="text-[white] text-[16px] font-light">
                 {t("item_78")}:
               </span>
               <h3 className="font-bold text-white text-[18px]">
                 {user?.results[0]?.user_number || ""}
               </h3>
-            </div>
+            </div> */}
             {user?.results[0]?.organization_name && (
               <div className="flex items-center gap-2">
-                <span className="text-[white] text-[16px] font-light">
+                {/* <span className="text-[white] text-[16px] font-light">
                   {t("item_12")}:
-                </span>
-                <h3 className="font-bold text-white text-[18px]">
+                </span> */}
+                <h3 className="font-bold text-white text-[16px]">
                   {user?.results[0]?.organization_name || ""}
                 </h3>
               </div>

@@ -7,7 +7,7 @@ function MainPage() {
     <div className="px-3 py-4">
       {/* title */}
       <div className="pt-2 pl-2">
-        <h2 className="text-xl font-[500] w-[180px] text-center">
+        <h2 className="text-xl font-[500] text-white w-[180px] text-center">
           {t("item_8")}
         </h2>
         <div className="w-full bg-[#E8E8E8] h-[3px] rounded-full">
