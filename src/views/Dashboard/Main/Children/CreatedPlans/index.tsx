@@ -130,7 +130,7 @@ function CreatedPlans() {
   };
 
   return (
-    <div className="w-full px-5 pb-10">
+    <div className="w-full p-5 pb-10 bg-white/90">
       {/* Filter Section */}
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         {/* Statement Filter */}

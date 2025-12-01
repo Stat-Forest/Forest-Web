@@ -192,7 +192,7 @@ function InnersCreateReportItem() {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 ${
+      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-white ${
         isSubmitting ? "opacity-50 pointer-events-none" : ""
       }`}
     >

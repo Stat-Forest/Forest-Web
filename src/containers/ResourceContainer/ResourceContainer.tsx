@@ -589,7 +589,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
           <TabSkeleton />
         ) : (
           <TabsList
-            className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3"
+            className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3 bg-white"
             data-aos="fade-down"
           >
             {tableHeadersData.map((col: ReportColumn) => (
@@ -624,7 +624,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   )}
                 </div>
 
-                <div data-aos="fade-up" data-aos-delay="100">
+                <div>
                   {isRowsLoading ? (
                     <div className="space-y-2">
                       <Skeleton className="h-6 w-48 rounded-md" />
@@ -687,7 +687,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     <FilterSkeleton />
                   ) : (
                     <div
-                      className="flex flex-wrap gap-3 w-full md:w-auto"
+                      className="flex flex-wrap gap-1 w-full md:w-auto"
                       data-aos="fade-left"
                       data-aos-delay="400"
                     >
@@ -695,7 +695,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         placeholder={`${t("item_79")}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full md:w-[250px] border-black min-h-[40px] focus:border-[#09B86F] transition-colors duration-300"
+                        className="w-full md:w-[250px] border-white bg-white min-h-[40px] focus:border-[#09B86F] transition-colors duration-300"
                         data-aos="fade-up"
                         data-aos-delay="500"
                       />
@@ -704,7 +704,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         onValueChange={setSelectedRegion}
                       >
                         <SelectTrigger
-                          className="w-full md:w-[220px] text-xl min-h-[40px] border-black focus:border-[#09B86F] transition-colors duration-300"
+                          className="w-full md:w-[220px] text-xl min-h-[40px] bg-white border-white focus:border-[#09B86F] transition-colors duration-300"
                           data-aos="fade-up"
                           data-aos-delay="550"
                         >
@@ -726,7 +726,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         onValueChange={setSelectedPeriod}
                       >
                         <SelectTrigger
-                          className="w-full md:w-[220px] text-xl min-h-[40px] border-black focus:border-[#09B86F] transition-colors duration-300"
+                          className="w-full md:w-[220px] text-xl min-h-[40px] bg-white border-white focus:border-[#09B86F] transition-colors duration-300"
                           data-aos="fade-up"
                           data-aos-delay="600"
                         >
@@ -796,7 +796,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       </Select>
 
                       <Input
-                        className="w-full border border-[black] md:w-[150px] focus:border-[#09B86F] transition-colors duration-300"
+                        className="w-full border border-[white] bg-white md:w-[150px] focus:border-[#09B86F] transition-colors duration-300"
                         type="number"
                         placeholder={`${t("year")}`}
                         value={selectedYear}
@@ -816,7 +816,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   )}
                 </div>
 
-                <div data-aos="fade-in" data-aos-delay="300">
+                <div>
                   {isRowsFetching ? (
                     <div className="space-y-3">
                       <div className="flex justify-between">

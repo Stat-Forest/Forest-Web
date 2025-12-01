@@ -154,7 +154,7 @@ const TableColumn = forwardRef(
 
     return (
       <>
-        <div className="overflow-x-auto" ref={tableRef} id="printableTable">
+        <div className="overflow-x-auto bg-white p-4 rounded-xl" ref={tableRef} id="printableTable">
           <table className="w-full border-collapse">
             <thead className="w-full">
               {headerRows.map((row, rowIndex) => (
@@ -284,8 +284,8 @@ const TableColumn = forwardRef(
           </table>
         </div>
 
-        <div className="py-14 pr-2">
-          <div className="flex items-center gap-5 mb-6 ">
+        <div className="p-4 my-2 bg-white rounded-xl">
+          <div className="flex items-center gap-2 mb-6 ">
             <div>
               <Input
                 type="text"

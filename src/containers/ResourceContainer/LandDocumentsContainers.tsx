@@ -145,7 +145,7 @@ function LandDocumentsContainers() {
   }
 
   return (
-    <div className="w-full px-5 pb-10">
+    <div className="w-full p-5 my-5 bg-white rounded-xl">
       {/* 🔍 Filter */}
       <div className="my-5 flex items-center gap-3 flex-wrap">
         <Input

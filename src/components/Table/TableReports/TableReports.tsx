@@ -46,18 +46,20 @@ function TableReports({ data }: any) {
             <TableRow
               key={item.id}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
-              // onClick={() => toggleRow(item.id)}
               onClick={() => navigate(`/resource-management/${item.statement}`)}
             >
-              <TableCell className="w-[20%] text-lg font-[300] border-none">
+              <TableCell className="w-[40%] text-lg font-[300] border-none whitespace-normal break-words">
                 {item?.organization_name}
               </TableCell>
-              <TableCell className="w-[20%] text-base font-[300] border-none">
+
+              <TableCell className="w-[20%] text-base font-[300] border-none whitespace-normal break-words">
                 {item?.statement_name}
               </TableCell>
+
               <TableCell className="w-[20%] text-base font-[300] border-none">
                 {item?.period}
               </TableCell>
+
               <TableCell className="w-[20%] text-base font-[300] border-none">
                 {[
                   item?.accepted_at,
@@ -66,6 +68,7 @@ function TableReports({ data }: any) {
                   item?.created_at,
                 ].find((v) => v != null && v !== "")}
               </TableCell>
+
               <TableCell className="text-right text-base font-[400] border-none">
                 <span
                   className={`px-4 py-1 rounded-full ${
@@ -88,54 +91,6 @@ function TableReports({ data }: any) {
                 </span>
               </TableCell>
             </TableRow>
-
-            {/* DETAIL QISMI */}
-            {/* {activeId === item.id && (
-              <div>
-                <TableRow className="bg-[#f9f9f9]">
-                  <TableCell colSpan={5} className="p-4">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full border border-gray-300">
-                        <thead className="bg-gray-200">
-                          <tr>
-                            {item.report_items[0]?.statement_columns?.map(
-                              (col: any) => (
-                                <th
-                                  key={col.statement_column_id}
-                                  className="px-2 py-1 border border-gray-300 text-left"
-                                >
-                                  {col.statement_column_name}
-                                </th>
-                              )
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {item.report_items.map(
-                            (reportItem: any, idx: number) => (
-                              <tr key={idx}>
-                                {reportItem.statement_columns.map(
-                                  (col: any) => (
-                                    <td
-                                      key={col.statement_column_id}
-                                      className="px-2 py-1 border border-gray-300 text-left"
-                                    >
-                                      {col.inners
-                                        .map((inner: any) => inner.value)
-                                        .join(", ")}
-                                    </td>
-                                  )
-                                )}
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </div>
-            )} */}
           </>
         ))}
       </TableBody>

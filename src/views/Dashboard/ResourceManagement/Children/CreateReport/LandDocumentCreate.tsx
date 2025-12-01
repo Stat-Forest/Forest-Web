@@ -50,7 +50,7 @@ function LandDocumentCreate() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 rounded-xl max-w-4xl bg-white">
       {/* Header Section */}
       <div className="flex items-center gap-4 mb-6">
         <Button

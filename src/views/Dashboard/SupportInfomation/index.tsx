@@ -14,7 +14,7 @@ function SupportInformation() {
 
   return (
     <div className="pt-2 px-4">
-      <h2 className="text-xl font-semibold text-black mb-2">
+      <h2 className="text-xl font-semibold text-white mb-2">
         {t("item_11")}
       </h2>
       <div className="w-full bg-gray-200 h-[5px] rounded-full mb-4">
@@ -26,7 +26,7 @@ function SupportInformation() {
         collapsible
         className="w-full space-y-2 flex flex-col gap-3"
       >
-        <AccordionItem value="item-1" className="shadow py-2 rounded-lg px-5">
+        <AccordionItem value="item-1" className="shadow py-2 rounded-lg px-5 bg-white">
           <AccordionTrigger className="text-2xl font-medium text-green-600">
             {t("item_61")}
           </AccordionTrigger>
@@ -36,7 +36,7 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-2" className="shadow py-2 rounded-lg px-5">
+        <AccordionItem value="item-2" className="shadow py-2 rounded-lg px-5 bg-white">
           <AccordionTrigger className="text-2xl font-medium text-green-600">
             {t("item_62")}
           </AccordionTrigger>
@@ -45,7 +45,7 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-3" className="shadow py-2 rounded-lg px-5">
+        <AccordionItem value="item-3" className="shadow py-2 rounded-lg px-5 bg-white">
           <AccordionTrigger className="text-2xl font-medium text-green-600">
             {t("item_63")}
           </AccordionTrigger>
@@ -58,7 +58,7 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-4" className="shadow py-2 rounded-lg px-5">
+        <AccordionItem value="item-4" className="shadow py-2 rounded-lg px-5 bg-white">
           <AccordionTrigger className="text-2xl font-medium text-green-600">
             {t("item_64")}
           </AccordionTrigger>
@@ -72,7 +72,7 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-5" className="shadow py-2 rounded-lg px-5">
+        <AccordionItem value="item-5" className="shadow py-2 rounded-lg px-5 bg-white">
           <AccordionTrigger className="text-2xl font-medium text-green-600">
             5. {t("item_65")}
           </AccordionTrigger>

@@ -89,7 +89,7 @@ function CreatedPlantable({
               <TableCell className="w-[5%] text-base font-[300] border-none">
                 {getGlobalIndex(index)}
               </TableCell>
-              <TableCell className="w-[20%] text-lg font-[300] border-none">
+              <TableCell className="w-[50%] text-lg font-[300] border-none whitespace-normal break-words">
                 {item?.organization || "N/A"}
               </TableCell>
               <TableCell className="w-[20%] text-base font-[300] border-none">

@@ -114,7 +114,7 @@ function CreateReport() {
   };
 
   return (
-    <div className="px-5 py-5 w-full mb-30">
+    <div className="px-5 py-5 w-full mb-30 bg-white/90">
       <div>
         <Button
           className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
