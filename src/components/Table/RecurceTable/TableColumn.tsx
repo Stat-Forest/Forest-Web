@@ -439,7 +439,7 @@ const TableColumn = forwardRef(
 
         {/* Detal ko'rinish */}
         {selectedRow && (
-          <>
+          <div className="p-4 bg-white rounded-xl">
             <div className="flex items-center justify-between my-5">
               <div className="flex items-center gap-2">
                 {selectedRow.status === "cancelled" && (
@@ -737,7 +737,7 @@ const TableColumn = forwardRef(
               setOpen={setIsCancelModalOpen}
               reportId={selectedRow?.id}
             />
-          </>
+          </div>
         )}
       </>
     );
