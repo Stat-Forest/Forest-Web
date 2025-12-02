@@ -154,7 +154,11 @@ const TableColumn = forwardRef(
 
     return (
       <>
-        <div className="overflow-x-auto bg-white p-4 rounded-xl" ref={tableRef} id="printableTable">
+        <div
+          className="overflow-x-auto bg-white p-4 rounded-xl"
+          ref={tableRef}
+          id="printableTable"
+        >
           <table className="w-full border-collapse">
             <thead className="w-full">
               {headerRows.map((row, rowIndex) => (
@@ -451,18 +455,21 @@ const TableColumn = forwardRef(
                     </span>
                   </span>
                 )}
+                <span>{selectedRow.submit_at}</span>
               </div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
                   {(user_role === "tashkilot_rahbari" ||
-                    user_role === "bolim_admin") && (
-                    <Button
-                      onClick={() => setIsCancelModalOpen(true)}
-                      className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
-                    >
-                      {t("recycle")}
-                    </Button>
-                  )}
+                    user_role === "bolim_admin") &&
+                    selectedRow.status !== "accepted" && (
+                      <Button
+                        onClick={() => setIsCancelModalOpen(true)}
+                        className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                      >
+                        {t("recycle")}
+                      </Button>
+                    )}
+
                   {user_role == "tashkilot_rahbari" && (
                     <Button
                       onClick={async () => {
@@ -618,35 +625,36 @@ const TableColumn = forwardRef(
                                 )}
 
                                 {/* Amallar faqat birinchi qatorda chiqsin */}
-                                {innerIndex === 0 && (
-                                  <td
-                                    className="border border-black px-2 py-1 text-center"
-                                    rowSpan={maxInners}
-                                  >
-                                    <div className="flex items-center justify-center gap-2">
-                                      <Button
-                                        className="bg-[#09B86F] hover:bg-[#09B86F]"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(
-                                            `/resource-management/update/${selectedRow?.id}`
-                                          );
-                                        }}
-                                      >
-                                        <Edit2 />
-                                      </Button>
-                                      <Button
-                                        className="bg-[#09B86F] hover:bg-[#09B86F]"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteReport(selectedRow.id);
-                                        }}
-                                      >
-                                        <Trash2 />
-                                      </Button>
-                                    </div>
-                                  </td>
-                                )}
+                                {innerIndex === 0 &&
+                                  selectedRow.status == "saved" && (
+                                    <td
+                                      className="border border-black px-2 py-1 text-center"
+                                      rowSpan={maxInners}
+                                    >
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Button
+                                          className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(
+                                              `/resource-management/update/${selectedRow?.id}`
+                                            );
+                                          }}
+                                        >
+                                          <Edit2 />
+                                        </Button>
+                                        <Button
+                                          className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteReport(selectedRow.id);
+                                          }}
+                                        >
+                                          <Trash2 />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  )}
                               </tr>
                             )
                           )}
