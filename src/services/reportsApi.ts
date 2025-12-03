@@ -94,7 +94,16 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
-    getPlantsReport: builder.query<any, { statement: string; lang: string; parent: string; page: number; perPage: number; }>({
+    getPlantsReport: builder.query<
+      any,
+      {
+        statement: string;
+        lang: string;
+        parent: string;
+        page: number;
+        perPage: number;
+      }
+    >({
       query: ({ statement, lang, parent, page, perPage }) => ({
         url: `/plants/?statement=${statement}&lang=${lang}&parent=${parent}&page=${page}&per_page=${perPage}`,
         method: "GET",
@@ -174,6 +183,23 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
+    getReportPlant: builder.query<
+      any,
+      { lang: string; page: number; per_page: number; search: string }
+    >({
+      query: ({ lang, page, per_page, search }) => ({
+        url: `/report-plant/?lang=${lang}&page=${page}&per_page=${per_page}&search=${search}`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
+    getReportPlantById: builder.query<any, { id: string }>({
+      query: ({ id }) => ({
+        url: `/report-plant/${id}/`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
 
     // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
@@ -224,7 +250,6 @@ export const reportApi = createApi({
       }),
       invalidatesTags: ["Reports"],
     }),
-
     // ==== 🟦 PUT endpoints ====
     updateReport: builder.mutation({
       query: ({ id, ...rest }) => ({
@@ -232,7 +257,7 @@ export const reportApi = createApi({
         method: "PUT",
         body: rest,
       }),
-      invalidatesTags: ["Reports"], 
+      invalidatesTags: ["Reports"],
     }),
 
     updateReportStatus: builder.mutation({
@@ -265,7 +290,7 @@ export const reportApi = createApi({
         method: "PUT",
         body: { owner_id: ownerId },
       }),
-      invalidatesTags: ["Reports"], 
+      invalidatesTags: ["Reports"],
     }),
 
     // ==== 🟥 DELETE endpoint ====
@@ -332,6 +357,8 @@ export const {
   useGetReganalReportQuery,
   useGetIndividualQuery,
   useLazyGetReganalReportQuery,
+  useGetReportPlantQuery,
+  useGetReportPlantByIdQuery,
 
   // POST
   useCreateReportMutation,

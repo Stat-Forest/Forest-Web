@@ -652,8 +652,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         onClick={() =>
                           navigate(`/resource-management/create/${reportName}`)
                         }
-                        data-aos="zoom-in"
-                        data-aos-delay="300"
                       >
                         {t("createNewReport")}
                       </button>
