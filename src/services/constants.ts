@@ -20,7 +20,11 @@ export const periods = [
   { value: "daily", label_uz: "Kunlik", label_ru: "Ежедневный" },
   { value: "weekly", label_uz: "Haftalik", label_ru: "Еженедельный" },
   { value: "monthly", label_uz: "Oylik", label_ru: "Ежемесячный" },
-  { value: "quarterly", label_uz: "Choraklik (3 oy)", label_ru: "Ежеквартальный (3 месяца)" },
+  {
+    value: "quarterly",
+    label_uz: "Choraklik (3 oy)",
+    label_ru: "Ежеквартальный (3 месяца)",
+  },
   { value: "yearly", label_uz: "Yillik", label_ru: "Ежегодный" },
 ];
 
@@ -44,6 +48,32 @@ export const regions2 = [
   { value: "jizzax", label: "Jizzax", label2: "Джизак" },
   { value: "sirdaryo", label: "Sirdaryo", label2: "Сырдарья" },
   { value: "xorazm", label: "Xorazm", label2: "Хорезм" },
-  { value: "qoraqalpog‘iston", label: "Qoraqalpog‘iston", label2: "Каракалпакстан" },
-  { value: "republic", label: "Respublika tashkilotlari", label2: "Республиканские организации" },
+  {
+    value: "qoraqalpog‘iston",
+    label: "Qoraqalpog‘iston",
+    label2: "Каракалпакстан",
+  },
+  {
+    value: "republic",
+    label: "Respublika tashkilotlari",
+    label2: "Республиканские организации",
+  },
+];
+
+export const DocumentType = [
+  { value: "farmon", label: "Farmon" },
+  { value: "qaror", label: "Qaror" },
+  { value: "buyruq", label: "Buyruq" },
+  { value: "nizom", label: "Nizom" },
+  { value: "yoriqnoma", label: "Yo‘riqnoma" },
+  { value: "reglament", label: "Reglament" },
+  { value: "ariza", label: "Ariza" },
+  { value: "malumotnoma", label: "Ma’lumotnoma" },
+  { value: "xizmat_xati", label: "Xizmat xati" },
+  { value: "dalolatnoma", label: "Dalolatnoma" },
+  { value: "bayonnoma", label: "Bayonnoma" },
+  { value: "ishonchnoma", label: "Ishonchnoma" },
+  { value: "tushuntirish_xati", label: "Tushuntirish xati" },
+  { value: "tavsifnoma", label: "Tavsifnoma" },
+  { value: "other", label: "Boshqa" },
 ];

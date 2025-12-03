@@ -31,6 +31,14 @@ export const generalApi = createApi({
       providesTags: ["Reports"],
     }),
 
+    landDocumentCreate: builder.mutation({
+      query: (payload) => ({
+        url: `/land-documents/`,
+        method: "POST",
+        body: payload, // payload bu FormData bo'lishi kerak
+      }),
+      invalidatesTags: ["Reports"],
+    }),
   }),
 });
 
@@ -40,4 +48,5 @@ export const {
   useGetAnnouncementsReportsQuery,
   useGetNotificationReportsQuery,
   useGetLandDocumentsReportsQuery,
+  useLandDocumentCreateMutation
 } = generalApi;

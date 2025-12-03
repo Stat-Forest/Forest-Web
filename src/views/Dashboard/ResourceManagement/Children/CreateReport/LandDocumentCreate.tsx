@@ -28,16 +28,73 @@ import { format } from "date-fns";
 import { uz } from "date-fns/locale";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  useGetOrganizationReportsQuery,
+  useLandDocumentCreateMutation,
+} from "@/services/generalApi";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
+import { DocumentType } from "@/services/constants";
 
 function LandDocumentCreate() {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [date, setDate] = useState<Date>();
+  const { t } = useTranslation();
+  const lang = useSelector((state: RootState) => state.language.lang);
+  const [landDocumentCreate] = useLandDocumentCreateMutation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const {
+    data: organization,
+    isLoading: organization_loading,
+    error: organization_error,
+  } = useGetOrganizationReportsQuery({ lang });
+
+  const filteredOrganizations = organization?.filter((item: any) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log("Form submitted", selectedFile, date);
+
+    if (!selectedFile || !date || !selectedOrg) {
+      alert("Majburiy maydonlarni to‘ldiring!");
+      return;
+    }
+
+    const form = e.target as HTMLFormElement;
+    const nameInput = form.elements.namedItem("name") as HTMLInputElement;
+    const typeInput = form.elements.namedItem(
+      "document_type"
+    ) as HTMLSelectElement;
+    const commentInput = form.elements.namedItem(
+      "comment"
+    ) as HTMLTextAreaElement;
+
+    const formData = new FormData();
+    formData.append("name", nameInput.value);
+    formData.append("date", format(date, "dd.MM.yyyy"));
+    formData.append("document_type", typeInput.value);
+    formData.append("organization", selectedOrg);
+    formData.append("comment", commentInput.value || "");
+    formData.append("file", selectedFile);
+
+    console.log(formData)
+    console.log(selectedFile)
+
+    try {
+      await landDocumentCreate(formData).unwrap();
+      alert("Hujjat yaratildi!");
+      navigate(-1);
+      console.log(formData)
+    } catch (error) {
+      console.error(error);
+      alert("Xatolik yuz berdi!");
+      console.log(formData)
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,12 +141,12 @@ function LandDocumentCreate() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Document Name */}
             <div className="space-y-2">
-              <Label htmlFor="document_name" className="text-sm font-medium">
+              <Label htmlFor="name" className="text-sm font-medium">
                 Hujjat Nomi *
               </Label>
               <Input
-                id="document_name"
-                name="document_name"
+                id="name"
+                name="name"
                 placeholder="Hujjat nomini kiriting"
                 className="h-11"
                 required
@@ -184,29 +241,58 @@ function LandDocumentCreate() {
                     <SelectValue placeholder="Hujjat turini tanlang" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-200 shadow-lg">
-                    <SelectItem value="type1">Egalik hujjati</SelectItem>
-                    <SelectItem value="type2">Ijara shartnomasi</SelectItem>
-                    <SelectItem value="type3">
-                      Sotib olish shartnomasi
-                    </SelectItem>
+                    {DocumentType.map((doc_type: any, index: number) => (
+                      <SelectItem key={index} value={doc_type.value}>
+                        {doc_type.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             {/* Organization */}
-            <div className="space-y-2">
-              <Label htmlFor="organization" className="text-sm font-medium">
-                Tashkilot *
-              </Label>
-              <Select name="organization" required>
-                <SelectTrigger className="h-11 bg-white border-gray-300">
-                  <SelectValue placeholder="Tashkilotni tanlang" />
+            <div className="w-full">
+              <Label className="pb-1.5 text-md block">{t("item_12")}</Label>
+              <Select
+                name="organization"
+                value={selectedOrg ?? ""}
+                onValueChange={setSelectedOrg}
+              >
+                <SelectTrigger className="w-full min-h-[45px]">
+                  <SelectValue placeholder={t("selectOrganization")} />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200 shadow-lg">
-                  <SelectItem value="org1">Yer kadastri boshqarmasi</SelectItem>
-                  <SelectItem value="org2">Davlat arxivi</SelectItem>
-                  <SelectItem value="org3">Notariat idorasi</SelectItem>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="Izlash..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full mb-2"
+                    />
+                  </div>
+
+                  {organization_loading && (
+                    <div className="text-center text-sm py-2">
+                      {t("loading")}
+                    </div>
+                  )}
+                  {organization_error && (
+                    <div className="text-center text-sm text-red-500 py-2">
+                      {t("error_occurred")}
+                    </div>
+                  )}
+                  {filteredOrganizations?.length > 0 ? (
+                    filteredOrganizations.map((item: any) => (
+                      <SelectItem key={item?.id} value={String(item?.id)}>
+                        {item.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="text-center text-sm text-gray-500 py-2">
+                      {t("noThingsFound")}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
