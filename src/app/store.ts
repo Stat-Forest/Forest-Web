@@ -7,6 +7,7 @@ import { authApi } from "@/services/authApi";
 import { generalApi } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
+import sidebarReducer from "@/features/sidebarSlice";
 
 // 🆕 persist qo‘shiladi
 import { persistStore, persistReducer } from "redux-persist";
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   report: reportReducer,
   language: languageReducer,
+   sidebar: sidebarReducer,
 });
 
 const persistedReducer = persistReducer(

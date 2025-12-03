@@ -1,4 +1,11 @@
-import { LogOut, User2, VideoIcon, Bell } from "lucide-react";
+import {
+  LogOut,
+  User2,
+  VideoIcon,
+  Bell,
+  PanelLeftClose,
+  PanelRightClose,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Select,
@@ -46,6 +53,7 @@ import { Card, CardContent } from "../ui/card";
 // persistor
 import { persistor } from "@/app/store";
 import { NavLink } from "react-router-dom";
+import { toggleSidebar } from "@/features/sidebarSlice";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -58,6 +66,7 @@ function Header({ onLogout }: HeaderProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
 
   // ✅ Local storage'dan o'qilgan notification count
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -126,11 +135,19 @@ function Header({ onLogout }: HeaderProps) {
   return (
     <>
       <div className="h-[70px] shadow flex items-center justify-between px-3">
-        <div>
-          <span className="text-[18px] text-white">
+        <div className="flex items-center gap-3">
+          <button onClick={() => dispatch(toggleSidebar())}>
+            {isOpen ? (
+              <PanelLeftClose color="white" className="cursor-pointer" />
+            ) : (
+              <PanelRightClose color="white" className="cursor-pointer" />
+            )}
+          </button>
+
+          <span className="text-[18px] text-black">
             {t("technical_inquiries")}:
             <NavLink
-              className={"text-[#09B86F] px-2"}
+              className={"text-[#ffffff] px-2"}
               to={"tel:+998 71 207 88 77 (1010)"}
             >
               +998 71 207 88 77 ({t("phone_extension")}: 1010)

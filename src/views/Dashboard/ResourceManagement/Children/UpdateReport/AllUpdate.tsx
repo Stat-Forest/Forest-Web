@@ -12,19 +12,25 @@ import { Input } from "@/components/ui/input";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
-  fetchReportDeadlines,
   useUpdateReportMutation,
   useGetStatementColumnsReportQuery,
   useGetReportByIdQuery,
   reportApi,
+  useGetDeadlinesReportQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
 import { useNavigate, useParams } from "react-router-dom";
-import InfiniteSelect from "@/components/ui/InfiniteSelect";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -81,11 +87,13 @@ function AllUpdateReportItem() {
     error: reportError,
   } = useGetReportByIdQuery(id ?? skipToken);
 
+  console.log(existingReport);
+
   const {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
-  } = useGetOrganizationReportsQuery({lang});
+  } = useGetOrganizationReportsQuery({ lang });
 
   const {
     data: tableHeadersData = [],
@@ -94,6 +102,34 @@ function AllUpdateReportItem() {
   } = useGetStatementColumnsReportQuery(
     reportIds ? { statementId: reportIds, lang, isUser: "true" } : skipToken
   );
+
+  const [deadlinePage, setDeadlinePage] = useState(1);
+  const perPage = 5;
+
+  const {
+    data: deadlineData,
+    isLoading: deadlineLoading,
+    error: deadlineError,
+  } = useGetDeadlinesReportQuery(
+    {
+      statement: reportIds as string,
+      page: deadlinePage,
+      perPage,
+      statement__period: "",
+    },
+    { skip: !reportIds }
+  );
+
+  const formatDeadlineText = (submitAt: string) => {
+    if (!submitAt) return "Noma'lum";
+
+    if (submitAt.includes("CHORAK")) {
+      // "2025-CHORAK_1" -> "2025 yil 1-chorak"
+      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
+    }
+
+    return submitAt;
+  };
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
@@ -312,17 +348,113 @@ function AllUpdateReportItem() {
           </div>
         )}
 
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <div>
-            <label className="block mb-1 text-sm font-medium">Deadline:</label>
-            <InfiniteSelect
-              placeholder="Tanlang"
-              fetchData={fetchReportDeadlines}
-              className="border-none w-[300px] text-base"
-              name="deadline"
-              value={selectedDeadlineId}
-              onValueChange={setSelectedDeadlineId}
-            />
+        <div className="flex flex-col gap-4">
+          {/* <div>
+            <span>Avval tanlangan deadline:</span>
+            {existingReport.submit_at}
+          </div> */}
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div>
+              <label className="block mb-1 text-lg font-medium">
+                {t("deadline")}:
+              </label>
+
+              <Select
+                value={selectedDeadlineId}
+                onValueChange={(val) => setSelectedDeadlineId(val)}
+              >
+                <SelectTrigger className="w-[300px]">
+                  <SelectValue
+                    placeholder={
+                      deadlineLoading
+                        ? "Yuklanmoqda..."
+                        : deadlineError
+                        ? "Xatolik yuz berdi"
+                        : t("selectDeadline")
+                    }
+                  />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {/* LOADING */}
+                  {deadlineLoading && (
+                    <div className="p-2 text-center text-muted-foreground text-sm">
+                      Yuklanmoqda...
+                    </div>
+                  )}
+
+                  {/* ERROR */}
+                  {deadlineError && (
+                    <div className="p-2 text-center text-red-500 text-sm">
+                      Ma'lumotlarni yuklashda xatolik
+                    </div>
+                  )}
+
+                  {/* DATA */}
+                  {!deadlineLoading &&
+                    !deadlineError &&
+                    deadlineData?.results?.length > 0 &&
+                    deadlineData.results.map((item: any) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {formatDeadlineText(item.submit_at)}
+                      </SelectItem>
+                    ))}
+
+                  {/* AGAR BO‘SH BO‘LSA */}
+                  {!deadlineLoading &&
+                    !deadlineError &&
+                    deadlineData?.results?.length === 0 && (
+                      <div className="p-2 text-center text-muted-foreground text-sm">
+                        Deadline mavjud emas
+                      </div>
+                    )}
+
+                  {/* PAGINATION */}
+                  {!deadlineLoading &&
+                    !deadlineError &&
+                    deadlineData?.count > perPage && (
+                      <div className="flex items-center justify-between px-2 py-1 border-t">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={deadlinePage === 1}
+                          onClick={() =>
+                            setDeadlinePage((p) => Math.max(p - 1, 1))
+                          }
+                        >
+                          {t("before")}
+                        </Button>
+
+                        <span className="text-xs text-gray-500">
+                          {deadlinePage} /{" "}
+                          {Math.ceil(deadlineData.count / perPage)}
+                        </span>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            deadlinePage >=
+                            Math.ceil(deadlineData.count / perPage)
+                          }
+                          onClick={() =>
+                            setDeadlinePage((p) =>
+                              Math.min(
+                                p + 1,
+                                Math.ceil(deadlineData.count / perPage)
+                              )
+                            )
+                          }
+                        >
+                          {t("next")}
+                        </Button>
+                      </div>
+                    )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
