@@ -28,6 +28,7 @@ import LandDocumentCreate from "./ResourceManagement/Children/CreateReport/LandD
 
 function Dashboard() {
   const lang = useSelector((state: RootState) => state.language.lang);
+  const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
   const { data: announcements } = useGetAnnouncementsReportsQuery({ lang });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [open, setOpen] = useState(false);
@@ -76,15 +77,17 @@ function Dashboard() {
 
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <div className="w-[310px] fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
-          <Sidebar />
-        </div>
+        {isOpen && (
+          <div className="w-[310px] fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
+            <Sidebar />
+          </div>
+        )}
 
         {/* Main content */}
-        <div className="flex-1 ml-[310px] overflow-y-auto relative">
+        <div className={`flex-1 ${isOpen ? "ml-[310px]" : "ml-0"} overflow-y-auto relative`}>
           <ScrollToTop />
           <Header onLogout={handleLogout} />
-
+          
           <Suspense
             fallback={<div className="p-8 text-center">Yuklanmoqda...</div>}
           >
@@ -126,7 +129,10 @@ function Dashboard() {
                 path="support-information"
                 element={<SupportInformation />}
               />
-              <Route path="/land-documents-create" element={<LandDocumentCreate />} />
+              <Route
+                path="/land-documents-create"
+                element={<LandDocumentCreate />}
+              />
               <Route path="/video" element={<Video />} />
 
               <Route path="*" element={<Navigate to="/main" replace />} />
