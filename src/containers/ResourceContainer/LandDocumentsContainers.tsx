@@ -49,7 +49,13 @@ function LandDocumentsContainers() {
     try {
       const token = localStorage.getItem("access_token");
 
-      const response = await fetch(doc.file_url, {
+      // 🔹 Agar URL http bo'lsa, avtomatik https ga o'zgartirish
+      let fileUrl = doc.file_url;
+      if (fileUrl.startsWith("http://")) {
+        fileUrl = fileUrl.replace("http://", "https://");
+      }
+
+      const response = await fetch(fileUrl, {
         method: "GET",
         headers: {
           Accept: "*/*",
@@ -61,30 +67,31 @@ function LandDocumentsContainers() {
         throw new Error(`Server xatosi: ${response.status}`);
       }
 
-      // Faylni blob ko‘rinishida olish
+      // Faylni blob sifatida olish
       const blob = await response.blob();
 
-      // Fayl uchun URL yaratish
-      const url = window.URL.createObjectURL(blob);
-
-      // Fayl nomi
+      // Fayl nomini olish
       const fileExtension =
         doc.file_url.split(".").pop()?.split("?")[0] || "pdf";
       const fileName = `${doc.name || "document"}.${fileExtension}`;
 
       // Yuklash uchun link yaratish
       const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName; // 🔥 Faqat yuklaydi, ochmaydi!
+      a.href = window.URL.createObjectURL(blob);
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
 
       // URLni tozalash
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(a.href);
     } catch (error) {
       console.error("Download error:", error);
-      alert("Faylni yuklab bo‘lmadi.");
+
+      // 🔹 Agar fetch https versiyada ham ishlamasa, fallback uchun alert
+      alert(
+        "Faylni yuklab bo‘lmadi. Iltimos, brauzer konsolini tekshiring yoki administrator bilan bog‘laning."
+      );
     }
   };
 
