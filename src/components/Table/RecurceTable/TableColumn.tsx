@@ -477,14 +477,14 @@ const TableColumn = forwardRef(
                   {(user_role === "tashkilot_rahbari" &&
                     selectedRow?.status == "saved") ||
                     (user_role === "bolim_admin" &&
-                      selectedRow.status == "sent" && (
+                      selectedRow.status == "sent") && (
                         <Button
                           onClick={() => setIsCancelModalOpen(true)}
                           className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
                         >
                           {t("recycle")}
                         </Button>
-                      ))}
+                      )}
 
                   {user_role == "tashkilot_rahbari" &&
                     selectedRow?.status == "saved" && (
