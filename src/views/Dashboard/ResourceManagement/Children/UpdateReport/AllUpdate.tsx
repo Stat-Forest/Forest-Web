@@ -349,10 +349,10 @@ function AllUpdateReportItem() {
         )}
 
         <div className="flex flex-col gap-4">
-          {/* <div>
+          <div>
             <span>Avval tanlangan deadline:</span>
             {existingReport.submit_at}
-          </div> */}
+          </div>
           <div className="flex flex-col gap-4 sm:flex-row">
             <div>
               <label className="block mb-1 text-lg font-medium">
