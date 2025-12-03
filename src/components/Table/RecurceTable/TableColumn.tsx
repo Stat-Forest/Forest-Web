@@ -6,7 +6,12 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit2, MessageSquareWarning, Trash2 } from "lucide-react";
+import {
+  Edit2,
+  MessageSquareWarning,
+  NotebookText,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   useAcceptReportMutation,
@@ -412,7 +417,12 @@ const TableColumn = forwardRef(
                     {item?.period}
                   </TableCell>
                   <TableCell className="w-[20%] text-base font-[300] border-none">
-                    {item?.created_at}
+                    {[
+                      item?.accepted_at,
+                      item?.cancelled_at,
+                      item?.sent_at,
+                      item?.created_at,
+                    ].find((v) => v != null && v !== "")}
                   </TableCell>
                   <TableCell className="text-right text-base font-[400] border-none">
                     <span
@@ -445,7 +455,7 @@ const TableColumn = forwardRef(
         {selectedRow && (
           <div className="p-4 bg-white rounded-xl">
             <div className="flex items-center justify-between my-5">
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2 flex-col">
                 {selectedRow.status === "cancelled" && (
                   <span className="text-xl flex items-center gap-2 font-[500]">
                     <MessageSquareWarning color="#FF5445" size={36} />{" "}
@@ -455,88 +465,96 @@ const TableColumn = forwardRef(
                     </span>
                   </span>
                 )}
-                <span>{selectedRow.submit_at}</span>
+                <div className="flex items-center gap-2">
+                  <span className="flex text-xl items-center">
+                    <NotebookText size={30} /> {t("deadline")}:
+                  </span>
+                  <span className="text-xl">{selectedRow.submit_at}</span>
+                </div>
               </div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
-                  {(user_role === "tashkilot_rahbari" ||
-                    user_role === "bolim_admin") &&
-                    selectedRow.status !== "accepted" && (
+                  {(user_role === "tashkilot_rahbari" &&
+                    selectedRow?.status == "saved") ||
+                    (user_role === "bolim_admin" &&
+                      selectedRow.status == "sent" && (
+                        <Button
+                          onClick={() => setIsCancelModalOpen(true)}
+                          className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                        >
+                          {t("recycle")}
+                        </Button>
+                      ))}
+
+                  {user_role == "tashkilot_rahbari" &&
+                    selectedRow?.status == "saved" && (
                       <Button
-                        onClick={() => setIsCancelModalOpen(true)}
-                        className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                        onClick={async () => {
+                          if (!selectedRow?.id) {
+                            alert("Hisobot ID topilmadi");
+                            return;
+                          }
+
+                          try {
+                            await sendReport({
+                              id: selectedRow.id,
+                            }).unwrap();
+                            alert("Hisobot muvaffaqiyatli yuborildi!");
+                          } catch (error: any) {
+                            const msg =
+                              error?.data?.message ||
+                              "Hisobot yuborishda xatolik yuz berdi";
+                            alert(msg);
+                          }
+                        }}
+                        disabled={isSending}
+                        className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]"
                       >
-                        {t("recycle")}
+                        {isSending ? t("sending") : t("send2")}
                       </Button>
                     )}
 
-                  {user_role == "tashkilot_rahbari" && (
-                    <Button
-                      onClick={async () => {
-                        if (!selectedRow?.id) {
-                          alert("Hisobot ID topilmadi");
-                          return;
+                  {user_role == "bolim_admin" &&
+                    selectedRow?.status == "sent" && (
+                      <Button
+                        onClick={async () => {
+                          if (!selectedRow?.id) {
+                            alert("Hisobot ID topilmadi");
+                            return;
+                          }
+
+                          try {
+                            await acceptReport({
+                              id: selectedRow.id,
+                            }).unwrap();
+
+                            // Qabul qilingan hisobotlarni ro'yxatga qo'shish
+                            setAcceptedReports((prev: any) => {
+                              const newSet = new Set(prev);
+                              newSet.add(selectedRow.id);
+                              return newSet;
+                            });
+
+                            alert("Hisobot muvaffaqiyatli qabul qilindi!");
+                          } catch (error: any) {
+                            const msg =
+                              error?.data?.message ||
+                              "Qabul qilishda xatolik yuz berdi";
+                            alert(msg);
+                          }
+                        }}
+                        disabled={
+                          isAccepting || acceptedReports.has(selectedRow.id)
                         }
-
-                        try {
-                          await sendReport({
-                            id: selectedRow.id,
-                          }).unwrap();
-                          alert("Hisobot muvaffaqiyatli yuborildi!");
-                        } catch (error: any) {
-                          const msg =
-                            error?.data?.message ||
-                            "Hisobot yuborishda xatolik yuz berdi";
-                          alert(msg);
-                        }
-                      }}
-                      disabled={isSending}
-                      className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]"
-                    >
-                      {isSending ? t("sending") : t("send2")}
-                    </Button>
-                  )}
-
-                  {user_role == "bolim_admin" && (
-                    <Button
-                      onClick={async () => {
-                        if (!selectedRow?.id) {
-                          alert("Hisobot ID topilmadi");
-                          return;
-                        }
-
-                        try {
-                          await acceptReport({
-                            id: selectedRow.id,
-                          }).unwrap();
-
-                          // Qabul qilingan hisobotlarni ro'yxatga qo'shish
-                          setAcceptedReports((prev: any) => {
-                            const newSet = new Set(prev);
-                            newSet.add(selectedRow.id);
-                            return newSet;
-                          });
-
-                          alert("Hisobot muvaffaqiyatli qabul qilindi!");
-                        } catch (error: any) {
-                          const msg =
-                            error?.data?.message ||
-                            "Qabul qilishda xatolik yuz berdi";
-                          alert(msg);
-                        }
-                      }}
-                      disabled={
-                        isAccepting || acceptedReports.has(selectedRow.id)
-                      }
-                      className="bg-[#09B86F] rounded w-[150px] hover:bg-[#09B86F]"
-                    >
-                      {isAccepting
-                        ? "Qabul qilinmoqda..."
-                        : acceptedReports.has(selectedRow.id)
-                        ? "Qabul qilindi"
-                        : "Qabul qilish"}
-                    </Button>
-                  )}
+                        className="bg-[#09B86F] rounded w-[150px] hover:bg-[#09B86F]"
+                      >
+                        {isAccepting
+                          ? "Qabul qilinmoqda..."
+                          : acceptedReports.has(selectedRow.id)
+                          ? "Qabul qilindi"
+                          : "Qabul qilish"}
+                      </Button>
+                    )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
@@ -626,7 +644,9 @@ const TableColumn = forwardRef(
 
                                 {/* Amallar faqat birinchi qatorda chiqsin */}
                                 {innerIndex === 0 &&
-                                  selectedRow.status == "saved" && (
+                                  (selectedRow.status == "saved" ||
+                                    selectedRow.status == "cancelled") &&
+                                  user_role == "tashkilot_hodimi" && (
                                     <td
                                       className="border border-black px-2 py-1 text-center"
                                       rowSpan={maxInners}
@@ -643,15 +663,17 @@ const TableColumn = forwardRef(
                                         >
                                           <Edit2 />
                                         </Button>
-                                        <Button
-                                          className="bg-[#09B86F] hover:bg-[#09B86F]"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteReport(selectedRow.id);
-                                          }}
-                                        >
-                                          <Trash2 />
-                                        </Button>
+                                        {selectedRow.status == "saved" && (
+                                          <Button
+                                            className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteReport(selectedRow.id);
+                                            }}
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        )}
                                       </div>
                                     </td>
                                   )}
