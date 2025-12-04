@@ -44,7 +44,7 @@ function UpdatePlans() {
   const lang = useSelector((state: RootState) => state.language.lang);
 
   // ==== Queries & Mutations ====
-  const { data: organization } = useGetOrganizationReportsQuery({lang});
+  const { data: organization } = useGetOrganizationReportsQuery({ lang });
   const { data: existingPlan, isLoading: isPlanLoading } = useGetPlanByIdQuery(
     id ? id : skipToken
   );
@@ -70,8 +70,14 @@ function UpdatePlans() {
     }
   }, [existingPlan]);
 
+  // Filter organizations for search
   const filteredOrganizations = organization?.filter((item: any) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Find selected organization object
+  const selectedOrgData = organization?.find(
+    (org: any) => org.id === selectedOrg
   );
 
   const handleChange = (columnId: string, value: string) => {
@@ -122,10 +128,7 @@ function UpdatePlans() {
               <Select value={selectedOrg ?? ""} onValueChange={setSelectedOrg}>
                 <SelectTrigger className="w-full min-h-[45px]">
                   <SelectValue placeholder="Tanlang">
-                    {selectedOrg && organization
-                      ? organization.find((org: any) => org.id === selectedOrg)
-                          ?.name
-                      : "Tanlang"}
+                    {selectedOrgData ? selectedOrgData.name : "Tanlang"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -135,6 +138,7 @@ function UpdatePlans() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full mb-2"
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                   {filteredOrganizations?.map((item: any) => (
@@ -144,6 +148,7 @@ function UpdatePlans() {
                   ))}
                 </SelectContent>
               </Select>
+              <span className="text-md text-silver">{existingPlan.organization}</span>
             </div>
 
             {/* YEAR */}
@@ -158,7 +163,9 @@ function UpdatePlans() {
 
             {/* STATEMENT (read-only) */}
             <div className="w-full">
-              <Label className="pb-1.5 text-md block">{`${t("reportType")}`}</Label>
+              <Label className="pb-1.5 text-md block">{`${t(
+                "reportType"
+              )}`}</Label>
               <Input
                 value={existingPlan?.statement || ""}
                 readOnly
@@ -174,13 +181,15 @@ function UpdatePlans() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t("columnName")}</TableHead>
-                      <TableHead className="min-w-[300px]">{t("value")}</TableHead>
+                      <TableHead className="min-w-[300px]">
+                        {t("value")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {plan_cols.map((item: any) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium whitespace-normal break-words">
                           {item.parent}
                         </TableCell>
                         <TableCell>
