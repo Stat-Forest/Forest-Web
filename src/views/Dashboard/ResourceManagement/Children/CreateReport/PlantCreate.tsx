@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft } from "lucide-react";
+import { toast } from "react-toastify";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -415,6 +416,7 @@ function PlantCreate() {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
       navigate(-1);
+      toast.success("Hisobod muvaffaqiyatli yaratildi!"); // 🔹 success toast
       // Reset form groups
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
@@ -433,6 +435,7 @@ function PlantCreate() {
         "Ma'lumotlarni yuborishda xatolik yuz berdi";
       setFormErrors((prev) => [...prev, errorMessage]);
       console.error("Yuborishda xatolik:", err);
+      toast.error(errorMessage);
     }
   };
 

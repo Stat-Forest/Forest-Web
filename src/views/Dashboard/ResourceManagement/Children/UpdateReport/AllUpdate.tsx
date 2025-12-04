@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "react-toastify";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -297,6 +298,7 @@ function AllUpdateReportItem() {
       removeCookie("reportId");
       navigate(-1);
       setFormErrors([]);
+      toast.success("Hisobod muvaffaqiyatli yangilandi!"); // 🔹 success toast
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
@@ -304,6 +306,7 @@ function AllUpdateReportItem() {
         "Ma'lumotlarni yangilashda xatolik yuz berdi";
       setFormErrors((prev) => [...prev, errorMessage]);
       console.error("Update xatolik:", err);
+      toast.error(errorMessage);
     }
   };
 

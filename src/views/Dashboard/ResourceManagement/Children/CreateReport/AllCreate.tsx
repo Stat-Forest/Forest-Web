@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft } from "lucide-react";
+import { toast } from "react-toastify";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -270,8 +271,8 @@ function AllCreateReportItem() {
     e.preventDefault();
     setFormErrors([]);
 
-    // Frontend validatsiya
     const errors: string[] = [];
+
     if (!selectedDeadlineId) {
       errors.push("Iltimos, deadline tanlang");
     }
@@ -299,6 +300,7 @@ function AllCreateReportItem() {
 
     if (errors.length > 0) {
       setFormErrors(errors);
+      errors.forEach((err) => toast.error(err)); // 🔹 toast error ko‘rsatish
       return;
     }
 
@@ -336,9 +338,10 @@ function AllCreateReportItem() {
       setFormValues({});
       setCurrentStep(0);
       setFormErrors([]);
+      toast.success("Hisobod muvaffaqiyatli yaratildi!"); // 🔹 success toast
     } catch (err: any) {
-      // Error useEffect da qayta ishlanadi, shuning uchun bu yerda hech narsa qilish shart emas
       console.error("Yuborishda xatolik:", err);
+      toast.error(err.message); // 🔹 umumiy error toast
     }
   };
 
