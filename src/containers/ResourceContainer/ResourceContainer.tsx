@@ -640,8 +640,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
 
                 <div
                   className="flex items-center justify-between gap-3 mb-4 flex-wrap"
-                  data-aos="fade-up"
-                  data-aos-delay="200"
                 >
                   {/* Filters */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
