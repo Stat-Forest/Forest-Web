@@ -104,7 +104,7 @@ function CreateReport() {
 
     try {
       await createReport(payload).unwrap();
-      alert(t('report_created_successfully'));
+      alert(t("report_created_successfully"));
       navigate("/main");
       resetForm();
     } catch (error) {
@@ -117,19 +117,20 @@ function CreateReport() {
     <div className="px-5 py-5 w-full mb-30 bg-white/90">
       <div>
         <Button
-          className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
+          className="min-w-[50px] min-h-[25px] bg-white text-black text-sm border-1 border-black"
           onClick={() => navigate(-1)}
         >
-          <ChevronLeft /> {t("back")}
+          <ChevronLeft size={20} />
+          <span className="text-sm">{t("back")}</span>
         </Button>
       </div>
       <form onSubmit={createReportHandler} className="grid grid-cols-1 gap-3">
         {/* ORGANIZATION */}
         <div className="w-full">
-          <Label className="pb-1.5 text-md block">{t('item_12')}</Label>
+          <Label className="pb-1.5 text-md block">{t("item_12")}</Label>
           <Select value={selectedOrg ?? ""} onValueChange={setSelectedOrg}>
             <SelectTrigger className="w-full min-h-[45px]">
-              <SelectValue placeholder={t('selectOrganization')} />
+              <SelectValue placeholder={t("selectOrganization")} />
             </SelectTrigger>
             <SelectContent>
               <div className="p-2">
@@ -157,7 +158,7 @@ function CreateReport() {
                 ))
               ) : (
                 <div className="text-center text-sm text-gray-500 py-2">
-                 {t("noThingsFound")}
+                  {t("noThingsFound")}
                 </div>
               )}
             </SelectContent>
@@ -166,10 +167,10 @@ function CreateReport() {
 
         {/* STATEMENT */}
         <div className="w-full">
-          <Label className="pb-1.5 text-md block">{t('statments_name')}</Label>
+          <Label className="pb-1.5 text-md block">{t("statments_name")}</Label>
           <Select value={statement ?? ""} onValueChange={setStatement}>
             <SelectTrigger className="w-full min-h-[45px]">
-              <SelectValue placeholder={t('selectChapter')} />
+              <SelectValue placeholder={t("selectChapter")} />
             </SelectTrigger>
             <SelectContent>
               {statment_loading && (
@@ -193,7 +194,7 @@ function CreateReport() {
 
         {/* YEAR */}
         <div className="w-full">
-          <Label className="pb-1.5 text-md block">{t('year')}</Label>
+          <Label className="pb-1.5 text-md block">{t("year")}</Label>
           <Input
             name="year"
             className="min-h-[45px]"
@@ -208,7 +209,7 @@ function CreateReport() {
         {statement && (
           <>
             {plan_cols_loading ? (
-              <div className="text-center py-4">{t('table_loading')}</div>
+              <div className="text-center py-4">{t("table_loading")}</div>
             ) : plan_cols_error ? (
               <div className="text-center text-red-500 py-4">
                 {t("data_loading_error_4")}
@@ -219,7 +220,9 @@ function CreateReport() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t("columnName")}</TableHead>
-                      <TableHead className="min-w-[300px]">{t("value")}</TableHead>
+                      <TableHead className="min-w-[300px]">
+                        {t("value")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -245,7 +248,7 @@ function CreateReport() {
               </div>
             ) : (
               <div className="text-center text-sm text-gray-500 py-4">
-               {t("noColumnsFound")}
+                {t("noColumnsFound")}
               </div>
             )}
           </>
@@ -260,7 +263,7 @@ function CreateReport() {
               className="min-h-[40px] min-w-[130px] bg-[#09B86F] text-md flex items-center gap-2"
             >
               {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
-              {t('submit')}
+              {t("submit")}
             </Button>
           </div>
         )}

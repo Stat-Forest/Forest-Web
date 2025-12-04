@@ -325,11 +325,12 @@ function AllUpdateReportItem() {
     <>
       <div>
         <Button
-          className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
-          onClick={() => navigate(-1)}
-        >
-          <ChevronLeft /> {t("back")}
-        </Button>
+                 className="min-w-[50px] min-h-[25px] bg-white text-black text-sm border-1 border-black"
+                 onClick={() => navigate(-1)}
+               >
+                 <ChevronLeft size={20} />
+                 <span className="text-sm">{t("back")}</span>
+               </Button>
       </div>
 
       <form

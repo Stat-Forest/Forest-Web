@@ -309,8 +309,10 @@ function PlantCreate() {
       errors.push("Iltimos, deadline tanlang");
     }
     if (
-      allEmptyColumnsByStep[currentStep]?.some((col) =>
-        col.title.toLowerCase().includes("tashkilot nomi") || col.title.toLowerCase().includes("Названия регионов")
+      allEmptyColumnsByStep[currentStep]?.some(
+        (col) =>
+          col.title.toLowerCase().includes("tashkilot nomi") ||
+          col.title.toLowerCase().includes("Названия регионов")
       ) &&
       !selectedOrganizationId
     ) {
@@ -366,9 +368,9 @@ function PlantCreate() {
         if (!currentFormGroup) return [];
 
         return stepColumns.map((col) => {
-          const isOrganizationColumn = col.title
-            .toLowerCase()
-            .includes("tashkilot nomi" ) || col.title.toLowerCase().includes("Названия регионов");
+          const isOrganizationColumn =
+            col.title.toLowerCase().includes("tashkilot nomi") ||
+            col.title.toLowerCase().includes("Названия регионов");
           const isRejaColumn = col.title.toLowerCase().includes("reja");
 
           if (isOrganizationColumn) {
@@ -469,10 +471,11 @@ function PlantCreate() {
     <>
       <div className="p-6">
         <Button
-          className="min-w-[50px] min-h-[25px] bg-white text-black text-lg border-1 border-black"
+          className="min-w-[50px] min-h-[25px] bg-white text-black text-sm border-1 border-black"
           onClick={() => navigate(-1)}
         >
-          <ChevronLeft /> {t("back")}
+          <ChevronLeft size={20} />
+          <span className="text-sm">{t("back")}</span>
         </Button>
       </div>
       <form
@@ -754,7 +757,10 @@ function PlantCreate() {
                           );
                         }
 
-                        if (lowerTitle.includes("tashkilot nomi") || lowerTitle.includes("Названия регионов")) {
+                        if (
+                          lowerTitle.includes("tashkilot nomi") ||
+                          lowerTitle.includes("Названия регионов")
+                        ) {
                           // ❗ faqat birinchi formda ko'rinadi
                           if (formIndex !== 0) return null;
                           return (
