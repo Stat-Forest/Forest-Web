@@ -14,6 +14,8 @@ import { TestModeCarousel } from "./components/TestModeCarousel";
 import AppWrapper from "./components/AppWrapper";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 // import Landing from "./views/Landing";
 
 export const user_role = import.meta.env.USER_ROLE;
@@ -36,6 +38,17 @@ function App() {
   return (
     <AppWrapper>
       <TestModeCarousel />
+       <ToastContainer
+        position="top-right"
+        autoClose={3500} // 3.5 sekund
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <Routes>
         <Route path="/auth" element={<Auth />}>
           <Route index element={<Login />} />

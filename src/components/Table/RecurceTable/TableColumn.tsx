@@ -655,10 +655,11 @@ const TableColumn = forwardRef(
                                         <Button
                                           className="bg-[#09B86F] hover:bg-[#09B86F]"
                                           onClick={(e) => {
-                                            e.stopPropagation();
+                                            e.stopPropagation();;
                                             navigate(
                                               `/resource-management/update/${selectedRow?.id}`
                                             );
+                                            window.location.reload(); 
                                           }}
                                         >
                                           <Edit2 />
@@ -669,6 +670,7 @@ const TableColumn = forwardRef(
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               deleteReport(selectedRow.id);
+                                              window.location.reload();
                                             }}
                                           >
                                             <Trash2 />

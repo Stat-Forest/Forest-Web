@@ -29,6 +29,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 function UpdatePlans() {
   const { id } = useParams();
@@ -105,11 +106,12 @@ function UpdatePlans() {
 
     try {
       await updatePlan({ id: id!, data: payload }).unwrap();
-      alert("Hisobot muvaffaqiyatli yangilandi!");
+      toast.success("Hisobot muvaffaqiyatli yangilandi!");
       navigate("/main");
+
     } catch (error) {
       console.error("Saqlashda xatolik:", error);
-      alert("Xatolik yuz berdi!");
+      toast.error("Xatolik yuz berdi!");
     }
   };
 

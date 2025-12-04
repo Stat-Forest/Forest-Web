@@ -29,6 +29,7 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 
 function CreateReport() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
@@ -104,12 +105,12 @@ function CreateReport() {
 
     try {
       await createReport(payload).unwrap();
-      alert(t("report_created_successfully"));
+      toast.success(t("report_created_successfully"));
       navigate("/main");
       resetForm();
     } catch (error) {
       console.error("Yaratishda xatolik:", error);
-      alert(t("error_occurred"));
+      toast.error(t("error_occurred"));
     }
   };
 
