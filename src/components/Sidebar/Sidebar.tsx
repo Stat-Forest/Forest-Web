@@ -61,7 +61,20 @@ function Sidebar() {
         <Sheet key={item.id}>
           <SheetTrigger asChild>
             <div className="cursor-pointer transition-transform duration-200 hover:scale-105 p-2 hover:bg-gray-200 rounded-md flex items-center gap-2">
-              {item.icon && <img src={item.icon} alt="" className="w-5 h-5" />}
+              {item.icon && (
+                <img
+                  src={item.icon.startsWith("http://") ? item.icon.replace("http://", "https://") : item.icon}
+                  alt=""
+                  className="w-5 h-5"
+                  onError={(e) => {
+                    // Error bo'lsa, HTTPS versiyasini sinab ko'rish
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.startsWith("http://")) {
+                      target.src = target.src.replace("http://", "https://");
+                    }
+                  }}
+                />
+              )}
               <span>{t(item.name)}</span>
             </div>
           </SheetTrigger>
