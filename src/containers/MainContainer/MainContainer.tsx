@@ -11,8 +11,16 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import AOS from "aos";
-import "aos/dist/aos.css";
+// AOS lazy loading - faqat kerak bo'lganda yuklash
+let AOS: any = null;
+const loadAOS = async () => {
+  if (!AOS) {
+    const aosModule = await import("aos");
+    AOS = aosModule.default;
+    await import("aos/dist/aos.css");
+  }
+  return AOS;
+};
 
 function MainContainer() {
   const {
@@ -24,12 +32,24 @@ function MainContainer() {
   const { t } = useTranslation();
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
 
+  // AOS'ni lazy load qilamiz - blocking operatsiyalarni oldini olish uchun
   useEffect(() => {
-    AOS.init({
-      duration: 700,
-      once: true,
-      easing: "ease-out-cubic",
-    });
+    const initAOS = async () => {
+      try {
+        const aos = await loadAOS();
+        aos.init({
+          duration: 700,
+          once: true,
+          easing: "ease-out-cubic",
+        });
+      } catch (error) {
+        console.warn("AOS yuklanmadi:", error);
+      }
+    };
+
+    // Defer AOS initialization - sahifa render bo'lgandan keyin
+    const timeoutId = setTimeout(initAOS, 100);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   if (isLoading) {

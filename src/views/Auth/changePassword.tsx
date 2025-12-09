@@ -1,5 +1,5 @@
 import { useSetNewPasswordMutation } from "@/services/authApi";
-import { decryptData } from "@/utils/crypto";
+import { decryptData, removeEncryptedData } from "@/utils/crypto";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -51,7 +51,9 @@ const ChangePassword = () => {
       setConfirmPassword("");
       sessionStorage.removeItem("reset_email");
       sessionStorage.removeItem("reset_code");
-      localStorage.removeItem("token");
+      // Cookie'dan token'ni tozalaymiz
+      removeEncryptedData("token");
+      removeEncryptedData("refresh");
 
       navigate("/auth", { replace: true });
     } catch (err: any) {

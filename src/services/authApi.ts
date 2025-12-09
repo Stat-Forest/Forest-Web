@@ -1,12 +1,8 @@
 import {
   createApi,
-  fetchBaseQuery,
-  FetchArgs,
-  FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
-import { base_url, prepareHeaders } from "./baseUrl";
-import { encryptData, decryptData } from "@/utils/crypto";
-import { logout } from "@/features/authSlice";
+import { base_url } from "./baseUrl";
+import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 
 export interface User {
   email: string;
@@ -45,57 +41,11 @@ interface SetNewPasswordResponse {
   message: string;
 }
 
-// --- BaseQuery ---
-const rawBaseQuery = fetchBaseQuery({
-  baseUrl: `${base_url}/authentications`,
-  prepareHeaders,
-});
-
-// --- Refresh bilan custom baseQuery ---
-const baseQueryWithReauth = async (
-  args: string | FetchArgs,
-  api: any,
-  extraOptions: any
-) => {
-  let result = await rawBaseQuery(args, api, extraOptions);
-
-  if (result.error && (result.error as FetchBaseQueryError).status === 401) {
-    const user = decryptData("user", "user") as User | null;
-    const refreshToken = user?.refresh;
-
-    if (refreshToken) {
-      const refreshResult = await rawBaseQuery(
-        {
-          url: "/token/refresh/",
-          method: "POST",
-          body: { refresh: refreshToken },
-        },
-        api,
-        extraOptions
-      );
-
-      if (refreshResult.data) {
-        const newAccess = (refreshResult.data as RefreshResponse).access;
-
-        const updatedUser: User = { ...(user as User), access: newAccess };
-        encryptData("token", newAccess, "token");
-        encryptData("user", updatedUser, "user");
-
-        result = await rawBaseQuery(args, api, extraOptions);
-      } else {
-        api.dispatch(logout());
-      }
-    } else {
-      api.dispatch(logout());
-    }
-  }
-
-  return result;
-};
-
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: baseQueryWithReauth,
+  // BaseQuery for authApi with authentications baseUrl
+  // Lazy initialization - circular dependency'ni oldini olish uchun
+  baseQuery: createBaseQueryWithReauth(`${base_url}/authentications`),
   endpoints: (builder) => ({
     // ✅ Login
     login: builder.mutation<LoginResponse, { email: string; password: string }>(

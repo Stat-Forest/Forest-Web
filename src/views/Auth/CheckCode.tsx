@@ -46,8 +46,9 @@ const CheckCode = () => {
     verifyCode({ email, code })
       .unwrap()
       .then((res: VerifyCodeResponse) => {
-        encryptData("token", res.access, "token");
-        encryptData("refresh", res.refresh, "refresh");
+        // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
+        encryptData("token", res.access, "token", 30);
+        encryptData("refresh", res.refresh, "refresh", 30);
         navigate("/auth/change-password");
       })
       .catch((err: any) => {

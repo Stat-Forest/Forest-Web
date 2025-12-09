@@ -177,10 +177,18 @@
 }
 
 body {
-  background: linear-gradient(#a7bcb075, #e7fced7d), url(./assets/bg.png);
+  /* Background gradient - image yuklanguncha gradient ko'rsatadi */
+  background: linear-gradient(#a7bcb075, #e7fced7d);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  /* Image loading optimizatsiyasi */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* Will-change - browser'ga optimizatsiya qilish imkoniyatini beradi */
+  will-change: background-image;
+  /* Smooth transition background image yuklanganda */
+  transition: background-image 0.3s ease-in-out;
 }
 
 /* HTML: <div class="loader"></div> */

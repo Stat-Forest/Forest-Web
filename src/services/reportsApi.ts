@@ -1,13 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { base_url, prepareHeaders } from "./baseUrl";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { base_url } from "./baseUrl";
+import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { decryptData } from "@/utils/crypto";
 
 export const reportApi = createApi({
   reducerPath: "reportApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${base_url}/reports`,
-    prepareHeaders,
-  }),
+  baseQuery: createBaseQueryWithReauth(`${base_url}/reports`),
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====

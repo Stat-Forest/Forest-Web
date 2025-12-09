@@ -42,9 +42,16 @@ import { ReportColumn, ReportRow } from "@/types/reportInterface";
 import { regions2 } from "@/services/constants";
 import { useTranslation } from "react-i18next";
 
-// AOS import
-import AOS from "aos";
-import "aos/dist/aos.css";
+// AOS lazy loading - faqat kerak bo'lganda yuklash
+let AOS: any = null;
+const loadAOS = async () => {
+  if (!AOS) {
+    const aosModule = await import("aos");
+    AOS = aosModule.default;
+    await import("aos/dist/aos.css");
+  }
+  return AOS;
+};
 
 function ResourceContainer({ reportName }: { reportName: string }) {
   const { id } = useParams<{ id: string }>();
@@ -71,19 +78,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
-  // AOS initialization
-  useEffect(() => {
-    AOS.init({
-      duration: 800,
-      easing: "ease-in-out",
-      once: true,
-      offset: 50,
-    });
-
-    // Refresh AOS when data loads
-    AOS.refresh();
-  }, []);
-
   // ✅ tableHeadersData ni birinchi bo'lib e'lon qilamiz
   const {
     data: tableHeadersData = [],
@@ -94,9 +88,44 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     { skip: !id }
   );
 
-  // ✅ Endi AOS ni yangilash ma'lumotlar o'zgarganda
+  // AOS'ni lazy load qilamiz - blocking operatsiyalarni oldini olish uchun
   useEffect(() => {
-    AOS.refresh();
+    const initAOS = async () => {
+      try {
+        const aos = await loadAOS();
+        aos.init({
+          duration: 800,
+          easing: "ease-in-out",
+          once: true,
+          offset: 50,
+        });
+        // Refresh AOS when data loads
+        aos.refresh();
+      } catch (error) {
+        console.warn("AOS yuklanmadi:", error);
+      }
+    };
+
+    // Defer AOS initialization - sahifa render bo'lgandan keyin
+    const timeoutId = setTimeout(initAOS, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // ✅ AOS refresh'ni ham async qilamiz
+  useEffect(() => {
+    const refreshAOS = async () => {
+      try {
+        const aos = await loadAOS();
+        aos.refresh();
+      } catch (error) {
+        console.warn("AOS refresh xatolik:", error);
+      }
+    };
+
+    if (tableHeadersData.length > 0 || activeTab) {
+      const timeoutId = setTimeout(refreshAOS, 50);
+      return () => clearTimeout(timeoutId);
+    }
   }, [tableHeadersData, activeTab]);
 
   const { data: deadline, isLoading: deadlineLoading } =

@@ -1,12 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { base_url, prepareHeaders } from "./baseUrl";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { base_url } from "./baseUrl";
+import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const statistikApi = createApi({
   reducerPath: "statistikApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${base_url}/statistics`,
-    prepareHeaders,
-  }),
+  baseQuery: createBaseQueryWithReauth(`${base_url}/statistics`),
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     getEmployeeIncomeStat: builder.query<any, void>({

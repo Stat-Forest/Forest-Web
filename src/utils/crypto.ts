@@ -1,12 +1,19 @@
 import CryptoJS from "crypto-js";
+import { setCookie, getCookie, removeCookie } from "./cookie";
 
 /**
- * Ma'lumotni AES yordamida shifrlab localStorage ga saqlaydi.
- * @param name - localStorage key nomi
+ * Ma'lumotni AES yordamida shifrlab xavfsiz cookie'ga saqlaydi.
+ * @param name - Cookie nomi
  * @param data - saqlanadigan ma'lumot
  * @param key - shifrlash kaliti
+ * @param days - Cookie yashash muddati (kunlarda, default: 30)
  */
-export const encryptData = (name: string, data: unknown, key: string): void => {
+export const encryptData = (
+  name: string,
+  data: unknown,
+  key: string,
+  days: number = 30
+): void => {
   if (data === undefined || data === null) {
     console.warn(`encryptData: ${name} uchun hech qanday ma'lumot topilmadi`);
     return;
@@ -17,25 +24,30 @@ export const encryptData = (name: string, data: unknown, key: string): void => {
       JSON.stringify(data),
       key
     ).toString();
-    localStorage.setItem(name, encrypted);
+
+    // Xavfsiz cookie'ga saqlaymiz
+    // Production'da secure=true, development'da false bo'lishi mumkin
+    const isProduction = import.meta.env.PROD;
+    setCookie(name, encrypted, days, {
+      secure: isProduction, // Production'da faqat HTTPS
+      sameSite: "strict", // CSRF himoyasi
+    });
   } catch (error) {
     console.error("encryptData: Xatolik yuz berdi", error);
   }
 };
 
 /**
- * AES yordamida localStorage'dan ma'lumotni deshifrlaydi.
- * @param name - localStorage key nomi
+ * AES yordamida cookie'dan ma'lumotni deshifrlaydi.
+ * @param name - Cookie nomi
  * @param key - deshifrlash kaliti
  * @returns deshifrlangan obyekt yoki null
  */
 export const decryptData = (name: string, key: string): unknown => {
-  const encrypted = localStorage.getItem(name);
+  const encrypted = getCookie(name);
 
   if (!encrypted) {
-    console.warn(
-      `decryptData: ${name} uchun localStorage'da hech nima topilmadi`
-    );
+    console.warn(`decryptData: ${name} uchun cookie'da hech nima topilmadi`);
     return null;
   }
 
@@ -51,7 +63,15 @@ export const decryptData = (name: string, key: string): unknown => {
     return JSON.parse(decrypted);
   } catch (error) {
     console.error("decryptData: Deshifrlashda xatolik:", error);
-    localStorage.removeItem(name); // buzilgan bo‘lsa, tozalab yuboramiz
+    removeCookie(name); // buzilgan bo'lsa, tozalab yuboramiz
     return null;
   }
+};
+
+/**
+ * Cookie'dan ma'lumotni tozalaydi
+ * @param name - Cookie nomi
+ */
+export const removeEncryptedData = (name: string): void => {
+  removeCookie(name);
 };

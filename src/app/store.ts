@@ -10,10 +10,27 @@ import { sumApi } from "@/services/sumApi";
 import sidebarReducer from "@/features/sidebarSlice";
 import uiReducer from "@/features/uiSlice";
 
-// 🆕 persist qo‘shiladi
+// 🆕 persist qo'shiladi
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // localStorage ishlatish uchun
 import { combineReducers } from "redux";
+
+// Redux Persist optimizatsiyasi
+const persistConfig = {
+  key: "root",
+  storage,
+  whitelist: ["auth", "language"], // faqat qaysi slice'lar saqlansin
+  // Performance optimizatsiyasi
+  blacklist: [
+    reportApi.reducerPath,
+    generalApi.reducerPath,
+    statistikApi.reducerPath,
+    sumApi.reducerPath,
+    "report",
+    "sidebar",
+    "ui",
+  ], // Bu slice'lar persist qilinmaydi - performance uchun
+};
 
 const rootReducer = combineReducers({
   [reportApi.reducerPath]: reportApi.reducer,
@@ -29,14 +46,7 @@ const rootReducer = combineReducers({
   ui: uiReducer,
 });
 
-const persistedReducer = persistReducer(
-  {
-    key: "root",
-    storage,
-    whitelist: ["auth", "language"], // faqat qaysi slice'lar saqlansin
-  },
-  rootReducer
-);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
