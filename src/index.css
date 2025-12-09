@@ -177,8 +177,8 @@
 }
 
 body {
-  /* Background gradient - image yuklanguncha gradient ko'rsatadi */
-  background: linear-gradient(#a7bcb075, #e7fced7d);
+  /* Background image - lazy load qilingan, lekin fallback sifatida CSS'da ham qo'yamiz */
+  background: linear-gradient(#a7bcb075, #e7fced7d), url(./assets/bg.png);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
