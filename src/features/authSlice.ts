@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { authApi, User } from "@/services/authApi";
-import { encryptData, decryptData } from "@/utils/crypto";
+import { encryptData, decryptData, removeEncryptedData } from "@/utils/crypto";
 
 interface AuthState {
   user: User | null;
@@ -19,8 +19,17 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      // Cookie'lardan ma'lumotlarni tozalaymiz
+      removeEncryptedData("token");
+      removeEncryptedData("user");
+      removeEncryptedData("refresh");
+    },
+    setToken: (
+      state,
+      action: PayloadAction<{ token: string; user: User }>
+    ) => {
+      state.token = action.payload.token;
+      state.user = action.payload.user;
     },
   },
   extraReducers: (builder) => {
@@ -31,8 +40,9 @@ const authSlice = createSlice({
         const payload = action.payload;
         state.token = payload.access;
         state.user = payload;
-        encryptData("token", payload.access, "token");
-        encryptData("user", payload, "user");
+        // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
+        encryptData("token", payload.access, "token", 30);
+        encryptData("user", payload, "user", 30);
       }
     );
 
@@ -43,12 +53,13 @@ const authSlice = createSlice({
         const payload = action.payload;
         state.token = payload.access;
         state.user = payload;
-        encryptData("token", payload.access, "token");
-        encryptData("user", payload, "user");
+        // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
+        encryptData("token", payload.access, "token", 30);
+        encryptData("user", payload, "user", 30);
       }
     );
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setToken } = authSlice.actions;
 export default authSlice.reducer;

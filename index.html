@@ -2,20 +2,30 @@
 <html lang="en">
 
 <head>
-  <script src="https://test.e-imzo.uz/demo/e-imzo.js"></script>
-  <script src="https://test.e-imzo.uz/demo/e-imzo-client.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Stat-Forest Platform - O'rmon xo'jaligi statistikasi" />
+  <link rel="icon" type="image/svg+xml" href="./src/assets/logo.png" />
+  <title>Stat-Forest Platform</title>
+  
+  <!-- Performance optimizatsiyasi - Resource hints -->
+  <link rel="preconnect" href="https://test.e-imzo.uz" crossorigin />
+  <link rel="dns-prefetch" href="https://test.e-imzo.uz" />
+  
+  <!-- E-IMZO scripts - defer qilingan, blocking operatsiyalarni oldini olish uchun -->
+  <script src="https://test.e-imzo.uz/demo/e-imzo.js" defer></script>
+  <script src="https://test.e-imzo.uz/demo/e-imzo-client.js" defer></script>
   <script>
     // Add dates comparison utility used by E-IMZO
-    window.dates = {
-      compare: function (a, b) {
-        return (a > b) ? 1 : (a < b) ? -1 : 0;
-      }
-    };
+    // Defer qilingan - sahifa yuklangandan keyin ishlaydi
+    window.addEventListener('DOMContentLoaded', function() {
+      window.dates = {
+        compare: function (a, b) {
+          return (a > b) ? 1 : (a < b) ? -1 : 0;
+        }
+      };
+    });
   </script>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="./src/assets/logo.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stat-Forest Platform</title>
 </head>
 
 <body style="background-color: #FAFAFA;"> 

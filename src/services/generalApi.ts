@@ -1,12 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { base_url, prepareHeaders } from "./baseUrl";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { base_url } from "./baseUrl";
+import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const generalApi = createApi({
   reducerPath: "generalApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${base_url}/general`,
-    prepareHeaders,
-  }),
+  baseQuery: createBaseQueryWithReauth(`${base_url}/general`),
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
     // ==== ✅ GET endpoints ====

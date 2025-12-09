@@ -1,30 +1,32 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, lazy } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Header from "@/components/Header/Header";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import Main from "./Main";
-import Draft from "./Main/Children/Draft";
-import MainDetail from "./Main/Children/SendReport";
-import ReturnedReport from "./Main/Children/ReturnedReport";
-import ReceivedReport from "./Main/Children/ReceivedReport";
-import ResponsibleRepresentatives from "./Main/Children/ResponsibleRepresentatives";
-import Newsletters from "./Main/Children/Newsletters";
-import ResourceManagement from "./ResourceManagement";
-import CreateReport from "./Main/Children/CreateReport";
-import ReceiptInformation from "./ReceiptInformation";
-import CreateReportItem from "./ResourceManagement/Children/CreateReport";
-import SupportInformation from "./SupportInfomation";
 import ScrollToTop from "@/routes/ScrollToTop";
-import CreatedPlans from "./Main/Children/CreatedPlans";
-import UpdateReportItem from "./ResourceManagement/Children/UpdateReport";
-import UpdatePlans from "./Main/Children/UpdatePlans";
-import Video from "../Video";
 import { useGetAnnouncementsReportsQuery } from "@/services/generalApi";
 import { RootState } from "@/app/store";
 import { useDispatch, useSelector } from "react-redux";
 import AnnouncementModal from "@/components/Modals/AnnouncementModal";
-import LandDocumentCreate from "./ResourceManagement/Children/CreateReport/LandDocumentCreate";
 import { setAnnouncementState } from "@/features/uiSlice";
+
+// Lazy loading - Dashboard route'larini alohida chunk'larga ajratish
+const Main = lazy(() => import("./Main"));
+const Draft = lazy(() => import("./Main/Children/Draft"));
+const MainDetail = lazy(() => import("./Main/Children/SendReport"));
+const ReturnedReport = lazy(() => import("./Main/Children/ReturnedReport"));
+const ReceivedReport = lazy(() => import("./Main/Children/ReceivedReport"));
+const ResponsibleRepresentatives = lazy(() => import("./Main/Children/ResponsibleRepresentatives"));
+const Newsletters = lazy(() => import("./Main/Children/Newsletters"));
+const ResourceManagement = lazy(() => import("./ResourceManagement"));
+const CreateReport = lazy(() => import("./Main/Children/CreateReport"));
+const ReceiptInformation = lazy(() => import("./ReceiptInformation"));
+const CreateReportItem = lazy(() => import("./ResourceManagement/Children/CreateReport"));
+const SupportInformation = lazy(() => import("./SupportInfomation"));
+const CreatedPlans = lazy(() => import("./Main/Children/CreatedPlans"));
+const UpdateReportItem = lazy(() => import("./ResourceManagement/Children/UpdateReport"));
+const UpdatePlans = lazy(() => import("./Main/Children/UpdatePlans"));
+const Video = lazy(() => import("../Video"));
+const LandDocumentCreate = lazy(() => import("./ResourceManagement/Children/CreateReport/LandDocumentCreate"));
 
 function Dashboard() {
   const dispatch = useDispatch();
