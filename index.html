@@ -12,19 +12,6 @@
   <link rel="preconnect" href="https://test.e-imzo.uz" crossorigin />
   <link rel="dns-prefetch" href="https://test.e-imzo.uz" />
   
-  <!-- React preload - production'da chunk loading order uchun -->
-  <script>
-    // React chunk'ni preload qilish - production'da muammolarni oldini olish uchun
-    if (import.meta.env.PROD) {
-      const link = document.createElement('link');
-      link.rel = 'modulepreload';
-      link.as = 'script';
-      // Build'dan keyin to'g'ri path'ni olish uchun
-      link.href = '/assets/js/react-vendor';
-      document.head.appendChild(link);
-    }
-  </script>
-  
   <!-- E-IMZO scripts - defer qilingan, blocking operatsiyalarni oldini olish uchun -->
   <script src="https://test.e-imzo.uz/demo/e-imzo.js" defer></script>
   <script src="https://test.e-imzo.uz/demo/e-imzo-client.js" defer></script>
