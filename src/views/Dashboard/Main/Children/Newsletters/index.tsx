@@ -3,9 +3,9 @@ import {
   useGetDeadlinesReportQuery,
   useGetStatementsReportQuery,
 } from "@/services/reportsApi";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { RootState } from "@/app/store";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Select,
   SelectContent,
@@ -16,13 +16,15 @@ import {
 import { periods } from "@/services/constants";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { resetNewsletterState, setNewsletterState } from "@/features/uiSlice";
 
 function Newsletters() {
-  const [page, setPage] = useState(1);
+  const dispatch = useDispatch();
   const perPage = 20;
   const { t, i18n } = useTranslation();
-  const [selectedStatement, setSelectedStatement] = useState<string>("");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const { page, selectedStatement, selectedPeriod } = useSelector(
+    (state: RootState) => state.ui.newsletters
+  );
 
   const lang = useSelector((state: RootState) => state.language.lang);
 
@@ -47,26 +49,26 @@ function Newsletters() {
 
   // 📌 Filter o'zgarsa page 1 ga qaytadi
   useEffect(() => {
-    setPage(1);
-  }, [selectedStatement, selectedPeriod]);
+    if (page !== 1) {
+      dispatch(setNewsletterState({ page: 1 }));
+    }
+  }, [selectedStatement, selectedPeriod, page, dispatch]);
 
   // 📌 Tozalash funksiyasi
   const handleClearFilters = () => {
-    setSelectedStatement("");
-    setSelectedPeriod("");
-    setPage(1);
+    dispatch(resetNewsletterState());
   };
 
   // 📌 Pagination handlers
   const handleNextPage = () => {
     if (page < totalPages) {
-      setPage(page + 1);
+      dispatch(setNewsletterState({ page: page + 1 }));
     }
   };
 
   const handlePrevPage = () => {
     if (page > 1) {
-      setPage(page - 1);
+      dispatch(setNewsletterState({ page: page - 1 }));
     }
   };
 
@@ -86,7 +88,7 @@ function Newsletters() {
       pages.push(
         <Button
           key={i}
-          onClick={() => setPage(i)}
+          onClick={() => dispatch(setNewsletterState({ page: i }))}
           variant={page === i ? "default" : "outline"}
           className={`mx-1 min-w-[40px] ${
             page === i ? "bg-blue-600 text-white" : ""
@@ -107,7 +109,9 @@ function Newsletters() {
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         <Select
           value={selectedStatement}
-          onValueChange={(value) => setSelectedStatement(value)}
+          onValueChange={(value) =>
+            dispatch(setNewsletterState({ selectedStatement: value }))
+          }
           disabled={isStatementsLoading}
         >
           <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
@@ -130,7 +134,9 @@ function Newsletters() {
 
         <Select
           value={selectedPeriod}
-          onValueChange={(value) => setSelectedPeriod(value)}
+          onValueChange={(value) =>
+            dispatch(setNewsletterState({ selectedPeriod: value }))
+          }
         >
           <SelectTrigger className="w-[300px] text-xl min-h-[40px] border border-black">
             <SelectValue placeholder={t("item_14")} />

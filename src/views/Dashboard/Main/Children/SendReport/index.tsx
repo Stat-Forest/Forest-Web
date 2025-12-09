@@ -10,14 +10,15 @@ import {
 } from "@/components/ui/select";
 import { regions2 } from "@/services/constants";
 import { useGetAllReportsQuery, useGetStatementsReportQuery } from "@/services/reportsApi";
-import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { RootState } from "@/app/store";
+import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
 
 function MainDetail() {
-  const [selectedOrganization, setSelectedOrganization] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatement, setSelectedStatement] = useState("");
+  const dispatch = useDispatch();
+  const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
+    useSelector((state: RootState) => state.ui.reportsFilters.sent);
   const lang = localStorage.getItem("i18nextLng") || "uz";
   const { t } = useTranslation();
 
@@ -52,14 +53,28 @@ function MainDetail() {
               placeholder={`${t("item_79")}...`}
               className="w-[260px] text-xl min-h-[40px] border-black"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "sent",
+                    changes: { searchTerm: e.target.value },
+                  })
+                )
+              }
             />
           </div>
 
           <div>
             <Select
               value={selectedOrganization}
-              onValueChange={(value) => setSelectedOrganization(value)}
+              onValueChange={(value) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "sent",
+                    changes: { selectedOrganization: value },
+                  })
+                )
+              }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("region")}`} />
@@ -77,7 +92,14 @@ function MainDetail() {
           <div>
             <Select
               value={selectedStatement}
-              onValueChange={setSelectedStatement}
+              onValueChange={(value) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "sent",
+                    changes: { selectedStatement: value },
+                  })
+                )
+              }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder="Yo‘nalishni tanlang" />
@@ -113,7 +135,14 @@ function MainDetail() {
           <div>
             <Select
               value={selectedPeriod}
-              onValueChange={(value) => setSelectedPeriod(value)}
+              onValueChange={(value) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "sent",
+                    changes: { selectedPeriod: value },
+                  })
+                )
+              }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("reportType")}`} />
@@ -131,9 +160,7 @@ function MainDetail() {
           <div>
             <Button
               onClick={() => {
-                setSelectedOrganization("");
-                setSelectedPeriod("");
-                setSearchTerm("");
+                dispatch(resetReportsFilter("sent"));
               }}
               className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
             >
