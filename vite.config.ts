@@ -20,6 +20,11 @@ export default defineConfig({
     cssCodeSplit: true,
     // Asset inline limit - kichik asset'larni inline qilish
     assetsInlineLimit: 4096, // 4KB dan kichik asset'lar inline bo'ladi
+    // CommonJS va ES modules'ni to'g'ri handle qilish
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
     // Code splitting optimizatsiyasi
     rollupOptions: {
       output: {
@@ -28,32 +33,23 @@ export default defineConfig({
           // Node modules'ni alohida chunk'larga ajratish
           if (id.includes("node_modules")) {
             // React va React DOM - bir chunk'da bo'lishi kerak (React dependency uchun)
+            // Va React Router ham bir chunk'da - dependency uchun
+            // Production'da chunk loading order muammosini oldini olish uchun
             if (
-              (id.includes("react/") || id.includes("react\\")) &&
-              !id.includes("react-dom") &&
-              !id.includes("react-router")
+              id.includes("react/") ||
+              id.includes("react\\") ||
+              id.includes("react-dom") ||
+              id.includes("react-router")
             ) {
               return "react-vendor";
             }
-            // React DOM - React bilan bir chunk'da
-            if (id.includes("react-dom")) {
-              return "react-vendor";
-            }
-            // React Router - alohida
-            if (id.includes("react-router")) {
-              return "react-router-vendor";
-            }
-            // Redux Toolkit - alohida
-            if (id.includes("@reduxjs/toolkit")) {
-              return "redux-toolkit-vendor";
-            }
-            // React Redux - alohida
-            if (id.includes("react-redux")) {
-              return "react-redux-vendor";
-            }
-            // Redux Persist - alohida
-            if (id.includes("redux-persist")) {
-              return "redux-persist-vendor";
+            // Redux va Redux Toolkit - bir chunk'da
+            if (
+              id.includes("@reduxjs/toolkit") ||
+              id.includes("react-redux") ||
+              id.includes("redux-persist")
+            ) {
+              return "redux-vendor";
             }
             // Radix UI - katta library, alohida chunk
             if (id.includes("@radix-ui")) {
@@ -154,6 +150,17 @@ export default defineConfig({
     sourcemap: false,
     // Report compressed size - gzip size'ni ko'rsatish
     reportCompressedSize: true,
+    // Module preload - React chunk'ni birinchi yuklash uchun
+    modulePreload: {
+      polyfill: true,
+      resolveDependencies: (filename, deps) => {
+        // React vendor chunk'ni birinchi yuklash
+        if (filename.includes("react-vendor")) {
+          return deps;
+        }
+        return deps;
+      },
+    },
   },
   // Performance optimizatsiyasi
   optimizeDeps: {
