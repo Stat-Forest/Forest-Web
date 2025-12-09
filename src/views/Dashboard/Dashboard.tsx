@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Header from "@/components/Header/Header";
 import Sidebar from "@/components/Sidebar/Sidebar";
@@ -22,16 +21,19 @@ import UpdatePlans from "./Main/Children/UpdatePlans";
 import Video from "../Video";
 import { useGetAnnouncementsReportsQuery } from "@/services/generalApi";
 import { RootState } from "@/app/store";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AnnouncementModal from "@/components/Modals/AnnouncementModal";
 import LandDocumentCreate from "./ResourceManagement/Children/CreateReport/LandDocumentCreate";
+import { setAnnouncementState } from "@/features/uiSlice";
 
 function Dashboard() {
+  const dispatch = useDispatch();
   const lang = useSelector((state: RootState) => state.language.lang);
   const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
+  const { open, currentIndex } = useSelector(
+    (state: RootState) => state.ui.announcement
+  );
   const { data: announcements } = useGetAnnouncementsReportsQuery({ lang });
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   // 🔹 Modalni boshqarish
@@ -41,21 +43,30 @@ function Dashboard() {
       const today = new Date().toISOString().split("T")[0];
 
       if (dismissed !== today) {
-        setOpen(true);
-        setCurrentIndex(0);
+        dispatch(
+          setAnnouncementState({
+            open: true,
+            currentIndex: 0,
+          })
+        );
       }
     }
-  }, [announcements]);
+  }, [announcements, dispatch]);
 
   // 🔹 Modal yopilganda keyingisiga o‘tish
   const handleClose = () => {
     const next = currentIndex + 1;
     if (announcements?.results && next < announcements.results.length) {
-      setCurrentIndex(next);
+      dispatch(setAnnouncementState({ currentIndex: next }));
     } else {
       const today = new Date().toISOString().split("T")[0];
       localStorage.setItem("announcementsSeenDate", today);
-      setOpen(false);
+      dispatch(
+        setAnnouncementState({
+          open: false,
+          currentIndex: 0,
+        })
+      );
     }
   };
 

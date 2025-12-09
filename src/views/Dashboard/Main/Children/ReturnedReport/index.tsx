@@ -13,14 +13,15 @@ import {
   useGetAllReportsQuery,
   useGetStatementsReportQuery,
 } from "@/services/reportsApi";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/app/store";
+import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
 
 function ReturnedReport() {
-  const [selectedOrganization, setSelectedOrganization] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatement, setSelectedStatement] = useState("");
+  const dispatch = useDispatch();
+  const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
+    useSelector((state: RootState) => state.ui.reportsFilters.cancelled);
   const { t } = useTranslation();
 
   const lang = localStorage.getItem("i18nextLng") || "uz";
@@ -55,14 +56,28 @@ function ReturnedReport() {
               placeholder={`${t("item_79")}...`}
               className="w-[260px] text-xl min-h-[40px] border-black"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "cancelled",
+                    changes: { searchTerm: e.target.value },
+                  })
+                )
+              }
             />
           </div>
 
           <div>
             <Select
               value={selectedOrganization}
-              onValueChange={(value) => setSelectedOrganization(value)}
+              onValueChange={(value) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "cancelled",
+                    changes: { selectedOrganization: value },
+                  })
+                )
+              }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("region")}`} />
@@ -80,7 +95,14 @@ function ReturnedReport() {
           <div>
             <Select
               value={selectedStatement}
-              onValueChange={setSelectedStatement}
+              onValueChange={(value) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "cancelled",
+                    changes: { selectedStatement: value },
+                  })
+                )
+              }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder="Yo‘nalishni tanlang" />
@@ -116,7 +138,14 @@ function ReturnedReport() {
           <div>
             <Select
               value={selectedPeriod}
-              onValueChange={(value) => setSelectedPeriod(value)}
+              onValueChange={(value) =>
+                dispatch(
+                  setReportsFilter({
+                    key: "cancelled",
+                    changes: { selectedPeriod: value },
+                  })
+                )
+              }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("reportType")}`} />
@@ -134,9 +163,7 @@ function ReturnedReport() {
           <div>
             <Button
               onClick={() => {
-                setSelectedOrganization("");
-                setSelectedPeriod("");
-                setSearchTerm("");
+                dispatch(resetReportsFilter("cancelled"));
               }}
               className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
             >

@@ -27,7 +27,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { RootState } from "@/app/store";
 import { setLanguage } from "@/features/languageSlice";
-import { useState, useEffect } from "react"; // ✅ useEffect qo'shildi
+import { useEffect } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
 
 // RTK Query APIs
@@ -54,6 +54,7 @@ import { Card, CardContent } from "../ui/card";
 import { persistor } from "@/app/store";
 import { NavLink } from "react-router-dom";
 import { toggleSidebar } from "@/features/sidebarSlice";
+import { setHeaderState } from "@/features/uiSlice";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -64,13 +65,10 @@ function Header({ onLogout }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
   const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
-
-  // ✅ Local storage'dan o'qilgan notification count
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-
+  const { changePasswordOpen, notificationOpen, unreadCount } = useSelector(
+    (state: RootState) => state.ui.header
+  );
   const currentLang = useSelector((state: RootState) => state.language.lang);
 
   // Notification data
@@ -82,25 +80,27 @@ function Header({ onLogout }: HeaderProps) {
   useEffect(() => {
     const savedCount = localStorage.getItem("unreadNotificationCount");
     if (savedCount) {
-      setUnreadCount(parseInt(savedCount, 10));
+      dispatch(
+        setHeaderState({ unreadCount: parseInt(savedCount, 10) || 0 })
+      );
     }
-  }, []);
+  }, [dispatch]);
 
   // ✅ Yangi notificationlar kelganda local storage'ga saqlaymiz
   useEffect(() => {
     if (data?.results?.length !== undefined) {
       const count = data.results.length;
-      setUnreadCount(count);
+      dispatch(setHeaderState({ unreadCount: count }));
       localStorage.setItem("unreadNotificationCount", count.toString());
     }
-  }, [data?.results?.length]);
+  }, [data?.results?.length, dispatch]);
 
   // ✅ Notification ochilganda count ni 0 qilamiz
   const handleNotificationOpen = (open: boolean) => {
-    setNotificationOpen(open);
+    dispatch(setHeaderState({ notificationOpen: open }));
     if (!open) {
       // Notification yopilganda count ni 0 qilamiz va local storage'dan o'chiramiz
-      setUnreadCount(0);
+      dispatch(setHeaderState({ unreadCount: 0 }));
       localStorage.removeItem("unreadNotificationCount");
     }
   };
@@ -237,7 +237,11 @@ function Header({ onLogout }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48 mt-2 mr-2">
-              <DropdownMenuItem onClick={() => setOpen(true)}>
+              <DropdownMenuItem
+                onClick={() =>
+                  dispatch(setHeaderState({ changePasswordOpen: true }))
+                }
+              >
                 <User2 color="#09B86F" />
                 {t("item_81")}
               </DropdownMenuItem>
@@ -257,7 +261,12 @@ function Header({ onLogout }: HeaderProps) {
         </div>
       </div>
 
-      <ChangePasswordModal open={open} setOpen={setOpen} />
+      <ChangePasswordModal
+        open={changePasswordOpen}
+        setOpen={(value) =>
+          dispatch(setHeaderState({ changePasswordOpen: value }))
+        }
+      />
     </>
   );
 }
