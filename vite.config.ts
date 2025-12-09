@@ -27,13 +27,17 @@ export default defineConfig({
         manualChunks: (id) => {
           // Node modules'ni alohida chunk'larga ajratish
           if (id.includes("node_modules")) {
-            // React core - eng kichik chunk
-            if (id.includes("react/") && !id.includes("react-dom") && !id.includes("react-router")) {
-              return "react-core";
+            // React va React DOM - bir chunk'da bo'lishi kerak (React dependency uchun)
+            if (
+              (id.includes("react/") || id.includes("react\\")) &&
+              !id.includes("react-dom") &&
+              !id.includes("react-router")
+            ) {
+              return "react-vendor";
             }
-            // React DOM - alohida
+            // React DOM - React bilan bir chunk'da
             if (id.includes("react-dom")) {
-              return "react-dom-vendor";
+              return "react-vendor";
             }
             // React Router - alohida
             if (id.includes("react-router")) {
