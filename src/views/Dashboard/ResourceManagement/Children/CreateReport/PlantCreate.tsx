@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useReducer, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -31,59 +31,16 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
-
-function findEmptyChildrenColumnIds(
-  children: any[]
-): { id: string; title: string; fullParentChain: string }[] {
-  const result: { id: string; title: string; fullParentChain: string }[] = [];
-  const traverse = (cols: any[], parentChain: string[] = []) => {
-    cols.forEach((col) => {
-      const currentChain = [...parentChain, col.title];
-      if (
-        col.children &&
-        Array.isArray(col.children) &&
-        col.children.length > 0
-      ) {
-        traverse(col.children, currentChain);
-      } else {
-        result.push({
-          id: col.id,
-          title: col.title,
-          fullParentChain: currentChain.join(" / "),
-        });
-      }
-    });
-  };
-  traverse(children);
-  return result;
-}
+import { findEmptyChildrenColumnIds } from "@/utils/findEmptyChildrenColumnIds";
+import { plantCreateReducer, plantCreateInitialState } from "@/reducers/plantCreateReducer";
 
 function PlantCreate() {
-  // 🔹 YANGI: formGroups state - har bir step uchun alohida form guruhlari
-  const [formGroups, setFormGroups] = useState<
-    {
-      step: number;
-      forms: { values: Record<string, string>; plantId: string }[];
-    }[]
-  >([]);
-
-  const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
-  const [selectedOrganizationId, setSelectedOrganizationId] =
-    useState<string>("");
-  const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
-    { id: string; title: string; fullParentChain: string }[][]
-  >([]);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [formErrors, setFormErrors] = useState<string[]>([]);
-  const [planItems, setPlanItems] = useState<
-    { columnId: string; plan_value: string; fullParentChain: string }[]
-  >([]);
-  const [usedPlantIds, setUsedPlantIds] = useState<Set<string>>(new Set()); // 🔹 Tanlangan plantlarni kuzatish
+  const [state, dispatch] = useReducer(plantCreateReducer, plantCreateInitialState);
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
+  const reduxDispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
 
   const {
@@ -102,7 +59,6 @@ function PlantCreate() {
   );
 
   // 🔹 Plants state with pagination
-  const [plantsPage, setPlantsPage] = useState(1);
   const plantsPerPage = 5;
 
   const {
@@ -114,14 +70,13 @@ function PlantCreate() {
       statement: reportIds || "",
       lang,
       parent: "",
-      page: plantsPage,
+      page: state.plantsPage,
       perPage: plantsPerPage,
     },
     { skip: !reportIds }
   );
 
   // 🔹 Deadline state
-  const [deadlinePage, setDeadlinePage] = useState(1);
   const deadlinePerPage = 5;
 
   const {
@@ -131,7 +86,7 @@ function PlantCreate() {
   } = useGetDeadlinesReportQuery(
     {
       statement: reportIds || "",
-      page: deadlinePage,
+      page: state.deadlinePage,
       perPage: deadlinePerPage,
       statement__period: "",
     },
@@ -152,8 +107,7 @@ function PlantCreate() {
   }, [tableHeadersDataMemo]);
 
   useEffect(() => {
-    setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
-    setCurrentStep(0);
+    dispatch({ type: "SET_EMPTY_COLUMNS", payload: allEmptyColumnsByStepMemo });
 
     // 🔹 YANGI: Har bir step uchun boshlang'ich form guruhini yaratish
     if (allEmptyColumnsByStepMemo.length > 0) {
@@ -163,7 +117,7 @@ function PlantCreate() {
           forms: [{ values: {}, plantId: "" }], // Har bir stepda boshlang'ich 1 forma
         })
       );
-      setFormGroups(initialFormGroups);
+      dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
     }
   }, [allEmptyColumnsByStepMemo]);
 
@@ -172,19 +126,19 @@ function PlantCreate() {
     let isMounted = true;
 
     const fetchPlanDataForColumns = async () => {
-      const rejaColumns = allEmptyColumnsByStep
+      const rejaColumns = state.allEmptyColumnsByStep
         .flat()
         .filter((col) => col.title.toLowerCase().includes("reja"));
 
-      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
+      if (rejaColumns.length === 0 || !reportIds || !state.selectedOrganizationId)
         return;
 
       try {
         const results = await Promise.all(
           rejaColumns.map((col) =>
-            dispatch(
+            reduxDispatch(
               reportApi.endpoints.getPlanItemsReport.initiate({
-                organization_id: selectedOrganizationId,
+                organization_id: state.selectedOrganizationId,
                 statement_id: reportIds,
                 year: "2025",
                 column: col.id,
@@ -202,15 +156,12 @@ function PlantCreate() {
               plan_value: res?.plan_value?.toString() || "",
             };
           });
-          setPlanItems(mergedResults);
+          dispatch({ type: "SET_PLAN_ITEMS", payload: mergedResults });
         }
       } catch (error) {
         if (isMounted) {
           console.error("Plan olishda xatolik:", error);
-          setFormErrors((prev) => [
-            ...prev,
-            "Plan ma'lumotlarini olishda xatolik yuz berdi",
-          ]);
+          dispatch({ type: "ADD_FORM_ERROR", payload: "Plan ma'lumotlarini olishda xatolik yuz berdi" });
         }
       }
     };
@@ -219,7 +170,7 @@ function PlantCreate() {
     return () => {
       isMounted = false;
     };
-  }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, dispatch]);
+  }, [state.allEmptyColumnsByStep, state.selectedOrganizationId, reportIds, reduxDispatch]);
 
   const [createReportItem, { isLoading: isSubmitting }] =
     usePlantCreateMutation();
@@ -231,20 +182,7 @@ function PlantCreate() {
     id: string,
     value: string
   ) => {
-    setFormGroups((prev) =>
-      prev.map((group) =>
-        group.step === stepIndex
-          ? {
-              ...group,
-              forms: group.forms.map((form, idx) =>
-                idx === formIndex
-                  ? { ...form, values: { ...form.values, [id]: value } }
-                  : form
-              ),
-            }
-          : group
-      )
-    );
+    dispatch({ type: "UPDATE_FORM_VALUE", payload: { stepIndex, formIndex, id, value } });
   };
 
   // 🔹 YANGI: Plant o'zgartirish funksiyasi
@@ -253,75 +191,40 @@ function PlantCreate() {
     formIndex: number,
     plantId: string
   ) => {
-    setFormGroups((prev) =>
-      prev.map((group) =>
-        group.step === stepIndex
-          ? {
-              ...group,
-              forms: group.forms.map((form, idx) =>
-                idx === formIndex ? { ...form, plantId } : form
-              ),
-            }
-          : group
-      )
-    );
-
-    // 🔹 Tanlangan plantlarni yangilash
-    setUsedPlantIds((prev) => {
-      const newUsed = new Set(prev);
-      if (plantId) {
-        newUsed.add(plantId);
-      }
-      return newUsed;
-    });
+    dispatch({ type: "UPDATE_PLANT_ID", payload: { stepIndex, formIndex, plantId } });
   };
 
   // 🔹 YANGI: Form qo'shish funksiyasi (faqat joriy step uchun)
   const handleAddForm = (stepIndex: number) => {
-    setFormGroups((prev) =>
-      prev.map((group) =>
-        group.step === stepIndex
-          ? { ...group, forms: [...group.forms, { values: {}, plantId: "" }] }
-          : group
-      )
-    );
+    dispatch({ type: "ADD_FORM", payload: stepIndex });
   };
 
   // 🔹 YANGI: Form o'chirish funksiyasi (faqat joriy step uchun)
   const handleRemoveForm = (stepIndex: number, formIndex: number) => {
-    setFormGroups((prev) =>
-      prev.map((group) =>
-        group.step === stepIndex
-          ? {
-              ...group,
-              forms: group.forms.filter((_, idx) => idx !== formIndex),
-            }
-          : group
-      )
-    );
+    dispatch({ type: "REMOVE_FORM", payload: { stepIndex, formIndex } });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormErrors([]);
+    dispatch({ type: "SET_FORM_ERRORS", payload: [] });
 
     const errors: string[] = [];
-    if (!selectedDeadlineId) {
+    if (!state.selectedDeadlineId) {
       errors.push("Iltimos, deadline tanlang");
     }
     if (
-      allEmptyColumnsByStep[currentStep]?.some(
+      state.allEmptyColumnsByStep[state.currentStep]?.some(
         (col) =>
           col.title.toLowerCase().includes("tashkilot nomi") ||
           col.title.toLowerCase().includes("Названия регионов")
       ) &&
-      !selectedOrganizationId
+      !state.selectedOrganizationId
     ) {
       errors.push("Iltimos, tashkilot nomini tanlang");
     }
 
     // 🔹 Har bir step va har bir form uchun plant tanlanganligini tekshiramiz
-    formGroups.forEach((group) => {
+    state.formGroups.forEach((group) => {
       group.forms.forEach((form, formIndex) => {
         if (!form.plantId) {
           errors.push(
@@ -334,9 +237,9 @@ function PlantCreate() {
     });
 
     // 🔹 Har bir form uchun majburiy maydonlarni tekshiramiz
-    formGroups.forEach((group) => {
+    state.formGroups.forEach((group) => {
       group.forms.forEach((form, formIndex) => {
-        allEmptyColumnsByStep[group.step]?.forEach((col) => {
+        state.allEmptyColumnsByStep[group.step]?.forEach((col) => {
           if (
             !col.title.toLowerCase().includes("reja") &&
             !col.title.toLowerCase().includes("tashkilot nomi") &&
@@ -355,14 +258,14 @@ function PlantCreate() {
     });
 
     if (errors.length > 0) {
-      setFormErrors(errors);
+      dispatch({ type: "SET_FORM_ERRORS", payload: errors });
       return;
     }
 
     // 🔹 YANGI: Backend strukturasiga mos report_items yaratish - HAR BIR FORM UCHUN ALOHIDA
-    const report_items = allEmptyColumnsByStep.flatMap(
+    const report_items = state.allEmptyColumnsByStep.flatMap(
       (stepColumns, stepIndex) => {
-        const currentFormGroup = formGroups.find(
+        const currentFormGroup = state.formGroups.find(
           (group) => group.step === stepIndex
         );
 
@@ -378,16 +281,15 @@ function PlantCreate() {
             // Tashkilot nomi - faqat bir marta
             return {
               statement_column: col.id,
-              inners: [{ value: selectedOrganizationId || "" }],
+              inners: [{ value: state.selectedOrganizationId || "" }],
             };
           } else if (isRejaColumn) {
-            // 🔹 YANGI: Reja - HAR BIR FORM UCHUN ALOHIDA
-            const planItem = planItems.find((item) => item.columnId === col.id);
+            // 🔹 YANGI: Reja - HAR BIR FORM UCHUN ALOHIDA (plant yuborilmaydi, faqat value)
+            const planItem = state.planItems.find((item) => item.columnId === col.id);
             const planValue = planItem ? planItem.plan_value : "";
 
-            const inners = currentFormGroup.forms.map((form) => ({
-              ...(form.plantId && { plant: form.plantId }),
-              value: planValue, // Har bir form uchun reja qiymati
+            const inners = currentFormGroup.forms.map(() => ({
+              value: planValue, // Har bir form uchun reja qiymati (plant yo'q)
             }));
 
             return {
@@ -410,7 +312,7 @@ function PlantCreate() {
       }
     );
 
-    const payload = { deadline: selectedDeadlineId, report_items };
+    const payload = { deadline: state.selectedDeadlineId, report_items };
 
     try {
       await createReportItem(payload).unwrap();
@@ -424,16 +326,16 @@ function PlantCreate() {
           forms: [{ values: {}, plantId: "" }],
         })
       );
-      setFormGroups(initialFormGroups);
-      setCurrentStep(0);
-      setFormErrors([]);
-      setUsedPlantIds(new Set());
+      dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
+      dispatch({ type: "SET_CURRENT_STEP", payload: 0 });
+      dispatch({ type: "SET_FORM_ERRORS", payload: [] });
+      dispatch({ type: "RESET_FORM" });
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
         err?.message ||
         "Ma'lumotlarni yuborishda xatolik yuz berdi";
-      setFormErrors((prev) => [...prev, errorMessage]);
+      dispatch({ type: "ADD_FORM_ERROR", payload: errorMessage });
       console.error("Yuborishda xatolik:", err);
       toast.error(errorMessage);
     }
@@ -451,12 +353,12 @@ function PlantCreate() {
       </div>
     );
 
-  const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
-  const totalSteps = allEmptyColumnsByStep.length;
+  const currentEmptyColumns = state.allEmptyColumnsByStep[state.currentStep] || [];
+  const totalSteps = state.allEmptyColumnsByStep.length;
   const currentStepTitle =
-    tableHeadersData?.[currentStep]?.title ?? `Qadam ${currentStep + 1}`;
-  const currentFormGroup = formGroups.find(
-    (group) => group.step === currentStep
+    tableHeadersData?.[state.currentStep]?.title ?? `Qadam ${state.currentStep + 1}`;
+  const currentFormGroup = state.formGroups.find(
+    (group) => group.step === state.currentStep
   );
 
   // 🔹 Deadline matnini formatlash funksiyasi
@@ -487,10 +389,10 @@ function PlantCreate() {
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
-        {formErrors.length > 0 && (
+        {state.formErrors.length > 0 && (
           <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
             <ul>
-              {formErrors.map((error, idx) => (
+              {state.formErrors.map((error: string, idx: number) => (
                 <li key={idx}>{error}</li>
               ))}
             </ul>
@@ -504,8 +406,8 @@ function PlantCreate() {
               {t("deadline")}:
             </label>
             <Select
-              value={selectedDeadlineId}
-              onValueChange={(val) => setSelectedDeadlineId(val)}
+              value={state.selectedDeadlineId}
+              onValueChange={(val) => dispatch({ type: "SET_DEADLINE", payload: val })}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue
@@ -542,15 +444,15 @@ function PlantCreate() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          disabled={deadlinePage === 1}
+                          disabled={state.deadlinePage === 1}
                           onClick={() =>
-                            setDeadlinePage((p) => Math.max(p - 1, 1))
+                            dispatch({ type: "SET_DEADLINE_PAGE", payload: Math.max(state.deadlinePage - 1, 1) })
                           }
                         >
                           {t("before")}
                         </Button>
                         <span className="text-xs text-gray-500">
-                          {deadlinePage} /{" "}
+                          {state.deadlinePage} /{" "}
                           {Math.ceil(deadlineData.count / deadlinePerPage)}
                         </span>
                         <Button
@@ -558,16 +460,17 @@ function PlantCreate() {
                           size="sm"
                           variant="outline"
                           disabled={
-                            deadlinePage >=
+                            state.deadlinePage >=
                             Math.ceil(deadlineData.count / deadlinePerPage)
                           }
                           onClick={() =>
-                            setDeadlinePage((p) =>
-                              Math.min(
-                                p + 1,
+                            dispatch({
+                              type: "SET_DEADLINE_PAGE",
+                              payload: Math.min(
+                                state.deadlinePage + 1,
                                 Math.ceil(deadlineData.count / deadlinePerPage)
-                              )
-                            )
+                              ),
+                            })
                           }
                         >
                           {t("next")}
@@ -599,14 +502,14 @@ function PlantCreate() {
                   </h2>
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500">
-                      {currentStep + 1} / {totalSteps}
+                      {state.currentStep + 1} / {totalSteps}
                     </span>
                     {currentFormGroup.forms.length > 1 && (
                       <Button
                         type="button"
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleRemoveForm(currentStep, formIndex)}
+                        onClick={() => handleRemoveForm(state.currentStep, formIndex)}
                       >
                         Remove
                       </Button>
@@ -622,7 +525,7 @@ function PlantCreate() {
                   <Select
                     value={form.plantId}
                     onValueChange={(plantId) =>
-                      handlePlantChange(currentStep, formIndex, plantId)
+                      handlePlantChange(state.currentStep, formIndex, plantId)
                     }
                   >
                     <SelectTrigger className="w-[300px]">
@@ -662,12 +565,12 @@ function PlantCreate() {
                                 value={child.id}
                                 className="pl-6"
                                 disabled={
-                                  usedPlantIds.has(child.id) &&
+                                  state.usedPlantIds.has(child.id) &&
                                   form.plantId !== child.id
                                 } // 🔹 Tanlangan plantlarni bloklash
                               >
                                 {child.name}
-                                {usedPlantIds.has(child.id) && " (Tanlangan)"}
+                                {state.usedPlantIds.has(child.id) && " (Tanlangan)"}
                               </SelectItem>
                             )),
                           ])}
@@ -679,15 +582,15 @@ function PlantCreate() {
                                 type="button"
                                 size="sm"
                                 variant="outline"
-                                disabled={plantsPage === 1}
+                                disabled={state.plantsPage === 1}
                                 onClick={() =>
-                                  setPlantsPage((p) => Math.max(p - 1, 1))
+                                  dispatch({ type: "SET_PLANTS_PAGE", payload: Math.max(state.plantsPage - 1, 1) })
                                 }
                               >
                                 {t("before")}
                               </Button>
                               <span className="text-xs text-gray-500">
-                                {plantsPage} /{" "}
+                                {state.plantsPage} /{" "}
                                 {Math.ceil(plantsData.count / plantsPerPage)}
                               </span>
                               <Button
@@ -695,18 +598,17 @@ function PlantCreate() {
                                 size="sm"
                                 variant="outline"
                                 disabled={
-                                  plantsPage >=
+                                  state.plantsPage >=
                                   Math.ceil(plantsData.count / plantsPerPage)
                                 }
                                 onClick={() =>
-                                  setPlantsPage((p) =>
-                                    Math.min(
-                                      p + 1,
-                                      Math.ceil(
-                                        plantsData.count / plantsPerPage
-                                      )
-                                    )
-                                  )
+                                  dispatch({
+                                    type: "SET_PLANTS_PAGE",
+                                    payload: Math.min(
+                                      state.plantsPage + 1,
+                                      Math.ceil(plantsData.count / plantsPerPage)
+                                    ),
+                                  })
                                 }
                               >
                                 {t("next")}
@@ -739,8 +641,8 @@ function PlantCreate() {
                         const lowerTitle = col.title.toLowerCase();
 
                         if (lowerTitle.includes("reja")) {
-                          const planItem = planItems.find(
-                            (item) => item.columnId === col.id
+                          const planItem = state.planItems.find(
+                            (item: any) => item.columnId === col.id
                           );
                           const planValue = planItem ? planItem.plan_value : "";
                           return (
@@ -773,11 +675,11 @@ function PlantCreate() {
                               </TableCell>
                               <TableCell>
                                 <select
-                                  value={selectedOrganizationId}
+                                  value={state.selectedOrganizationId}
                                   onChange={(e) => {
-                                    setSelectedOrganizationId(e.target.value);
+                                    dispatch({ type: "SET_ORGANIZATION", payload: e.target.value });
                                     handleInputChange(
-                                      currentStep,
+                                      state.currentStep,
                                       formIndex,
                                       col.id,
                                       e.target.value
@@ -809,7 +711,7 @@ function PlantCreate() {
                                 value={form.values[col.id] || ""}
                                 onChange={(e) =>
                                   handleInputChange(
-                                    currentStep,
+                                    state.currentStep,
                                     formIndex,
                                     col.id,
                                     e.target.value
@@ -833,7 +735,7 @@ function PlantCreate() {
             <div className="flex justify-center">
               <Button
                 type="button"
-                onClick={() => handleAddForm(currentStep)}
+                onClick={() => handleAddForm(state.currentStep)}
                 className="bg-green-600 hover:bg-green-700"
               >
                 + Yangi Form Qo'shish
@@ -848,17 +750,17 @@ function PlantCreate() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-              disabled={currentStep === 0 || isSubmitting}
+              onClick={() => dispatch({ type: "SET_CURRENT_STEP", payload: Math.max(state.currentStep - 1, 0) })}
+              disabled={state.currentStep === 0 || isSubmitting}
             >
               {t("before")}
             </Button>
-            {currentStep < totalSteps - 1 && (
+            {state.currentStep < totalSteps - 1 && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={() =>
-                  setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
+                  dispatch({ type: "SET_CURRENT_STEP", payload: Math.min(state.currentStep + 1, totalSteps - 1) })
                 }
                 disabled={isSubmitting}
               >
@@ -866,7 +768,7 @@ function PlantCreate() {
               </Button>
             )}
           </div>
-          {currentStep === totalSteps - 1 && (
+          {state.currentStep === totalSteps - 1 && (
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "⏳ Yuborilmoqda..." : "Yuborish"}
             </Button>
@@ -876,8 +778,8 @@ function PlantCreate() {
         {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
           <h3 className="font-semibold mb-2">Tanlangan Plantlar:</h3>
-          {formGroups.map((group) =>
-            group.forms.map((form, formIndex) => {
+          {state.formGroups.map((group: any) =>
+            group.forms.map((form: any, formIndex: number) => {
               const plant = plantsData?.results
                 ?.flatMap((category: any) => category.children || [])
                 .find((child: any) => child.id === form.plantId);

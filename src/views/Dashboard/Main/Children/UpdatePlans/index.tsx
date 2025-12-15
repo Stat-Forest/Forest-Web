@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useReducer, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,16 +30,13 @@ import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { updatePlansReducer, updatePlansInitialState } from "@/reducers/formReducer";
 
 function UpdatePlans() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
-  const [statement, setStatement] = useState<string | null>(null);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [year, setYear] = useState<number | undefined>(undefined);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [state, dispatch] = useReducer(updatePlansReducer, updatePlansInitialState);
   const { t } = useTranslation();
 
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -59,48 +56,52 @@ function UpdatePlans() {
   // ==== Fill initial data when editing ====
   useEffect(() => {
     if (existingPlan) {
-      setSelectedOrg(existingPlan.organization_id ?? null);
-      setStatement(existingPlan.statement_id ?? null);
-      setYear(existingPlan.year ?? 2025);
-
       const initialValues: Record<string, string> = {};
       existingPlan.plan_items.forEach((item: any) => {
         initialValues[item.column_id] = String(item.plan_value ?? "");
       });
-      setValues(initialValues);
+      dispatch({
+        type: "INIT_FORM",
+        payload: {
+          selectedOrg: existingPlan.organization_id ?? null,
+          statement: existingPlan.statement_id ?? null,
+          year: existingPlan.year ?? 2025,
+          values: initialValues,
+        },
+      });
     }
   }, [existingPlan]);
 
   // Filter organizations for search
   const filteredOrganizations = organization?.filter((item: any) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(state.searchTerm.toLowerCase())
   );
 
   // Find selected organization object
   const selectedOrgData = organization?.find(
-    (org: any) => org.id === selectedOrg
+    (org: any) => org.id === state.selectedOrg
   );
 
   const handleChange = (columnId: string, value: string) => {
-    setValues((prev) => ({ ...prev, [columnId]: value }));
+    dispatch({ type: "SET_VALUE", payload: { columnId, value } });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedOrg || !statement || !year) {
+    if (!state.selectedOrg || !state.statement || !state.year) {
       alert("Iltimos, barcha maydonlarni to'ldiring!");
       return;
     }
 
-    const plan_items = Object.entries(values).map(([column, plan_value]) => ({
+    const plan_items = Object.entries(state.values).map(([column, plan_value]) => ({
       column,
       plan_value: Number(plan_value),
     }));
 
     const payload = {
-      organization: selectedOrg,
-      year,
+      organization: state.selectedOrg,
+      year: state.year,
       plan_items,
     };
 
@@ -127,7 +128,12 @@ function UpdatePlans() {
             {/* ORGANIZATION */}
             <div className="w-full">
               <Label className="pb-1.5 text-md block">Organizatsiya</Label>
-              <Select value={selectedOrg ?? ""} onValueChange={setSelectedOrg}>
+              <Select
+                value={state.selectedOrg ?? ""}
+                onValueChange={(value) =>
+                  dispatch({ type: "SET_SELECTED_ORG", payload: value })
+                }
+              >
                 <SelectTrigger className="w-full min-h-[45px]">
                   <SelectValue placeholder="Tanlang">
                     {selectedOrgData ? selectedOrgData.name : "Tanlang"}
@@ -137,8 +143,10 @@ function UpdatePlans() {
                   <div className="p-2">
                     <Input
                       placeholder="Izlash..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      value={state.searchTerm}
+                      onChange={(e) =>
+                        dispatch({ type: "SET_SEARCH_TERM", payload: e.target.value })
+                      }
                       className="w-full mb-2"
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -158,8 +166,10 @@ function UpdatePlans() {
               <Label className="pb-1.5 text-md">Yil</Label>
               <Input
                 type="number"
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
+                value={state.year}
+                onChange={(e) =>
+                  dispatch({ type: "SET_YEAR", payload: Number(e.target.value) })
+                }
               />
             </div>
 
@@ -197,7 +207,7 @@ function UpdatePlans() {
                         <TableCell>
                           <Input
                             type="number"
-                            value={values[item.id] || ""}
+                            value={state.values[item.id] || ""}
                             onChange={(e) =>
                               handleChange(item.id, e.target.value)
                             }
