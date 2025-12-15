@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,13 +30,10 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { createReportReducer, createReportInitialState } from "@/reducers/formReducer";
 
 function CreateReport() {
-  const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statement, setStatement] = useState<string | null>(null);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [year, setYear] = useState<number | undefined>(undefined);
+  const [state, dispatch] = useReducer(createReportReducer, createReportInitialState);
   const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
@@ -60,46 +57,43 @@ function CreateReport() {
     isLoading: plan_cols_loading,
     error: plan_cols_error,
   } = useGetPlanColumnsReportQuery(
-    statement ? { search: statement } : skipToken
+    state.statement ? { search: state.statement } : skipToken
   );
 
   const filteredOrganizations = organization?.filter((item: any) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(state.searchTerm.toLowerCase())
   );
 
   const handleChange = (columnId: string, value: string) => {
-    setValues((prev) => ({ ...prev, [columnId]: value }));
+    dispatch({ type: "SET_VALUE", payload: { columnId, value } });
   };
 
   const resetForm = () => {
-    setSelectedOrg(null);
-    setStatement(null);
-    setValues({});
-    setYear(2025);
+    dispatch({ type: "RESET_FORM" });
   };
 
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!selectedOrg || !statement || !year) {
+    if (!state.selectedOrg || !state.statement || !state.year) {
       alert(t("must_select_all"));
       return;
     }
 
-    if (Object.values(values).some((val) => val === "")) {
+    if (Object.values(state.values).some((val) => val === "")) {
       alert(t("must_fill_all"));
       return;
     }
 
-    const plan_items = Object.entries(values).map(([column, plan_value]) => ({
+    const plan_items = Object.entries(state.values).map(([column, plan_value]) => ({
       column,
       plan_value,
     }));
 
     const payload = {
-      organization: selectedOrg,
-      statement,
-      year,
+      organization: state.selectedOrg,
+      statement: state.statement,
+      year: state.year,
       plan_items,
     };
 
@@ -129,7 +123,12 @@ function CreateReport() {
         {/* ORGANIZATION */}
         <div className="w-full">
           <Label className="pb-1.5 text-md block">{t("item_12")}</Label>
-          <Select value={selectedOrg ?? ""} onValueChange={setSelectedOrg}>
+          <Select
+            value={state.selectedOrg ?? ""}
+            onValueChange={(value) =>
+              dispatch({ type: "SET_SELECTED_ORG", payload: value })
+            }
+          >
             <SelectTrigger className="w-full min-h-[45px]">
               <SelectValue placeholder={t("selectOrganization")} />
             </SelectTrigger>
@@ -137,8 +136,10 @@ function CreateReport() {
               <div className="p-2">
                 <Input
                   placeholder="Izlash..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={state.searchTerm}
+                  onChange={(e) =>
+                    dispatch({ type: "SET_SEARCH_TERM", payload: e.target.value })
+                  }
                   className="w-full mb-2"
                 />
               </div>
@@ -169,7 +170,12 @@ function CreateReport() {
         {/* STATEMENT */}
         <div className="w-full">
           <Label className="pb-1.5 text-md block">{t("statments_name")}</Label>
-          <Select value={statement ?? ""} onValueChange={setStatement}>
+          <Select
+            value={state.statement ?? ""}
+            onValueChange={(value) =>
+              dispatch({ type: "SET_STATEMENT", payload: value })
+            }
+          >
             <SelectTrigger className="w-full min-h-[45px]">
               <SelectValue placeholder={t("selectChapter")} />
             </SelectTrigger>
@@ -200,14 +206,16 @@ function CreateReport() {
             name="year"
             className="min-h-[45px]"
             type="number"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
+            value={state.year}
+            onChange={(e) =>
+              dispatch({ type: "SET_YEAR", payload: Number(e.target.value) })
+            }
             required
           />
         </div>
 
         {/* PLAN COLUMNS */}
-        {statement && (
+        {state.statement && (
           <>
             {plan_cols_loading ? (
               <div className="text-center py-4">{t("table_loading")}</div>
@@ -235,7 +243,7 @@ function CreateReport() {
                         <TableCell>
                           <Input
                             type="number"
-                            value={values[item.id] || ""}
+                            value={state.values[item.id] || ""}
                             onChange={(e) =>
                               handleChange(item.id, e.target.value)
                             }
@@ -256,7 +264,7 @@ function CreateReport() {
         )}
 
         {/* SUBMIT */}
-        {statement && plan_cols.length > 0 && (
+        {state.statement && plan_cols.length > 0 && (
           <div>
             <Button
               type="submit"

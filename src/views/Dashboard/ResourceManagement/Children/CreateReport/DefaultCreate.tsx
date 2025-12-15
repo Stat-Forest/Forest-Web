@@ -6,7 +6,7 @@ import {
   useGetStatementColumnsReportQuery,
 } from "@/services/reportsApi";
 import { findEmptyChildrenColumnIds } from "@/utils/findEmptyChildrenColumnIds";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { useSelector } from "react-redux";
 import {
   Table,
@@ -29,20 +29,14 @@ import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { Plus, Minus } from "lucide-react";
 import { removeCookie } from "@/utils/cookie";
 import { useTranslation } from "react-i18next";
+import { defaultCreateReducer, defaultCreateInitialState } from "@/reducers/defaultCreateReducer";
 
 const DefaultCreate = () => {
-  // Change formValues to store arrays of values for each column
-  const [formValues, setFormValues] = useState<Record<string, string[]>>({});
-  const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState("");
+  const [state, dispatch] = useReducer(defaultCreateReducer, defaultCreateInitialState);
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
-  const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
-    { id: string; title: string; fullParentChain: string }[][]
-  >([]);
-  const [currentStep, setCurrentStep] = useState<number>(0);
 
-  const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
+  const currentEmptyColumns = state.allEmptyColumnsByStep[state.currentStep] || [];
   const { t } = useTranslation();
   const {
     data: organizationsData,
@@ -72,11 +66,9 @@ const DefaultCreate = () => {
           ? findEmptyChildrenColumnIds(obj.children)
           : []
       );
-      setAllEmptyColumnsByStep(allStepsEmptyCols);
-      setCurrentStep(0);
+      dispatch({ type: "SET_EMPTY_COLUMNS", payload: allStepsEmptyCols });
     } else {
-      setAllEmptyColumnsByStep([]);
-      setCurrentStep(0);
+      dispatch({ type: "SET_EMPTY_COLUMNS", payload: [] });
     }
   }, [tableHeadersData]);
 
@@ -84,13 +76,14 @@ const DefaultCreate = () => {
   useEffect(() => {
     const initialValues: Record<string, string[]> = {};
     currentEmptyColumns.forEach((col) => {
-      if (!formValues[col.id]) {
+      if (!state.formValues[col.id]) {
         initialValues[col.id] = [""];
       }
     });
     if (Object.keys(initialValues).length > 0) {
-      setFormValues((prev) => ({ ...prev, ...initialValues }));
+      dispatch({ type: "SET_FORM_VALUES", payload: { ...state.formValues, ...initialValues } });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentEmptyColumns]);
 
   const handleInputChange = (
@@ -98,12 +91,7 @@ const DefaultCreate = () => {
     inputIndex: number,
     value: string
   ) => {
-    setFormValues((prev) => {
-      const currentValues = prev[columnId] || [""];
-      const newValues = [...currentValues];
-      newValues[inputIndex] = value;
-      return { ...prev, [columnId]: newValues };
-    });
+    dispatch({ type: "UPDATE_FORM_VALUE", payload: { columnId, inputIndex, value } });
   };
 
   const handleOrganizationChange = (
@@ -114,33 +102,22 @@ const DefaultCreate = () => {
     handleInputChange(columnId, inputIndex, value);
     // Only update selectedOrganizationId for the first input of organization columns
     if (inputIndex === 0) {
-      setSelectedOrganizationId(value);
+      dispatch({ type: "SET_ORGANIZATION", payload: value });
     }
   };
 
   const addInput = (columnId: string) => {
-    setFormValues((prev) => {
-      const currentValues = prev[columnId] || [""];
-      return { ...prev, [columnId]: [...currentValues, ""] };
-    });
+    dispatch({ type: "ADD_INPUT", payload: columnId });
   };
 
   const removeInput = (columnId: string, inputIndex: number) => {
-    setFormValues((prev) => {
-      const currentValues = prev[columnId] || [""];
-      if (currentValues.length <= 1) return prev; // Keep at least one input
-
-      const newValues = currentValues.filter(
-        (_, index) => index !== inputIndex
-      );
-      return { ...prev, [columnId]: newValues };
-    });
+    dispatch({ type: "REMOVE_INPUT", payload: { columnId, inputIndex } });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!selectedDeadlineId) {
+    if (!state.selectedDeadlineId) {
       alert("Iltimos, deadline tanlang");
       return;
     }
@@ -150,14 +127,14 @@ const DefaultCreate = () => {
       col.title.toLowerCase().includes("tashkilot")
     );
 
-    if (hasOrganizationColumn && !selectedOrganizationId) {
+    if (hasOrganizationColumn && !state.selectedOrganizationId) {
       alert("Iltimos, tashkilot tanlang");
       return;
     }
 
     // Validate that all required fields (first input of each column) have values
     const emptyRequiredFields = currentEmptyColumns.filter((col) => {
-      const columnValues = formValues[col.id] || [""];
+      const columnValues = state.formValues[col.id] || [""];
       return !columnValues[0] || columnValues[0].trim() === "";
     });
 
@@ -167,11 +144,11 @@ const DefaultCreate = () => {
     }
 
     // Get all columns from all steps
-    const allColumns = allEmptyColumnsByStep.flat();
+    const allColumns = state.allEmptyColumnsByStep.flat();
 
     // Build report_items with new structure
     const report_items = allColumns.map((col) => {
-      const columnValues = formValues[col.id] || [""];
+      const columnValues = state.formValues[col.id] || [""];
       const isOrganizationColumn = col.title
         .toLowerCase()
         .includes("tashkilot");
@@ -184,7 +161,7 @@ const DefaultCreate = () => {
       // If no valid values, add a default based on column type
       if (inners.length === 0) {
         if (isOrganizationColumn) {
-          inners.push({ value: selectedOrganizationId || "" });
+          inners.push({ value: state.selectedOrganizationId || "" });
         } else {
           inners.push({ value: "1" }); // Default value for non-organization columns
         }
@@ -197,17 +174,14 @@ const DefaultCreate = () => {
     });
 
     const payload = {
-      deadline: selectedDeadlineId,
+      deadline: state.selectedDeadlineId,
       report_items: report_items,
     };
 
     try {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
-      setFormValues({});
-      setSelectedDeadlineId("");
-      setSelectedOrganizationId("");
-      setCurrentStep(0);
+      dispatch({ type: "RESET_FORM" });
     } catch (error) {
       console.error("Error submitting report:", error);
       alert("Hisobotni yuborishda xatolik yuz berdi");
@@ -229,9 +203,9 @@ const DefaultCreate = () => {
       </div>
     );
 
-  const totalSteps = allEmptyColumnsByStep.length;
+  const totalSteps = state.allEmptyColumnsByStep.length;
   const currentStepTitle =
-    tableHeadersData?.[currentStep]?.title || `Qadam ${currentStep + 1}`;
+    tableHeadersData?.[state.currentStep]?.title || `Qadam ${state.currentStep + 1}`;
 
   return (
     <form
@@ -246,8 +220,8 @@ const DefaultCreate = () => {
             fetchData={fetchReportDeadlines}
             className="border-none w-[300px] text-base"
             name="deadline"
-            value={selectedDeadlineId}
-            onValueChange={setSelectedDeadlineId}
+            value={state.selectedDeadlineId}
+            onValueChange={(value) => dispatch({ type: "SET_DEADLINE", payload: value })}
           />
         </div>
       </div>
@@ -257,7 +231,7 @@ const DefaultCreate = () => {
           <div className="mb-4 flex justify-between">
             <h2 className="text-lg font-semibold">{currentStepTitle}</h2>
             <span className="text-sm text-gray-500">
-              {currentStep + 1} / {totalSteps}
+              {state.currentStep + 1} / {totalSteps}
             </span>
           </div>
           <Table>
@@ -272,7 +246,7 @@ const DefaultCreate = () => {
                 const isOrganizationColumn = col.title
                   .toLowerCase()
                   .includes("tashkilot");
-                const columnValues = formValues[col.id] || [""];
+                const columnValues = state.formValues[col.id] || [""];
 
                 return (
                   <TableRow key={col.id}>
@@ -377,24 +351,29 @@ const DefaultCreate = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-            disabled={currentStep === 0}
+            onClick={() =>
+              dispatch({ type: "SET_CURRENT_STEP", payload: Math.max(state.currentStep - 1, 0) })
+            }
+            disabled={state.currentStep === 0}
           >
             {t("before")}
           </Button>
-          {currentStep < totalSteps - 1 && (
+          {state.currentStep < totalSteps - 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={() =>
-                setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
+                dispatch({
+                  type: "SET_CURRENT_STEP",
+                  payload: Math.min(state.currentStep + 1, totalSteps - 1),
+                })
               }
             >
               {t("next")}
             </Button>
           )}
         </div>
-        {currentStep === totalSteps - 1 && (
+        {state.currentStep === totalSteps - 1 && (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Yuborilmoqda..." : "Yuborish"}
           </Button>
