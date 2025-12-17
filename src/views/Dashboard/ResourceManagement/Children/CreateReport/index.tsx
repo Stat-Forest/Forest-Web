@@ -8,7 +8,13 @@ function CreateReportItem() {
   // const reportName = useSelector((state: any) => state.report.reportName);
   const { reportName } = useParams();
 
-  if (reportName === "Xuquqbuzarlik" || reportName === "Og'ir mahalla") {
+  if (
+    reportName === "Xuquqbuzarlik" ||
+    reportName === "Og'ir mahalla" ||
+    reportName === "трудный район" ||
+    reportName === "Счет механизации" ||
+    reportName === "Mexanizatsiya hisobi"
+  ) {
     return <InnersCreateReportItem />;
   } else if (
     reportName === "Ko‘chat va Nihol" ||
