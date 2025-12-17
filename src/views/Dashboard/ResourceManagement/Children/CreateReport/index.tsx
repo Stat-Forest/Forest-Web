@@ -8,13 +8,17 @@ function CreateReportItem() {
   // const reportName = useSelector((state: any) => state.report.reportName);
   const { reportName } = useParams();
 
-  if (reportName === "Xuquqbuzarlik") {
+  if (reportName === "Xuquqbuzarlik" || reportName === "Og'ir mahalla") {
     return <InnersCreateReportItem />;
   } else if (
     reportName === "Ko‘chat va Nihol" ||
     reportName === "Urug' xarakati Reja" ||
     reportName === "Посевной материал План" ||
-    reportName === "Саженцы и саженцы"
+    reportName === "Саженцы и саженцы" ||
+    reportName === "Urug' harakati" ||
+    reportName === "Питомник и Саженец Всего" ||
+    reportName === "Движение семян" ||
+    reportName === "Ko'chatxona va Niholxona Jami"
   ) {
     return <PlantCreate />;
   } else {
