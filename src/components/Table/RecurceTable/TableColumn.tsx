@@ -16,8 +16,10 @@ import { useNavigate } from "react-router-dom";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
+  useGetReportPlantByIdQuery,
   useSendReportMutation,
 } from "@/services/reportsApi";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
@@ -56,6 +58,7 @@ const TableColumn = forwardRef(
       selectedRow,
       allReports,
       individualRows = [],
+      enablePlantDetail = false,
       setSelectedOrganizationReport,
       setSelectedPeriodReport,
       setSelectedStatusReport,
@@ -77,6 +80,78 @@ const TableColumn = forwardRef(
     const [acceptReport, { isLoading: isAccepting }] =
       useAcceptReportMutation();
     const [acceptedReports, setAcceptedReports] = useState(new Set());
+
+    const statementName = (selectedRow?.statement_name ?? "") as string;
+    const normalizeStatementName = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/[‘’ʻʼ`´]/g, "'")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const sName = normalizeStatementName(statementName);
+    const isPlantStatement =
+      enablePlantDetail &&
+      ((sName.includes("urug") && sName.includes("reja")) ||
+        (sName.includes("ko'chat") && sName.includes("nihol")));
+
+    const { data: plantDetail, isLoading: isPlantDetailLoading } =
+      useGetReportPlantByIdQuery(
+        isPlantStatement && selectedRow?.id
+          ? { id: String(selectedRow.id) }
+          : skipToken
+      );
+
+    // Plant detail kelganda: selectedRow dagi column tartibini saqlab qolish uchun shunga moslab normalize qilamiz
+    const expectedColumnIds: string[] =
+      selectedRow?.report_items?.[0]?.statement_columns?.map(
+        (c: any) => c.statement_column_id
+      ) || [];
+
+    const normalizedPlantReportItems = (plantDetail as any)?.report_items
+      ? ((plantDetail as any).report_items || []).map((reportItem: any) => {
+          const cols = reportItem.statement_columns || [];
+          const normalizedColumns =
+            expectedColumnIds.length > 0
+              ? expectedColumnIds.map((colId) => {
+                  const found = cols.find(
+                    (c: any) => c.statement_column_id === colId
+                  );
+                  return (
+                    found || {
+                      statement_column_id: colId,
+                      value: "-",
+                      inners: [],
+                    }
+                  );
+                })
+              : cols;
+
+          return { ...reportItem, statement_columns: normalizedColumns };
+        })
+      : [];
+
+    const formatInnerValue = (inner: any) => {
+      if (!inner) return "";
+      // Plant-report ustunlarida oddiy raqam/qiymat chiqsin, plant_name faqat tashkilot nomi column ichida bo'ladi
+      return inner.value ?? "";
+    };
+
+    const isOrganizationColumn = (col: any) => {
+      const name = (col?.statement_column_name ?? col?.statement_column_title ?? "")
+        .toString()
+        .toLowerCase();
+      // API example: "... – Tashkilot nomi"
+      return name.includes("tashkilot") && name.includes("nomi");
+    };
+
+    const getPlantNamesForRow = (statementColumns: any[], innerIndex: number) => {
+      const names = (statementColumns || [])
+        .map((c: any) => c?.inners?.[innerIndex]?.plant_name)
+        .filter(Boolean);
+      // bir nechta plant bo'lsa, bittalab ko'rsatamiz
+      return Array.from(new Set(names)).join(", ");
+    };
 
     // 🔹 Yangi: Print uchun to'liq jadvalni olish
     const getPrintableTable = () => {
@@ -607,87 +682,167 @@ const TableColumn = forwardRef(
                   ))}
                 </thead>
                 <tbody>
-                  {/* 🔹 Selected Row */}
-                  {selectedRow.report_items?.map(
-                    (reportItem: any, reportIndex: number) => {
-                      const maxInners = Math.max(
-                        ...reportItem.statement_columns.map(
-                          (col: any) => col.inners?.length || 0
-                        )
-                      );
+                  {/* 🔹 Selected Row (jami) – plant-report rejimida ko'rinmasin */}
+                  {!enablePlantDetail &&
+                    selectedRow.report_items?.map(
+                      (reportItem: any, reportIndex: number) => {
+                        const maxInners = Math.max(
+                          ...reportItem.statement_columns.map(
+                            (col: any) => col.inners?.length || 0
+                          )
+                        );
 
-                      return (
-                        <Fragment key={reportIndex}>
-                          {Array.from({ length: maxInners }).map(
-                            (_, innerIndex) => (
-                              <tr key={innerIndex}>
-                                {/* T/R faqat birinchi qatorda chiqsin */}
-                                {innerIndex === 0 && (
-                                  <td
-                                    className="border border-black px-2 py-1 text-center"
-                                    rowSpan={maxInners}
-                                  >
-                                    1
-                                  </td>
-                                )}
-
-                                {reportItem.statement_columns?.map(
-                                  (col: any) => (
-                                    <td
-                                      key={col.id}
-                                      className="border min-w-[350px] border-black px-2 py-1 text-center"
-                                    >
-                                      {col.inners?.[innerIndex]?.value || ""}
-                                    </td>
-                                  )
-                                )}
-
-                                {/* Amallar faqat birinchi qatorda chiqsin */}
-                                {innerIndex === 0 &&
-                                  (selectedRow.status == "saved" ||
-                                    selectedRow.status == "cancelled") &&
-                                  user_role == "tashkilot_hodimi" && (
+                        return (
+                          <Fragment key={reportIndex}>
+                            {Array.from({ length: maxInners }).map(
+                              (_, innerIndex) => (
+                                <tr key={innerIndex}>
+                                  {/* T/R faqat birinchi qatorda chiqsin */}
+                                  {innerIndex === 0 && (
                                     <td
                                       className="border border-black px-2 py-1 text-center"
                                       rowSpan={maxInners}
                                     >
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button
-                                          className="bg-[#09B86F] hover:bg-[#09B86F]"
-                                          onClick={(e) => {
-                                            e.stopPropagation();;
-                                            navigate(
-                                              `/resource-management/update/${selectedRow?.id}`
-                                            );
-                                            window.location.reload(); 
-                                          }}
-                                        >
-                                          <Edit2 />
-                                        </Button>
-                                        {selectedRow.status == "saved" && (
+                                      1
+                                    </td>
+                                  )}
+
+                                  {reportItem.statement_columns?.map(
+                                    (col: any) => (
+                                      <td
+                                        key={col.id}
+                                        className="border min-w-[350px] border-black px-2 py-1 text-center"
+                                      >
+                                        {col.inners?.[innerIndex]?.value || ""}
+                                      </td>
+                                    )
+                                  )}
+
+                                  {/* Amallar faqat birinchi qatorda chiqsin */}
+                                  {innerIndex === 0 &&
+                                    (selectedRow.status == "saved" ||
+                                      selectedRow.status == "cancelled") &&
+                                    user_role == "tashkilot_hodimi" && (
+                                      <td
+                                        className="border border-black px-2 py-1 text-center"
+                                        rowSpan={maxInners}
+                                      >
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             className="bg-[#09B86F] hover:bg-[#09B86F]"
                                             onClick={(e) => {
-                                              e.stopPropagation();
-                                              deleteReport(selectedRow.id);
-                                              window.location.reload();
+                                              e.stopPropagation();;
+                                              navigate(
+                                                `/resource-management/update/${selectedRow?.id}`
+                                              );
+                                              window.location.reload(); 
                                             }}
                                           >
-                                            <Trash2 />
+                                            <Edit2 />
                                           </Button>
-                                        )}
-                                      </div>
-                                    </td>
-                                  )}
-                              </tr>
-                            )
-                          )}
-                        </Fragment>
-                      );
-                    }
+                                          {selectedRow.status == "saved" && (
+                                            <Button
+                                              className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteReport(selectedRow.id);
+                                                window.location.reload();
+                                              }}
+                                            >
+                                              <Trash2 />
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </td>
+                                    )}
+                                </tr>
+                              )
+                            )}
+                          </Fragment>
+                        );
+                      }
+                    )}
+
+                  {/* 🌱 Plant Detail (faqat Ko'chat va Nihol / Urug' xarakati Reja) */}
+                  {isPlantStatement && (
+                    <>
+
+                      {isPlantDetailLoading ? (
+                        <tr>
+                          <td
+                            className="border border-black px-2 py-3 text-center"
+                            colSpan={999}
+                          >
+                            Yuklanmoqda...
+                          </td>
+                        </tr>
+                      ) : (
+                        normalizedPlantReportItems.map(
+                          (reportItem: any, reportIndex: number) => {
+                            const maxInners = Math.max(
+                              1,
+                              ...reportItem.statement_columns.map(
+                                (col: any) => col.inners?.length || 0
+                              )
+                            );
+
+                            return (
+                              <Fragment key={`plant-${reportIndex}`}>
+                                {Array.from({ length: maxInners }).map(
+                                  (_, innerIndex) => (
+                                    <tr key={`plant-${reportIndex}-${innerIndex}`}>
+                                      {/* T/R bo'sh */}
+                                      {innerIndex === 0 && (
+                                        <td
+                                          className="border border-black px-2 py-1 text-center"
+                                          rowSpan={maxInners}
+                                        >{innerIndex +1}</td>
+                                      )}
+
+                                      {reportItem.statement_columns?.map(
+                                        (col: any) => {
+                                          const plantNames = getPlantNamesForRow(
+                                            reportItem.statement_columns || [],
+                                            innerIndex
+                                          );
+
+                                          return (
+                                            <td
+                                              key={col.statement_column_id || col.id}
+                                              className="border min-w-[120px] border-black px-2 py-1 text-center"
+                                            >
+                                              {/* ✅ Tashkilot nomi o'rniga: plant_name */}
+                                              {isOrganizationColumn(col)
+                                                ? plantNames || ""
+                                                : formatInnerValue(
+                                                    col.inners?.[innerIndex]
+                                                  )}
+                                            </td>
+                                          );
+                                        }
+                                      )}
+
+                                      {/* Amallar ustuni bo'sh */}
+                                      {innerIndex === 0 && (
+                                        <td
+                                          className="border border-black px-2 py-1 text-center"
+                                          rowSpan={maxInners}
+                                        >
+                                          -
+                                        </td>
+                                      )}
+                                    </tr>
+                                  )
+                                )}
+                              </Fragment>
+                            );
+                          }
+                        )
+                      )}
+                    </>
                   )}
 
-                  {/* 🔥 Individual Rows */}
+                  {/* 🔥 Individual Rows (Jami), plant mode'da ham ko'rsatamiz */}
                   {individualRows?.length > 0 &&
                     individualRows.map((indRow: any) =>
                       indRow.report_items?.map(
@@ -708,7 +863,7 @@ const TableColumn = forwardRef(
                                       <td
                                         className="border border-black px-2 py-1 text-center"
                                         rowSpan={maxInners}
-                                      ></td>
+                                      >{innerIndex +1}</td>
                                     )}
 
                                     {reportItem.statement_columns?.map(

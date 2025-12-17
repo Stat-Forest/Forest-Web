@@ -10,6 +10,7 @@ import {
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
   useLazyGetReganalReportQuery,
+  useGetReportPlantByIdQuery,
 } from "@/services/reportsApi";
 
 // UI Components
@@ -77,6 +78,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
+
+  // ✅ Faqat shu statement id larda plant-report ko'rsatamiz
+  const enablePlantDetail =
+    id === "61ae3c83-1f9c-4ec8-bb06-0c2fc35d0a00" || // Ko‘chat va Nihol
+    id === "0efead0e-25c3-44ab-8200-c2a7628dca8f"; // Urug' xarakati Reja
 
   // ✅ tableHeadersData ni birinchi bo'lib e'lon qilamiz
   const {
@@ -192,20 +198,31 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
   );
 
+  const {
+    data: _plantById,
+    isLoading: isPlantByIdLoading,
+    error: isPlantByIdError,
+  } = useGetReportPlantByIdQuery(
+    { id: selectedRow?.id || "" },
+    { skip: !enablePlantDetail || !selectedRow?.id }
+  );
+
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||
     isRepublicLoading ||
     isAllReportLoading ||
     isIndividualLoading ||
-    deadlineLoading;
+    deadlineLoading ||
+    isPlantByIdLoading;
 
   const isError =
     isErrorHeaders ||
     isErrorRows ||
     isRepublicError ||
     isAllReportError ||
-    isIndividualError;
+    isIndividualError ||
+    isPlantByIdError;
 
   useEffect(() => {
     setSearchTerm("");
@@ -667,9 +684,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   )}
                 </div>
 
-                <div
-                  className="flex items-center justify-between gap-3 mb-4 flex-wrap"
-                >
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   {/* Filters */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
                     {(user_role === "tashkilot_hodimi" ||
@@ -892,6 +907,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       }}
                       selectedRow={selectedRow}
                       individualRows={filteredIndividualRows}
+                      enablePlantDetail={enablePlantDetail}
                       setSelectedOrganizationReport={
                         setSelectedOrganizationReport
                       }
