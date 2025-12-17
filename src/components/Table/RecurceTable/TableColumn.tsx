@@ -546,6 +546,9 @@ const TableColumn = forwardRef(
                   </span>
                   <span className="text-xl">{selectedRow.submit_at}</span>
                 </div>
+                <div className="text-lg">
+                 <b className="font-bold">{t('item_12')}:</b> {selectedRow.organization_name}
+                </div>
               </div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
