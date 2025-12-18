@@ -241,16 +241,8 @@ function CreateReport() {
                 <SelectValue placeholder={t("season")} />
               </SelectTrigger>
               <SelectContent>
-                {statment_loading && (
-                  <div className="text-center text-sm py-2">{t("loading")}</div>
-                )}
-                {statment_error && (
-                  <div className="text-center text-sm text-red-500 py-2">
-                    {t("error_occurred")}
-                  </div>
-                )}
-                <SelectItem value={"spring"}>spring</SelectItem>
-                <SelectItem value={"summer"}>summer</SelectItem>
+                <SelectItem value={"spring"}>Bahor</SelectItem>
+                <SelectItem value={"autumn"}>Kuz</SelectItem>
               </SelectContent>
             </Select>
           </div>
