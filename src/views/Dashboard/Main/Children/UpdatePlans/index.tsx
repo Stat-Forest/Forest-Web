@@ -30,13 +30,19 @@ import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { updatePlansReducer, updatePlansInitialState } from "@/reducers/formReducer";
+import {
+  updatePlansReducer,
+  updatePlansInitialState,
+} from "@/reducers/formReducer";
 
 function UpdatePlans() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [state, dispatch] = useReducer(updatePlansReducer, updatePlansInitialState);
+  const [state, dispatch] = useReducer(
+    updatePlansReducer,
+    updatePlansInitialState
+  );
   const { t } = useTranslation();
 
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -67,6 +73,7 @@ function UpdatePlans() {
           statement: existingPlan.statement_id ?? null,
           year: existingPlan.year ?? 2025,
           values: initialValues,
+          season: existingPlan.season ?? "",
         },
       });
     }
@@ -94,10 +101,12 @@ function UpdatePlans() {
       return;
     }
 
-    const plan_items = Object.entries(state.values).map(([column, plan_value]) => ({
-      column,
-      plan_value: Number(plan_value),
-    }));
+    const plan_items = Object.entries(state.values).map(
+      ([column, plan_value]) => ({
+        column,
+        plan_value: Number(plan_value),
+      })
+    );
 
     const payload = {
       organization: state.selectedOrg,
@@ -109,7 +118,6 @@ function UpdatePlans() {
       await updatePlan({ id: id!, data: payload }).unwrap();
       toast.success("Hisobot muvaffaqiyatli yangilandi!");
       navigate("/main");
-
     } catch (error) {
       console.error("Saqlashda xatolik:", error);
       toast.error("Xatolik yuz berdi!");
@@ -145,7 +153,10 @@ function UpdatePlans() {
                       placeholder="Izlash..."
                       value={state.searchTerm}
                       onChange={(e) =>
-                        dispatch({ type: "SET_SEARCH_TERM", payload: e.target.value })
+                        dispatch({
+                          type: "SET_SEARCH_TERM",
+                          payload: e.target.value,
+                        })
                       }
                       className="w-full mb-2"
                       onClick={(e) => e.stopPropagation()}
@@ -158,7 +169,9 @@ function UpdatePlans() {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-md text-silver">{existingPlan.organization}</span>
+              <span className="text-md text-silver">
+                {existingPlan.organization}
+              </span>
             </div>
 
             {/* YEAR */}
@@ -168,10 +181,36 @@ function UpdatePlans() {
                 type="number"
                 value={state.year}
                 onChange={(e) =>
-                  dispatch({ type: "SET_YEAR", payload: Number(e.target.value) })
+                  dispatch({
+                    type: "SET_YEAR",
+                    payload: Number(e.target.value),
+                  })
                 }
               />
             </div>
+            {(state.statement == "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
+              state.statement == "671577ba-6a86-4619-b31c-86fff20ad305") && (
+              <div className="w-full">
+                <Label>{t("season")}</Label>
+                <Select
+                  value={state.season ?? ""}
+                  onValueChange={(value) =>
+                    dispatch({
+                      type: "SET_SEASON",
+                      payload: value,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full min-h-[45px]">
+                    <SelectValue placeholder="Mavsumni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="spring">Bahor</SelectItem>
+                    <SelectItem value="autumn">Kuz</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* STATEMENT (read-only) */}
             <div className="w-full">
