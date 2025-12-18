@@ -315,27 +315,85 @@ body {
 
 /* Ice/Glassmorphism effect - bg-white o'rniga ishlatiladi */
 .bg-ice {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  /* Biroz to‘qroq ice (sidebar children vibe) + ichida text/border yaxshi ko‘rinsin */
+  --ice-fg: #0b1220;
+  --ice-muted: rgba(15, 23, 42, 0.65);
+  --ice-border: rgba(59, 130, 246, 0.28);
+  --ice-border-strong: rgba(59, 130, 246, 0.40);
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(59, 130, 246, 0.22) 55%,
+    rgba(30, 64, 175, 0.16) 100%
+  );
+  color: var(--ice-fg);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow:
+    0 16px 44px rgba(30, 64, 175, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .bg-ice-strong {
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.36) 0%,
+    rgba(59, 130, 246, 0.28) 55%,
+    rgba(30, 64, 175, 0.22) 100%
+  );
+  color: var(--ice-fg);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow:
+    0 20px 55px rgba(30, 64, 175, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
 
 .bg-ice-light {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.20) 0%,
+    rgba(59, 130, 246, 0.16) 60%,
+    rgba(30, 64, 175, 0.12) 100%
+  );
+  color: var(--ice-fg);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 12px 34px rgba(30, 64, 175, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+
+/* ✅ Glass ichida input/select/textarea border va text kontrasti */
+.bg-ice [data-slot="input"],
+.bg-ice [data-slot="select-trigger"],
+.bg-ice textarea,
+.bg-ice select {
+  background-color: rgba(255, 255, 255, 0.28) !important;
+  border-color: var(--ice-border) !important;
+  color: var(--ice-fg) !important;
+}
+
+.bg-ice [data-slot="input"]::placeholder,
+.bg-ice textarea::placeholder {
+  color: var(--ice-muted) !important;
+}
+
+.bg-ice [data-slot="input"]:focus,
+.bg-ice [data-slot="select-trigger"]:focus,
+.bg-ice textarea:focus,
+.bg-ice select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.20);
+  border-color: var(--ice-border-strong) !important;
+}
+
+.bg-ice hr {
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 /* Sidebar qish vibe uchun qo'shimcha stillar */
