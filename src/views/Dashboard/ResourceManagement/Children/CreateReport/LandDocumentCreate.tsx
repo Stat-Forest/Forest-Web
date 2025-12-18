@@ -107,7 +107,7 @@ function LandDocumentCreate() {
   };
 
   return (
-    <div className="container mx-auto p-6 rounded-xl max-w-4xl bg-white">
+    <div className="container mx-auto p-6 rounded-xl max-w-4xl bg-ice">
       {/* Header Section */}
       <div className="flex items-center gap-4 mb-6">
         <Button
@@ -164,7 +164,7 @@ function LandDocumentCreate() {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full h-11 justify-start text-left font-normal bg-white hover:bg-gray-50 border-gray-300",
+                        "w-full h-11 justify-start text-left font-normal bg-ice hover:bg-gray-50/50 border-gray-300",
                         !date && "text-gray-500"
                       )}
                     >
@@ -237,10 +237,10 @@ function LandDocumentCreate() {
                   Hujjat Turi *
                 </Label>
                 <Select name="document_type" required>
-                  <SelectTrigger className="h-11 bg-white border-gray-300">
+                  <SelectTrigger className="h-11 bg-ice border-gray-300">
                     <SelectValue placeholder="Hujjat turini tanlang" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200 shadow-lg">
+                  <SelectContent className="bg-ice border-gray-200 shadow-lg">
                     {DocumentType.map((doc_type: any, index: number) => (
                       <SelectItem key={index} value={doc_type.value}>
                         {doc_type.label}
@@ -318,10 +318,10 @@ function LandDocumentCreate() {
 
               {selectedFile ? (
                 // Selected File Preview
-                <div className="border border-green-200 bg-green-50 rounded-lg p-4 transition-colors">
+                <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-green-600" />
+                      <FileText className="h-8 w-8 text-blue-600" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate text-gray-900">
                           {selectedFile.name}

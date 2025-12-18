@@ -28,7 +28,7 @@ const ForgetPassword = () => {
     };
 
     return (
-        <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 pt-[70px] pb-[40px] flex flex-col gap-4 items-center">
+        <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 pt-[70px] pb-[40px] flex flex-col gap-4 items-center">
             <h2 className="text-[30px] font-bold">{t("forgotPassword2")}</h2>
             <p className="text-[#929292] font-medium text-[13px]">
                 {t("forgotPasswordDesc")}
@@ -39,7 +39,7 @@ const ForgetPassword = () => {
                 </span>
                 <input onChange={(e) => setEmail(e.target.value)} value={email} type="email" required className="border border-[#DADADA] rounded-[15px] py-[12px] px-4 bg-[#F8F8F8]" />
                 {error && <span className="text-red-500 text-sm">{error}</span>}
-                <button disabled={isLoading} type="submit" className="mt-[30px] cursor-pointer bg-[#09B86F] rounded-[15px] w-full py-4 text-white font-bold text-[15px]" >
+                <button disabled={isLoading} type="submit" className="mt-[30px] cursor-pointer bg-[#3B82F6] rounded-[15px] w-full py-4 text-white font-bold text-[15px] hover:bg-[#2563EB]" >
                     {isLoading ? t("sending") : t("send")}
                 </button>
                 <Link replace to={"/auth"} className="text-[#6C6C6C] text-[13px] font-medium m-auto" >

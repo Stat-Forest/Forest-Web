@@ -130,7 +130,7 @@ const LandRentedChart = ({ activeTab }: { activeTab: string }) => {
         <div className="flex items-center justify-between px-5 py-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="bg-[#09B86F] text-white w-full">Export</Button>
+              <Button className="bg-[#3B82F6] text-white w-full hover:bg-[#2563EB]">Export</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full max-w-[200px]">
               <DropdownMenuItem

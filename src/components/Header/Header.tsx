@@ -160,10 +160,10 @@ function Header({ onLogout }: HeaderProps) {
           <Sheet open={notificationOpen} onOpenChange={handleNotificationOpen}>
             <SheetTrigger asChild>
               <Button
-                className="h-[42px] w-[42px] bg-transparent border-1 text-gray-600 hover:text-[#09B86F] hover:bg-gray-100 relative"
+                className="h-[42px] w-[42px] bg-white/80 border-1 text-gray-600 hover:text-[#3B82F6] hover:bg-gray-100 relative"
                 variant="outline"
               >
-                <Bell size={20} color="white" />
+                <Bell size={20} color="blue" />
                 {/* ✅ Local storage'dan o'qilgan count ni ko'rsatamiz */}
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
@@ -211,7 +211,7 @@ function Header({ onLogout }: HeaderProps) {
           </Sheet>
 
           <Button
-            className="bg-[#09B86F] h-[42px] w-[170px] hover:bg-[#09B86F]"
+            className="bg-[#3B82F6] h-[42px] w-[170px] hover:bg-[#2563EB]"
             onClick={() => navigate("/video")}
           >
             <VideoIcon />
@@ -219,7 +219,7 @@ function Header({ onLogout }: HeaderProps) {
           </Button>
 
           <Select value={currentLang} onValueChange={handleChangeLang}>
-            <SelectTrigger className="w-[120px] text-white min-h-[42px] shadow-none">
+            <SelectTrigger className="w-[120px] bg-white/80 text-blue-800 min-h-[42px] shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -232,7 +232,7 @@ function Header({ onLogout }: HeaderProps) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-[40px] w-[40px] rounded-full bg-white/20 border-1 text-[#069458] hover:text-[white] hover:bg-[#09B86F]">
+              <Button className="h-[40px] w-[40px] rounded-full bg-white/80 border-1 text-[#3B82F6] hover:text-[white] hover:bg-[#3B82F6]">
                 <User2 size={38} />
               </Button>
             </DropdownMenuTrigger>
@@ -242,7 +242,7 @@ function Header({ onLogout }: HeaderProps) {
                   dispatch(setHeaderState({ changePasswordOpen: true }))
                 }
               >
-                <User2 color="#09B86F" />
+                <User2 color="#3B82F6" />
                 {t("item_81")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
@@ -253,7 +253,7 @@ function Header({ onLogout }: HeaderProps) {
           </DropdownMenu>
 
           <Button
-            className="h-[40px] w-[40px] bg-white/10 border-1 hover:bg-[#FF5445] text-[#FF5445] hover:text-[white]"
+            className="h-[40px] w-[40px] bg-white/80 border-1 hover:bg-[#FF5445] text-[#FF5445] hover:text-[white]"
             onClick={handleLogout}
           >
             <LogOut />

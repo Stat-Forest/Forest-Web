@@ -85,7 +85,7 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          <Button type="submit" disabled={isLoading} className="w-full bg-[#09B86F] min-h-[40px]">
+          <Button type="submit" disabled={isLoading} className="w-full bg-[#3B82F6] min-h-[40px] hover:bg-[#2563EB]">
             {isLoading ? "Yuborilmoqda..." : t("changePassword")}
           </Button>
         </form>

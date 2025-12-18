@@ -42,7 +42,7 @@ function TabsTrigger({
       className={cn(
         "data-[state=active]:bg-transparent",
         "data-[state=active]:border-b-2",
-        "data-[state=active]:border-[#09B86F]",
+        "data-[state=active]:border-[#3B82F6]",
         "data-[state=active]:text-[#000000]",
         "dark:data-[state=active]:bg-input/30",
         "text-foreground dark:text-muted-foreground",

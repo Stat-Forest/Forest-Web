@@ -72,7 +72,7 @@ function ResponsibleRepresentatives() {
           <h1 className="text-red-500">Xatolik yuz berdi!</h1>
         </div>
       ) : (
-        <div className="w-full border bg-white/90 border-[silver] rounded-xl px-3 py-5">
+        <div className="w-full border bg-ice border-[silver] rounded-xl px-3 py-5">
           {/* Count info */}
           <div className="mb-3 text-sm text-gray-600">
             {t("users", { count: data?.count || 0 })}

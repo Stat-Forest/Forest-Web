@@ -109,13 +109,13 @@ function CreatedPlantable({
                         e.stopPropagation();
                         navigate(`/plan-update/${item.id}`);
                       }}
-                      className="bg-[#09B86F] hover:bg-[#09B86F]"
+                      className="bg-[#3B82F6] hover:bg-[#2563EB]"
                       size="sm"
                     >
                       <Edit2 size={16} />
                     </Button>
                     <Button
-                      className="bg-[#09B86F] hover:bg-[#09B86F]"
+                      className="bg-[#3B82F6] hover:bg-[#2563EB]"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(item?.id);
@@ -155,7 +155,7 @@ function CreatedPlantable({
                     {item?.plan_items?.map((plan: any, idx: number) => (
                       <div
                         key={plan.id || idx}
-                        className="p-3 border rounded-md shadow-sm bg-white"
+                        className="p-3 border rounded-md shadow-sm bg-ice"
                       >
                         <p className="text-sm font-semibold text-gray-700 break-words whitespace-pre-wrap">
                           {plan?.column_parent_name} {plan.column_name}

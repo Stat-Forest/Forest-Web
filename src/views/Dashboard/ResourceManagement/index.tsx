@@ -44,7 +44,7 @@ function ResourceManagement() {
           {!isLoading && !isError && childTitle}
         </h2>
         <div className="w-full bg-[#E8E8E8] h-[4px] rounded-full">
-          <div className="w-[540px] h-[4px] rounded-full bg-green-500"></div>
+          <div className="w-[540px] h-[4px] rounded-full bg-blue-500"></div>
         </div>
       </div>
 

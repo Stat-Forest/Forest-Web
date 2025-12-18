@@ -132,7 +132,7 @@ const EmployeeAnalysisChart = ({ activeTab }: { activeTab: string }) => {
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="bg-[#09B86F] text-white w-full">
+                <Button className="bg-[#3B82F6] text-white w-full hover:bg-[#2563EB]">
                   Export
                 </Button>
               </DropdownMenuTrigger>

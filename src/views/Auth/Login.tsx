@@ -200,7 +200,7 @@ function Login() {
 
   return (
     <>
-      <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
+      <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
         <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
 
         <Tabs defaultValue="login" className="w-full">
@@ -241,7 +241,7 @@ function Login() {
 
                 <Button
                   onClick={handleEimzoLogin}
-                  className="bg-green-600 text-white h-[45px]"
+                  className="bg-blue-600 text-white h-[45px] hover:bg-blue-700"
                   disabled={!selectedKey || isLoading}
                 >
                   {isLoading ? "Ishlanmoqda..." : "Kirish"}
@@ -331,7 +331,7 @@ function Login() {
                 <div className="flex justify-end">
                   <Link
                     to="/auth/forget-password"
-                    className="text-[#09B86F] text-[15px] font-medium"
+                    className="text-[#3B82F6] text-[15px] font-medium"
                   >
                     {t("forgotPassword")}
                   </Link>
@@ -340,7 +340,7 @@ function Login() {
 
               <Button
                 type="submit"
-                className="bg-green-600 text-white h-[45px]"
+                className="bg-blue-600 text-white h-[45px] hover:bg-blue-700"
               >
                 {t("enter")}
               </Button>

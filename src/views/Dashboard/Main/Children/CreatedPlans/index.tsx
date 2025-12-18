@@ -130,7 +130,7 @@ function CreatedPlans() {
   };
 
   return (
-    <div className="w-full p-5 pb-10 bg-white/90">
+    <div className="w-full p-5 pb-10 bg-ice">
       {/* Filter Section */}
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         {/* Statement Filter */}
@@ -307,7 +307,7 @@ function CreatedPlans() {
       {/* Secondary loading indicator */}
       {isFetching && !isLoading && (
         <div className="flex justify-center items-center mt-4">
-          <span className="text-[#09B86F]">{t("loading")}</span>
+          <span className="text-[#3B82F6]">{t("loading")}</span>
         </div>
       )}
     </div>

@@ -68,7 +68,7 @@ const CheckCode = () => {
   };
 
   return (
-    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
+    <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
       <h2 className="text-[30px] font-bold">{t("confirmCode")}</h2>
       <p className="text-[#929292] font-medium text-[13px]">
         {t("sendedCodeFront")} <span className="text-black">{email}</span>{" "}
@@ -96,7 +96,7 @@ const CheckCode = () => {
         <button
           disabled={isLoading}
           type="submit"
-          className="mt-[30px] cursor-pointer bg-[#09B86F] rounded-[15px] w-full py-4 text-white font-bold text-[15px]"
+          className="mt-[30px] cursor-pointer bg-[#3B82F6] rounded-[15px] w-full py-4 text-white font-bold text-[15px] hover:bg-[#2563EB]"
         >
           {isLoading ? t("confirming") : t("confirm")}
         </button>
@@ -106,7 +106,7 @@ const CheckCode = () => {
           <button
             type="button"
             onClick={handleResendCode}
-            className="text-[#09B86F] cursor-pointer"
+            className="text-[#3B82F6] cursor-pointer"
           >
             {t("resend")}
           </button>

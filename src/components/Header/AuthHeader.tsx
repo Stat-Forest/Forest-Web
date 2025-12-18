@@ -46,7 +46,7 @@ function AuthHeader() {
         {location.pathname != "/auth" && (
           <Button
             onClick={() => navigate("/auth")}
-            className="text-white font-semibold text-[15px] bg-[#09B86F] rounded-[10px] py-[21px] px-[20px] hover:bg-[#09A95F] cursor-pointer"
+            className="text-white font-semibold text-[15px] bg-[#3B82F6] rounded-[10px] py-[21px] px-[20px] hover:bg-[#2563EB] cursor-pointer"
           >
             Kirish
           </Button>
@@ -54,7 +54,7 @@ function AuthHeader() {
         {location.pathname == "/auth" && (
           <Button
             onClick={() => navigate("/")}
-            className="text-white font-semibold text-[15px] bg-[#09B86F] rounded-[10px] py-[21px] hover:bg-[#09A95F] cursor-pointer"
+            className="text-white font-semibold text-[15px] bg-[#3B82F6] rounded-[10px] py-[21px] hover:bg-[#2563EB] cursor-pointer"
           >
             {t("auth_statistics")}
           </Button>

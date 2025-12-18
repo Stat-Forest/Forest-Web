@@ -65,7 +65,7 @@ function MainContainer() {
   }
 
   const cardClasses =
-    "w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300 bg-white/70 border-2 border-white";
+    "w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300 bg-ice border-2 border-white/30";
 
   return (
     <div className="grid grid-cols-3 gap-5 py-4 px-2">
@@ -147,12 +147,12 @@ function MainContainer() {
         onClick={() => navigate("/main/draft")}
         className={cardClasses}
       >
-        <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-green-600">
+        <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-600">
           <FileText color="white" size={25} />
         </div>
         <div>
           <h2 className="font-medium text-[22px] text-gray-800">{t("item_5")}</h2>
-          <span className="text-[22px] font-semibold text-green-700">
+          <span className="text-[22px] font-semibold text-blue-700">
             {dashboard_data?.draft_reports || 0} ta
           </span>
         </div>
@@ -165,12 +165,12 @@ function MainContainer() {
         onClick={() => navigate("/main/newsletter")}
         className={cardClasses}
       >
-        <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-green-300">
+        <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-300">
           <ClipboardIcon color="white" size={25} />
         </div>
         <div>
           <h2 className="font-medium text-[22px] text-gray-800">{t("item_6")}</h2>
-          <span className="text-[22px] font-semibold text-green-700">
+          <span className="text-[22px] font-semibold text-blue-700">
             {dashboard_data?.deadlines || 0} ta
           </span>
         </div>

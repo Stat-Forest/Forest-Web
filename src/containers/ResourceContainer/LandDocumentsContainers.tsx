@@ -152,7 +152,7 @@ function LandDocumentsContainers() {
   }
 
   return (
-    <div className="w-full p-5 my-5 bg-white rounded-xl">
+    <div className="w-full p-5 my-5 bg-ice rounded-xl">
       {/* 🔍 Filter */}
       <div className="my-5 flex items-center gap-3 flex-wrap">
         <Input
@@ -294,7 +294,7 @@ function LandDocumentsContainers() {
 
       {isFetching && !isLoading && (
         <div className="flex justify-center items-center mt-4">
-          <span className="text-[#09B86F]">{t("loading")}</span>
+          <span className="text-[#3B82F6]">{t("loading")}</span>
         </div>
       )}
     </div>
