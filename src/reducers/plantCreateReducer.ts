@@ -20,6 +20,7 @@ export function plantCreateReducer(
   switch (action.type) {
     case "SET_FORM_GROUPS":
       return { ...state, formGroups: action.payload };
+
     case "UPDATE_FORM_VALUE": {
       const { stepIndex, formIndex, id, value } = action.payload;
       return {
@@ -38,12 +39,24 @@ export function plantCreateReducer(
         ),
       };
     }
+
     case "UPDATE_PLANT_ID": {
       const { stepIndex, formIndex, plantId } = action.payload;
+      const oldPlantId = state.formGroups[stepIndex]?.forms[formIndex]?.plantId;
+
+      // Yangi usedPlantIds setini yaratish
       const newUsedPlantIds = new Set(state.usedPlantIds);
+
+      // Eski plant ID ni o'chirish (agar mavjud bo'lsa)
+      if (oldPlantId) {
+        newUsedPlantIds.delete(oldPlantId);
+      }
+
+      // Yangi plant ID ni qo'shish (agar mavjud bo'lsa)
       if (plantId) {
         newUsedPlantIds.add(plantId);
       }
+
       return {
         ...state,
         formGroups: state.formGroups.map((group) =>
@@ -59,6 +72,7 @@ export function plantCreateReducer(
         usedPlantIds: newUsedPlantIds,
       };
     }
+
     case "ADD_FORM": {
       return {
         ...state,
@@ -69,8 +83,20 @@ export function plantCreateReducer(
         ),
       };
     }
+
     case "REMOVE_FORM": {
       const { stepIndex, formIndex } = action.payload;
+      const removedPlantId =
+        state.formGroups[stepIndex]?.forms[formIndex]?.plantId;
+
+      // Yangi usedPlantIds setini yaratish
+      const newUsedPlantIds = new Set(state.usedPlantIds);
+
+      // O'chirilgan plant ID ni usedPlantIds dan olib tashlash
+      if (removedPlantId) {
+        newUsedPlantIds.delete(removedPlantId);
+      }
+
       return {
         ...state,
         formGroups: state.formGroups.map((group) =>
@@ -81,35 +107,55 @@ export function plantCreateReducer(
               }
             : group
         ),
+        usedPlantIds: newUsedPlantIds,
       };
     }
+
     case "SET_DEADLINE":
       return { ...state, selectedDeadlineId: action.payload };
+
     case "SET_ORGANIZATION":
       return { ...state, selectedOrganizationId: action.payload };
+
     case "SET_EMPTY_COLUMNS":
-      return { ...state, allEmptyColumnsByStep: action.payload, currentStep: 0 };
+      return {
+        ...state,
+        allEmptyColumnsByStep: action.payload,
+        currentStep: 0,
+      };
+
     case "SET_CURRENT_STEP":
       return { ...state, currentStep: action.payload };
+
     case "SET_FORM_ERRORS":
       return { ...state, formErrors: action.payload };
+
     case "ADD_FORM_ERROR":
       return { ...state, formErrors: [...state.formErrors, action.payload] };
+
     case "SET_PLAN_ITEMS":
       return { ...state, planItems: action.payload };
+
     case "ADD_USED_PLANT_ID": {
       const newUsed = new Set(state.usedPlantIds);
       newUsed.add(action.payload);
       return { ...state, usedPlantIds: newUsed };
     }
+
     case "SET_PLANTS_PAGE":
       return { ...state, plantsPage: action.payload };
+
     case "SET_DEADLINE_PAGE":
       return { ...state, deadlinePage: action.payload };
+
     case "RESET_FORM":
-      return plantCreateInitialState;
+      return {
+        ...plantCreateInitialState,
+        plantsPage: state.plantsPage,
+        deadlinePage: state.deadlinePage,
+      };
+
     default:
       return state;
   }
 }
-
