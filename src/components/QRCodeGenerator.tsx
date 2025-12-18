@@ -21,7 +21,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
     });
 
     return (
-        <div className="p-2 bg-white inline-block">
+        <div className="p-2 bg-ice inline-block">
             <QRCode value={qrValue} size={100} />
         </div>
     );

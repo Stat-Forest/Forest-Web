@@ -12,7 +12,7 @@ function ReceiptInformation() {
           {t("item_10")} {/* Malumotnoma olish */}
         </h2>
         <div className="w-full bg-[#E8E8E8] h-[4px] rounded-full">
-          <div className="w-[250px] h-[3px] rounded-full bg-green-500"></div>
+          <div className="w-[250px] h-[3px] rounded-full bg-blue-500"></div>
         </div>
       </div>
 
@@ -20,7 +20,7 @@ function ReceiptInformation() {
         {receipt_information.map((item: any) => (
           <div
             key={item.id}
-            className="h-[130px] shadow rounded-lg flex items-center justify-between px-5 cursor-pointer bg-white"
+            className="h-[130px] shadow rounded-lg flex items-center justify-between px-5 cursor-pointer bg-ice"
             onClick={() => window.open('https://my.gov.uz', '_blank')}
           >
             <div className="flex flex-col gap-5">

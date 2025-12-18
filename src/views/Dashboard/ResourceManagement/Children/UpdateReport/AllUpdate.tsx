@@ -328,7 +328,7 @@ function AllUpdateReportItem() {
     <>
       <div>
         <Button
-                 className="min-w-[50px] min-h-[25px] bg-white text-black text-sm border-1 border-black"
+                 className="min-w-[50px] min-h-[25px] bg-ice text-black text-sm border-1 border-black"
                  onClick={() => navigate(-1)}
                >
                  <ChevronLeft size={20} />
@@ -338,7 +338,7 @@ function AllUpdateReportItem() {
 
       <form
         onSubmit={handleSubmit}
-        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-white ${
+        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >

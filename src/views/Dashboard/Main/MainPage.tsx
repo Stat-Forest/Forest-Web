@@ -11,7 +11,7 @@ function MainPage() {
           {t("item_8")}
         </h2>
         <div className="w-full bg-[#E8E8E8] h-[3px] rounded-full">
-          <div className="w-[190px] h-[3px] rounded-full bg-green-500"></div>
+          <div className="w-[190px] h-[3px] rounded-full bg-blue-500"></div>
         </div>
       </div>
 

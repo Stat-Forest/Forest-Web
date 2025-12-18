@@ -18,7 +18,7 @@ function SupportInformation() {
         {t("item_11")}
       </h2>
       <div className="w-full bg-gray-200 h-[5px] rounded-full mb-4">
-        <div className="w-[280px] h-[5px] rounded-full bg-green-500"></div>
+        <div className="w-[280px] h-[5px] rounded-full bg-blue-500"></div>
       </div>
 
       <Accordion
@@ -26,8 +26,8 @@ function SupportInformation() {
         collapsible
         className="w-full space-y-2 flex flex-col gap-3"
       >
-        <AccordionItem value="item-1" className="shadow py-2 rounded-lg px-5 bg-white">
-          <AccordionTrigger className="text-2xl font-medium text-green-600">
+        <AccordionItem value="item-1" className="shadow py-2 rounded-lg px-5 bg-ice">
+          <AccordionTrigger className="text-2xl font-medium text-blue-600">
             {t("item_61")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
@@ -36,8 +36,8 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-2" className="shadow py-2 rounded-lg px-5 bg-white">
-          <AccordionTrigger className="text-2xl font-medium text-green-600">
+        <AccordionItem value="item-2" className="shadow py-2 rounded-lg px-5 bg-ice">
+          <AccordionTrigger className="text-2xl font-medium text-blue-600">
             {t("item_62")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
@@ -45,8 +45,8 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-3" className="shadow py-2 rounded-lg px-5 bg-white">
-          <AccordionTrigger className="text-2xl font-medium text-green-600">
+        <AccordionItem value="item-3" className="shadow py-2 rounded-lg px-5 bg-ice">
+          <AccordionTrigger className="text-2xl font-medium text-blue-600">
             {t("item_63")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
@@ -58,8 +58,8 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-4" className="shadow py-2 rounded-lg px-5 bg-white">
-          <AccordionTrigger className="text-2xl font-medium text-green-600">
+        <AccordionItem value="item-4" className="shadow py-2 rounded-lg px-5 bg-ice">
+          <AccordionTrigger className="text-2xl font-medium text-blue-600">
             {t("item_64")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
@@ -72,8 +72,8 @@ function SupportInformation() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="item-5" className="shadow py-2 rounded-lg px-5 bg-white">
-          <AccordionTrigger className="text-2xl font-medium text-green-600">
+        <AccordionItem value="item-5" className="shadow py-2 rounded-lg px-5 bg-ice">
+          <AccordionTrigger className="text-2xl font-medium text-blue-600">
             5. {t("item_65")}
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">

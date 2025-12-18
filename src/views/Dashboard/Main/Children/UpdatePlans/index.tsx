@@ -117,7 +117,7 @@ function UpdatePlans() {
   };
 
   return (
-    <div className="px-5 py-5 w-full mb-30 bg-white/90">
+    <div className="px-5 py-5 w-full mb-30 bg-ice">
       <h1 className="text-2xl font-bold mb-5">Rejani Yangilash</h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3">
@@ -227,7 +227,7 @@ function UpdatePlans() {
                 <Button
                   type="submit"
                   disabled={isUpdating}
-                  className="min-h-[40px] min-w-[130px] bg-[#09B86F] text-md flex items-center gap-2"
+                  className="min-h-[40px] min-w-[130px] bg-[#3B82F6] text-md flex items-center gap-2"
                 >
                   {isUpdating && <Loader2 className="animate-spin w-4 h-4" />}
                   {id ? "Yangilash" : "Yuborish"}

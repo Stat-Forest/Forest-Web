@@ -9,6 +9,7 @@ import { reportApi } from "@/services/reportsApi";
 import { generalApi } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
+import SnowAnimation from "./SnowAnimation";
 
 const AppWrapper = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
@@ -79,7 +80,12 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
     return () => clearInterval(interval);
   }, [user, refreshToken, dispatch]);
 
-  return <>{children}</>;
+  return (
+    <>
+      <SnowAnimation />
+      {children}
+    </>
+  );
 };
 
 export default AppWrapper;

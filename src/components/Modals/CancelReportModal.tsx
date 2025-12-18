@@ -53,7 +53,7 @@ export default function CancelReportModal({ open, setOpen, reportId }: Props) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <textarea
-            className="w-full border rounded-md p-3 text-sm resize-none min-h-[170px] focus:outline-none focus:ring focus:ring-green-300 placeholder:text-gray-400"
+            className="w-full border rounded-md p-3 text-sm resize-none min-h-[170px] focus:outline-none focus:ring focus:ring-blue-300 placeholder:text-gray-400"
             placeholder="Sababni shu yerga yozing"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -64,7 +64,7 @@ export default function CancelReportModal({ open, setOpen, reportId }: Props) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#09B86F] hover:bg-[#09B86F] text-white min-h-[40px]"
+            className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white min-h-[40px]"
           >
             {isLoading ? "Yuborilmoqda..." : "Jonatish"}
           </Button>

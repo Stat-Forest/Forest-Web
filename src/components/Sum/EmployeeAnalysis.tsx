@@ -104,9 +104,9 @@ const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
   };
 
   return (
-    <div className="bg-white shadow px-5 py-4 rounded-2xl mb-6">
+    <div className="bg-ice shadow px-5 py-4 rounded-2xl mb-6">
       <div className="flex items-end gap-2 pb-3">
-        <ChartNoAxesColumn color="#09B86F" fontWeight={800} />
+        <ChartNoAxesColumn color="#3B82F6" fontWeight={800} />
         <h2>{t("tableSummary")}</h2>
       </div>
 

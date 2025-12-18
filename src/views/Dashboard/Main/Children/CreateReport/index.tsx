@@ -109,10 +109,10 @@ function CreateReport() {
   };
 
   return (
-    <div className="px-5 py-5 w-full mb-30 bg-white/90">
+    <div className="px-5 py-5 w-full mb-30 bg-ice">
       <div>
         <Button
-          className="min-w-[50px] min-h-[25px] bg-white text-black text-sm border-1 border-black"
+          className="min-w-[50px] min-h-[25px] bg-ice text-black text-sm border-1 border-black"
           onClick={() => navigate(-1)}
         >
           <ChevronLeft size={20} />
@@ -269,7 +269,7 @@ function CreateReport() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="min-h-[40px] min-w-[130px] bg-[#09B86F] text-md flex items-center gap-2"
+              className="min-h-[40px] min-w-[130px] bg-[#3B82F6] text-md flex items-center gap-2"
             >
               {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
               {t("submit")}

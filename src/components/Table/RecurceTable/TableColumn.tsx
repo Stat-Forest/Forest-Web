@@ -235,7 +235,7 @@ const TableColumn = forwardRef(
     return (
       <>
         <div
-          className="overflow-x-auto bg-white p-4 rounded-xl"
+          className="overflow-x-auto bg-ice p-4 rounded-xl"
           ref={tableRef}
           id="printableTable"
         >
@@ -368,7 +368,7 @@ const TableColumn = forwardRef(
           </table>
         </div>
 
-        <div className="p-4 my-2 bg-white rounded-xl">
+        <div className="p-4 my-2 bg-ice rounded-xl">
           <div className="flex items-center gap-2 mb-6 ">
             <div>
               <Input
@@ -445,7 +445,7 @@ const TableColumn = forwardRef(
                   setSelectedStatusReport("");
                   setSearchTermReport("");
                 }}
-                className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
+                className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
               >
                 {t("reset")}
               </Button>
@@ -528,7 +528,7 @@ const TableColumn = forwardRef(
 
         {/* Detal ko'rinish */}
         {selectedRow && (
-          <div className="p-4 bg-white rounded-xl">
+          <div className="p-4 bg-ice rounded-xl">
             <div className="flex items-center justify-between my-5">
               <div className="flex gap-2 flex-col">
                 {selectedRow.status === "cancelled" && (
@@ -586,7 +586,7 @@ const TableColumn = forwardRef(
                           }
                         }}
                         disabled={isSending}
-                        className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]"
+                        className="bg-[#3B82F6] rounded w-[100px] hover:bg-[#2563EB]"
                       >
                         {isSending ? t("sending") : t("send2")}
                       </Button>
@@ -624,7 +624,7 @@ const TableColumn = forwardRef(
                         disabled={
                           isAccepting || acceptedReports.has(selectedRow.id)
                         }
-                        className="bg-[#09B86F] rounded w-[150px] hover:bg-[#09B86F]"
+                        className="bg-[#3B82F6] rounded w-[150px] hover:bg-[#2563EB]"
                       >
                         {isAccepting
                           ? "Qabul qilinmoqda..."
@@ -635,7 +635,7 @@ const TableColumn = forwardRef(
                     )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button className="bg-[#09B86F] rounded w-[100px] hover:bg-[#09B86F]">
+                      <Button className="bg-[#3B82F6] rounded w-[100px] hover:bg-[#2563EB]">
                         Export
                       </Button>
                     </DropdownMenuTrigger>
@@ -732,7 +732,7 @@ const TableColumn = forwardRef(
                                       >
                                         <div className="flex items-center justify-center gap-2">
                                           <Button
-                                            className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                            className="bg-[#3B82F6] hover:bg-[#2563EB]"
                                             onClick={(e) => {
                                               e.stopPropagation();;
                                               navigate(
@@ -745,7 +745,7 @@ const TableColumn = forwardRef(
                                           </Button>
                                           {selectedRow.status == "saved" && (
                                             <Button
-                                              className="bg-[#09B86F] hover:bg-[#09B86F]"
+                                              className="bg-[#3B82F6] hover:bg-[#2563EB]"
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 deleteReport(selectedRow.id);

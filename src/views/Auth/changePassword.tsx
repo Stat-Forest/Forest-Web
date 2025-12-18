@@ -63,7 +63,7 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="bg-white w-[480px] rounded-2xl shadow-md px-7 pt-[70px] pb-[40px] flex flex-col gap-4 items-center">
+    <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 pt-[70px] pb-[40px] flex flex-col gap-4 items-center">
       <h2 className="text-[30px] font-bold">{t("resetPassword")}</h2>
       <form
         onSubmit={handleSubmit}
@@ -93,7 +93,7 @@ const ChangePassword = () => {
         <button
           disabled={isLoading}
           type="submit"
-          className="mt-[30px] cursor-pointer bg-[#09B86F] rounded-[15px] w-full py-4 text-white font-bold text-[15px]"
+          className="mt-[30px] cursor-pointer bg-[#3B82F6] rounded-[15px] w-full py-4 text-white font-bold text-[15px] hover:bg-[#2563EB]"
         >
           {isLoading ? t("confirming") : t("confirm")}
         </button>

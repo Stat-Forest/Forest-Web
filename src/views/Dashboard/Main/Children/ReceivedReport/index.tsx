@@ -45,7 +45,7 @@ function ReceivedReport() {
     <div className="px-5 w-full">
       {isReportsLoading && <h1>Yuklanmoqda...</h1>}
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
-      <div className="w-full border bg-white/90 border-[silver] rounded-xl px-3 py-5">
+      <div className="w-full border bg-ice border-[silver] rounded-xl px-3 py-5">
         <div className="flex items-center gap-5 mb-6">
           <div>
             <Input
@@ -160,7 +160,7 @@ function ReceivedReport() {
               onClick={() => {
                 dispatch(resetReportsFilter("accepted"));
               }}
-              className="bg-[#09B86F] text-[white] hover:bg-[#09B86F] cursor-pointer"
+              className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
             >
               {t("reset")}
             </Button>

@@ -434,7 +434,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   margin-bottom: 10px;
                   background-color: #f0f0f0;
                   padding: 8px 12px;
-                  border-left: 4px solid #09B86F;
+                  border-left: 4px solid #3B82F6;
                 }
                 @media print {
                   body { margin: 15mm; }
@@ -456,7 +456,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                 }
                 .print-btn {
                   padding: 10px 20px;
-                  background: #09B86F;
+                  background: #3B82F6;
                   color: white;
                   border: none;
                   border-radius: 5px;
@@ -635,14 +635,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
           <TabSkeleton />
         ) : (
           <TabsList
-            className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3 bg-white"
+            className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3 bg-ice"
             data-aos="fade-down"
           >
             {tableHeadersData.map((col: ReportColumn) => (
               <TabsTrigger
                 key={col.id}
                 value={col.title}
-                className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#09B86F] data-[state=active]:text-[#000]"
+                className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#3B82F6] data-[state=active]:text-[#000]"
                 data-aos="fade-up"
                 data-aos-delay={100 * tableHeadersData.indexOf(col)}
               >
@@ -690,7 +690,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     {(user_role === "tashkilot_hodimi" ||
                       user_role === "hududiy_boshqarma") && (
                       <button
-                        className="bg-[#09B86F] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#078a5a] transition-colors duration-300"
+                        className="bg-[#3B82F6] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#2563EB] transition-colors duration-300"
                         onClick={() =>
                           navigate(`/resource-management/create/${reportName}`)
                         }
@@ -701,7 +701,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="py-2.5 font-semibold w-full md:w-[150px] rounded bg-[#09B86F] border-1 text-[white] hover:bg-[#078a5a] transition-colors duration-300"
+                          className="py-2.5 font-semibold w-full md:w-[150px] rounded bg-[#3B82F6] border-1 text-[white] hover:bg-[#2563EB] transition-colors duration-300"
                           data-aos="zoom-in"
                           data-aos-delay="350"
                         >
@@ -735,7 +735,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         placeholder={`${t("item_79")}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full md:w-[250px] border-white bg-white min-h-[40px] focus:border-[#09B86F] transition-colors duration-300"
+                        className="w-full md:w-[250px] border-white/30 bg-ice min-h-[40px] focus:border-[#3B82F6] transition-colors duration-300"
                         data-aos="fade-up"
                         data-aos-delay="500"
                       />
@@ -744,7 +744,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         onValueChange={setSelectedRegion}
                       >
                         <SelectTrigger
-                          className="w-full md:w-[220px] text-xl min-h-[40px] bg-white border-white focus:border-[#09B86F] transition-colors duration-300"
+                          className="w-full md:w-[220px] text-xl min-h-[40px] bg-ice border-white/30 focus:border-[#3B82F6] transition-colors duration-300"
                           data-aos="fade-up"
                           data-aos-delay="550"
                         >
@@ -766,7 +766,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         onValueChange={setSelectedPeriod}
                       >
                         <SelectTrigger
-                          className="w-full md:w-[220px] text-xl min-h-[40px] bg-white border-white focus:border-[#09B86F] transition-colors duration-300"
+                          className="w-full md:w-[220px] text-xl min-h-[40px] bg-ice border-white/30 focus:border-[#3B82F6] transition-colors duration-300"
                           data-aos="fade-up"
                           data-aos-delay="600"
                         >
@@ -836,7 +836,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       </Select>
 
                       <Input
-                        className="w-full border border-[white] bg-white md:w-[150px] focus:border-[#09B86F] transition-colors duration-300"
+                        className="w-full border border-white/30 bg-ice md:w-[150px] focus:border-[#3B82F6] transition-colors duration-300"
                         type="number"
                         placeholder={`${t("year")}`}
                         value={selectedYear}
@@ -848,7 +848,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         onClick={handleSearchRegional}
                         data-aos="zoom-in"
                         data-aos-delay="700"
-                        className="hover:bg-[#078a5a] transition-colors duration-300"
+                        className="hover:bg-[#2563EB] transition-colors duration-300"
                       >
                         {t("item_79")}
                       </Button>
