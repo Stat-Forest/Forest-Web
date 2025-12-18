@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import { toast } from "react-toastify";
 
 interface CreatedPlantableProps {
   data: any[];
@@ -33,14 +34,19 @@ function CreatedPlantable({
   const [openRow, setOpenRow] = useState<number | null>(null);
   const navigate = useNavigate();
 
-   const user_role = useSelector((state: RootState) => state.auth.user?.role);
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
 
   const handleDelete = async (id: number) => {
     setLoadingId(id);
     try {
       await deletePlan(id).unwrap();
-    } catch (err) {
+      toast.success("Muvaffaqiyatli o‘chirildi");
+    } catch (err: any) {
       console.error("Xatolik:", err);
+
+      const message = err?.data?.message || err?.error || "Xatolik yuz berdi";
+
+      toast.error(message);
     } finally {
       setLoadingId(null);
     }
