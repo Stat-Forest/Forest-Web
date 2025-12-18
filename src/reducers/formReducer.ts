@@ -1,4 +1,9 @@
-import { CreateReportFormState, CreateReportFormAction, UpdatePlansFormState, UpdatePlansFormAction } from "@/types/formTypes";
+import {
+  CreateReportFormState,
+  CreateReportFormAction,
+  UpdatePlansFormState,
+  UpdatePlansFormAction,
+} from "@/types/formTypes";
 
 // CreateReport uchun reducer
 export const createReportInitialState: CreateReportFormState = {
@@ -7,6 +12,7 @@ export const createReportInitialState: CreateReportFormState = {
   statement: null,
   values: {},
   year: undefined,
+  season: null,
 };
 
 export function createReportReducer(
@@ -23,8 +29,13 @@ export function createReportReducer(
     case "SET_VALUE":
       return {
         ...state,
-        values: { ...state.values, [action.payload.columnId]: action.payload.value },
+        values: {
+          ...state.values,
+          [action.payload.columnId]: action.payload.value,
+        },
       };
+    case "SET_SEASON":
+      return { ...state, season: action.payload };
     case "SET_YEAR":
       return { ...state, year: action.payload };
     case "RESET_FORM":
@@ -41,6 +52,7 @@ export const updatePlansInitialState: UpdatePlansFormState = {
   values: {},
   year: undefined,
   searchTerm: "",
+  season: "",
 };
 
 export function updatePlansReducer(
@@ -55,8 +67,13 @@ export function updatePlansReducer(
     case "SET_VALUE":
       return {
         ...state,
-        values: { ...state.values, [action.payload.columnId]: action.payload.value },
+        values: {
+          ...state.values,
+          [action.payload.columnId]: action.payload.value,
+        },
       };
+    case "SET_SEASON":
+      return { ...state, season: action.payload };
     case "SET_YEAR":
       return { ...state, year: action.payload };
     case "SET_SEARCH_TERM":
@@ -67,4 +84,3 @@ export function updatePlansReducer(
       return state;
   }
 }
-
