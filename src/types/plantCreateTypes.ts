@@ -32,8 +32,19 @@ export interface PlantFormState {
 
 export type PlantFormAction =
   | { type: "SET_FORM_GROUPS"; payload: FormGroup[] }
-  | { type: "UPDATE_FORM_VALUE"; payload: { stepIndex: number; formIndex: number; id: string; value: string } }
-  | { type: "UPDATE_PLANT_ID"; payload: { stepIndex: number; formIndex: number; plantId: string } }
+  | {
+      type: "UPDATE_FORM_VALUE";
+      payload: {
+        stepIndex: number;
+        formIndex: number;
+        id: string;
+        value: string;
+      };
+    }
+  | {
+      type: "UPDATE_PLANT_ID";
+      payload: { stepIndex: number; formIndex: number; plantId: string };
+    }
   | { type: "ADD_FORM"; payload: number }
   | { type: "REMOVE_FORM"; payload: { stepIndex: number; formIndex: number } }
   | { type: "SET_DEADLINE"; payload: string }
@@ -47,4 +58,3 @@ export type PlantFormAction =
   | { type: "SET_PLANTS_PAGE"; payload: number }
   | { type: "SET_DEADLINE_PAGE"; payload: number }
   | { type: "RESET_FORM" };
-
