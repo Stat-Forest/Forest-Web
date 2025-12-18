@@ -30,10 +30,16 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { createReportReducer, createReportInitialState } from "@/reducers/formReducer";
+import {
+  createReportReducer,
+  createReportInitialState,
+} from "@/reducers/formReducer";
 
 function CreateReport() {
-  const [state, dispatch] = useReducer(createReportReducer, createReportInitialState);
+  const [state, dispatch] = useReducer(
+    createReportReducer,
+    createReportInitialState
+  );
   const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
@@ -85,16 +91,19 @@ function CreateReport() {
       return;
     }
 
-    const plan_items = Object.entries(state.values).map(([column, plan_value]) => ({
-      column,
-      plan_value,
-    }));
+    const plan_items = Object.entries(state.values).map(
+      ([column, plan_value]) => ({
+        column,
+        plan_value,
+      })
+    );
 
     const payload = {
       organization: state.selectedOrg,
       statement: state.statement,
       year: state.year,
       plan_items,
+      season: state.season,
     };
 
     try {
@@ -138,7 +147,10 @@ function CreateReport() {
                   placeholder="Izlash..."
                   value={state.searchTerm}
                   onChange={(e) =>
-                    dispatch({ type: "SET_SEARCH_TERM", payload: e.target.value })
+                    dispatch({
+                      type: "SET_SEARCH_TERM",
+                      payload: e.target.value,
+                    })
                   }
                   className="w-full mb-2"
                 />
@@ -213,6 +225,36 @@ function CreateReport() {
             required
           />
         </div>
+
+        {(state.statement ==
+          "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
+          state.statement == "671577ba-6a86-4619-b31c-86fff20ad305") && (
+          <div className="w-full">
+            <Label className="pb-1.5 text-md block">{t("season")}</Label>
+            <Select
+              value={state.season ?? ""}
+              onValueChange={(value) =>
+                dispatch({ type: "SET_SEASON", payload: value })
+              }
+            >
+              <SelectTrigger className="w-full min-h-[45px]">
+                <SelectValue placeholder={t("season")} />
+              </SelectTrigger>
+              <SelectContent>
+                {statment_loading && (
+                  <div className="text-center text-sm py-2">{t("loading")}</div>
+                )}
+                {statment_error && (
+                  <div className="text-center text-sm text-red-500 py-2">
+                    {t("error_occurred")}
+                  </div>
+                )}
+                <SelectItem value={"spring"}>spring</SelectItem>
+                <SelectItem value={"summer"}>summer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* PLAN COLUMNS */}
         {state.statement && (
