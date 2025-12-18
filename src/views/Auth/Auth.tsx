@@ -13,13 +13,13 @@ function Auth() {
       <AuthHeader />
 
       <div
-        className="flex items-center justify-center h-screen w-full flex-col gap-10"
+        className="flex items-center justify-center h-screen w-full flex-col gap-10 bg-white/10"
       >
         
         <Outlet />
         {/* <Login /> */}
         <div>
-          <span className="text-[18px] text-black">
+          <span className="text-[18px] text-blue-800">
             © 2025 "{t('compny_name')}" {t("auth_bottom")}
             <NavLink
               className={"text-[#3B82F6] px-2"}
