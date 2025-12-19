@@ -552,18 +552,20 @@ const TableColumn = forwardRef(
               </div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">
-                  {(user_role === "tashkilot_rahbari" &&
+                  {/* 🔹 Qaytarish (Recycle) button */}
+                  {((user_role === "tashkilot_rahbari" &&
                     selectedRow?.status == "saved") ||
                     (user_role === "bolim_admin" &&
-                      selectedRow.status == "sent") && (
-                        <Button
-                          onClick={() => setIsCancelModalOpen(true)}
-                          className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
-                        >
-                          {t("recycle")}
-                        </Button>
-                      )}
+                      selectedRow?.status == "sent")) && (
+                      <Button
+                        onClick={() => setIsCancelModalOpen(true)}
+                        className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                      >
+                        {t("recycle")}
+                      </Button>
+                    )}
 
+                  {/* 🔹 Yuborish (Send) button - faqat tashkilot_rahbari va saved status'da */}
                   {user_role == "tashkilot_rahbari" &&
                     selectedRow?.status == "saved" && (
                       <Button
@@ -592,6 +594,7 @@ const TableColumn = forwardRef(
                       </Button>
                     )}
 
+                  {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
                   {user_role == "bolim_admin" &&
                     selectedRow?.status == "sent" && (
                       <Button
@@ -633,6 +636,8 @@ const TableColumn = forwardRef(
                           : "Qabul qilish"}
                       </Button>
                     )}
+
+                  {/* 🔹 Export button - har doim ko'rinadi */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button className="bg-[#3B82F6] rounded w-[100px] hover:bg-[#2563EB]">
