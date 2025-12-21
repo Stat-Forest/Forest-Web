@@ -60,14 +60,13 @@ function Sidebar() {
       return (
         <Sheet key={item.id}>
           <SheetTrigger asChild>
-            <div className="sidebar-menu-item cursor-pointer p-2 hover:text-blue-700 rounded-lg flex items-center gap-2 text-gray-800 border border-transparent hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40 transition-all duration-200 group">
+            <div className="sidebar-menu-item cursor-pointer p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40">
               {item.icon && (
                 <img
                   src={item.icon.startsWith("http://") ? item.icon.replace("http://", "https://") : item.icon}
                   alt=""
                   className="w-5 h-5 transition-transform duration-200 group-hover:scale-110"
                   onError={(e) => {
-                    // Error bo'lsa, HTTPS versiyasini sinab ko'rish
                     const target = e.target as HTMLImageElement;
                     if (target.src.startsWith("http://")) {
                       target.src = target.src.replace("http://", "https://");
@@ -75,16 +74,16 @@ function Sidebar() {
                   }}
                 />
               )}
-              <span className="flex-1">{t(item.name)}</span>
+              <span className="font-medium flex-1">{t(item.name)}</span>
               <div className="w-1.5 h-1.5 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="ml-[310px] bg-ice backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-white/20 shadow-2xl z-[100] text-gray-900"
+            className="ml-[310px] bg-ice backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-white/20 shadow-2xl z-[100]"
           >
             <SheetHeader className="bg-gradient-to-r from-blue-600/30 via-blue-500/25 to-blue-400/30 rounded-lg p-4 border border-white/30 shadow-md mb-4">
-              <SheetTitle className="text-blue-100 font-bold text-lg drop-shadow-sm">
+              <SheetTitle className="text-gray-900 font-bold text-lg">
                 {t(item.name)}
               </SheetTitle>
             </SheetHeader>
@@ -117,12 +116,12 @@ function Sidebar() {
         to={item.path}
         key={item.id}
         className={({ isActive }) =>
-        `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
-          isActive
-            ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
-            : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
-        }`
-      }
+          `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
+            isActive
+              ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
+              : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
+          }`
+        }
       >
         {item.default_icon && (
           <img src={item.default_icon} alt="" className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
