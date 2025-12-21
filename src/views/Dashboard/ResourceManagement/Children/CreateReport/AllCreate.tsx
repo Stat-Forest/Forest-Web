@@ -62,6 +62,7 @@ function AllCreateReportItem() {
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
+  const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
@@ -329,7 +330,11 @@ function AllCreateReportItem() {
       };
     });
 
-    const payload = { deadline: selectedDeadlineId, report_items };
+    const payload = { 
+      deadline: selectedDeadlineId, 
+      report_items,
+      season: selectedSeason || null
+    };
 
     try {
       await createReportItem(payload).unwrap();
@@ -500,6 +505,25 @@ function AllCreateReportItem() {
               </SelectContent>
             </Select>
           </div>
+         {(reportIds == "1186b75c-d84c-44e6-999e-d6be3c5118ff" || reportIds == "671577ba-6a86-4619-b31c-86fff20ad305") && (
+          <div>
+            <label className="block mb-1 text-lg font-medium">
+              Season:
+            </label>
+            <Select
+              value={selectedSeason}
+              onValueChange={(val) => setSelectedSeason(val)}
+            >
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder="Tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="spring">Bahor</SelectItem>
+                <SelectItem value="autumn">Kuz</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         </div>
 
         {/* ✅ QOLGAN KOD — TABLE STEP */}
