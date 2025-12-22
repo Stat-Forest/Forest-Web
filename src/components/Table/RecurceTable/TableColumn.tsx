@@ -18,6 +18,7 @@ import {
   useDeleteReportMutation,
   useGetReportPlantByIdQuery,
   useSendReportMutation,
+  useExportExcelMutation,
 } from "@/services/reportsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useSelector } from "react-redux";
@@ -80,6 +81,38 @@ const TableColumn = forwardRef(
     const [acceptReport, { isLoading: isAccepting }] =
       useAcceptReportMutation();
     const [acceptedReports, setAcceptedReports] = useState(new Set());
+    const [exportExcel, { isLoading: isExporting }] = useExportExcelMutation();
+
+    // Export Excel funksiyasi
+    const handleExportExcel = async () => {
+      if (!selectedRow?.id) {
+        alert("Export qilish uchun hisobot tanlang");
+        return;
+      }
+
+      try {
+        const lang = i18n.language === "uz" ? "uz" : "ru";
+        const result = await exportExcel({
+          report_ids: [selectedRow.id],
+          lang,
+          mode: "json",
+        }).unwrap();
+
+        if (result?.download_url) {
+          // Download URL'ni ochish
+          window.open(result.download_url, "_blank");
+        } else {
+          alert(result?.detail || "Export muvaffaqiyatli bajarildi");
+        }
+      } catch (error: any) {
+        console.error("Export xatolik:", error);
+        alert(
+          error?.data?.detail ||
+            error?.message ||
+            "Export qilishda xatolik yuz berdi"
+        );
+      }
+    };
 
     const statementName = (selectedRow?.statement_name ?? "") as string;
     const normalizeStatementName = (s: string) =>
@@ -645,8 +678,13 @@ const TableColumn = forwardRef(
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 mt-2 mr-2">
-                      <DropdownMenuItem>
-                        Hisobotni export qilib olish
+                      <DropdownMenuItem
+                        onClick={handleExportExcel}
+                        disabled={!selectedRow?.id || isExporting}
+                      >
+                        {isExporting
+                          ? "Export qilinmoqda..."
+                          : "Hisobotni export qilib olish"}
                       </DropdownMenuItem>
 
                       <DropdownMenuItem>Hisobotni chop etish</DropdownMenuItem>
