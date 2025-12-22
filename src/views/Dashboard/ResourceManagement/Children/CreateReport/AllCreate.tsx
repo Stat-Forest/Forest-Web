@@ -171,6 +171,7 @@ function AllCreateReportItem() {
                 statement_id: reportIds as string,
                 year: "2025",
                 column: col.id,
+                ...(selectedSeason && { season: selectedSeason }),
               })
             ).unwrap()
           )

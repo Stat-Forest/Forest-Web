@@ -17,6 +17,7 @@ export const reportApi = createApi({
         organization__region: string;
         statement__period: string;
         search: string;
+        time_status?: string;
       }
     >({
       query: ({
@@ -25,8 +26,9 @@ export const reportApi = createApi({
         organization__region,
         statement__period,
         search,
+        time_status,
       }) =>
-        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}`,
+        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&time_status=${time_status}`,
       providesTags: ["Reports"],
     }),
 
@@ -51,6 +53,47 @@ export const reportApi = createApi({
         url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}`,
         method: "GET",
       }),
+      providesTags: ["Reports"],
+    }),
+    getExpiredDeadlinesReport: builder.query<
+      any,
+      {
+        deadline_at?: string;
+        organizations?: number;
+        page?: number;
+        per_page?: number;
+        statement?: number;
+        submit_at?: string;
+      }
+    >({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        
+        if (params.deadline_at !== undefined && params.deadline_at !== "") {
+          queryParams.append("deadline_at", params.deadline_at);
+        }
+        if (params.organizations !== undefined && params.organizations !== null) {
+          queryParams.append("organizations", params.organizations.toString());
+        }
+        if (params.page !== undefined && params.page !== null) {
+          queryParams.append("page", params.page.toString());
+        }
+        if (params.per_page !== undefined && params.per_page !== null) {
+          queryParams.append("per_page", params.per_page.toString());
+        }
+        if (params.statement !== undefined && params.statement !== null) {
+          queryParams.append("statement", params.statement.toString());
+        }
+        if (params.submit_at !== undefined && params.submit_at !== "") {
+          queryParams.append("submit_at", params.submit_at);
+        }
+
+        const queryString = queryParams.toString();
+        return {
+          url: `/expired-deadlines/${queryString ? `?${queryString}` : ""}`,
+          method: "GET",
+        };
+      },
       providesTags: ["Reports"],
     }),
     getReportItemsReport: builder.query<any, void>({
@@ -132,6 +175,7 @@ export const reportApi = createApi({
         search: string;
         year: string;
         perPage: number;
+        season: string;
       }
     >({
       query: ({
@@ -142,8 +186,9 @@ export const reportApi = createApi({
         search,
         year,
         perPage,
+        season,
       }) => ({
-        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}&per_page=${perPage}`,
+        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}&per_page=${perPage}&&season=${season}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -156,12 +201,19 @@ export const reportApi = createApi({
         statement_id: string;
         year: string;
         column: string;
+        season?: string | null;
       }
     >({
-      query: ({ organization_id, statement_id, year, column }) => ({
-        url: `/plan-items/?plan__organization=${organization_id}&column=${column}&plan__statement=${statement_id}&plan__year=${year}`,
-        method: "GET",
-      }),
+      query: ({ organization_id, statement_id, year, column, season }) => {
+        let url = `/plan-items/?plan__organization=${organization_id}&column=${column}&plan__statement=${statement_id}&plan__year=${year}`;
+        if (season) {
+          url += `&season=${season}`;
+        }
+        return {
+          url,
+          method: "GET",
+        };
+      },
       providesTags: ["Reports"],
     }),
     getPlanById: builder.query<any, string>({
@@ -342,6 +394,7 @@ export const {
   useGetReportByIdQuery,
   useGetDashboardReportQuery,
   useGetDeadlinesReportQuery,
+  useGetExpiredDeadlinesReportQuery,
   useGetReportItemsReportQuery,
   useGetStatementColumnsReportQuery,
   useGetStatementsReportQuery,
