@@ -162,6 +162,17 @@ function AllCreateReportItem() {
       if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
         return;
 
+      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin plan olinadi
+      const hasSeasonSelect = 
+        reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || 
+        reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
+      
+      if (hasSeasonSelect && !selectedSeason) {
+        // Season tanlanmagan bo'lsa, plan ma'lumotlarini tozalash
+        setPlanItems([]);
+        return;
+      }
+
       try {
         const results = await Promise.all(
           rejaColumns.map((col) =>
@@ -203,7 +214,7 @@ function AllCreateReportItem() {
     return () => {
       isMounted = false;
     };
-  }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, dispatch]);
+  }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, selectedSeason, dispatch]);
 
   const [
     createReportItem,
