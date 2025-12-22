@@ -17,7 +17,7 @@ export const reportApi = createApi({
         organization__region: string;
         statement__period: string;
         search: string;
-        time_status?: string;
+        // time_status?: string;
       }
     >({
       query: ({
@@ -26,9 +26,9 @@ export const reportApi = createApi({
         organization__region,
         statement__period,
         search,
-        time_status,
+        // time_status,
       }) =>
-        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&time_status=${time_status}`,
+        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}`,
       providesTags: ["Reports"],
     }),
 
