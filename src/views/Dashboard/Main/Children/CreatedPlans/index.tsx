@@ -40,6 +40,7 @@ function CreatedPlans() {
     perPage,
     search: "",
     year: debouncedSearchYear,
+    season: "",
   });
 
   const {
