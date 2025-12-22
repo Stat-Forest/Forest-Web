@@ -284,6 +284,20 @@ export const reportApi = createApi({
       }),
       invalidatesTags: ["Reports"],
     }),
+    exportExcel: builder.mutation<
+      any,
+      {
+        report_ids: string[];
+        lang: string;
+        mode?: string;
+      }
+    >({
+      query: ({ report_ids, lang, mode = "json" }) => ({
+        url: `/export-excel/`,
+        method: "POST",
+        body: { report_ids, lang, mode },
+      }),
+    }),
     PlanCreate: builder.mutation({
       query: (payload) => ({
         url: `/plan-create/`,
@@ -418,6 +432,7 @@ export const {
   useCancelReportMutation,
   useAcceptReportMutation,
   usePlantCreateMutation,
+  useExportExcelMutation,
 
   // PUT
   useUpdateReportMutation,
