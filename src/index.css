@@ -178,7 +178,7 @@
 
 body {
   /* Background image - lazy load qilingan, lekin fallback sifatida CSS'da ham qo'yamiz */
-  background: linear-gradient(rgba(222, 242, 250, 0.1), rgba(217, 245, 249, 0.3)), url(./assets/bg_winter.jpg);
+  background: linear-gradient(rgba(222, 242, 250, 0.1), rgba(217, 245, 249, 0.3)), url(./assets/bg_winter.png);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;

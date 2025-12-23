@@ -23,6 +23,7 @@ import {
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import { decryptData } from "@/utils/crypto";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
 import {
@@ -92,25 +93,95 @@ const TableColumn = forwardRef(
 
       try {
         const lang = i18n.language === "uz" ? "uz" : "ru";
+        
+        console.log("Export boshlandi:", {
+          report_ids: [selectedRow.id],
+          lang,
+          mode: "json",
+        });
+
         const result = await exportExcel({
           report_ids: [selectedRow.id],
           lang,
           mode: "json",
         }).unwrap();
 
+        console.log("Export response:", result);
+
         if (result?.download_url) {
-          // Download URL'ni ochish
-          window.open(result.download_url, "_blank");
+          // Download URL'ni tekshirish va to'g'ri formatlash
+          let downloadUrl = result.download_url;
+          
+          // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
+          if (downloadUrl.startsWith("/")) {
+            const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
+            downloadUrl = `${baseUrl}${downloadUrl}`;
+          } else if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://")) {
+            // Agar protocol bo'lmasa, base_url qo'shish
+            const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
+            downloadUrl = `${baseUrl}/${downloadUrl}`;
+          }
+          
+          console.log("Download URL:", downloadUrl);
+          
+          // Token bilan download URL'ni ochish
+          const token = decryptData("token", "token");
+          if (token) {
+            // Token bilan fetch qilish
+            try {
+              const response = await fetch(downloadUrl, {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = result.filename || "export.xlsx";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                if (result?.detail) {
+                  alert(result.detail);
+                }
+              } else {
+                throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+              }
+            } catch (downloadError: any) {
+              console.error("Download xatolik:", downloadError);
+              // Fallback: to'g'ridan-to'g'ri URL'ni ochish
+              window.open(downloadUrl, "_blank");
+            }
+          } else {
+            // Token bo'lmasa, to'g'ridan-to'g'ri ochish
+            window.open(downloadUrl, "_blank");
+          }
         } else {
-          alert(result?.detail || "Export muvaffaqiyatli bajarildi");
+          console.warn("Download URL topilmadi, response:", result);
+          alert(result?.detail || "Export muvaffaqiyatli bajarildi, lekin download URL topilmadi");
         }
       } catch (error: any) {
         console.error("Export xatolik:", error);
-        alert(
+        console.error("Error details:", {
+          status: error?.status,
+          data: error?.data,
+          message: error?.message,
+        });
+        
+        // Xatolik xabarini ko'rsatish
+        const errorMessage =
           error?.data?.detail ||
-            error?.message ||
-            "Export qilishda xatolik yuz berdi"
-        );
+          error?.data?.message ||
+          error?.message ||
+          "Export qilishda xatolik yuz berdi";
+        
+        alert(`Export xatolik: ${errorMessage}`);
       }
     };
 
@@ -284,16 +355,26 @@ const TableColumn = forwardRef(
                       №
                     </th>
                   )}
-                  {row.map((cell: any, cellIndex: number) => (
-                    <th
-                      key={cellIndex}
-                      className="border w-[400px] border-black px-2 py-1 text-center"
-                      colSpan={cell.colSpan}
-                      rowSpan={cell.rowSpan}
-                    >
-                      {cell.title}
-                    </th>
-                  ))}
+                  {row.map((cell: any, cellIndex: number) => {
+                    // Plant detail rejimida "Tashkilot nomi" o'rniga "O'simlik nomi" ko'rsatish
+                    let displayTitle = cell.title;
+                    if (isPlantStatement && cell.title) {
+                      const titleLower = cell.title.toLowerCase();
+                      if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
+                        displayTitle = cell.title.replace(/tashkilot nomi/gi, "O'simlik nomi");
+                      }
+                    }
+                    return (
+                      <th
+                        key={cellIndex}
+                        className="border w-[400px] border-black px-2 py-1 text-center"
+                        colSpan={cell.colSpan}
+                        rowSpan={cell.rowSpan}
+                      >
+                        {displayTitle}
+                      </th>
+                    );
+                  })}
                 </tr>
               ))}
             </thead>
@@ -706,16 +787,26 @@ const TableColumn = forwardRef(
                           №
                         </th>
                       )}
-                      {row.map((cell: any, cellIndex: number) => (
-                        <th
-                          key={cellIndex}
-                          className="border w-[400px] border-black px-2 py-1 text-center"
-                          colSpan={cell.colSpan}
-                          rowSpan={cell.rowSpan}
-                        >
-                          {cell.title}
-                        </th>
-                      ))}
+                      {row.map((cell: any, cellIndex: number) => {
+                        // Plant detail rejimida "Tashkilot nomi" o'rniga "O'simlik nomi" ko'rsatish
+                        let displayTitle = cell.title;
+                        if (isPlantStatement && cell.title) {
+                          const titleLower = cell.title.toLowerCase();
+                          if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
+                            displayTitle = cell.title.replace(/tashkilot nomi/gi, "O'simlik nomi");
+                          }
+                        }
+                        return (
+                          <th
+                            key={cellIndex}
+                            className="border w-[400px] border-black px-2 py-1 text-center"
+                            colSpan={cell.colSpan}
+                            rowSpan={cell.rowSpan}
+                          >
+                            {displayTitle}
+                          </th>
+                        );
+                      })}
                       {rowIndex === 0 && (
                         <th
                           rowSpan={maxDepth}
