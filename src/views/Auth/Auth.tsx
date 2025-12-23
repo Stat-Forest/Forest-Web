@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useTranslation } from "react-i18next";
-import loginBgWinter from '@/assets/login_winter.jpg'
+import loginBgWinter from '@/assets/login_winter.png'
 
 function Auth() {
   const { t } = useTranslation();

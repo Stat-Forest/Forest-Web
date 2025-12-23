@@ -157,6 +157,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
           organization__region: selectedOrganizationReport,
           statement__period: selectedPeriodReport,
           search: searchTermReport,
+          // time_status: "",
         }
       : skipToken
   );
