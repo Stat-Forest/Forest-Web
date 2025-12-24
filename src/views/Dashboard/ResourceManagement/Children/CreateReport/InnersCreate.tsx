@@ -10,12 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/app/store";
 import {
   fetchReportDeadlines,
   useCreateReportMutation,
   useGetStatementColumnsReportQuery,
+  reportApi,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
@@ -54,16 +55,21 @@ function InnersCreateReportItem() {
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
+  const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [footNote, setFootNote] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [planItems, setPlanItems] = useState<
+    { columnId: string; plan_value: string; fullParentChain: string }[]
+  >([]);
   const { t } = useTranslation();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const {
     data: organizationsData,
@@ -97,6 +103,72 @@ function InnersCreateReportItem() {
     setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
     setCurrentStep(0);
   }, [allEmptyColumnsByStepMemo]);
+
+  // 🔹 PLAN MA'LUMOTLARI
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPlanDataForColumns = async () => {
+      const rejaColumns = allEmptyColumnsByStep
+        .flat()
+        .filter((col) => col.title.toLowerCase().includes("reja"));
+
+      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
+        return;
+
+      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin plan olinadi
+      const hasSeasonSelect = 
+        reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || 
+        reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
+      
+      if (hasSeasonSelect && !selectedSeason) {
+        // Season tanlanmagan bo'lsa, plan ma'lumotlarini tozalash
+        setPlanItems([]);
+        return;
+      }
+
+      try {
+        const results = await Promise.all(
+          rejaColumns.map((col) =>
+            dispatch(
+              reportApi.endpoints.getPlanItemsReport.initiate({
+                organization_id: selectedOrganizationId,
+                statement_id: reportIds as string,
+                year: "2025",
+                column: col.id,
+                ...(selectedSeason && { season: selectedSeason }),
+              })
+            ).unwrap()
+          )
+        );
+
+        if (isMounted) {
+          const mergedResults = rejaColumns.map((col, idx) => {
+            const res = results[idx]?.[0];
+            return {
+              columnId: col.id,
+              fullParentChain: col.fullParentChain,
+              plan_value: res?.plan_value?.toString() || "",
+            };
+          });
+          setPlanItems(mergedResults);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Plan olishda xatolik:", error);
+          setFormErrors((prev) => [
+            ...prev,
+            "Plan ma'lumotlarini olishda xatolik yuz berdi",
+          ]);
+        }
+      }
+    };
+
+    fetchPlanDataForColumns();
+    return () => {
+      isMounted = false;
+    };
+  }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, selectedSeason, dispatch]);
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
@@ -140,11 +212,21 @@ function InnersCreateReportItem() {
       const isOrganizationColumn = col.title
         .toLowerCase()
         .includes("tashkilot");
+      const isRejaColumn = col.title.toLowerCase().includes("reja");
 
       let inners;
       if (isOrganizationColumn) {
         // ❗ faqat bitta inners (birinchi formdan)
         inners = [{ id: col.id, value: selectedOrganizationId || "" }];
+      } else if (isRejaColumn) {
+        // Plan qiymatini olish
+        const planItem = planItems.find((item) => item.columnId === col.id);
+        const planValue = planItem ? planItem.plan_value : "";
+        // Plan qiymatini barcha form'lar uchun bir xil qilish
+        inners = formGroups.map(() => ({
+          id: col.id,
+          value: planValue,
+        }));
       } else {
         inners = formGroups.map((form) => ({
           id: col.id,
@@ -161,6 +243,7 @@ function InnersCreateReportItem() {
     const payload = { 
       deadline: selectedDeadlineId, 
       report_items,
+      ...(selectedSeason && { season: selectedSeason }),
       foot_note: footNote || ""
     };
 
@@ -224,6 +307,20 @@ function InnersCreateReportItem() {
             onValueChange={setSelectedDeadlineId}
           />
         </div>
+        {(reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || reportIds === "671577ba-6a86-4619-b31c-86fff20ad305") && (
+          <div>
+            <label className="block mb-1 text-sm font-medium">Season:</label>
+            <select
+              value={selectedSeason}
+              onChange={(e) => setSelectedSeason(e.target.value)}
+              className="border rounded px-2 py-1 w-[300px]"
+            >
+              <option value="">Tanlang</option>
+              <option value="spring">Bahor</option>
+              <option value="autumn">Kuz</option>
+            </select>
+          </div>
+        )}
         <div>
           <Button type="button" onClick={handleAddForm}>
             Add
@@ -284,6 +381,28 @@ function InnersCreateReportItem() {
                             </option>
                           ))}
                         </select>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
+                if (lowerTitle.includes("reja")) {
+                  const planItem = planItems.find(
+                    (item) => item.columnId === col.id
+                  );
+                  const planValue = planItem ? planItem.plan_value : "";
+                  return (
+                    <TableRow key={col.id}>
+                      <TableCell className="whitespace-normal break-words">
+                        {col.fullParentChain}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          value={planValue}
+                          disabled
+                          className="bg-gray-100 cursor-not-allowed"
+                        />
                       </TableCell>
                     </TableRow>
                   );
