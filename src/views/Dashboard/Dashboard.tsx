@@ -27,6 +27,9 @@ const UpdateReportItem = lazy(() => import("./ResourceManagement/Children/Update
 const UpdatePlans = lazy(() => import("./Main/Children/UpdatePlans"));
 const Video = lazy(() => import("../Video"));
 const LandDocumentCreate = lazy(() => import("./ResourceManagement/Children/CreateReport/LandDocumentCreate"));
+const OnTime = lazy(() => import("./Main/Children/OnTime"));
+const Lated = lazy(() => import("./Main/Children/Lated"));
+const ExpiredDeadlines = lazy(() => import("./Main/Children/ExpiredDeadlines"));
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -116,6 +119,10 @@ function Dashboard() {
                 <Route path="draft" element={<Draft />} />
                 <Route path="newsletter" element={<Newsletters />} />
                 <Route path="created-plans" element={<CreatedPlans />} />
+
+                <Route path="on-time" element={<OnTime />} />
+                <Route path="late" element={<Lated />} />
+                <Route path="expired-deadlines" element={<ExpiredDeadlines />} />
               </Route>
 
               <Route path="plan/create-report" element={<CreateReport />} />
