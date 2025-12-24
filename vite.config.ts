@@ -56,16 +56,9 @@ export default defineConfig({
     sourcemap: false,
     // Report compressed size - gzip size'ni ko'rsatish
     reportCompressedSize: true,
-    // Module preload - React chunk'ni birinchi yuklash uchun
+    // Module preload - default Vite strategiyasi
     modulePreload: {
       polyfill: true,
-      resolveDependencies: (filename, deps) => {
-        // React vendor chunk'ni birinchi yuklash
-        if (filename.includes("react-vendor")) {
-          return deps;
-        }
-        return deps;
-      },
     },
   },
   // Performance optimizatsiyasi
