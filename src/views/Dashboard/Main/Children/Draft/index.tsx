@@ -33,6 +33,7 @@ function Draft() {
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,
+    time_status: "",
   });
   const {
     data: statement,

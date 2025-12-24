@@ -116,12 +116,12 @@ function Sidebar() {
         to={item.path}
         key={item.id}
         className={({ isActive }) =>
-          `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
-            isActive
-              ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
-              : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
-          }`
-        }
+        `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
+          isActive
+            ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
+            : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
+        }`
+      }
       >
         {item.default_icon && (
           <img src={item.default_icon} alt="" className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
