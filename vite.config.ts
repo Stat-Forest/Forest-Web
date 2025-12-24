@@ -7,11 +7,6 @@ import { defineConfig } from "vite"
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: "/",
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   build: {
     // Bundle size optimizatsiyasi
     target: "esnext",
@@ -57,7 +52,8 @@ export default defineConfig({
         manualChunks: (id) => {
           // node_modules'dan katta paketlarni alohida chunk'larga ajratish
           if (id.includes("node_modules")) {
-            if (id.includes("react") || id.includes("react-dom")) {
+            // React va React DOM'ni bitta chunk'ga birlashtirish - muammoni hal qilish uchun
+            if (id.includes("react") || id.includes("react-dom") || id.includes("react/jsx-runtime")) {
               return "vendor-react";
             }
             if (id.includes("@reduxjs/toolkit") || id.includes("react-redux")) {
@@ -97,6 +93,7 @@ export default defineConfig({
     include: [
       "react",
       "react-dom",
+      "react/jsx-runtime",
       "react-router-dom",
       "@reduxjs/toolkit",
       "react-redux",
@@ -104,6 +101,16 @@ export default defineConfig({
     exclude: ["@react-pdf/renderer", "jspdf", "xlsx"],
     // Force optimization - tezroq yuklash uchun
     force: true,
+  },
+  // Resolve konfiguratsiyasi - React'ni to'g'ri resolve qilish
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      // React'ni bitta instance'ga majburlash
+      react: path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
+    },
+    dedupe: ["react", "react-dom"],
   },
   // Esbuild options - console.log va debugger'larni olib tashlash
   esbuild: {
