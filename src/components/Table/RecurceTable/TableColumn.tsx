@@ -194,10 +194,9 @@ const TableColumn = forwardRef(
         .trim();
 
     const sName = normalizeStatementName(statementName);
-    const isPlantStatement =
-      enablePlantDetail &&
-      ((sName.includes("urug") && sName.includes("reja")) ||
-        (sName.includes("ko'chat") && sName.includes("nihol")));
+    // Barcha plant detail report nomlar uchun plant detail ko'rsatish
+    // (enablePlantDetail true bo'lsa, barcha report nomlar uchun ishlaydi)
+    const isPlantStatement = enablePlantDetail;
 
     const { data: plantDetail, isLoading: isPlantDetailLoading } =
       useGetReportPlantByIdQuery(
@@ -259,7 +258,42 @@ const TableColumn = forwardRef(
 
     // 🔹 Yangi: Print uchun to'liq jadvalni olish
     const getPrintableTable = () => {
-      return tableRef.current?.innerHTML;
+      if (!tableRef.current) return "";
+      
+      // Faqat jadvalni olish
+      const table = tableRef.current.querySelector("table");
+      if (!table) return "";
+      
+      // Jadvalni clone qilish va print uchun tayyorlash
+      const clonedTable = table.cloneNode(true) as HTMLTableElement;
+      
+      // Barcha inline style va class larni saqlash
+      const allElements = clonedTable.querySelectorAll("*");
+      allElements.forEach((el) => {
+        const originalEl = table.querySelector(
+          `[data-print-id="${el.getAttribute("data-print-id")}"]`
+        );
+        if (originalEl) {
+          (el as HTMLElement).style.cssText = (
+            originalEl as HTMLElement
+          ).style.cssText;
+        }
+      });
+      
+      let html = clonedTable.outerHTML;
+      
+      // QR kodni qo'shish (agar mavjud bo'lsa)
+      const qrCodeContainer = tableRef.current.querySelector(".mt-8");
+      if (qrCodeContainer) {
+        const qrClone = qrCodeContainer.cloneNode(true) as HTMLElement;
+        qrClone.style.marginTop = "30px";
+        qrClone.style.display = "flex";
+        qrClone.style.alignItems = "center";
+        qrClone.style.gap = "16px";
+        html += qrClone.outerHTML;
+      }
+      
+      return html;
     };
 
     // 🔹 Yangi: Header qatorlarini olish

@@ -82,7 +82,25 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   // ✅ Faqat shu statement id larda plant-report ko'rsatamiz
   const enablePlantDetail =
     id === "61ae3c83-1f9c-4ec8-bb06-0c2fc35d0a00" || // Ko‘chat va Nihol
-    id === "0efead0e-25c3-44ab-8200-c2a7628dca8f"; // Urug' xarakati Reja
+    id === "0efead0e-25c3-44ab-8200-c2a7628dca8f" || // Urug' xarakati Reja
+    (reportName && [
+      "Ko'chat va Nihol",
+      "Urug' xarakati Reja",
+      "Посевной материал План",
+      "Саженцы и саженцы",
+      "Urug' harakati",
+      "Питомник и Саженец Всего",
+      "Движение семян",
+      "Ko'chatxona va Niholxona Jami",
+      "Shakl 8-O'X",
+      "Форма 8-Ох",
+      "Shakl 9-O'X",
+      "Форма 9-Ох",
+      "Shakl 10-O'X",
+      "Форма 10-Ох",
+      "Shakl 11-O'X",
+      "Форма 11-Ох",
+    ].includes(reportName));
 
   // ✅ tableHeadersData ni birinchi bo'lib e'lon qilamiz
   const {
@@ -392,18 +410,32 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   width: 100%; 
                   border-collapse: collapse; 
                   margin-bottom: 30px;
-                  font-size: 12px;
+                  font-size: 11px;
+                  table-layout: fixed;
                 }
                 th, td { 
                   border: 1px solid #000; 
-                  padding: 10px 8px; 
+                  padding: 8px 6px; 
                   text-align: center;
                   vertical-align: middle;
+                  word-wrap: break-word;
+                  overflow-wrap: break-word;
                 }
                 th { 
-                  background-color: #f8f9fa; 
+                  background-color: #f8f9fa !important; 
                   font-weight: bold;
-                  font-size: 11px;
+                  font-size: 10px;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                td {
+                  font-size: 10px;
+                }
+                thead {
+                  display: table-header-group;
+                }
+                tbody {
+                  display: table-row-group;
                 }
                 .print-header {
                   text-align: center;
@@ -437,13 +469,49 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   padding: 8px 12px;
                   border-left: 4px solid #3B82F6;
                 }
+                img {
+                  max-width: 100%;
+                  height: auto;
+                }
+                .mt-8 {
+                  margin-top: 30px;
+                  display: flex;
+                  align-items: center;
+                  gap: 16px;
+                }
+                .mt-8 h2 {
+                  margin: 0;
+                  font-size: 14px;
+                }
                 @media print {
-                  body { margin: 15mm; }
+                  body { 
+                    margin: 10mm; 
+                    font-size: 10px;
+                  }
                   .no-print { display: none !important; }
-                  table { page-break-inside: auto; }
-                  tr { page-break-inside: avoid; page-break-after: auto; }
-                  thead { display: table-header-group; }
-                  tfoot { display: table-footer-group; }
+                  table { 
+                    page-break-inside: auto;
+                    width: 100%;
+                    font-size: 9px;
+                  }
+                  tr { 
+                    page-break-inside: avoid; 
+                    page-break-after: auto; 
+                  }
+                  thead { 
+                    display: table-header-group; 
+                  }
+                  tfoot { 
+                    display: table-footer-group; 
+                  }
+                  th, td {
+                    padding: 6px 4px;
+                    font-size: 9px;
+                  }
+                  @page {
+                    size: A4 landscape;
+                    margin: 10mm;
+                  }
                 }
                 .print-actions {
                   position: fixed;
