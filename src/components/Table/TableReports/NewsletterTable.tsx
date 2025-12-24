@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Table,
   TableBody,
@@ -50,8 +49,8 @@ function NewsletterTable({ data, currentPage, perPage }: NewsletterTableProps) {
 
       <TableBody>
         {data?.map((item, index) => (
-          <React.Fragment key={item.id || index}>
             <TableRow
+              key={item.id || `newsletter-${index}`}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
               onClick={() => toggleRow(item?.statement?.id)}
             >
@@ -69,7 +68,6 @@ function NewsletterTable({ data, currentPage, perPage }: NewsletterTableProps) {
                 {item?.submit_at || "-"}
               </TableCell>
             </TableRow>
-          </React.Fragment>
         ))}
       </TableBody>
     </Table>
