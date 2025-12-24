@@ -185,15 +185,7 @@ const TableColumn = forwardRef(
       }
     };
 
-    const statementName = (selectedRow?.statement_name ?? "") as string;
-    const normalizeStatementName = (s: string) =>
-      s
-        .toLowerCase()
-        .replace(/[‘’ʻʼ`´]/g, "'")
-        .replace(/\s+/g, " ")
-        .trim();
 
-    const sName = normalizeStatementName(statementName);
     // Barcha plant detail report nomlar uchun plant detail ko'rsatish
     // (enablePlantDetail true bo'lsa, barcha report nomlar uchun ishlaydi)
     const isPlantStatement = enablePlantDetail;
