@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import {
@@ -53,6 +54,7 @@ function InnersCreateReportItem() {
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
+  const [footNote, setFootNote] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
@@ -156,7 +158,11 @@ function InnersCreateReportItem() {
       };
     });
 
-    const payload = { deadline: selectedDeadlineId, report_items };
+    const payload = { 
+      deadline: selectedDeadlineId, 
+      report_items,
+      foot_note: footNote || ""
+    };
 
     try {
       await createReportItem(payload).unwrap();
@@ -335,6 +341,22 @@ function InnersCreateReportItem() {
           </Button>
         )}
       </div>
+
+      {/* ✅ FOOT NOTE TEXTAREA - Faqat oxirgi qadamda */}
+      {currentStep === totalSteps - 1 && (
+        <div className="mt-6">
+          <label className="block mb-2 text-lg font-medium">
+            Izoh (ixtiyoriy):
+          </label>
+          <Textarea
+            value={footNote}
+            onChange={(e) => setFootNote(e.target.value)}
+            placeholder="Izoh kiriting..."
+            className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
+            rows={4}
+          />
+        </div>
+      )}
     </form>
   );
 }

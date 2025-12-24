@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -29,6 +30,9 @@ export default function AnnouncementModal({
           <DialogTitle className="text-xl font-semibold">
             {data.title}
           </DialogTitle>
+          <DialogDescription>
+            {data.desc}
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <img
