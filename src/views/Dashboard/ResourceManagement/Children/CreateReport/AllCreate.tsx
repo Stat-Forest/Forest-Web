@@ -127,29 +127,44 @@ function AllCreateReportItem() {
   }, [tableHeadersDataMemo]);
 
   useEffect(() => {
-    setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
-    setCurrentStep(0);
+    // Faqat o'zgarganda yangilash - JSON.stringify bilan solishtirish
+    const currentString = JSON.stringify(allEmptyColumnsByStep);
+    const newString = JSON.stringify(allEmptyColumnsByStepMemo);
+    
+    if (currentString !== newString) {
+      setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
+      setCurrentStep(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allEmptyColumnsByStepMemo]);
 
   // Boshlang'ich qiymatlar
   useEffect(() => {
-    if (allEmptyColumnsByStep[currentStep]?.length > 0) {
-      const initialValues: Record<string, string> = {};
-      allEmptyColumnsByStep[currentStep].forEach((col) => {
-        if (
-          !col.title.toLowerCase().includes("tashkilot nomi") &&
-          !col.title.toLowerCase().includes("Названия регионов") &&
-          !col.title.toLowerCase().includes("reja")
-        ) {
-          if (!formValues[col.id]) {
-            initialValues[col.id] = "";
-          }
+    if (!allEmptyColumnsByStep[currentStep]?.length) return;
+
+    const initialValues: Record<string, string> = {};
+    allEmptyColumnsByStep[currentStep].forEach((col) => {
+      if (
+        !col.title.toLowerCase().includes("tashkilot nomi") &&
+        !col.title.toLowerCase().includes("Названия регионов") &&
+        !col.title.toLowerCase().includes("reja")
+      ) {
+        if (!formValues[col.id]) {
+          initialValues[col.id] = "";
         }
-      });
-      if (Object.keys(initialValues).length > 0) {
-        setFormValues((prev) => ({ ...prev, ...initialValues }));
       }
+    });
+    
+    // Faqat yangi qiymatlar bo'lsa yangilash
+    if (Object.keys(initialValues).length > 0) {
+      setFormValues((prev) => {
+        const hasNewValues = Object.keys(initialValues).some(
+          (key) => !prev[key]
+        );
+        return hasNewValues ? { ...prev, ...initialValues } : prev;
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, allEmptyColumnsByStep]);
 
   // 🔹 PLAN MA'LUMOTLARI
