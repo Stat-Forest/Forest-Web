@@ -778,7 +778,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
-                        className="w-56 mt-2 mr-2"
+                        className="w-56 mt-2 ml-20"
                         data-aos="fade-down"
                       >
                         <DropdownMenuItem onClick={handleExportExcel}>
