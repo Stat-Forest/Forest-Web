@@ -6,6 +6,7 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -20,6 +21,10 @@ export default defineConfig({
     cssCodeSplit: true,
     // Asset inline limit - kichik asset'larni inline qilish
     assetsInlineLimit: 4096, // 4KB dan kichik asset'lar inline bo'ladi
+    // OutDir - build output directory
+    outDir: "dist",
+    // AssetsDir - asset'lar papkasi
+    assetsDir: "assets",
     // CommonJS va ES modules'ni to'g'ri handle qilish
     commonjsOptions: {
       include: [/node_modules/],
@@ -28,7 +33,7 @@ export default defineConfig({
     // Code splitting optimizatsiyasi - default Vite chunk splitting
     rollupOptions: {
       output: {
-        // Chunk naming optimizatsiyasi
+        // Chunk naming optimizatsiyasi - relative path'lar
         chunkFileNames: "assets/js/[name]-[hash].js",
         entryFileNames: "assets/js/[name]-[hash].js",
         assetFileNames: (assetInfo) => {
@@ -47,6 +52,25 @@ export default defineConfig({
             return `assets/fonts/[name]-[hash][extname]`;
           }
           return `assets/[ext]/[name]-[hash][extname]`;
+        },
+        // Manual chunks - vendor code splitting
+        manualChunks: (id) => {
+          // node_modules'dan katta paketlarni alohida chunk'larga ajratish
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom")) {
+              return "vendor-react";
+            }
+            if (id.includes("@reduxjs/toolkit") || id.includes("react-redux")) {
+              return "vendor-redux";
+            }
+            if (id.includes("react-router")) {
+              return "vendor-router";
+            }
+            if (id.includes("chart.js") || id.includes("recharts")) {
+              return "vendor-charts";
+            }
+            return "vendor";
+          }
         },
       },
     },
