@@ -52,7 +52,8 @@ function Newsletters() {
     if (page !== 1) {
       dispatch(setNewsletterState({ page: 1 }));
     }
-  }, [selectedStatement, selectedPeriod, page, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStatement, selectedPeriod]);
 
   // 📌 Tozalash funksiyasi
   const handleClearFilters = () => {
@@ -122,12 +123,12 @@ function Newsletters() {
             />
           </SelectTrigger>
           <SelectContent>
-            {statementsData?.results?.map((parent: any) =>
+            {statementsData?.results?.flatMap((parent: any) =>
               parent.children?.map((child: any) => (
                 <SelectItem key={child.id} value={child.id.toString()}>
                   {child.name}
                 </SelectItem>
-              ))
+              )) || []
             )}
           </SelectContent>
         </Select>
