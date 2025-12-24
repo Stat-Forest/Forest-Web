@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -50,6 +51,9 @@ export default function CancelReportModal({ open, setOpen, reportId }: Props) {
           <DialogTitle className="text-left text-lg font-semibold">
             Hisobot qaytarilgani sababini yozing
           </DialogTitle>
+          <DialogDescription>
+            Hisobotni qaytarish sababini kiriting
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <textarea

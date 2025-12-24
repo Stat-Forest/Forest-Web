@@ -689,6 +689,11 @@ const TableColumn = forwardRef(
                 <div className="text-lg">
                  <b className="font-bold">{t('item_12')}:</b> {selectedRow.organization_name}
                 </div>
+                {selectedRow.foot_note && (
+                  <div className="text-lg mt-2">
+                    <b className="font-bold">Izoh:</b> {selectedRow.foot_note}
+                  </div>
+                )}
               </div>
               <div>
                 <div className="flex justify-end items-center gap-3 mb-3">

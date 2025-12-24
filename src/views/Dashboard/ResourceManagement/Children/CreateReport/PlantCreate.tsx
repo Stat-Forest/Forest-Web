@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
@@ -81,6 +82,7 @@ function PlantCreate() {
   const [plantMetaById, setPlantMetaById] = useState<
     Record<string, { name: string; categoryName?: string }>
   >({});
+  const [footNote, setFootNote] = useState<string>("");
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -451,7 +453,11 @@ function PlantCreate() {
       }
     );
 
-    const payload = { deadline: state.selectedDeadlineId, report_items };
+    const payload = { 
+      deadline: state.selectedDeadlineId, 
+      report_items,
+      foot_note: footNote || ""
+    };
 
     try {
       await createReportItem(payload).unwrap();
@@ -963,6 +969,22 @@ function PlantCreate() {
             </Button>
           )}
         </div>
+
+        {/* ✅ FOOT NOTE TEXTAREA - Faqat oxirgi qadamda */}
+        {state.currentStep === totalSteps - 1 && (
+          <div className="mt-6">
+            <label className="block mb-2 text-lg font-medium">
+              Izoh (ixtiyoriy):
+            </label>
+            <Textarea
+              value={footNote}
+              onChange={(e) => setFootNote(e.target.value)}
+              placeholder="Izoh kiriting..."
+              className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
+              rows={4}
+            />
+          </div>
+        )}
 
         {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">

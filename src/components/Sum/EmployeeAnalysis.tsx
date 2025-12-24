@@ -6,7 +6,7 @@ import {
   useGetLandAcquisitionSumQuery,
 } from "@/services/sumApi";
 import { ChartNoAxesColumn } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 
@@ -48,40 +48,37 @@ const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
     isFinaceFundSumLoading ||
     isLandAcquisitionLoading;
 
-  let data;
-  if (reportName === "Xodimlar hisobi taxlili") {  // qilindi
-    data = employeeAnalysisSum;
-  } else if (reportName === "Daromad") { // qilindi
-    data = financeIncomeSum;
-  } else if (reportName === "Xodimlar hisobi") { // qilindi
-    data = employeeReportSum;
-  } else if (reportName === "Jamg'arma") { // qilindi
-    data = financeFundSum;
-  } else if (reportName === "Yer o'zlashtirish") { // qilindi
-    data = landAcquisition;
-  } else {
-    data = null;
-  }
-
-  console.log(data);
+  const data = useMemo(() => {
+    if (reportName === "Xodimlar hisobi taxlili") {
+      return employeeAnalysisSum;
+    } else if (reportName === "Daromad") {
+      return financeIncomeSum;
+    } else if (reportName === "Xodimlar hisobi") {
+      return employeeReportSum;
+    } else if (reportName === "Jamg'arma") {
+      return financeFundSum;
+    } else if (reportName === "Yer o'zlashtirish") {
+      return landAcquisition;
+    }
+    return null;
+  }, [reportName, employeeAnalysisSum, financeIncomeSum, employeeReportSum, financeFundSum, landAcquisition]);
   
   useEffect(() => {
-    if (data) {
-      let ilovaData: Record<string, any> = {};
-
-      // massiv yoki object farqi
-      if (Array.isArray(data)) {
-        ilovaData = data[0]?.[activeTab] || {};
-      } else {
-        ilovaData = data[activeTab] || {};
-      }
-
-      console.log("Backend data:", data);
-      console.log("ActiveTab:", activeTab);
-      console.log("Selected ilovaData:", ilovaData);
-
-      setSumData(ilovaData);
+    if (!data) {
+      setSumData({});
+      return;
     }
+
+    let ilovaData: Record<string, any> = {};
+
+    // massiv yoki object farqi
+    if (Array.isArray(data)) {
+      ilovaData = data[0]?.[activeTab] || {};
+    } else {
+      ilovaData = data[activeTab] || {};
+    }
+
+    setSumData(ilovaData);
   }, [data, activeTab]);
 
   // ✅ Recursive renderer

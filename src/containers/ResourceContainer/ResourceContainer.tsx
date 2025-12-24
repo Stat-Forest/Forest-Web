@@ -266,7 +266,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     if (tableHeadersData.length > 0 && !activeTab) {
       setActiveTab(tableHeadersData[0].title);
     }
-  }, [tableHeadersData, activeTab]);
+  }, [tableHeadersData]);
 
   const activeLeafIds = useMemo(() => {
     return tabLeafIdMap[activeTab] || [];

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
@@ -63,6 +64,7 @@ function AllCreateReportItem() {
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
   const [selectedSeason, setSelectedSeason] = useState<string>("");
+  const [footNote, setFootNote] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     { id: string; title: string; fullParentChain: string }[][]
   >([]);
@@ -345,7 +347,8 @@ function AllCreateReportItem() {
     const payload = { 
       deadline: selectedDeadlineId, 
       report_items,
-      season: selectedSeason || null
+      season: selectedSeason || null,
+      foot_note: footNote || ""
     };
 
     try {
@@ -641,6 +644,22 @@ function AllCreateReportItem() {
           </div>
         ) : (
           <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+        )}
+
+        {/* ✅ FOOT NOTE TEXTAREA - Faqat oxirgi qadamda */}
+        {currentStep === totalSteps - 1 && (
+          <div className="mt-6">
+            <label className="block mb-2 text-lg font-medium">
+              Izoh (ixtiyoriy):
+            </label>
+            <Textarea
+              value={footNote}
+              onChange={(e) => setFootNote(e.target.value)}
+              placeholder="Izoh kiriting..."
+              className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
+              rows={4}
+            />
+          </div>
         )}
 
         {/* ✅ STEP BOSHQARISH */}

@@ -3,6 +3,7 @@ import { useChangePasswordMutation } from "@/services/authApi";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -62,6 +63,9 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
       <DialogContent  className="p-8">
         <DialogHeader>
           <DialogTitle>{t("item_81")}</DialogTitle>
+          <DialogDescription>
+            Parolingizni o'zgartirish uchun ma'lumotlarni kiriting
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
