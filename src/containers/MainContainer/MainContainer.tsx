@@ -216,7 +216,7 @@ function MainContainer() {
 
 
       </div>
-      <hr className="my-4 mx-4" />
+      {/* <hr className="my-4 mx-4" />
       <div className="grid grid-cols-3 gap-5 py-4 px-2">
         <div
           data-aos="fade-up"
@@ -266,7 +266,7 @@ function MainContainer() {
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }
