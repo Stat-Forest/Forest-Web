@@ -48,26 +48,6 @@ export default defineConfig({
           }
           return `assets/[ext]/[name]-[hash][extname]`;
         },
-        // Manual chunks - vendor code splitting
-        manualChunks: (id) => {
-          // node_modules'dan katta paketlarni alohida chunk'larga ajratish
-          if (id.includes("node_modules")) {
-            // React va React DOM'ni bitta chunk'ga birlashtirish - muammoni hal qilish uchun
-            if (id.includes("react") || id.includes("react-dom") || id.includes("react/jsx-runtime")) {
-              return "vendor-react";
-            }
-            if (id.includes("@reduxjs/toolkit") || id.includes("react-redux")) {
-              return "vendor-redux";
-            }
-            if (id.includes("react-router")) {
-              return "vendor-router";
-            }
-            if (id.includes("chart.js") || id.includes("recharts")) {
-              return "vendor-charts";
-            }
-            return "vendor";
-          }
-        },
       },
     },
     // Chunk size warning'ini oshirish
