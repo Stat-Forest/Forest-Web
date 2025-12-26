@@ -56,7 +56,7 @@ function TableReports({ data }: any) {
               </TableCell>
 
               <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.period}
+                {item?.submit_at}
               </TableCell>
 
               <TableCell className="w-[20%] text-base font-[300] border-none">

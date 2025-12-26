@@ -156,13 +156,13 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   } = useGetAllReportsQuery(
     id
       ? {
-          statement: id,
-          status: `status=${selectedStatusReport}`,
-          organization__region: selectedOrganizationReport,
-          statement__period: selectedPeriodReport,
-          search: searchTermReport,
-          // time_status: "",
-        }
+        statement: id,
+        status: `status=${selectedStatusReport}`,
+        organization__region: selectedOrganizationReport,
+        statement__period: selectedPeriodReport,
+        search: searchTermReport,
+        // time_status: "",
+      }
       : skipToken
   );
 
@@ -203,15 +203,16 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
   );
 
+  // ✅ Plant detail query - faqat enablePlantDetail true va selectedRow.id mavjud bo'lganda so'rov yuboriladi
   const {
     data: _plantById,
     isLoading: isPlantByIdLoading,
     error: isPlantByIdError,
   } = useGetReportPlantByIdQuery(
-    { id: selectedRow?.id || "" },
-    { skip: !enablePlantDetail || !selectedRow?.id }
+    enablePlantDetail && selectedRow?.id
+      ? { id: String(selectedRow.id) }
+      : skipToken
   );
-
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||
@@ -532,14 +533,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                 <div class="print-title">${reportName}</div>
                 <div class="print-subtitle">${activeTab}</div>
                 <div class="print-date">${new Date().toLocaleDateString(
-                  "uz-UZ",
-                  {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    weekday: "long",
-                  }
-                )}</div>
+          "uz-UZ",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            weekday: "long",
+          }
+        )}</div>
               </div>
               
               <div class="print-section">
@@ -744,15 +745,15 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
                     {(user_role === "tashkilot_hodimi" ||
                       user_role === "hududiy_boshqarma") && (
-                      <button
-                        className="bg-[#3B82F6] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#2563EB] transition-colors duration-300"
-                        onClick={() =>
-                          navigate(`/resource-management/create/${reportName}`)
-                        }
-                      >
-                        {t("createNewReport")}
-                      </button>
-                    )}
+                        <button
+                          className="bg-[#3B82F6] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#2563EB] transition-colors duration-300"
+                          onClick={() =>
+                            navigate(`/resource-management/create/${reportName}`)
+                          }
+                        >
+                          {t("createNewReport")}
+                        </button>
+                      )}
                     <ExportDropdown
                       onExportExcel={handleExportExcel}
                       onPrint={handlePrint}
