@@ -1,14 +1,41 @@
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import AllUpdateReportItem from "./AllUpdate";
+import PlantUpdate from "./PlantUpdate";
+import InnersUpdate from "./InnersUpdate";
 
 function UpdateReportItem() {
-  const reportIds = useSelector((state: RootState) => state.report.reportId);
+  const reportName = useSelector((state: RootState) => state.report.reportName);
 
-  if (reportIds === "b9ad04fd-d7ff-4233-a25d-d30cf5c81ffc") {
-    return <h1></h1>;
+  if (
+    reportName === "Xuquqbuzarlik" ||
+    reportName === "Og'ir mahalla" ||
+    reportName === "трудный район" ||
+    reportName === "Счет механизации" ||
+    reportName === "Mexanizatsiya hisobi"
+  ) {
+    return <InnersUpdate />;
+  } else if (
+    reportName === "Ko'chat va Nihol" ||
+    reportName === "Urug' xarakati Reja" ||
+    reportName === "Посевной материал План" ||
+    reportName === "Саженцы и саженцы" ||
+    reportName === "Urug' harakati" ||
+    reportName === "Питомник и Саженец Всего" ||
+    reportName === "Движение семян" ||
+    reportName === "Ko'chatxona va Niholxona Jami" ||
+    reportName === "Shakl 8-O'X" ||
+    reportName === "Форма 8-Ох" ||
+    reportName === "Shakl 9-O'X" ||
+    reportName === "Форма 9-Ох" ||
+    reportName === "Shakl 10-O'X" ||
+    reportName === "Форма 10-Ох" ||
+    reportName === "Shakl 11-O'X" ||
+    reportName === "Форма 11-Ох"
+  ) {
+    return <PlantUpdate />;
   } else {
-   return <AllUpdateReportItem />;
+    return <AllUpdateReportItem />;
   }
 }
 
