@@ -93,7 +93,7 @@ const TableColumn = forwardRef(
 
       try {
         const lang = i18n.language === "uz" ? "uz" : "ru";
-        
+
         console.log("Export boshlandi:", {
           report_ids: [selectedRow.id],
           lang,
@@ -111,7 +111,7 @@ const TableColumn = forwardRef(
         if (result?.download_url) {
           // Download URL'ni tekshirish va to'g'ri formatlash
           let downloadUrl = result.download_url;
-          
+
           // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
           if (downloadUrl.startsWith("/")) {
             const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
@@ -121,9 +121,9 @@ const TableColumn = forwardRef(
             const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
             downloadUrl = `${baseUrl}/${downloadUrl}`;
           }
-          
+
           console.log("Download URL:", downloadUrl);
-          
+
           // Token bilan download URL'ni ochish
           const token = decryptData("token", "token");
           if (token) {
@@ -146,7 +146,7 @@ const TableColumn = forwardRef(
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
-                
+
                 if (result?.detail) {
                   alert(result.detail);
                 }
@@ -173,14 +173,14 @@ const TableColumn = forwardRef(
           data: error?.data,
           message: error?.message,
         });
-        
+
         // Xatolik xabarini ko'rsatish
         const errorMessage =
           error?.data?.detail ||
           error?.data?.message ||
           error?.message ||
           "Export qilishda xatolik yuz berdi";
-        
+
         alert(`Export xatolik: ${errorMessage}`);
       }
     };
@@ -205,25 +205,25 @@ const TableColumn = forwardRef(
 
     const normalizedPlantReportItems = (plantDetail as any)?.report_items
       ? ((plantDetail as any).report_items || []).map((reportItem: any) => {
-          const cols = reportItem.statement_columns || [];
-          const normalizedColumns =
-            expectedColumnIds.length > 0
-              ? expectedColumnIds.map((colId) => {
-                  const found = cols.find(
-                    (c: any) => c.statement_column_id === colId
-                  );
-                  return (
-                    found || {
-                      statement_column_id: colId,
-                      value: "-",
-                      inners: [],
-                    }
-                  );
-                })
-              : cols;
+        const cols = reportItem.statement_columns || [];
+        const normalizedColumns =
+          expectedColumnIds.length > 0
+            ? expectedColumnIds.map((colId) => {
+              const found = cols.find(
+                (c: any) => c.statement_column_id === colId
+              );
+              return (
+                found || {
+                  statement_column_id: colId,
+                  value: "-",
+                  inners: [],
+                }
+              );
+            })
+            : cols;
 
-          return { ...reportItem, statement_columns: normalizedColumns };
-        })
+        return { ...reportItem, statement_columns: normalizedColumns };
+      })
       : [];
 
     const formatInnerValue = (inner: any) => {
@@ -251,14 +251,14 @@ const TableColumn = forwardRef(
     // 🔹 Yangi: Print uchun to'liq jadvalni olish
     const getPrintableTable = () => {
       if (!tableRef.current) return "";
-      
+
       // Faqat jadvalni olish
       const table = tableRef.current.querySelector("table");
       if (!table) return "";
-      
+
       // Jadvalni clone qilish va print uchun tayyorlash
       const clonedTable = table.cloneNode(true) as HTMLTableElement;
-      
+
       // Barcha inline style va class larni saqlash
       const allElements = clonedTable.querySelectorAll("*");
       allElements.forEach((el) => {
@@ -271,9 +271,9 @@ const TableColumn = forwardRef(
           ).style.cssText;
         }
       });
-      
+
       let html = clonedTable.outerHTML;
-      
+
       // QR kodni qo'shish (agar mavjud bo'lsa)
       const qrCodeContainer = tableRef.current.querySelector(".mt-8");
       if (qrCodeContainer) {
@@ -284,7 +284,7 @@ const TableColumn = forwardRef(
         qrClone.style.gap = "16px";
         html += qrClone.outerHTML;
       }
-      
+
       return html;
     };
 
@@ -615,9 +615,8 @@ const TableColumn = forwardRef(
               {allReports?.map((item: any) => (
                 <TableRow
                   key={item.id}
-                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${
-                    selectedRow?.id === item.id ? "bg-gray-200" : ""
-                  }`}
+                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${selectedRow?.id === item.id ? "bg-gray-200" : ""
+                    }`}
                   onClick={() =>
                     onRowClick?.(selectedRow?.id === item.id ? null : item)
                   }
@@ -641,23 +640,22 @@ const TableColumn = forwardRef(
                   </TableCell>
                   <TableCell className="text-right text-base font-[400] border-none">
                     <span
-                      className={`px-4 py-1 rounded-full ${
-                        item.status === "accepted"
+                      className={`px-4 py-1 rounded-full ${item.status === "accepted"
                           ? "bg-[#7fa1f84f] text-[#4579FF]"
                           : item.status === "cancelled"
-                          ? "bg-[#f9695c74] text-[#FF5445]"
-                          : item.status == "saved"
-                          ? "bg-[#65656555] text-[#4D4D4D]"
-                          : "bg-[#fcc7544a] text-[#fd9c15]"
-                      }`}
+                            ? "bg-[#f9695c74] text-[#FF5445]"
+                            : item.status == "saved"
+                              ? "bg-[#65656555] text-[#4D4D4D]"
+                              : "bg-[#fcc7544a] text-[#fd9c15]"
+                        }`}
                     >
                       {item?.status == "accepted"
                         ? t("received")
                         : item.status == "cancelled"
-                        ? t("returned")
-                        : item.status == "saved"
-                        ? t("draft")
-                        : t("sended")}
+                          ? t("returned")
+                          : item.status == "saved"
+                            ? t("draft")
+                            : t("sended")}
                     </span>
                   </TableCell>
                 </TableRow>
@@ -687,7 +685,7 @@ const TableColumn = forwardRef(
                   <span className="text-xl">{selectedRow.submit_at}</span>
                 </div>
                 <div className="text-lg">
-                 <b className="font-bold">{t('item_12')}:</b> {selectedRow.organization_name}
+                  <b className="font-bold">{t('item_12')}:</b> {selectedRow.organization_name}
                 </div>
                 {selectedRow.foot_note && (
                   <div className="text-lg mt-2">
@@ -777,8 +775,8 @@ const TableColumn = forwardRef(
                         {isAccepting
                           ? "Qabul qilinmoqda..."
                           : acceptedReports.has(selectedRow.id)
-                          ? "Qabul qilindi"
-                          : "Qabul qilish"}
+                            ? "Qabul qilindi"
+                            : "Qabul qilish"}
                       </Button>
                     )}
 
@@ -903,7 +901,7 @@ const TableColumn = forwardRef(
                                               navigate(
                                                 `/resource-management/update/${selectedRow?.id}`
                                               );
-                                              window.location.reload(); 
+                                              window.location.reload();
                                             }}
                                           >
                                             <Edit2 />
@@ -964,7 +962,7 @@ const TableColumn = forwardRef(
                                         <td
                                           className="border border-black px-2 py-1 text-center"
                                           rowSpan={maxInners}
-                                        >{innerIndex +1}</td>
+                                        >{innerIndex + 1}</td>
                                       )}
 
                                       {reportItem.statement_columns?.map(
@@ -983,22 +981,50 @@ const TableColumn = forwardRef(
                                               {isOrganizationColumn(col)
                                                 ? plantNames || ""
                                                 : formatInnerValue(
-                                                    col.inners?.[innerIndex]
-                                                  )}
+                                                  col.inners?.[innerIndex]
+                                                )}
                                             </td>
                                           );
                                         }
                                       )}
 
-                                      {/* Amallar ustuni bo'sh */}
-                                      {innerIndex === 0 && (
-                                        <td
-                                          className="border border-black px-2 py-1 text-center"
-                                          rowSpan={maxInners}
-                                        >
-                                          -
-                                        </td>
-                                      )}
+                                      {/* Amallar faqat birinchi qatorda chiqsin */}
+                                      {innerIndex === 0 &&
+                                        (selectedRow.status == "saved" ||
+                                          selectedRow.status == "cancelled") &&
+                                        user_role == "tashkilot_hodimi" && (
+                                          <td
+                                            className="border border-black px-2 py-1 text-center"
+                                            rowSpan={maxInners}
+                                          >
+                                            <div className="flex items-center justify-center gap-2">
+                                              <Button
+                                                className="bg-[#3B82F6] hover:bg-[#2563EB]"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();;
+                                                  navigate(
+                                                    `/resource-management/update/${selectedRow?.id}`
+                                                  );
+                                                  window.location.reload();
+                                                }}
+                                              >
+                                                <Edit2 />
+                                              </Button>
+                                              {selectedRow.status == "saved" && (
+                                                <Button
+                                                  className="bg-[#3B82F6] hover:bg-[#2563EB]"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    deleteReport(selectedRow.id);
+                                                    window.location.reload();
+                                                  }}
+                                                >
+                                                  <Trash2 />
+                                                </Button>
+                                              )}
+                                            </div>
+                                          </td>
+                                        )}
                                     </tr>
                                   )
                                 )}
@@ -1031,7 +1057,7 @@ const TableColumn = forwardRef(
                                       <td
                                         className="border border-black px-2 py-1 text-center"
                                         rowSpan={maxInners}
-                                      >{innerIndex +1}</td>
+                                      >{innerIndex + 1}</td>
                                     )}
 
                                     {reportItem.statement_columns?.map(
@@ -1046,15 +1072,8 @@ const TableColumn = forwardRef(
                                       )
                                     )}
 
-                                    {/* Amallar ustuni bo'sh */}
-                                    {innerIndex === 0 && (
-                                      <td
-                                        className="border border-black px-2 py-1 text-center"
-                                        rowSpan={maxInners}
-                                      >
-                                        -
-                                      </td>
-                                    )}
+                                    {/* Amallar faqat birinchi qatorda chiqsin */}
+                                    <td className="flex items-center justify-center">-</td>
                                   </tr>
                                 )
                               )}
