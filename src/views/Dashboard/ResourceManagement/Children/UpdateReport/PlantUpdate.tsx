@@ -150,10 +150,13 @@ function PlantUpdate() {
           if (!id) return;
           const name = child?.name || `ID: ${id}`;
           const existing = next[id];
+          // Agar allaqachon mavjud bo'lsa va faqat temporary name bo'lsa (ID: xxx), uni to'liq ma'lumot bilan almashtiramiz
+          // Yoki agar name o'zgargan bo'lsa, yangilaymiz
           if (
             !existing ||
-            existing.name !== name ||
-            existing.categoryName !== categoryName
+            (existing.name === `ID: ${id}` && name !== `ID: ${id}`) ||
+            (existing.name !== name) ||
+            (existing.categoryName !== categoryName)
           ) {
             next[id] = { name, categoryName };
             changed = true;
@@ -214,39 +217,115 @@ function PlantUpdate() {
     if (existingReport?.report_items && allEmptyColumnsByStepMemo.length > 0) {
       // report_items strukturasidan formGroups ni yaratish
       const formGroupsMap: Record<number, any[]> = {};
+      const plantIdsFromReport: Set<string> = new Set();
+      const plantMetaMap: Record<string, { name: string; categoryName?: string }> = {};
       
-      // Har bir column uchun step ni topish
-      existingReport.report_items.forEach((reportItem: any) => {
-        const columnId = reportItem.statement_column;
-        const stepIndex = allEmptyColumnsByStepMemo.findIndex((stepCols) =>
-          stepCols.some((col) => col.id === columnId)
+      // Plant report struktura ikkala variantni ham qo'llab-quvvatlash:
+      // 1. { report_items: [{ statement_column: string, inners: Array }] }
+      // 2. { report_items: [{ statement_columns: Array<{ statement_column_id: string, inners: Array }> }] }
+      
+      // Helper function: inners ni qayta ishlash
+      function processInners(
+        inners: any[],
+        stepIndex: number,
+        columnId: string,
+        formGroupsMap: Record<number, any[]>,
+        plantIdsFromReport: Set<string>,
+        plantMetaMap: Record<string, { name: string; categoryName?: string }>,
+        allEmptyColumnsByStepMemo: { id: string; title: string; fullParentChain: string }[][]
+      ) {
+        const col = allEmptyColumnsByStepMemo[stepIndex]?.find(
+          (c) => c.id === columnId
         );
+        const isOrganizationColumn = col && (
+          col.title.toLowerCase().includes("tashkilot nomi") ||
+          col.title.toLowerCase().includes("Названия регионов")
+        );
+        const isRejaColumn = col && col.title.toLowerCase().includes("reja");
         
-        if (stepIndex >= 0) {
-          const inners = reportItem.inners || [];
+        inners.forEach((inner: any, innerIndex: number) => {
+          if (!formGroupsMap[stepIndex]) {
+            formGroupsMap[stepIndex] = [];
+          }
           
-          // Har bir inner uchun form yaratish
-          inners.forEach((inner: any, innerIndex: number) => {
-            if (!formGroupsMap[stepIndex]) {
-              formGroupsMap[stepIndex] = [];
+          // Form yaratish (agar mavjud bo'lmasa)
+          if (!formGroupsMap[stepIndex][innerIndex]) {
+            formGroupsMap[stepIndex][innerIndex] = {
+              values: {},
+              plantId: "",
+            };
+          }
+          
+          // Plant ID ni o'rnatish (faqat plant column uchun, reja va tashkilot uchun emas)
+          if (!isOrganizationColumn && !isRejaColumn && inner.plant) {
+            const plantId = inner.plant.toString();
+            if (!formGroupsMap[stepIndex][innerIndex].plantId) {
+              formGroupsMap[stepIndex][innerIndex].plantId = plantId;
+              plantIdsFromReport.add(plantId);
+              
+              // Plant nomini cache'ga qo'shamiz (agar plant_name kelgan bo'lsa yoki keyinroq to'ldiramiz)
+              if (inner.plant_name) {
+                plantMetaMap[plantId] = {
+                  name: inner.plant_name,
+                  categoryName: inner.plant_category_name || undefined,
+                };
+              } else {
+                // Agar plant_name kelmagan bo'lsa, faqat ID ni saqlaymiz
+                // Keyin plantsData kelganda uni to'ldiramiz
+                plantMetaMap[plantId] = {
+                  name: `ID: ${plantId}`, // Temporary name
+                  categoryName: undefined,
+                };
+              }
             }
-            
-            if (!formGroupsMap[stepIndex][innerIndex]) {
-              formGroupsMap[stepIndex][innerIndex] = {
-                values: {},
-                plantId: inner.plant || "",
-              };
-            }
-            
-            // Value ni qo'shish (agar reja column bo'lmasa)
-            const col = allEmptyColumnsByStepMemo[stepIndex]?.find(
-              (c) => c.id === columnId
+          }
+          
+          // Value ni qo'shish (reja va tashkilot columnlar uchun ham)
+          if (col && !isRejaColumn) {
+            formGroupsMap[stepIndex][innerIndex].values[columnId] =
+              inner.value || "";
+          }
+        });
+      }
+      
+      existingReport.report_items.forEach((reportItem: any) => {
+        // Variant 1: To'g'ridan-to'g'ri statement_column va inners
+        if (reportItem.statement_column && reportItem.inners) {
+          const columnId = reportItem.statement_column;
+          const stepIndex = allEmptyColumnsByStepMemo.findIndex((stepCols) =>
+            stepCols.some((col) => col.id === columnId)
+          );
+          
+          if (stepIndex >= 0) {
+            const inners = reportItem.inners || [];
+            processInners(inners, stepIndex, columnId, formGroupsMap, plantIdsFromReport, plantMetaMap, allEmptyColumnsByStepMemo);
+          }
+        }
+        // Variant 2: statement_columns array
+        else if (reportItem.statement_columns) {
+          reportItem.statement_columns.forEach((col: any) => {
+            const columnId = col.statement_column_id || col.id;
+            const stepIndex = allEmptyColumnsByStepMemo.findIndex((stepCols) =>
+              stepCols.some((c) => c.id === columnId)
             );
-            if (col && !col.title.toLowerCase().includes("reja")) {
-              formGroupsMap[stepIndex][innerIndex].values[columnId] =
-                inner.value || "";
+            
+            if (stepIndex >= 0 && col.inners) {
+              processInners(col.inners, stepIndex, columnId, formGroupsMap, plantIdsFromReport, plantMetaMap, allEmptyColumnsByStepMemo);
             }
           });
+        }
+      });
+
+      // Plant ID larni plantMetaById ga qo'shish (plant_name kelgan bo'lsa to'liq, kelmagan bo'lsa temporary name bilan)
+      // Keyin plantsData kelganda temporary namelar to'ldiriladi
+      if (Object.keys(plantMetaMap).length > 0) {
+        setPlantMetaById((prev) => ({ ...prev, ...plantMetaMap }));
+      }
+
+      // Plant ID larni usedPlantIds ga qo'shish
+      plantIdsFromReport.forEach((plantId) => {
+        if (plantId) {
+          dispatch({ type: "ADD_USED_PLANT_ID", payload: plantId });
         }
       });
 
@@ -268,20 +347,45 @@ function PlantUpdate() {
       }
 
       // Tashkilot ID ni topish
-      const orgItem = existingReport.report_items.find((it: any) => {
-        const col = allEmptyColumnsByStepMemo
-          .flat()
-          .find((c) => c.id === it.statement_column);
-        return (
-          col &&
-          (col.title.toLowerCase().includes("tashkilot nomi") ||
-            col.title.toLowerCase().includes("Названия регионов"))
-        );
-      });
-      if (orgItem?.inners?.[0]?.value) {
+      let orgValue = "";
+      for (const reportItem of existingReport.report_items) {
+        // Variant 1: To'g'ridan-to'g'ri statement_column
+        if (reportItem.statement_column) {
+          const col = allEmptyColumnsByStepMemo
+            .flat()
+            .find((c) => c.id === reportItem.statement_column);
+          if (
+            col &&
+            (col.title.toLowerCase().includes("tashkilot nomi") ||
+              col.title.toLowerCase().includes("Названия регионов"))
+          ) {
+            orgValue = reportItem.inners?.[0]?.value || "";
+            break;
+          }
+        }
+        // Variant 2: statement_columns array
+        if (reportItem.statement_columns) {
+          for (const col of reportItem.statement_columns) {
+            const columnId = col.statement_column_id || col.id;
+            const colDef = allEmptyColumnsByStepMemo
+              .flat()
+              .find((c) => c.id === columnId);
+            if (
+              colDef &&
+              (colDef.title.toLowerCase().includes("tashkilot nomi") ||
+                colDef.title.toLowerCase().includes("Названия регионов"))
+            ) {
+              orgValue = col.inners?.[0]?.value || "";
+              break;
+            }
+          }
+          if (orgValue) break;
+        }
+      }
+      if (orgValue) {
         dispatch({
           type: "SET_ORGANIZATION",
-          payload: orgItem.inners[0].value,
+          payload: orgValue,
         });
       }
 
@@ -290,7 +394,7 @@ function PlantUpdate() {
         setFootNote(existingReport.foot_note);
       }
     }
-  }, [existingReport, allEmptyColumnsByStepMemo]);
+  }, [existingReport, allEmptyColumnsByStepMemo, dispatch]);
 
   // 🔹 PLAN MA'LUMOTLARI
   useEffect(() => {
@@ -338,7 +442,7 @@ function PlantUpdate() {
           console.error("Plan olishda xatolik:", error);
           dispatch({
             type: "ADD_FORM_ERROR",
-            payload: "Plan ma'lumotlarini olishda xatolik yuz berdi",
+            payload: t("plan_fetch_error"),
           });
         }
       }
@@ -429,7 +533,7 @@ function PlantUpdate() {
 
     // Deadline tekshiruvi
     if (!state.selectedDeadlineId) {
-      errors.push("Iltimos, deadline tanlang");
+      errors.push(t("please_select_deadline"));
     }
 
     // Tashkilot nomi tekshiruvi
@@ -441,7 +545,7 @@ function PlantUpdate() {
       ) &&
       !state.selectedOrganizationId
     ) {
-      errors.push("Iltimos, tashkilot nomini tanlang");
+      errors.push(t("please_select_organization"));
     }
 
     // 🔹 Plant duplikatsiyasini tekshirish
@@ -450,7 +554,7 @@ function PlantUpdate() {
       group.forms.forEach((form) => {
         if (form.plantId) {
           if (plantIds.includes(form.plantId)) {
-            errors.push(`Bir xil plant bir necha marta tanlangan!`);
+            errors.push(t("duplicate_plant"));
           }
           plantIds.push(form.plantId);
         }
@@ -462,9 +566,10 @@ function PlantUpdate() {
       group.forms.forEach((form, formIndex) => {
         if (!form.plantId) {
           errors.push(
-            `Iltimos, ${group.step + 1}-qadam ${
-              formIndex + 1
-            }-form uchun plant tanlang`
+            t("please_select_plant", {
+              step: group.step + 1,
+              form: formIndex + 1,
+            })
           );
         }
       });
@@ -482,9 +587,7 @@ function PlantUpdate() {
               form.values[col.id].toString().trim() === "")
           ) {
             errors.push(
-              `${group.step + 1}-qadam ${formIndex + 1}-form uchun "${
-                col.fullParentChain
-              }" qiymati kiritish shart`
+              `${t("step")} ${group.step + 1} ${t("form")} ${formIndex + 1} uchun "${col.fullParentChain}" qiymati kiritish shart`
             );
           }
         });
@@ -548,9 +651,9 @@ function PlantUpdate() {
       }
     );
 
-    const payload = {
+    const payload = { 
       id: id,
-      deadline: state.selectedDeadlineId,
+      deadline: state.selectedDeadlineId, 
       report_items,
       foot_note: footNote || "",
     };
@@ -559,13 +662,13 @@ function PlantUpdate() {
       await updateReport(payload).unwrap();
       removeCookie("reportId");
       navigate(-1);
-      toast.success("Hisobod muvaffaqiyatli yangilandi!");
+      toast.success(t("updated_successfully"));
       dispatch({ type: "SET_FORM_ERRORS", payload: [] });
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
         err?.message ||
-        "Ma'lumotlarni yangilashda xatolik yuz berdi";
+        t("update_error");
       dispatch({ type: "ADD_FORM_ERROR", payload: errorMessage });
       console.error("Yangilashda xatolik:", err);
       toast.error(errorMessage);
@@ -579,11 +682,11 @@ function PlantUpdate() {
     plantsLoading ||
     isReportLoading
   )
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
   if (headersError || orgError || deadlineError || plantsError || reportError)
     return (
       <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi</p>
+        <p>{t("loading_error")}</p>
         <p className="text-sm">
           {String(
             deadlineError ||
@@ -608,7 +711,7 @@ function PlantUpdate() {
 
   // 🔹 Deadline matnini formatlash funksiyasi
   const formatDeadlineText = (submitAt: string) => {
-    if (!submitAt) return "Noma'lum";
+    if (!submitAt) return t("unknown");
 
     if (submitAt.includes("CHORAK")) {
       return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
@@ -660,9 +763,9 @@ function PlantUpdate() {
                 <SelectValue
                   placeholder={
                     deadlineLoading
-                      ? "Yuklanmoqda..."
+                      ? t("loading")
                       : deadlineError
-                      ? "Xatolik yuz berdi"
+                      ? t("loading_error")
                       : t("selectDeadline")
                   }
                 />
@@ -670,11 +773,11 @@ function PlantUpdate() {
               <SelectContent>
                 {deadlineLoading ? (
                   <div className="p-2 text-center text-muted-foreground text-sm">
-                    Yuklanmoqda...
+                    {t("loading")}
                   </div>
                 ) : deadlineError ? (
                   <div className="p-2 text-center text-red-500 text-sm">
-                    Ma'lumotlarni yuklashda xatolik
+                    {t("data_load_error")}
                   </div>
                 ) : (deadlineData as any)?.results?.length > 0 ? (
                   <>
@@ -838,7 +941,7 @@ function PlantUpdate() {
                                     {child.name}
                                     {isUsed &&
                                       !isCurrentFormPlant &&
-                                      " (Tanlangan)"}
+                                      ` (${t("selected")})`}
                                   </SelectItem>
                                 );
                               }),
@@ -898,7 +1001,7 @@ function PlantUpdate() {
                         </>
                       ) : (
                         <div className="p-2 text-center text-muted-foreground text-sm">
-                          Plant mavjud emas
+                          {t("plant_not_found")}
                         </div>
                       )}
                     </SelectContent>
@@ -1011,7 +1114,7 @@ function PlantUpdate() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+                  <p>{t("no_columns_to_fill")}</p>
                 )}
               </div>
             ))}
@@ -1063,7 +1166,7 @@ function PlantUpdate() {
           </div>
           {state.currentStep === totalSteps - 1 && (
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Yangilanmoqda..." : "Yangilash"}
+              {isSubmitting ? `⏳ ${t("updating")}` : t("update")}
             </Button>
           )}
         </div>
@@ -1072,12 +1175,12 @@ function PlantUpdate() {
         {state.currentStep === totalSteps - 1 && (
           <div className="mt-6">
             <label className="block mb-2 text-lg font-medium">
-              Izoh (ixtiyoriy):
+              {t("note_optional")}
             </label>
             <Textarea
               value={footNote}
               onChange={(e) => setFootNote(e.target.value)}
-              placeholder="Izoh kiriting..."
+              placeholder={t("enter_note")}
               className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
               rows={4}
             />
@@ -1086,12 +1189,12 @@ function PlantUpdate() {
 
         {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
-          <h3 className="font-semibold mb-2">Tanlangan Plantlar:</h3>
+          <h3 className="font-semibold mb-2">{t("selected_plants")}</h3>
           {state.formGroups.map((group: FormGroup) =>
             group.forms.map((form, formIndex) => {
               const plantName = form.plantId
                 ? getPlantLabel(form.plantId)
-                : "Tanlanmagan";
+                : t("not_selected");
               const plantCategory = form.plantId
                 ? getPlantCategory(form.plantId)
                 : "";
@@ -1102,7 +1205,7 @@ function PlantUpdate() {
                   className="text-sm mb-1 p-2 bg-white rounded border"
                 >
                   <strong>
-                    {group.step + 1}-qadam {formIndex + 1}-form:
+                    {t("step")} {group.step + 1} {t("form")} {formIndex + 1}:
                   </strong>{" "}
                   {plantName}
                   {plantCategory && (

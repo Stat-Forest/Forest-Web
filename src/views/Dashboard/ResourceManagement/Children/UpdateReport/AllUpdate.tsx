@@ -122,7 +122,7 @@ function AllUpdateReportItem() {
   );
 
   const formatDeadlineText = (submitAt: string) => {
-    if (!submitAt) return "Noma'lum";
+    if (!submitAt) return t("unknown");
 
     if (submitAt.includes("CHORAK")) {
       // "2025-CHORAK_1" -> "2025 yil 1-chorak"
@@ -216,7 +216,7 @@ function AllUpdateReportItem() {
           console.error("Plan olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
-            "Plan ma'lumotlarini olishda xatolik yuz berdi",
+            t("plan_fetch_error"),
           ]);
         }
       }
@@ -245,14 +245,14 @@ function AllUpdateReportItem() {
     }
 
     const errors: string[] = [];
-    if (!selectedDeadlineId) errors.push("Iltimos, deadline tanlang");
+    if (!selectedDeadlineId) errors.push(t("please_select_deadline"));
     if (
       allEmptyColumnsByStep[currentStep]?.some((col) =>
         col.title.toLowerCase().includes("tashkilot")
       ) &&
       !selectedOrganizationId
     ) {
-      errors.push("Iltimos, tashkilot tanlang");
+      errors.push(t("please_select_organization_simple"));
     }
 
     allEmptyColumnsByStep[currentStep]?.forEach((col) => {
@@ -298,12 +298,12 @@ function AllUpdateReportItem() {
       removeCookie("reportId");
       navigate(-1);
       setFormErrors([]);
-      toast.success("Hisobod muvaffaqiyatli yangilandi!"); // 🔹 success toast
+      toast.success(t("updated_successfully")); // 🔹 success toast
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
         err?.message ||
-        "Ma'lumotlarni yangilashda xatolik yuz berdi";
+        t("update_error");
       setFormErrors((prev) => [...prev, errorMessage]);
       console.error("Update xatolik:", err);
       toast.error(errorMessage);
@@ -311,11 +311,11 @@ function AllUpdateReportItem() {
   };
 
   if (isHeaderLoading || isOrgLoading || isReportLoading)
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
   if (headersError || orgError || reportError)
     return (
       <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi</p>
+        <p>{t("loading_error")}</p>
       </div>
     );
 
@@ -354,7 +354,7 @@ function AllUpdateReportItem() {
 
         <div className="flex flex-col gap-4">
           <div>
-            <span>Avval tanlangan deadline:</span>
+            <span>{t("previously_selected_deadline")}</span>
             {existingReport.submit_at}
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
@@ -371,9 +371,9 @@ function AllUpdateReportItem() {
                   <SelectValue
                     placeholder={
                       deadlineLoading
-                        ? "Yuklanmoqda..."
+                        ? t("loading")
                         : deadlineError
-                        ? "Xatolik yuz berdi"
+                        ? t("loading_error")
                         : t("selectDeadline")
                     }
                   />
@@ -383,14 +383,14 @@ function AllUpdateReportItem() {
                   {/* LOADING */}
                   {deadlineLoading && (
                     <div className="p-2 text-center text-muted-foreground text-sm">
-                      Yuklanmoqda...
+                      {t("loading")}
                     </div>
                   )}
 
                   {/* ERROR */}
                   {deadlineError && (
                     <div className="p-2 text-center text-red-500 text-sm">
-                      Ma'lumotlarni yuklashda xatolik
+                      {t("data_load_error")}
                     </div>
                   )}
 
@@ -518,7 +518,7 @@ function AllUpdateReportItem() {
                             className="w-full border rounded px-2 py-1"
                             required
                           >
-                            <option value="">Tanlang</option>
+                              <option value="">{t("please_select")}</option>
                             {organizationsData?.map((item: any) => (
                               <option key={item.id} value={item.id}>
                                 {item.name}
@@ -580,7 +580,7 @@ function AllUpdateReportItem() {
           </div>
           {currentStep === totalSteps - 1 && (
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Yangilanmoqda..." : "Yangilash"}
+              {isSubmitting ? `⏳ ${t("updating")}` : t("update")}
             </Button>
           )}
         </div>

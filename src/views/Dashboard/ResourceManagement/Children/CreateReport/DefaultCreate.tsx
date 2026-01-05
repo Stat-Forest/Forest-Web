@@ -118,7 +118,7 @@ const DefaultCreate = () => {
     e.preventDefault();
 
     if (!state.selectedDeadlineId) {
-      alert("Iltimos, deadline tanlang");
+      alert(t("please_select_deadline"));
       return;
     }
 
@@ -128,7 +128,7 @@ const DefaultCreate = () => {
     );
 
     if (hasOrganizationColumn && !state.selectedOrganizationId) {
-      alert("Iltimos, tashkilot tanlang");
+      alert(t("please_select_organization_simple"));
       return;
     }
 
@@ -139,7 +139,7 @@ const DefaultCreate = () => {
     });
 
     if (emptyRequiredFields.length > 0) {
-      alert("Iltimos, barcha majburiy maydonlarni to'ldiring");
+      alert(t("must_select_all"));
       return;
     }
 
@@ -184,21 +184,21 @@ const DefaultCreate = () => {
       dispatch({ type: "RESET_FORM" });
     } catch (error) {
       console.error("Error submitting report:", error);
-      alert("Hisobotni yuborishda xatolik yuz berdi");
+      alert(t("submit_error"));
     }
   };
 
   if (isHeaderLoading || isOrgLoading)
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
 
   if (headersError || orgError)
     return (
       <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi:</p>
+        <p>{t("loading_error")}:</p>
         <ul className="list-disc list-inside">
-          {<li>Deadline ma'lumotlarini yuklashda xatolik</li>}
-          {headersError && <li>Jadval ustunlarini olishda xatolik</li>}
-          {orgError && <li>Tashkilotlar ro'yxatini olishda xatolik</li>}
+          {<li>{t("deadline_load_error")}</li>}
+          {headersError && <li>{t("data_loading_error_4")}</li>}
+          {orgError && <li>{t("organizations_load_error")}</li>}
         </ul>
       </div>
     );
@@ -375,7 +375,7 @@ const DefaultCreate = () => {
         </div>
         {state.currentStep === totalSteps - 1 && (
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Yuborilmoqda..." : "Yuborish"}
+            {isSubmitting ? t("sending") : t("submit")}
           </Button>
         )}
       </div>

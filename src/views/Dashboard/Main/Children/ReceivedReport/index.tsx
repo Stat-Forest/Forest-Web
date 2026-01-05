@@ -20,7 +20,7 @@ function ReceivedReport() {
   const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
     useSelector((state: RootState) => state.ui.reportsFilters.accepted);
   const lang = localStorage.getItem("i18nextLng") || "uz";
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const {
     data: reportsData,
@@ -79,11 +79,13 @@ function ReceivedReport() {
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("region")}`} />
               </SelectTrigger>
-              {regions2.map((region) => (
-                <SelectContent key={region.value}>
-                  <SelectItem value={region.value}>{region.label}</SelectItem>
-                </SelectContent>
-              ))}
+              <SelectContent>
+                {regions2.map((region) => (
+                  <SelectItem key={region.value} value={region.value}>
+                    {i18n.language === "uz" ? region.label : region.label2}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 

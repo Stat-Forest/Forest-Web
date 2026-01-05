@@ -243,7 +243,7 @@ function PlantCreate() {
           console.error("Plan olishda xatolik:", error);
           dispatch({
             type: "ADD_FORM_ERROR",
-            payload: "Plan ma'lumotlarini olishda xatolik yuz berdi",
+            payload: t("plan_fetch_error"),
           });
         }
       }
@@ -334,7 +334,7 @@ function PlantCreate() {
 
     // Deadline tekshiruvi
     if (!state.selectedDeadlineId) {
-      errors.push("Iltimos, deadline tanlang");
+      errors.push(t("please_select_deadline"));
     }
 
     // Tashkilot nomi tekshiruvi
@@ -346,7 +346,7 @@ function PlantCreate() {
       ) &&
       !state.selectedOrganizationId
     ) {
-      errors.push("Iltimos, tashkilot nomini tanlang");
+      errors.push(t("please_select_organization"));
     }
 
     // 🔹 Plant duplikatsiyasini tekshirish
@@ -355,7 +355,7 @@ function PlantCreate() {
       group.forms.forEach((form) => {
         if (form.plantId) {
           if (plantIds.includes(form.plantId)) {
-            errors.push(`Bir xil plant bir necha marta tanlangan!`);
+            errors.push(t("duplicate_plant"));
           }
           plantIds.push(form.plantId);
         }
@@ -367,9 +367,10 @@ function PlantCreate() {
       group.forms.forEach((form, formIndex) => {
         if (!form.plantId) {
           errors.push(
-            `Iltimos, ${group.step + 1}-qadam ${
-              formIndex + 1
-            }-form uchun plant tanlang`
+            t("please_select_plant", {
+              step: group.step + 1,
+              form: formIndex + 1,
+            })
           );
         }
       });
@@ -463,7 +464,7 @@ function PlantCreate() {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
       navigate(-1);
-      toast.success("Hisobod muvaffaqiyatli yaratildi!");
+      toast.success(t("report_created_successfully"));
       // Reset form groups
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
@@ -479,7 +480,7 @@ function PlantCreate() {
       const errorMessage =
         err?.data?.message ||
         err?.message ||
-        "Ma'lumotlarni yuborishda xatolik yuz berdi";
+        t("submit_error");
       dispatch({ type: "ADD_FORM_ERROR", payload: errorMessage });
       console.error("Yuborishda xatolik:", err);
       toast.error(errorMessage);
@@ -487,11 +488,11 @@ function PlantCreate() {
   };
 
   if (isHeaderLoading || isOrgLoading || deadlineLoading || plantsLoading)
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
   if (headersError || orgError || deadlineError || plantsError)
     return (
       <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi</p>
+        <p>{t("loading_error")}</p>
         <p className="text-sm">
           {String(deadlineError || headersError || orgError || plantsError)}
         </p>
@@ -510,7 +511,7 @@ function PlantCreate() {
 
   // 🔹 Deadline matnini formatlash funksiyasi
   const formatDeadlineText = (submitAt: string) => {
-    if (!submitAt) return "Noma'lum";
+    if (!submitAt) return t("unknown");
 
     if (submitAt.includes("CHORAK")) {
       return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
@@ -572,11 +573,11 @@ function PlantCreate() {
               <SelectContent>
                 {deadlineLoading ? (
                   <div className="p-2 text-center text-muted-foreground text-sm">
-                    Yuklanmoqda...
+                    {t("loading")}
                   </div>
                 ) : deadlineError ? (
                   <div className="p-2 text-center text-red-500 text-sm">
-                    Ma'lumotlarni yuklashda xatolik
+                    {t("data_load_error")}
                   </div>
                 ) : (deadlineData as any)?.results?.length > 0 ? (
                   <>
@@ -671,7 +672,7 @@ function PlantCreate() {
                           handleRemoveForm(state.currentStep, formIndex)
                         }
                       >
-                        O'chirish
+                        {t("delete")}
                       </Button>
                     )}
                   </div>
@@ -696,20 +697,20 @@ function PlantCreate() {
                         {form.plantId
                           ? getPlantLabel(form.plantId)
                           : plantsLoading
-                          ? "Yuklanmoqda..."
+                          ? t("loading")
                           : plantsError
-                          ? "Xatolik yuz berdi"
-                          : "Tanlang"}
+                          ? t("loading_error")
+                          : t("please_select")}
                       </span>
                     </SelectTrigger>
                     <SelectContent>
                       {plantsLoading ? (
                         <div className="p-2 text-center text-muted-foreground text-sm">
-                          Yuklanmoqda...
+                          {t("loading")}
                         </div>
                       ) : plantsError ? (
                         <div className="p-2 text-center text-red-500 text-sm">
-                          Ma'lumotlarni yuklashda xatolik
+                          {t("data_load_error")}
                         </div>
                       ) : (plantsData as any)?.results?.length > 0 ? (
                         <>
@@ -740,7 +741,7 @@ function PlantCreate() {
                                     {child.name}
                                     {isUsed &&
                                       !isCurrentFormPlant &&
-                                      " (Tanlangan)"}
+                                      ` (${t("selected")})`}
                                   </SelectItem>
                                 );
                               }),
@@ -873,7 +874,7 @@ function PlantCreate() {
                                   className="w-full border rounded px-2 py-1"
                                   required
                                 >
-                                  <option value="">Tanlang</option>
+                                  <option value="">{t("please_select")}</option>
                                   {(organizationsData as Organization[])?.map(
                                     (item: Organization) => (
                                       <option key={item.id} value={item.id}>
@@ -925,7 +926,7 @@ function PlantCreate() {
                 onClick={() => handleAddForm(state.currentStep)}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                + Yangi Form Qo'shish
+                {t("add_new_form")}
               </Button>
             </div>
           </div>
@@ -965,7 +966,7 @@ function PlantCreate() {
           </div>
           {state.currentStep === totalSteps - 1 && (
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Yuborilmoqda..." : "Yuborish"}
+              {isSubmitting ? `⏳ ${t("sending")}` : t("submit")}
             </Button>
           )}
         </div>
@@ -974,12 +975,12 @@ function PlantCreate() {
         {state.currentStep === totalSteps - 1 && (
           <div className="mt-6">
             <label className="block mb-2 text-lg font-medium">
-              Izoh (ixtiyoriy):
+              {t("note_optional")}
             </label>
             <Textarea
               value={footNote}
               onChange={(e) => setFootNote(e.target.value)}
-              placeholder="Izoh kiriting..."
+              placeholder={t("enter_note")}
               className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
               rows={4}
             />
@@ -988,12 +989,12 @@ function PlantCreate() {
 
         {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
-          <h3 className="font-semibold mb-2">Tanlangan Plantlar:</h3>
+          <h3 className="font-semibold mb-2">{t("selected_plants")}</h3>
           {state.formGroups.map((group: FormGroup) =>
             group.forms.map((form, formIndex) => {
               const plantName = form.plantId
                 ? getPlantLabel(form.plantId)
-                : "Tanlanmagan";
+                : t("not_selected");
               const plantCategory = form.plantId
                 ? getPlantCategory(form.plantId)
                 : "";
@@ -1004,7 +1005,7 @@ function PlantCreate() {
                   className="text-sm mb-1 p-2 bg-white rounded border"
                 >
                   <strong>
-                    {group.step + 1}-qadam {formIndex + 1}-form:
+                    {t("step")} {group.step + 1} {t("form")} {formIndex + 1}:
                   </strong>{" "}
                   {plantName}
                   {plantCategory && (

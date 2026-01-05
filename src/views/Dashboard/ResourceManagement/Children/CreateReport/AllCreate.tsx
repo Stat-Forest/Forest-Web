@@ -267,21 +267,21 @@ function AllCreateReportItem() {
           }
         });
       } else {
-        errors.push("Ma'lumotlarni yuborishda noma'lum xatolik yuz berdi");
+        errors.push(t("submit_error_unknown"));
       }
     }
 
     // Boshqa API xatoliklari
     if (headersError) {
-      errors.push("Ustunlar ma'lumotlarini yuklashda xatolik yuz berdi");
+      errors.push(t("columns_load_error"));
     }
 
     if (orgError) {
-      errors.push("Tashkilotlar ma'lumotlarini yuklashda xatolik yuz berdi");
+      errors.push(t("organizations_load_error"));
     }
 
     if (deadlineError) {
-      errors.push("Deadline ma'lumotlarini yuklashda xatolik yuz berdi");
+      errors.push(t("deadline_load_error"));
     }
 
     if (errors.length > 0) {
@@ -373,7 +373,7 @@ function AllCreateReportItem() {
       setFormValues({});
       setCurrentStep(0);
       setFormErrors([]);
-      toast.success("Hisobod muvaffaqiyatli yaratildi!"); // 🔹 success toast
+      toast.success(t("report_created_successfully")); // 🔹 success toast
     } catch (err: any) {
       console.error("Yuborishda xatolik:", err);
       toast.error(err.message); // 🔹 umumiy error toast
@@ -381,7 +381,7 @@ function AllCreateReportItem() {
   };
 
   if (isHeaderLoading || isOrgLoading || deadlineLoading)
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
   const totalSteps = allEmptyColumnsByStep.length;
@@ -390,7 +390,7 @@ function AllCreateReportItem() {
 
   // 🔹 Deadline matnini formatlash funksiyasi
   const formatDeadlineText = (submitAt: string) => {
-    if (!submitAt) return "Noma'lum";
+    if (!submitAt) return t("unknown");
 
     if (submitAt.includes("CHORAK")) {
       // "2025-CHORAK_1" -> "2025 yil 1-chorak"
@@ -447,9 +447,9 @@ function AllCreateReportItem() {
                 <SelectValue
                   placeholder={
                     deadlineLoading
-                      ? "Yuklanmoqda..."
+                      ? t("loading")
                       : deadlineError
-                      ? "Xatolik yuz berdi"
+                      ? t("loading_error")
                       : t("selectDeadline")
                   }
                 />
@@ -458,9 +458,9 @@ function AllCreateReportItem() {
               <SelectContent>
                 {/* LOADING */}
                 {deadlineLoading && (
-                  <div className="p-2 text-center text-muted-foreground text-sm">
-                    Yuklanmoqda...
-                  </div>
+                    <div className="p-2 text-center text-muted-foreground text-sm">
+                      {t("loading")}
+                    </div>
                 )}
 
                 {/* ERROR */}
@@ -665,12 +665,12 @@ function AllCreateReportItem() {
         {currentStep === totalSteps - 1 && (
           <div className="mt-6">
             <label className="block mb-2 text-lg font-medium">
-              Izoh (ixtiyoriy):
+              {t("note_optional")}
             </label>
             <Textarea
               value={footNote}
               onChange={(e) => setFootNote(e.target.value)}
-              placeholder="Izoh kiriting..."
+              placeholder={t("enter_note")}
               className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
               rows={4}
             />
@@ -703,7 +703,7 @@ function AllCreateReportItem() {
           </div>
           {currentStep === totalSteps - 1 && (
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Yuborilmoqda..." : "Yuborish"}
+              {isSubmitting ? `⏳ ${t("sending")}` : t("submit")}
             </Button>
           )}
         </div>
