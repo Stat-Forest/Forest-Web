@@ -204,15 +204,15 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   );
 
   // ✅ Plant detail query - faqat enablePlantDetail true va selectedRow.id mavjud bo'lganda so'rov yuboriladi
-  const {
-    data: _plantById,
-    isLoading: isPlantByIdLoading,
-    error: isPlantByIdError,
-  } = useGetReportPlantByIdQuery(
+    const {
+      data: _plantById,
+      isLoading: isPlantByIdLoading,
+      error: isPlantByIdError,
+    } = useGetReportPlantByIdQuery(
     enablePlantDetail && selectedRow?.id
       ? { id: String(selectedRow.id) }
       : skipToken
-  );
+    );
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||

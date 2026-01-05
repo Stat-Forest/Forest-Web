@@ -158,7 +158,7 @@ function InnersCreateReportItem() {
           console.error("Plan olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
-            "Plan ma'lumotlarini olishda xatolik yuz berdi",
+            t("plan_fetch_error"),
           ]);
         }
       }
@@ -191,7 +191,7 @@ function InnersCreateReportItem() {
 
     const errors: string[] = [];
     if (!selectedDeadlineId) {
-      errors.push("Iltimos, deadline tanlang");
+      errors.push(t("please_select_deadline"));
     }
     if (
       allEmptyColumnsByStep[currentStep]?.some((col) =>
@@ -199,7 +199,7 @@ function InnersCreateReportItem() {
       ) &&
       !selectedOrganizationId
     ) {
-      errors.push("Iltimos, tashkilot tanlang");
+      errors.push(t("please_select_organization_simple"));
     }
     if (errors.length > 0) {
       setFormErrors(errors);
@@ -258,18 +258,18 @@ function InnersCreateReportItem() {
       const errorMessage =
         err?.data?.message ||
         err?.message ||
-        "Ma'lumotlarni yuborishda xatolik yuz berdi";
+        t("submit_error");
       setFormErrors((prev) => [...prev, errorMessage]);
       console.error("Yuborishda xatolik:", err);
     }
   };
 
   if (isHeaderLoading || isOrgLoading)
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
   if (headersError || orgError)
     return (
       <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi</p>
+        <p>{t("loading_error")}</p>
       </div>
     );
 
@@ -323,7 +323,7 @@ function InnersCreateReportItem() {
         )}
         <div>
           <Button type="button" onClick={handleAddForm}>
-            Add
+            {t("add")}
           </Button>
         </div>
       </div>
@@ -335,7 +335,7 @@ function InnersCreateReportItem() {
         >
           <div className="mb-4 flex justify-between">
             <h2 className="text-lg font-semibold">
-              {currentStepTitle} – {formIndex + 1}-jadval
+              {currentStepTitle} – {formIndex + 1}-{t("table")}
             </h2>
             <span className="text-sm text-gray-500">
               {currentStep + 1} / {totalSteps}
@@ -456,7 +456,7 @@ function InnersCreateReportItem() {
         </div>
         {currentStep === totalSteps - 1 && (
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "⏳ Yuborilmoqda..." : "Yuborish"}
+            {isSubmitting ? `⏳ ${t("sending")}` : t("submit")}
           </Button>
         )}
       </div>
@@ -465,12 +465,12 @@ function InnersCreateReportItem() {
       {currentStep === totalSteps - 1 && (
         <div className="mt-6">
           <label className="block mb-2 text-lg font-medium">
-            Izoh (ixtiyoriy):
+            {t("note_optional")}
           </label>
           <Textarea
             value={footNote}
             onChange={(e) => setFootNote(e.target.value)}
-            placeholder="Izoh kiriting..."
+            placeholder={t("enter_note")}
             className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
             rows={4}
           />

@@ -526,14 +526,18 @@ const TableColumn = forwardRef(
                 onValueChange={(value) => setSelectedOrganizationReport(value)}
               >
                 <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                  <SelectValue placeholder="Region" />
+                  <SelectValue placeholder={t("region")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {regions.map((region) => (
-                    <SelectItem key={region.value} value={region.value}>
-                      {region.label}
-                    </SelectItem>
-                  ))}
+                  {regions.map((region) => {
+                    // regions array faqat Uzbek tilida label ga ega, shuning uchun faqat Uzbek tilida ko'rsatamiz
+                    // Yoki regions2 ni ishlatish kerak, lekin regions2 da "all" yo'q
+                    return (
+                      <SelectItem key={region.value} value={region.value}>
+                        {region.value === "all" ? t("all_regions") : region.label}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

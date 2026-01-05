@@ -22,7 +22,7 @@ function ReturnedReport() {
   const dispatch = useDispatch();
   const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
     useSelector((state: RootState) => state.ui.reportsFilters.cancelled);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const lang = localStorage.getItem("i18nextLng") || "uz";
 
@@ -85,7 +85,7 @@ function ReturnedReport() {
               <SelectContent>
                 {regions2.map((region) => (
                   <SelectItem key={region.value} value={region.value}>
-                    {region.label}
+                    {i18n.language === "uz" ? region.label : region.label2}
                   </SelectItem>
                 ))}
               </SelectContent>

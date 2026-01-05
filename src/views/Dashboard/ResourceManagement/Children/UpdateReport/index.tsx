@@ -35,7 +35,7 @@ function UpdateReportItem() {
   ) {
     return <PlantUpdate />;
   } else {
-    return <AllUpdateReportItem />;
+   return <AllUpdateReportItem />;
   }
 }
 

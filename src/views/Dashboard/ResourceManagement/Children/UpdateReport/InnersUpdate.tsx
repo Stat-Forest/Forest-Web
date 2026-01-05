@@ -122,7 +122,7 @@ function InnersUpdateReportItem() {
   );
 
   const formatDeadlineText = (submitAt: string) => {
-    if (!submitAt) return "Noma'lum";
+    if (!submitAt) return t("unknown");
 
     if (submitAt.includes("CHORAK")) {
       return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
@@ -244,7 +244,7 @@ function InnersUpdateReportItem() {
           console.error("Plan olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
-            "Plan ma'lumotlarini olishda xatolik yuz berdi",
+            t("plan_fetch_error"),
           ]);
         }
       }
@@ -283,7 +283,7 @@ function InnersUpdateReportItem() {
 
     const errors: string[] = [];
     if (!selectedDeadlineId) {
-      errors.push("Iltimos, deadline tanlang");
+      errors.push(t("please_select_deadline"));
     }
     if (
       allEmptyColumnsByStep[currentStep]?.some((col) =>
@@ -291,7 +291,7 @@ function InnersUpdateReportItem() {
       ) &&
       !selectedOrganizationId
     ) {
-      errors.push("Iltimos, tashkilot tanlang");
+      errors.push(t("please_select_organization_simple"));
     }
     if (errors.length > 0) {
       setFormErrors(errors);
@@ -341,13 +341,13 @@ function InnersUpdateReportItem() {
       await updateReport(payload).unwrap();
       removeCookie("reportId");
       navigate(-1);
-      toast.success("Hisobod muvaffaqiyatli yangilandi!");
+      toast.success(t("updated_successfully"));
       setFormErrors([]);
     } catch (err: any) {
       const errorMessage =
         err?.data?.message ||
         err?.message ||
-        "Ma'lumotlarni yangilashda xatolik yuz berdi";
+        t("update_error");
       setFormErrors((prev) => [...prev, errorMessage]);
       console.error("Yangilashda xatolik:", err);
       toast.error(errorMessage);
@@ -355,11 +355,11 @@ function InnersUpdateReportItem() {
   };
 
   if (isHeaderLoading || isOrgLoading || isReportLoading)
-    return <p className="p-4 text-lg">Yuklanmoqda...</p>;
+    return <p className="p-4 text-lg">{t("loading")}</p>;
   if (headersError || orgError || reportError)
     return (
       <div className="text-red-500 p-4">
-        <p>Xatolik yuz berdi</p>
+        <p>{t("loading_error")}</p>
       </div>
     );
 
@@ -407,24 +407,24 @@ function InnersUpdateReportItem() {
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue
-                  placeholder={
-                    deadlineLoading
-                      ? "Yuklanmoqda..."
-                      : deadlineError
-                      ? "Xatolik yuz berdi"
-                      : t("selectDeadline")
-                  }
+                    placeholder={
+                      deadlineLoading
+                        ? t("loading")
+                        : deadlineError
+                        ? t("loading_error")
+                        : t("selectDeadline")
+                    }
                 />
               </SelectTrigger>
               <SelectContent>
                 {deadlineLoading && (
-                  <div className="p-2 text-center text-muted-foreground text-sm">
-                    Yuklanmoqda...
-                  </div>
+                    <div className="p-2 text-center text-muted-foreground text-sm">
+                      {t("loading")}
+                    </div>
                 )}
                 {deadlineError && (
                   <div className="p-2 text-center text-red-500 text-sm">
-                    Ma'lumotlarni yuklashda xatolik
+                    {t("data_load_error")}
                   </div>
                 )}
                 {!deadlineLoading &&
@@ -502,7 +502,7 @@ function InnersUpdateReportItem() {
           )}
           <div>
             <Button type="button" onClick={handleAddForm}>
-              Add
+              {t("add")}
             </Button>
           </div>
         </div>
@@ -514,7 +514,7 @@ function InnersUpdateReportItem() {
           >
             <div className="mb-4 flex justify-between">
               <h2 className="text-lg font-semibold">
-                {currentStepTitle} – {formIndex + 1}-jadval
+                {currentStepTitle} – {formIndex + 1}-{t("table")}
               </h2>
               <span className="text-sm text-gray-500">
                 {currentStep + 1} / {totalSteps}
@@ -635,7 +635,7 @@ function InnersUpdateReportItem() {
           </div>
           {currentStep === totalSteps - 1 && (
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Yangilanmoqda..." : "Yangilash"}
+              {isSubmitting ? `⏳ ${t("updating")}` : t("update")}
             </Button>
           )}
         </div>
@@ -644,12 +644,12 @@ function InnersUpdateReportItem() {
         {currentStep === totalSteps - 1 && (
           <div className="mt-6">
             <label className="block mb-2 text-lg font-medium">
-              Izoh (ixtiyoriy):
+              {t("note_optional")}
             </label>
             <Textarea
               value={footNote}
               onChange={(e) => setFootNote(e.target.value)}
-              placeholder="Izoh kiriting..."
+              placeholder={t("enter_note")}
               className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
               rows={4}
             />

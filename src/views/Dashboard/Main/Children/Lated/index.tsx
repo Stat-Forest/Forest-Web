@@ -22,7 +22,7 @@ function Lated() {
   const [selectedStatement, setSelectedStatement] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     data: reportsData,
     isLoading: isReportsLoading,
@@ -68,7 +68,7 @@ function Lated() {
               <SelectContent>
                 {regions2.map((region) => (
                   <SelectItem key={region.value} value={region.value}>
-                    {t(region.label)}
+                    {i18n.language === "uz" ? region.label : region.label2}
                   </SelectItem>
                 ))}
               </SelectContent>
