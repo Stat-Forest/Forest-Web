@@ -13,16 +13,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
-  fetchReportDeadlines,
   useCreateReportMutation,
   useGetStatementColumnsReportQuery,
   reportApi,
+  useGetDeadlinesReportQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
 import { useNavigate } from "react-router-dom";
-import InfiniteSelect from "@/components/ui/InfiniteSelect";
 import { useTranslation } from "react-i18next";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -71,11 +77,29 @@ function InnersCreateReportItem() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
+  // 🔹 Deadline state
+  const [deadlinePage, setDeadlinePage] = useState(1);
+  const perPage = 5;
+
+  const {
+    data: deadlineData,
+    isLoading: deadlineLoading,
+    error: deadlineError,
+  } = useGetDeadlinesReportQuery(
+    {
+      statement: reportIds as string,
+      page: deadlinePage,
+      perPage,
+      statement__period: "",
+    },
+    { skip: !reportIds }
+  );
+
   const {
     data: organizationsData,
     isLoading: isOrgLoading,
     error: orgError,
-  } = useGetOrganizationReportsQuery({lang});
+  } = useGetOrganizationReportsQuery({ lang });
 
   const {
     data: tableHeadersData = [],
@@ -117,10 +141,10 @@ function InnersCreateReportItem() {
         return;
 
       // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin plan olinadi
-      const hasSeasonSelect = 
-        reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || 
+      const hasSeasonSelect =
+        reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
         reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
-      
+
       if (hasSeasonSelect && !selectedSeason) {
         // Season tanlanmagan bo'lsa, plan ma'lumotlarini tozalash
         setPlanItems([]);
@@ -185,6 +209,12 @@ function InnersCreateReportItem() {
     setFormGroups((prev) => [...prev, {}]);
   };
 
+  const handleRemoveForm = (formIndex: number) => {
+    if (formGroups.length > 1) {
+      setFormGroups((prev) => prev.filter((_, idx) => idx !== formIndex));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormErrors([]);
@@ -240,8 +270,8 @@ function InnersCreateReportItem() {
       };
     });
 
-    const payload = { 
-      deadline: selectedDeadlineId, 
+    const payload = {
+      deadline: selectedDeadlineId,
       report_items,
       ...(selectedSeason && { season: selectedSeason }),
       foot_note: footNote || ""
@@ -264,7 +294,19 @@ function InnersCreateReportItem() {
     }
   };
 
-  if (isHeaderLoading || isOrgLoading)
+  // 🔹 Deadline matnini formatlash funksiyasi
+  const formatDeadlineText = (submitAt: string) => {
+    if (!submitAt) return t("unknown") || "Noma'lum";
+
+    if (submitAt.includes("CHORAK")) {
+      // "2025-CHORAK_1" -> "2025 yil 1-chorak"
+      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
+    }
+
+    return submitAt;
+  };
+
+  if (isHeaderLoading || isOrgLoading || deadlineLoading)
     return <p className="p-4 text-lg">{t("loading")}</p>;
   if (headersError || orgError)
     return (
@@ -281,9 +323,8 @@ function InnersCreateReportItem() {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${
-        isSubmitting ? "opacity-50 pointer-events-none" : ""
-      }`}
+      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${isSubmitting ? "opacity-50 pointer-events-none" : ""
+        }`}
     >
       {formErrors.length > 0 && (
         <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
@@ -297,15 +338,104 @@ function InnersCreateReportItem() {
 
       <div className="flex items-end justify-between gap-4 sm:flex-row">
         <div>
-          <label className="block mb-1 text-sm font-medium">Deadline:</label>
-          <InfiniteSelect
-            placeholder="Tanlang"
-            fetchData={fetchReportDeadlines}
-            className="border-none w-[300px] text-base"
-            name="deadline"
+          <label className="block mb-1 text-sm font-medium">
+            {t("deadline") || "Deadline"}:
+          </label>
+          <Select
             value={selectedDeadlineId}
-            onValueChange={setSelectedDeadlineId}
-          />
+            onValueChange={(val) => setSelectedDeadlineId(val)}
+          >
+            <SelectTrigger className="w-[300px]">
+              <SelectValue
+                placeholder={
+                  deadlineLoading
+                    ? t("loading")
+                    : deadlineError
+                    ? t("loading_error")
+                    : t("selectDeadline") || "Tanlang"
+                }
+              />
+            </SelectTrigger>
+
+            <SelectContent>
+              {/* LOADING */}
+              {deadlineLoading && (
+                <div className="p-2 text-center text-muted-foreground text-sm">
+                  {t("loading")}
+                </div>
+              )}
+
+              {/* ERROR */}
+              {deadlineError && (
+                <div className="p-2 text-center text-red-500 text-sm">
+                  Ma'lumotlarni yuklashda xatolik
+                </div>
+              )}
+
+              {/* DATA */}
+              {!deadlineLoading &&
+                !deadlineError &&
+                deadlineData?.results?.length > 0 &&
+                deadlineData.results.map((item: any) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {formatDeadlineText(item.submit_at)}
+                  </SelectItem>
+                ))}
+
+              {/* AGAR BO'SH BO'LSA */}
+              {!deadlineLoading &&
+                !deadlineError &&
+                deadlineData?.results?.length === 0 && (
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    Deadline mavjud emas
+                  </div>
+                )}
+
+              {/* PAGINATION */}
+              {!deadlineLoading &&
+                !deadlineError &&
+                deadlineData?.count > perPage && (
+                  <div className="flex items-center justify-between px-2 py-1 border-t">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={deadlinePage === 1}
+                      onClick={() =>
+                        setDeadlinePage((p) => Math.max(p - 1, 1))
+                      }
+                    >
+                      {t("before")}
+                    </Button>
+
+                    <span className="text-xs text-gray-500">
+                      {deadlinePage} /{" "}
+                      {Math.ceil(deadlineData.count / perPage)}
+                    </span>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        deadlinePage >=
+                        Math.ceil(deadlineData.count / perPage)
+                      }
+                      onClick={() =>
+                        setDeadlinePage((p) =>
+                          Math.min(
+                            p + 1,
+                            Math.ceil(deadlineData.count / perPage)
+                          )
+                        )
+                      }
+                    >
+                      {t("next")}
+                    </Button>
+                  </div>
+                )}
+            </SelectContent>
+          </Select>
         </div>
         {(reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || reportIds === "671577ba-6a86-4619-b31c-86fff20ad305") && (
           <div>
@@ -321,11 +451,6 @@ function InnersCreateReportItem() {
             </select>
           </div>
         )}
-        <div>
-          <Button type="button" onClick={handleAddForm}>
-            {t("add")}
-          </Button>
-        </div>
       </div>
 
       {formGroups.map((formValues, formIndex) => (
@@ -333,14 +458,26 @@ function InnersCreateReportItem() {
           key={formIndex}
           className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
         >
-          <div className="mb-4 flex justify-between">
-            <h2 className="text-lg font-semibold">
-              {currentStepTitle} – {formIndex + 1}-{t("table")}
-            </h2>
-            <span className="text-sm text-gray-500">
-              {currentStep + 1} / {totalSteps}
-            </span>
-          </div>
+                <div className="mb-4 flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">
+                    {currentStepTitle} – {formIndex + 1}-{t("table")}
+                  </h2>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">
+                      {currentStep + 1} / {totalSteps}
+                    </span>
+                    {formGroups.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveForm(formIndex)}
+                      >
+                        {t("delete") || "O'chirish"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
 
           <Table>
             <TableHeader>
@@ -430,6 +567,17 @@ function InnersCreateReportItem() {
           </Table>
         </div>
       ))}
+
+      {/* ✅ ADD FORM BUTTON (PlantCreate dagi kabi) */}
+      <div className="flex justify-center">
+        <Button
+          type="button"
+          onClick={handleAddForm}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {t("add_new_form") || t("add")}
+        </Button>
+      </div>
 
       <div className="flex justify-between items-center pt-4">
         <div className="space-x-2">
