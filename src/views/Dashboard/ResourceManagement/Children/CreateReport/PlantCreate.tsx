@@ -468,10 +468,23 @@ function PlantCreate() {
             };
           } else {
             // 🔹 Boshqa maydonlar - HAR BIR FORM UCHUN ALOHIDA
-            const inners = currentFormGroup.forms.map((form) => ({
-              ...(form.plantId && { plant: form.plantId }),
-              value: form.values[col.id] || "",
-            }));
+            // 🔹 Maxsus: "Ko'chat va Nihol" ilovalari uchun (Ko'chat-va-Nihol-ilova) plant o'rniga null yuboriladi
+            const isKoChatVaNiholStep = isKoChatVaNiholIlova1Step(stepIndex);
+            const inners = currentFormGroup.forms.map((form) => {
+              if (isKoChatVaNiholStep) {
+                // "Ko'chat va Nihol" ilovasi uchun plant o'rniga null yuborish
+                return {
+                  plant: null,
+                  value: form.values[col.id] || "",
+                };
+              } else {
+                // Boshqa ilovalar uchun plant ID yuborish (agar mavjud bo'lsa)
+                return {
+                  ...(form.plantId && { plant: form.plantId }),
+                  value: form.values[col.id] || "",
+                };
+              }
+            });
 
             return {
               statement_column: col.id,
