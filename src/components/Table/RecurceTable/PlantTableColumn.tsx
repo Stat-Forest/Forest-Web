@@ -952,11 +952,10 @@ import {
                                                 <Button
                                                   className="bg-[#3B82F6] hover:bg-[#2563EB]"
                                                   onClick={(e) => {
-                                                    e.stopPropagation();;
+                                                    e.stopPropagation();
                                                     navigate(
                                                       `/resource-management/update/${selectedRow?.id}/${reportName}`
                                                     );
-                                                    window.location.reload();
                                                   }}
                                                 >
                                                   <Edit2 />
@@ -964,10 +963,15 @@ import {
                                                 {selectedRow.status == "saved" && (
                                                   <Button
                                                     className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                                    onClick={(e) => {
+                                                    onClick={async (e) => {
                                                       e.stopPropagation();
-                                                      deleteReport(selectedRow.id);
-                                                      window.location.reload();
+                                                      try {
+                                                        await deleteReport(selectedRow.id).unwrap();
+                                                        // Mutasyon muvaffaqiyatli bo'lgandan keyin sahifani yangilash
+                                                        window.location.reload();
+                                                      } catch (error) {
+                                                        console.error("Delete error:", error);
+                                                      }
                                                     }}
                                                   >
                                                     <Trash2 />

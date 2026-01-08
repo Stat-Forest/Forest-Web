@@ -19,8 +19,8 @@ function NewsletterTable({ data, currentPage, perPage }: NewsletterTableProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const toggleRow = (id: number) => {
-    navigate(`/resource-management/${id}`);
+  const toggleRow = (id: number, statementName?: string) => {
+    navigate(`/resource-management/${id}/${encodeURIComponent(statementName || "")}`);
   };
 
   // Global raqamni hisoblash: (currentPage - 1) * perPage + index + 1
@@ -52,7 +52,7 @@ function NewsletterTable({ data, currentPage, perPage }: NewsletterTableProps) {
             <TableRow
               key={item.id || `newsletter-${index}`}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
-              onClick={() => toggleRow(item?.statement?.id)}
+              onClick={() => toggleRow(item?.statement?.id, item?.statement?.name)}
             >
               {/* ✅ Global raqam: 1-20, 21-40, 41-60, ... */}
               <TableCell className="text-base font-[300] border-none">
