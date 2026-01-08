@@ -3,6 +3,7 @@ import { decryptData, removeEncryptedData } from "@/utils/crypto";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import { getSimpleCookie, removeCookie } from "@/utils/cookie";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -35,8 +36,8 @@ const ChangePassword = () => {
     }
 
     try {
-      const email = sessionStorage.getItem("reset_email") || "";
-      const code = sessionStorage.getItem("reset_code") || "";
+      const email = getSimpleCookie("reset_email") || "";
+      const code = getSimpleCookie("reset_code") || "";
 
       await setnewpassword({
         email,
@@ -49,9 +50,9 @@ const ChangePassword = () => {
 
       setNewPassword("");
       setConfirmPassword("");
-      sessionStorage.removeItem("reset_email");
-      sessionStorage.removeItem("reset_code");
-      // Cookie'dan token'ni tozalaymiz
+      // Cookie'lardan barcha ma'lumotlarni tozalaymiz
+      removeCookie("reset_email");
+      removeCookie("reset_code");
       removeEncryptedData("token");
       removeEncryptedData("refresh");
 

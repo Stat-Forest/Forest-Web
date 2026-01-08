@@ -32,8 +32,8 @@ export const reportApi = createApi({
       providesTags: ["Reports"],
     }),
 
-    getReportById: builder.query({
-      query: (id: string | number) => ({ url: `/${id}/`, method: "GET" }),
+    getReportById: builder.query<any, {id:string | number; is_user_input:any}>({
+      query: ({ id, is_user_input }) => ({ url: `/${id}/?is_user_input=${is_user_input}`, method: "GET" }),
       providesTags: ["Reports"],
     }),
     getDashboardReport: builder.query<any, void>({
@@ -243,9 +243,9 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
-    getReportPlantById: builder.query<any, { id: string }>({
-      query: ({ id }) => ({
-        url: `/report-plant/${id}/`,
+    getReportPlantById: builder.query<any, { id: string; is_user_input:string }>({
+      query: ({ id, is_user_input }) => ({
+        url: `/report-plant/${id}/?is_user_input=${is_user_input}`,
         method: "GET",
       }),
       providesTags: ["Reports"],

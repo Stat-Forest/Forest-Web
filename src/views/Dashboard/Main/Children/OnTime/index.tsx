@@ -15,10 +15,11 @@ import {
 } from "@/services/reportsApi";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getSimpleCookie } from "@/utils/cookie";
 
 function OnTime() {
   const [selectedOrganization, setSelectedOrganization] = useState("");
-  const lang = localStorage.getItem("i18nextLng") || "uz";
+  const lang = getSimpleCookie("lang") || "uz";
   const [selectedStatement, setSelectedStatement] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [searchTerm, setSearchTerm] = useState("");

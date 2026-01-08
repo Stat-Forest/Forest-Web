@@ -1,11 +1,10 @@
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store";
 import AllUpdateReportItem from "./AllUpdate";
 import PlantUpdate from "./PlantUpdate";
 import InnersUpdate from "./InnersUpdate";
+import { useParams } from "react-router-dom";
 
 function UpdateReportItem() {
-  const reportName = useSelector((state: RootState) => state.report.reportName);
+  const { reportName } = useParams();
 
   if (
     reportName === "Xuquqbuzarlik" ||
@@ -16,7 +15,7 @@ function UpdateReportItem() {
   ) {
     return <InnersUpdate />;
   } else if (
-    reportName === "Ko'chat va Nihol" ||
+    reportName === "Ko‘chat va Nihol" ||
     reportName === "Urug' xarakati Reja" ||
     reportName === "Посевной материал План" ||
     reportName === "Саженцы и саженцы" ||
@@ -35,7 +34,7 @@ function UpdateReportItem() {
   ) {
     return <PlantUpdate />;
   } else {
-   return <AllUpdateReportItem />;
+    return <AllUpdateReportItem />;
   }
 }
 

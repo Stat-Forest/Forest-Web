@@ -142,6 +142,12 @@ export function plantCreateReducer(
       return { ...state, usedPlantIds: newUsed };
     }
 
+    case "REMOVE_USED_PLANT_ID": {
+      const newUsed = new Set(state.usedPlantIds);
+      newUsed.delete(action.payload);
+      return { ...state, usedPlantIds: newUsed };
+    }
+
     case "SET_PLANTS_PAGE":
       return { ...state, plantsPage: action.payload };
 

@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
+import { getSimpleCookie } from "@/utils/cookie";
 
 function ReturnedReport() {
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ function ReturnedReport() {
     useSelector((state: RootState) => state.ui.reportsFilters.cancelled);
   const { t, i18n } = useTranslation();
 
-  const lang = localStorage.getItem("i18nextLng") || "uz";
+  const lang = getSimpleCookie("lang") || "uz";
 
   const {
     data: reportsData,

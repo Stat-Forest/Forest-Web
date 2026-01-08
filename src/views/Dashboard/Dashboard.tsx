@@ -8,6 +8,7 @@ import { RootState } from "@/app/store";
 import { useDispatch, useSelector } from "react-redux";
 import AnnouncementModal from "@/components/Modals/AnnouncementModal";
 import { setAnnouncementState } from "@/features/uiSlice";
+import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
 
 // Lazy loading - Dashboard route'larini alohida chunk'larga ajratish
 const Main = lazy(() => import("./Main"));
@@ -44,7 +45,7 @@ function Dashboard() {
   // 🔹 Modalni boshqarish
   useEffect(() => {
     if (announcements?.results?.length) {
-      const dismissed = localStorage.getItem("announcementsSeenDate");
+      const dismissed = getSimpleCookie("announcementsSeenDate");
       const today = new Date().toISOString().split("T")[0];
 
       if (dismissed !== today) {
@@ -58,14 +59,14 @@ function Dashboard() {
     }
   }, [announcements, dispatch]);
 
-  // 🔹 Modal yopilganda keyingisiga o‘tish
+  // 🔹 Modal yopilganda keyingisiga o'tish
   const handleClose = () => {
     const next = currentIndex + 1;
     if (announcements?.results && next < announcements.results.length) {
       dispatch(setAnnouncementState({ currentIndex: next }));
     } else {
       const today = new Date().toISOString().split("T")[0];
-      localStorage.setItem("announcementsSeenDate", today);
+      setSimpleCookie("announcementsSeenDate", today, 1); // 1 kun muddat
       dispatch(
         setAnnouncementState({
           open: false,
@@ -75,10 +76,9 @@ function Dashboard() {
     }
   };
 
-  // 🔹 Logout bo‘lganda localStorage tozalanadi
+  // 🔹 Logout bo'lganda cookies tozalanadi
   const handleLogout = () => {
-    localStorage.removeItem("announcementsSeenDate");
-    localStorage.removeItem("accessToken");
+    removeCookie("announcementsSeenDate");
     navigate("/login");
   };
 
@@ -137,7 +137,7 @@ function Dashboard() {
                 element={<CreateReportItem />}
               />
               <Route
-                path="resource-management/update/:id"
+                path="resource-management/update/:id/:reportName"
                 element={<UpdateReportItem />}
               />
 

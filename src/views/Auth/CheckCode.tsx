@@ -6,6 +6,7 @@ import { encryptData } from "@/utils/crypto";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import { getSimpleCookie, setSimpleCookie } from "@/utils/cookie";
 
 interface VerifyCodeResponse {
   access: string;
@@ -23,7 +24,7 @@ const CheckCode = () => {
   const [sendEmail] = useSendEmailMutation();
 
   useEffect(() => {
-    const savedEmail = sessionStorage.getItem("reset_email");
+    const savedEmail = getSimpleCookie("reset_email");
     if (!savedEmail) {
       navigate("/auth/forget-password");
       return;
@@ -46,6 +47,8 @@ const CheckCode = () => {
     verifyCode({ email, code })
       .unwrap()
       .then((res: VerifyCodeResponse) => {
+        // Code ni cookie'ga saqlaymiz (1 soat muddat)
+        setSimpleCookie("reset_code", code, 1/24);
         // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
         encryptData("token", res.access, "token", 30);
         encryptData("refresh", res.refresh, "refresh", 30);

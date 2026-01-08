@@ -29,6 +29,7 @@ import { RootState } from "@/app/store";
 import { setLanguage } from "@/features/languageSlice";
 import { useEffect } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
+import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
 
 // RTK Query APIs
 import { authApi } from "@/services/authApi";
@@ -76,9 +77,9 @@ function Header({ onLogout }: HeaderProps) {
     lang: currentLang,
   });
 
-  // ✅ Component yuklanganda local storage'dan notification count ni o'qiymiz
+  // ✅ Component yuklanganda cookie'dan notification count ni o'qiymiz
   useEffect(() => {
-    const savedCount = localStorage.getItem("unreadNotificationCount");
+    const savedCount = getSimpleCookie("unreadNotificationCount");
     if (savedCount) {
       dispatch(
         setHeaderState({ unreadCount: parseInt(savedCount, 10) || 0 })
@@ -86,12 +87,12 @@ function Header({ onLogout }: HeaderProps) {
     }
   }, [dispatch]);
 
-  // ✅ Yangi notificationlar kelganda local storage'ga saqlaymiz
+  // ✅ Yangi notificationlar kelganda cookie'ga saqlaymiz
   useEffect(() => {
     if (data?.results?.length !== undefined) {
       const count = data.results.length;
       dispatch(setHeaderState({ unreadCount: count }));
-      localStorage.setItem("unreadNotificationCount", count.toString());
+      setSimpleCookie("unreadNotificationCount", count.toString(), 7); // 7 kun muddat
     }
   }, [data?.results?.length, dispatch]);
 
@@ -99,15 +100,15 @@ function Header({ onLogout }: HeaderProps) {
   const handleNotificationOpen = (open: boolean) => {
     dispatch(setHeaderState({ notificationOpen: open }));
     if (!open) {
-      // Notification yopilganda count ni 0 qilamiz va local storage'dan o'chiramiz
+      // Notification yopilganda count ni 0 qilamiz va cookie'dan o'chiramiz
       dispatch(setHeaderState({ unreadCount: 0 }));
-      localStorage.removeItem("unreadNotificationCount");
+      removeCookie("unreadNotificationCount");
     }
   };
 
   const handleLogout = () => {
     // 🔐 Logout paytida notification count ni ham tozalaymiz
-    localStorage.removeItem("unreadNotificationCount");
+    removeCookie("unreadNotificationCount");
 
     dispatch(logout());
     dispatch(authApi.util.resetApiState());

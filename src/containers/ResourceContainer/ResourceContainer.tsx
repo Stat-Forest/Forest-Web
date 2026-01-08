@@ -10,7 +10,6 @@ import {
   useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
   useLazyGetReganalReportQuery,
-  useGetReportPlantByIdQuery,
 } from "@/services/reportsApi";
 
 // UI Components
@@ -65,28 +64,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
-  // ✅ Faqat shu statement id larda plant-report ko'rsatamiz
-  const enablePlantDetail =
-    id === "61ae3c83-1f9c-4ec8-bb06-0c2fc35d0a00" || // Ko‘chat va Nihol
-    id === "0efead0e-25c3-44ab-8200-c2a7628dca8f" || // Urug' xarakati Reja
-    (reportName && [
-      "Ko'chat va Nihol",
-      "Urug' xarakati Reja",
-      "Посевной материал План",
-      "Саженцы и саженцы",
-      "Urug' harakati",
-      "Питомник и Саженец Всего",
-      "Движение семян",
-      "Ko'chatxona va Niholxona Jami",
-      "Shakl 8-O'X",
-      "Форма 8-Ох",
-      "Shakl 9-O'X",
-      "Форма 9-Ох",
-      "Shakl 10-O'X",
-      "Форма 10-Ох",
-      "Shakl 11-O'X",
-      "Форма 11-Ох",
-    ].includes(reportName));
 
   // ✅ tableHeadersData ni birinchi bo'lib e'lon qilamiz
   const {
@@ -203,32 +180,20 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
   );
 
-  // ✅ Plant detail query - faqat enablePlantDetail true va selectedRow.id mavjud bo'lganda so'rov yuboriladi
-    const {
-      data: _plantById,
-      isLoading: isPlantByIdLoading,
-      error: isPlantByIdError,
-    } = useGetReportPlantByIdQuery(
-    enablePlantDetail && selectedRow?.id
-      ? { id: String(selectedRow.id) }
-      : skipToken
-    );
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||
     isRepublicLoading ||
     isAllReportLoading ||
     isIndividualLoading ||
-    deadlineLoading ||
-    isPlantByIdLoading;
+    deadlineLoading;
 
   const isError =
     isErrorHeaders ||
     isErrorRows ||
     isRepublicError ||
     isAllReportError ||
-    isIndividualError ||
-    isPlantByIdError;
+    isIndividualError;
 
   useEffect(() => {
     setSearchTerm("");
@@ -790,6 +755,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     </div>
                   ) : (
                     <TableColumn
+                      reportName={reportName}
                       ref={tableRef}
                       data={col?.children}
                       rows={filteredRows}
@@ -830,7 +796,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       }}
                       selectedRow={selectedRow}
                       individualRows={filteredIndividualRows}
-                      enablePlantDetail={enablePlantDetail}
                       setSelectedOrganizationReport={
                         setSelectedOrganizationReport
                       }

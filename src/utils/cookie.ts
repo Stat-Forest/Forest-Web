@@ -86,3 +86,25 @@ export function removeCookie(name: string, path: string = "/"): void {
     document.cookie = `${name}=; path=${path}; expires=${expires}; secure`;
   }
 }
+
+/**
+ * Cookie'ga oddiy string qiymat saqlash (shifrlanmagan)
+ * @param name - Cookie nomi
+ * @param value - Cookie qiymati
+ * @param days - Cookie yashash muddati (kunlarda)
+ */
+export function setSimpleCookie(name: string, value: string, days: number = 30): void {
+  setCookie(name, value, days, {
+    secure: import.meta.env.PROD,
+    sameSite: "strict",
+  });
+}
+
+/**
+ * Cookie'dan oddiy string qiymat o'qish
+ * @param name - Cookie nomi
+ * @returns Cookie qiymati yoki null
+ */
+export function getSimpleCookie(name: string): string | null {
+  return getCookie(name);
+}

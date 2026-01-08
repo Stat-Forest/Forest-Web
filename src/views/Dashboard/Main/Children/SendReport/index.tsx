@@ -14,12 +14,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
+import { getSimpleCookie } from "@/utils/cookie";
 
 function MainDetail() {
   const dispatch = useDispatch();
   const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
     useSelector((state: RootState) => state.ui.reportsFilters.sent);
-  const lang = localStorage.getItem("i18nextLng") || "uz";
+  const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
 
   const {

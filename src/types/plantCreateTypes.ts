@@ -55,6 +55,7 @@ export type PlantFormAction =
   | { type: "ADD_FORM_ERROR"; payload: string }
   | { type: "SET_PLAN_ITEMS"; payload: PlanItem[] }
   | { type: "ADD_USED_PLANT_ID"; payload: string }
+  | { type: "REMOVE_USED_PLANT_ID"; payload: string }
   | { type: "SET_PLANTS_PAGE"; payload: number }
   | { type: "SET_DEADLINE_PAGE"; payload: number }
   | { type: "RESET_FORM" };

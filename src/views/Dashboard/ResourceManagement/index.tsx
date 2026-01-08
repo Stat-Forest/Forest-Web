@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setReportName } from "@/features/reportSlice";
 import LandDocumentsContainers from "@/containers/ResourceContainer/LandDocumentsContainers";
+import ResourcePlantContainer from "@/containers/ResourceContainer/ResourcePlantContainer";
 
 function ResourceManagement() {
   const { id } = useParams<{ id: string }>();
@@ -49,9 +50,11 @@ function ResourceManagement() {
       </div>
 
       {childTitle == "Yer hujjatlarini kiritish" ||
-      id == "05ec4fd3-6193-4211-9850-f3991be60a62" ||
-      childTitle == "Ввод земельных документов" ? (
+        id == "05ec4fd3-6193-4211-9850-f3991be60a62" ||
+        childTitle == "Ввод земельных документов" ? (
         <LandDocumentsContainers />
+      ) : childTitle == "Ko‘chat va Nihol" || childTitle == "Urug' xarakati Reja" || childTitle == "Посевной материал План" || childTitle == "Саженцы и саженцы" || childTitle == "Urug' harakati" || childTitle == "Питомник и Саженец Всего" || childTitle == "Движение семян" || childTitle == "Ko'chatxona va Niholxona Jami" || childTitle == "Shakl 8-O'X" || childTitle == "Форма 8-Ох" || childTitle == "Shakl 9-O'X" || childTitle == "Форма 9-Ох" || childTitle == "Shakl 10-O'X" || childTitle == "Форма 10-Ох" || childTitle == "Shakl 11-O'X" || childTitle == "Форма 11-Ох" ? (
+        <ResourcePlantContainer reportName={childTitle} />
       ) : (
         <ResourceContainer reportName={childTitle} />
       )}
