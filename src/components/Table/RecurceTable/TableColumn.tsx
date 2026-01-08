@@ -16,11 +16,9 @@ import { useNavigate } from "react-router-dom";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
-  useGetReportPlantByIdQuery,
   useSendReportMutation,
   useExportExcelMutation,
 } from "@/services/reportsApi";
-import { skipToken } from "@reduxjs/toolkit/query";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { decryptData } from "@/utils/crypto";
@@ -60,7 +58,6 @@ const TableColumn = forwardRef(
       selectedRow,
       allReports,
       individualRows = [],
-      enablePlantDetail = false,
       setSelectedOrganizationReport,
       setSelectedPeriodReport,
       setSelectedStatusReport,
@@ -69,6 +66,7 @@ const TableColumn = forwardRef(
       selectedPeriodReport,
       selectedStatusReport,
       searchTermReport,
+      reportName,
     }: any,
     ref
   ) => {
@@ -186,67 +184,6 @@ const TableColumn = forwardRef(
     };
 
 
-    // Barcha plant detail report nomlar uchun plant detail ko'rsatish
-    // (enablePlantDetail true bo'lsa, barcha report nomlar uchun ishlaydi)
-    const isPlantStatement = enablePlantDetail;
-
-    const { data: plantDetail, isLoading: isPlantDetailLoading } =
-      useGetReportPlantByIdQuery(
-        isPlantStatement && selectedRow?.id
-          ? { id: String(selectedRow.id) }
-          : skipToken
-      );
-
-    // Plant detail kelganda: selectedRow dagi column tartibini saqlab qolish uchun shunga moslab normalize qilamiz
-    const expectedColumnIds: string[] =
-      selectedRow?.report_items?.[0]?.statement_columns?.map(
-        (c: any) => c.statement_column_id
-      ) || [];
-
-    const normalizedPlantReportItems = (plantDetail as any)?.report_items
-      ? ((plantDetail as any).report_items || []).map((reportItem: any) => {
-        const cols = reportItem.statement_columns || [];
-        const normalizedColumns =
-          expectedColumnIds.length > 0
-            ? expectedColumnIds.map((colId) => {
-              const found = cols.find(
-                (c: any) => c.statement_column_id === colId
-              );
-              return (
-                found || {
-                  statement_column_id: colId,
-                  value: "-",
-                  inners: [],
-                }
-              );
-            })
-            : cols;
-
-        return { ...reportItem, statement_columns: normalizedColumns };
-      })
-      : [];
-
-    const formatInnerValue = (inner: any) => {
-      if (!inner) return "";
-      // Plant-report ustunlarida oddiy raqam/qiymat chiqsin, plant_name faqat tashkilot nomi column ichida bo'ladi
-      return inner.value ?? "";
-    };
-
-    const isOrganizationColumn = (col: any) => {
-      const name = (col?.statement_column_name ?? col?.statement_column_title ?? "")
-        .toString()
-        .toLowerCase();
-      // API example: "... – Tashkilot nomi"
-      return name.includes("tashkilot") && name.includes("nomi");
-    };
-
-    const getPlantNamesForRow = (statementColumns: any[], innerIndex: number) => {
-      const names = (statementColumns || [])
-        .map((c: any) => c?.inners?.[innerIndex]?.plant_name)
-        .filter(Boolean);
-      // bir nechta plant bo'lsa, bittalab ko'rsatamiz
-      return Array.from(new Set(names)).join(", ");
-    };
 
     // 🔹 Yangi: Print uchun to'liq jadvalni olish
     const getPrintableTable = () => {
@@ -382,14 +319,6 @@ const TableColumn = forwardRef(
                     </th>
                   )}
                   {row.map((cell: any, cellIndex: number) => {
-                    // Plant detail rejimida "Tashkilot nomi" o'rniga "O'simlik nomi" ko'rsatish
-                    let displayTitle = cell.title;
-                    if (isPlantStatement && cell.title) {
-                      const titleLower = cell.title.toLowerCase();
-                      if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
-                        displayTitle = cell.title.replace(/tashkilot nomi/gi, "O'simlik nomi");
-                      }
-                    }
                     return (
                       <th
                         key={cellIndex}
@@ -397,7 +326,7 @@ const TableColumn = forwardRef(
                         colSpan={cell.colSpan}
                         rowSpan={cell.rowSpan}
                       >
-                        {displayTitle}
+                        {cell.title}
                       </th>
                     );
                   })}
@@ -821,14 +750,6 @@ const TableColumn = forwardRef(
                         </th>
                       )}
                       {row.map((cell: any, cellIndex: number) => {
-                        // Plant detail rejimida "Tashkilot nomi" o'rniga "O'simlik nomi" ko'rsatish
-                        let displayTitle = cell.title;
-                        if (isPlantStatement && cell.title) {
-                          const titleLower = cell.title.toLowerCase();
-                          if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
-                            displayTitle = cell.title.replace(/tashkilot nomi/gi, "O'simlik nomi");
-                          }
-                        }
                         return (
                           <th
                             key={cellIndex}
@@ -836,7 +757,7 @@ const TableColumn = forwardRef(
                             colSpan={cell.colSpan}
                             rowSpan={cell.rowSpan}
                           >
-                            {displayTitle}
+                            {cell.title}
                           </th>
                         );
                       })}
@@ -852,9 +773,8 @@ const TableColumn = forwardRef(
                   ))}
                 </thead>
                 <tbody>
-                  {/* 🔹 Selected Row (jami) – plant-report rejimida ko'rinmasin */}
-                  {!enablePlantDetail &&
-                    selectedRow.report_items?.map(
+                  {/* 🔹 Selected Row (jami) */}
+                  {selectedRow.report_items?.map(
                       (reportItem: any, reportIndex: number) => {
                         const maxInners = Math.max(
                           ...reportItem.statement_columns.map(
@@ -903,7 +823,7 @@ const TableColumn = forwardRef(
                                             onClick={(e) => {
                                               e.stopPropagation();;
                                               navigate(
-                                                `/resource-management/update/${selectedRow?.id}`
+                                                `/resource-management/update/${selectedRow?.id}/${reportName}`
                                               );
                                               window.location.reload();
                                             }}
@@ -933,114 +853,7 @@ const TableColumn = forwardRef(
                       }
                     )}
 
-                  {/* 🌱 Plant Detail (faqat Ko'chat va Nihol / Urug' xarakati Reja) */}
-                  {isPlantStatement && (
-                    <>
-
-                      {isPlantDetailLoading ? (
-                        <tr>
-                          <td
-                            className="border border-black px-2 py-3 text-center"
-                            colSpan={999}
-                          >
-                            Yuklanmoqda...
-                          </td>
-                        </tr>
-                      ) : (
-                        normalizedPlantReportItems.map(
-                          (reportItem: any, reportIndex: number) => {
-                            const maxInners = Math.max(
-                              1,
-                              ...reportItem.statement_columns.map(
-                                (col: any) => col.inners?.length || 0
-                              )
-                            );
-
-                            return (
-                              <Fragment key={`plant-${reportIndex}`}>
-                                {Array.from({ length: maxInners }).map(
-                                  (_, innerIndex) => (
-                                    <tr key={`plant-${reportIndex}-${innerIndex}`}>
-                                      {/* T/R bo'sh */}
-                                      {innerIndex === 0 && (
-                                        <td
-                                          className="border border-black px-2 py-1 text-center"
-                                          rowSpan={maxInners}
-                                        >{innerIndex + 1}</td>
-                                      )}
-
-                                      {reportItem.statement_columns?.map(
-                                        (col: any) => {
-                                          const plantNames = getPlantNamesForRow(
-                                            reportItem.statement_columns || [],
-                                            innerIndex
-                                          );
-
-                                          return (
-                                            <td
-                                              key={col.statement_column_id || col.id}
-                                              className="border min-w-[120px] border-black px-2 py-1 text-center"
-                                            >
-                                              {/* ✅ Tashkilot nomi o'rniga: plant_name */}
-                                              {isOrganizationColumn(col)
-                                                ? plantNames || ""
-                                                : formatInnerValue(
-                                                  col.inners?.[innerIndex]
-                                                )}
-                                            </td>
-                                          );
-                                        }
-                                      )}
-
-                                      {/* Amallar faqat birinchi qatorda chiqsin */}
-                                      {innerIndex === 0 &&
-                                        (selectedRow.status == "saved" ||
-                                          selectedRow.status == "cancelled") &&
-                                        user_role == "tashkilot_hodimi" && (
-                                          <td
-                                            className="border border-black px-2 py-1 text-center"
-                                            rowSpan={maxInners}
-                                          >
-                                            <div className="flex items-center justify-center gap-2">
-                                              <Button
-                                                className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();;
-                                                  navigate(
-                                                    `/resource-management/update/${selectedRow?.id}`
-                                                  );
-                                                  window.location.reload();
-                                                }}
-                                              >
-                                                <Edit2 />
-                                              </Button>
-                                              {selectedRow.status == "saved" && (
-                                                <Button
-                                                  className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    deleteReport(selectedRow.id);
-                                                    window.location.reload();
-                                                  }}
-                                                >
-                                                  <Trash2 />
-                                                </Button>
-                                              )}
-                                            </div>
-                                          </td>
-                                        )}
-                                    </tr>
-                                  )
-                                )}
-                              </Fragment>
-                            );
-                          }
-                        )
-                      )}
-                    </>
-                  )}
-
-                  {/* 🔥 Individual Rows (Jami), plant mode'da ham ko'rsatamiz */}
+                  {/* 🔥 Individual Rows (Jami) */}
                   {individualRows?.length > 0 &&
                     individualRows.map((indRow: any) =>
                       indRow.report_items?.map(

@@ -2,6 +2,7 @@ import { useSendEmailMutation } from "@/services/authApi";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import { setSimpleCookie } from "@/utils/cookie";
 
 const ForgetPassword = () => {
     const navigate = useNavigate();
@@ -17,8 +18,8 @@ const ForgetPassword = () => {
         sendEmail({ email })
             .unwrap()
             .then(() => {
-                // ✅ Emailni sessionStorage'ga yozamiz
-                sessionStorage.setItem("reset_email", email);
+                // ✅ Emailni cookie'ga yozamiz (1 soat muddat)
+                setSimpleCookie("reset_email", email, 1/24); // 1 soat
                 navigate("/auth/check-code");
             })
             .catch((err) => {

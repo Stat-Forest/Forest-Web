@@ -22,6 +22,7 @@ import {
 import { useState, useMemo, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { getSimpleCookie } from "@/utils/cookie";
 
 interface ExpiredDeadline {
   id: string;
@@ -48,7 +49,7 @@ function ExpiredDeadlines() {
   const [page, setPage] = useState(1);
   const [openRow, setOpenRow] = useState<string | null>(null);
   const perPage = 10;
-  const lang = localStorage.getItem("i18nextLng") || "uz";
+  const lang = getSimpleCookie("lang") || "uz";
   const { t } = useTranslation();
 
   const toggleRow = (id: string) => {

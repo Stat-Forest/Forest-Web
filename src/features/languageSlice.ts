@@ -1,18 +1,30 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { getSimpleCookie, setSimpleCookie } from "@/utils/cookie";
 
 interface LanguageState {
   lang: string;
 }
 
-// localStorage'dan tilni o'qish, mavjud bo'lmasa "uz" qaytarish
+// Cookie'dan tilni o'qish, mavjud bo'lmasa "uz" qaytarish
 const getInitialLanguage = (): string => {
-  const savedLang = localStorage.getItem("lang");
+  // Avval cookie'dan o'qishga harakat qilamiz
+  const savedLang = getSimpleCookie("lang");
   if (savedLang) {
     return savedLang;
   }
   
-  // Agar localStorage'da til saqlanmagan bo'lsa, "uz" ni default qil
-  localStorage.setItem("lang", "uz");
+  // Eski localStorage'dan o'qish (migration uchun)
+  if (typeof window !== "undefined") {
+    const oldLang = localStorage.getItem("lang");
+    if (oldLang) {
+      setSimpleCookie("lang", oldLang, 365); // 1 yil muddat
+      localStorage.removeItem("lang");
+      return oldLang;
+    }
+  }
+  
+  // Agar hech qanday til saqlanmagan bo'lsa, "uz" ni default qil
+  setSimpleCookie("lang", "uz", 365); // 1 yil muddat
   return "uz";
 };
 
@@ -26,7 +38,11 @@ export const languageSlice = createSlice({
   reducers: {
     setLanguage: (state, action: PayloadAction<string>) => {
       state.lang = action.payload;
-      localStorage.setItem("lang", action.payload);
+      setSimpleCookie("lang", action.payload, 365); // 1 yil muddat
+      // Eski localStorage'dan ham o'chiramiz (migration uchun)
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("lang");
+      }
     },
   },
 });

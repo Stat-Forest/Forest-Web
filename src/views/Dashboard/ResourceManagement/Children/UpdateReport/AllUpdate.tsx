@@ -86,7 +86,9 @@ function AllUpdateReportItem() {
     data: existingReport,
     isLoading: isReportLoading,
     error: reportError,
-  } = useGetReportByIdQuery(id ?? skipToken);
+  } = useGetReportByIdQuery(
+    id ? { id: id, is_user_input: "true" } : skipToken
+  );
 
   console.log(existingReport);
 

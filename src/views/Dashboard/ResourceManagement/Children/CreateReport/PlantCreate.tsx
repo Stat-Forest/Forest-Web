@@ -174,6 +174,24 @@ function PlantCreate() {
     [tableHeadersData]
   );
 
+  // 🔹 Maxsus: "Ko‘chat va Nihol" ilovalari uchun (Ko‘chat-va-Nihol-ilova) plant select kerak emas
+  const isKoChatVaNiholIlova1Step = (stepIndex: number): boolean => {
+    const title =
+      (tableHeadersData as TableHeaderData[])?.[stepIndex]?.title ?? "";
+    if (!title) return false;
+
+    const normalized = title
+      .toLowerCase()
+      .replace(/[‘’]/g, "'")
+      .replace(/\s+/g, " ");
+
+    return (
+      normalized.includes("ko'chat") &&
+      normalized.includes("nihol") &&
+      normalized.includes("ilova")
+    );
+  };
+
   const allEmptyColumnsByStepMemo = useMemo(() => {
     return (tableHeadersDataMemo as TableHeaderData[]).map((obj) =>
       Array.isArray(obj.children)
@@ -349,9 +367,14 @@ function PlantCreate() {
       errors.push(t("please_select_organization"));
     }
 
-    // 🔹 Plant duplikatsiyasini tekshirish
+    // 🔹 Plant duplikatsiyasi va majburiyligini faqat plant-select bor bo'lgan step'lar uchun tekshiramiz
     const plantIds: string[] = [];
     state.formGroups.forEach((group) => {
+      const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
+      if (skipPlantForStep) {
+        return;
+      }
+
       group.forms.forEach((form) => {
         if (form.plantId) {
           if (plantIds.includes(form.plantId)) {
@@ -364,6 +387,11 @@ function PlantCreate() {
 
     // 🔹 Har bir step va har bir form uchun plant tanlanganligini tekshiramiz
     state.formGroups.forEach((group) => {
+      const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
+      if (skipPlantForStep) {
+        return;
+      }
+
       group.forms.forEach((form, formIndex) => {
         if (!form.plantId) {
           errors.push(
@@ -678,135 +706,137 @@ function PlantCreate() {
                   </div>
                 </div>
 
-                {/* ✅ FORM SPECIFIC PLANT SELECT */}
-                <div className="mb-4">
-                  <label className="block mb-1 text-lg font-medium">
-                    {formIndex + 1}-form uchun Plant:
-                  </label>
-                  <Select
-                    value={form.plantId}
-                    onValueChange={(plantId) =>
-                      handlePlantChange(state.currentStep, formIndex, plantId)
-                    }
-                  >
-                    <SelectTrigger className="w-[300px]">
-                      {/* SelectValue tanlangan item joriy page'da bo'lmasa label ko'rsatmaydi.
-                          Shuning uchun label'ni o'zimiz cache'dan chiqaramiz. */}
-                      <SelectValue className="hidden" />
-                      <span className={!form.plantId ? "text-muted-foreground" : ""}>
-                        {form.plantId
-                          ? getPlantLabel(form.plantId)
-                          : plantsLoading
-                          ? t("loading")
-                          : plantsError
-                          ? t("loading_error")
-                          : t("please_select")}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {plantsLoading ? (
-                        <div className="p-2 text-center text-muted-foreground text-sm">
-                          {t("loading")}
-                        </div>
-                      ) : plantsError ? (
-                        <div className="p-2 text-center text-red-500 text-sm">
-                          {t("data_load_error")}
-                        </div>
-                      ) : (plantsData as any)?.results?.length > 0 ? (
-                        <>
-                          {(plantsData as any).results.flatMap(
-                            (category: Category) => [
-                              <SelectItem
-                                key={category.id}
-                                value={category.id}
-                                disabled
-                                className="font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
-                              >
-                                {category.name}
-                              </SelectItem>,
-                              ...category.children.map((child: Plant) => {
-                                const isUsed = getAllUsedPlantIds.has(
-                                  child.id.toString()
-                                );
-                                const isCurrentFormPlant =
-                                  form.plantId === child.id.toString();
+                {/* ✅ FORM SPECIFIC PLANT SELECT (maxsus ilova uchun yashiriladi) */}
+                {!isKoChatVaNiholIlova1Step(state.currentStep) && (
+                  <div className="mb-4">
+                    <label className="block mb-1 text-lg font-medium">
+                      {formIndex + 1}-form uchun Plant:
+                    </label>
+                    <Select
+                      value={form.plantId}
+                      onValueChange={(plantId) =>
+                        handlePlantChange(state.currentStep, formIndex, plantId)
+                      }
+                    >
+                      <SelectTrigger className="w-[300px]">
+                        {/* SelectValue tanlangan item joriy page'da bo'lmasa label ko'rsatmaydi.
+                            Shuning uchun label'ni o'zimiz cache'dan chiqaramiz. */}
+                        <SelectValue className="hidden" />
+                        <span className={!form.plantId ? "text-muted-foreground" : ""}>
+                          {form.plantId
+                            ? getPlantLabel(form.plantId)
+                            : plantsLoading
+                            ? t("loading")
+                            : plantsError
+                            ? t("loading_error")
+                            : t("please_select")}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {plantsLoading ? (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            {t("loading")}
+                          </div>
+                        ) : plantsError ? (
+                          <div className="p-2 text-center text-red-500 text-sm">
+                            {t("data_load_error")}
+                          </div>
+                        ) : (plantsData as any)?.results?.length > 0 ? (
+                          <>
+                            {(plantsData as any).results.flatMap(
+                              (category: Category) => [
+                                <SelectItem
+                                  key={category.id}
+                                  value={category.id}
+                                  disabled
+                                  className="font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
+                                >
+                                  {category.name}
+                                </SelectItem>,
+                                ...category.children.map((child: Plant) => {
+                                  const isUsed = getAllUsedPlantIds.has(
+                                    child.id.toString()
+                                  );
+                                  const isCurrentFormPlant =
+                                    form.plantId === child.id.toString();
 
-                                return (
-                                  <SelectItem
-                                    key={child.id}
-                                    value={child.id.toString()}
-                                    className="pl-6"
-                                    disabled={isUsed && !isCurrentFormPlant}
-                                  >
-                                    {child.name}
-                                    {isUsed &&
-                                      !isCurrentFormPlant &&
-                                      ` (${t("selected")})`}
-                                  </SelectItem>
-                                );
-                              }),
-                            ]
-                          )}
+                                  return (
+                                    <SelectItem
+                                      key={child.id}
+                                      value={child.id.toString()}
+                                      className="pl-6"
+                                      disabled={isUsed && !isCurrentFormPlant}
+                                    >
+                                      {child.name}
+                                      {isUsed &&
+                                        !isCurrentFormPlant &&
+                                        ` (${t("selected")})`}
+                                    </SelectItem>
+                                  );
+                                }),
+                              ]
+                            )}
 
-                          {/* ✅ Plants Pagination Controls */}
-                          {(plantsData as any).count > plantsPerPage && (
-                            <div className="flex items-center justify-between px-2 py-1 border-t">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={state.plantsPage === 1}
-                                onClick={() =>
-                                  dispatch({
-                                    type: "SET_PLANTS_PAGE",
-                                    payload: Math.max(state.plantsPage - 1, 1),
-                                  })
-                                }
-                              >
-                                {t("before")}
-                              </Button>
-                              <span className="text-xs text-gray-500">
-                                {state.plantsPage} /{" "}
-                                {Math.ceil(
-                                  (plantsData as any).count / plantsPerPage
-                                )}
-                              </span>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  state.plantsPage >=
-                                  Math.ceil(
+                            {/* ✅ Plants Pagination Controls */}
+                            {(plantsData as any).count > plantsPerPage && (
+                              <div className="flex items-center justify-between px-2 py-1 border-t">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={state.plantsPage === 1}
+                                  onClick={() =>
+                                    dispatch({
+                                      type: "SET_PLANTS_PAGE",
+                                      payload: Math.max(state.plantsPage - 1, 1),
+                                    })
+                                  }
+                                >
+                                  {t("before")}
+                                </Button>
+                                <span className="text-xs text-gray-500">
+                                  {state.plantsPage} /{" "}
+                                  {Math.ceil(
                                     (plantsData as any).count / plantsPerPage
-                                  )
-                                }
-                                onClick={() =>
-                                  dispatch({
-                                    type: "SET_PLANTS_PAGE",
-                                    payload: Math.min(
-                                      state.plantsPage + 1,
-                                      Math.ceil(
-                                        (plantsData as any).count /
-                                          plantsPerPage
-                                      )
-                                    ),
-                                  })
-                                }
-                              >
-                                {t("next")}
-                              </Button>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="p-2 text-center text-muted-foreground text-sm">
-                          Plant mavjud emas
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                                  )}
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={
+                                    state.plantsPage >=
+                                    Math.ceil(
+                                      (plantsData as any).count / plantsPerPage
+                                    )
+                                  }
+                                  onClick={() =>
+                                    dispatch({
+                                      type: "SET_PLANTS_PAGE",
+                                      payload: Math.min(
+                                        state.plantsPage + 1,
+                                        Math.ceil(
+                                          (plantsData as any).count /
+                                            plantsPerPage
+                                        )
+                                      ),
+                                    })
+                                  }
+                                >
+                                  {t("next")}
+                                </Button>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            Plant mavjud emas
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {/* ✅ TABLE */}
                 {currentEmptyColumns.length > 0 ? (

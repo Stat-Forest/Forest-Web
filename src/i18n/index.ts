@@ -1,13 +1,30 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { getSimpleCookie, setSimpleCookie } from "@/utils/cookie";
 
 import uz from "./languages/uz.json";
 import ru from "./languages/ru.json";
 
-// localStorage'dan tilni o'qish
+// Cookie'dan tilni o'qish (localStorage o'rniga)
 const getInitialLanguage = () => {
-  return localStorage.getItem("lang") || "uz";
+  // Avval cookie'dan o'qishga harakat qilamiz
+  const cookieLang = getSimpleCookie("lang");
+  if (cookieLang) {
+    return cookieLang;
+  }
+  
+  // Eski localStorage'dan o'qish (migration uchun)
+  if (typeof window !== "undefined") {
+    const oldLang = localStorage.getItem("lang");
+    if (oldLang) {
+      setSimpleCookie("lang", oldLang, 365);
+      localStorage.removeItem("lang");
+      return oldLang;
+    }
+  }
+  
+  return "uz";
 };
 
 i18n
@@ -18,16 +35,16 @@ i18n
       uz: { translation: uz },
       ru: { translation: ru },
     },
-    lng: getInitialLanguage(), // ✅ Bu muhim - boshlang'ich tilni aniq belgilash
+    lng: getInitialLanguage(),
     fallbackLng: "uz",
     interpolation: {
       escapeValue: false,
     },
-    detection: {
-      order: ["localStorage", "navigator"], // localStorage birinchi tekshirilsin
-      lookupLocalStorage: "lang", // localStorage'dagi kalit nomi
-      caches: ["localStorage"],
-    },
   });
+
+// i18n til o'zgarganda cookie'ga saqlash
+i18n.on("languageChanged", (lng) => {
+  setSimpleCookie("lang", lng, 365);
+});
 
 export default i18n;
