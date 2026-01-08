@@ -129,7 +129,7 @@ function Dashboard() {
               <Route path="plan-update/:id" element={<UpdatePlans />} />
 
               <Route
-                path="resource-management/:id"
+                path="resource-management/:id/:reportName"
                 element={<ResourceManagement />}
               />
               <Route

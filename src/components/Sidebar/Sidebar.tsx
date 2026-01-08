@@ -91,7 +91,7 @@ function Sidebar() {
               {item.children.map((child: any, index: number) => (
                 <NavLink
                   key={index}
-                  to={`/resource-management/${child.id}`}
+                  to={`/resource-management/${child.id}/${child.name}`}
                   className={({ isActive }) =>
                     `group flex items-center gap-3 transition-all duration-200 p-3 rounded-lg border ${
                       isActive
