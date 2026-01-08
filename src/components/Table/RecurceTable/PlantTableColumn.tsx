@@ -239,13 +239,6 @@ import {
         return name.includes("tashkilot") && name.includes("nomi");
       };
   
-      const getPlantNamesForRow = (statementColumns: any[], innerIndex: number) => {
-        const names = (statementColumns || [])
-          .map((c: any) => c?.inners?.[innerIndex]?.plant_name)
-          .filter(Boolean);
-        // bir nechta plant bo'lsa, bittalab ko'rsatamiz
-        return Array.from(new Set(names)).join(", ");
-      };
   
       // 🔹 Yangi: Print uchun to'liq jadvalni olish
       const getPrintableTable = () => {
@@ -874,26 +867,64 @@ import {
                                 )
                               );
   
+                              // 🔹 Har bir inner object uchun alohida qator yaratish
+                              // Har bir column'da inner'lar ketma-ketligida bo'lishi mumkin
+                              // Har bir innerIndex uchun bir qator yaratamiz, har bir qatorda barcha column'lardan inner[innerIndex] ko'rsatiladi
+                              
+                              // Har bir innerIndex uchun qatorlar yaratish
+                              const rowsToRender = Array.from({ length: maxInners }).map((_, innerIndex) => {
+                                // Har bir column'dan bu innerIndex'dagi inner'ni olish
+                                const columns = reportItem.statement_columns?.map((col: any) => ({
+                                  col: col,
+                                  inner: col.inners?.[innerIndex] || null,
+                                  innerIndex: innerIndex
+                                })) || [];
+
+                                // Plant_name ni topish (birinchi topilgan plant_name bo'lgan column'dan)
+                                let plantName = "";
+                                for (const colData of columns) {
+                                  if (colData.inner?.plant_name) {
+                                    plantName = colData.inner.plant_name;
+                                    break;
+                                  }
+                                }
+
+                                return {
+                                  plantName: plantName,
+                                  columns: columns,
+                                  innerIndex: innerIndex
+                                };
+                              });
+                              
+                              // Faqat plant_name bo'lgan qatorlarni saqlab qolamiz
+                              // (yoki barcha qatorlarni ko'rsatamiz agar plant_name bo'lmasa ham qiymatlar bo'lsa)
+                              const finalRows = rowsToRender.filter((row) => {
+                                // Agar qator ichida hech bo'lmaganda bir inner bo'lsa va qiymat bo'lsa, uni ko'rsatamiz
+                                return row.columns.some((colData: any) => colData.inner !== null && colData.inner !== undefined);
+                              });
+
                               return (
                                 <Fragment key={`plant-${reportIndex}`}>
-                                  {Array.from({ length: maxInners }).map(
-                                    (_, innerIndex) => (
-                                      <tr key={`plant-${reportIndex}-${innerIndex}`}>
+                                  {finalRows.map((rowData, rowIdx) => {
+                                    return (
+                                      <tr key={`plant-${reportIndex}-${rowIdx}`}>
                                         {/* T/R bo'sh */}
-                                        {innerIndex === 0 && (
+                                        {rowIdx === 0 && (
                                           <td
                                             className="border border-black px-2 py-1 text-center"
-                                            rowSpan={maxInners}
-                                          >{innerIndex + 1}</td>
+                                            rowSpan={finalRows.length}
+                                          >{reportIndex + 1}</td>
                                         )}
-  
+
                                         {reportItem.statement_columns?.map(
                                           (col: any) => {
-                                            const plantNames = getPlantNamesForRow(
-                                              reportItem.statement_columns || [],
-                                              innerIndex
+                                            // Bu column uchun bu innerIndex'dagi inner'ni topish
+                                            const colData = rowData.columns.find((c: any) => 
+                                              (c.col.statement_column_id || c.col.id) === (col.statement_column_id || col.id)
                                             );
-  
+                                            const inner = colData?.inner || null;
+                                            const plantName = inner?.plant_name || rowData.plantName || "";
+
                                             return (
                                               <td
                                                 key={col.statement_column_id || col.id}
@@ -901,23 +932,21 @@ import {
                                               >
                                                 {/* ✅ Tashkilot nomi o'rniga: plant_name */}
                                                 {isOrganizationColumn(col)
-                                                  ? plantNames || ""
-                                                  : formatInnerValue(
-                                                    col.inners?.[innerIndex]
-                                                  )}
+                                                  ? plantName
+                                                  : formatInnerValue(inner)}
                                               </td>
                                             );
                                           }
                                         )}
-  
+
                                         {/* Amallar faqat birinchi qatorda chiqsin */}
-                                        {innerIndex === 0 &&
+                                        {rowIdx === 0 &&
                                           (selectedRow.status == "saved" ||
                                             selectedRow.status == "cancelled") &&
                                           user_role == "tashkilot_hodimi" && (
                                             <td
                                               className="border border-black px-2 py-1 text-center"
-                                              rowSpan={maxInners}
+                                              rowSpan={finalRows.length}
                                             >
                                               <div className="flex items-center justify-center gap-2">
                                                 <Button
@@ -948,8 +977,8 @@ import {
                                             </td>
                                           )}
                                       </tr>
-                                    )
-                                  )}
+                                    );
+                                  })}
                                 </Fragment>
                               );
                             }

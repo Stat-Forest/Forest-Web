@@ -10,7 +10,7 @@ import LandDocumentsContainers from "@/containers/ResourceContainer/LandDocument
 import ResourcePlantContainer from "@/containers/ResourceContainer/ResourcePlantContainer";
 
 function ResourceManagement() {
-  const { id } = useParams<{ id: string }>();
+  const { id, reportName } = useParams<{ id: string, reportName: string }>();
   const lang = useSelector((state: RootState) => state.language.lang);
   const dispatch = useDispatch();
 
@@ -30,7 +30,7 @@ function ResourceManagement() {
   )?.name;
 
   useEffect(() => {
-    dispatch(setReportName(childTitle));
+    dispatch(setReportName(reportName));
   }, [childTitle]);
 
   return (
