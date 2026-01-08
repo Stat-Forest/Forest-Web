@@ -45,7 +45,7 @@ function TableReports({ data }: any) {
             <TableRow
               key={item.id}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
-              onClick={() => navigate(`/resource-management/${item.statement}`)}
+              onClick={() => navigate(`/resource-management/${item.statement}/${encodeURIComponent(item?.statement_name || "")}`)}
             >
               <TableCell className="w-[40%] text-lg font-[300] border-none whitespace-normal break-words">
                 {item?.organization_name}
