@@ -154,26 +154,44 @@ function InnersUpdateReportItem() {
   // mavjud reportdan boshlang'ich qiymatlarni olish
   useEffect(() => {
     if (existingReport?.report_items) {
-      // report_items strukturasidan formGroups ni yaratish
-      // Birinchi report_item dan formlar sonini aniqlash (inners uzunligi)
-      const firstReportItem = existingReport.report_items[0];
-      const innersCount = firstReportItem?.inners?.length || 1;
+      // 🔹 Har bir column'dan maximum inners sonini topish
+      // Agar N ta object bo'lsa, N ta form bo'lishi kerak
+      const maxInnersCount = Math.max(
+        ...existingReport.report_items.map((item: any) => item.inners?.length || 0),
+        1 // Minimum 1 ta form
+      );
+
+      console.log("DEBUG InnersUpdate: maxInnersCount =", maxInnersCount);
+      console.log("DEBUG InnersUpdate: report_items =", existingReport.report_items);
 
       // Har bir inner uchun alohida form yaratish
+      // inner[0] -> form[0], inner[1] -> form[1], va hokazo
       const initialFormGroups: Record<string, string>[] = [];
-      for (let i = 0; i < innersCount; i++) {
+      
+      for (let innerIndex = 0; innerIndex < maxInnersCount; innerIndex++) {
         const form: Record<string, string> = {};
+        
+        // Har bir column'dan shu innerIndex'dagi inner'ni olish
         existingReport.report_items.forEach((item: any) => {
           const isOrganizationColumn = item.statement_column_title
             ?.toLowerCase()
             .includes("tashkilot");
-          if (!isOrganizationColumn && item.inners?.[i]) {
-            form[item.statement_column] = item.inners[i].value || "";
+          
+          // Tashkilot column'ini skip qilish
+          if (!isOrganizationColumn) {
+            // Agar bu column'da innerIndex'dagi inner mavjud bo'lsa, uni olish
+            if (item.inners?.[innerIndex]) {
+              form[item.statement_column] = item.inners[innerIndex].value || "";
+            }
+            // Agar inner mavjud bo'lmasa, bo'sh string qoldirish
+            // (ba'zi column'larda inner'lar kam bo'lishi mumkin)
           }
         });
+        
         initialFormGroups.push(form);
       }
 
+      console.log("DEBUG InnersUpdate: Created", initialFormGroups.length, "forms");
       setFormGroups(initialFormGroups.length > 0 ? initialFormGroups : [{}]);
       setSelectedDeadlineId(existingReport.deadline || "");
       setFootNote(existingReport.foot_note || "");

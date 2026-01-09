@@ -395,27 +395,35 @@ function PlantUpdate() {
             }
           });
 
-          // Step 2: Cache all plant names from backend
+          // Step 2: Cache all plant names from backend (bir marta set qilish)
+          const plantMetaMap: Record<string, { name: string; categoryName?: string }> = {};
           apiColumns.forEach(column => {
             column.inners?.forEach((inner: any) => {
               if (inner.plant_id && inner.plant_name) {
                 const plantId = String(inner.plant_id);
                 const plantName = String(inner.plant_name);
-                setPlantMetaById(prev => {
-                  if (prev[plantId]?.name === plantName) {
-                    return prev;
-                  }
-                  return {
-                    ...prev,
-                    [plantId]: {
-                      name: plantName,
-                      categoryName: prev[plantId]?.categoryName || ""
-                    }
+                if (!plantMetaMap[plantId]) {
+                  plantMetaMap[plantId] = {
+                    name: plantName,
+                    categoryName: ""
                   };
-                });
+                }
               }
             });
           });
+          // Barcha plant'lar uchun bir marta set qilish
+          if (Object.keys(plantMetaMap).length > 0) {
+            setPlantMetaById(prev => {
+              // Faqat yangi plant'lar qo'shish, mavjudlarini o'zgartirmaslik
+              const updated = { ...prev };
+              Object.keys(plantMetaMap).forEach(plantId => {
+                if (!updated[plantId]) {
+                  updated[plantId] = plantMetaMap[plantId];
+                }
+              });
+              return updated;
+            });
+          }
 
           // Step 3: Har bir step uchun form guruhini yaratish
           const formGroups = allEmptyColumnsByStepMemo.map((stepColumns, stepIndex) => {
@@ -448,28 +456,48 @@ function PlantUpdate() {
 
             console.log(`DEBUG: Step ${stepIndex} - stepTitle: "${stepTitle}", stepApiColumns count: ${stepApiColumns.length}`);
 
-            // Determine form count: use maximum number of inners across all columns in this step
+            // 🔹 SODDA YONDASHUV: Har bir step uchun formCount'ni to'g'ri aniqlash
+            // Agar stepApiColumns bo'sh bo'lsa, barcha API column'lardan qidiramiz
+            let columnsForFormCount = stepApiColumns;
+            
+            // Agar stepApiColumns bo'sh bo'lsa, barcha API column'lardan step title bo'yicha qidiramiz
+            if (columnsForFormCount.length === 0 && normalizedStepTitle) {
+              columnsForFormCount = apiColumns.filter(apiCol => {
+                const normalizedApiName = normalizeText(apiCol.statement_column_name);
+                // Check if API column name contains step title keywords
+                if (normalizedStepTitle.includes("ko'chat") && normalizedStepTitle.includes("ilova") && !normalizedStepTitle.includes("nihol")) {
+                  return normalizedApiName.includes("ko'chat") && normalizedApiName.includes("ilova") && !normalizedApiName.includes("nihol");
+                } else if (normalizedStepTitle.includes("nihol") && normalizedStepTitle.includes("ilova") && !normalizedStepTitle.includes("ko'chat")) {
+                  return normalizedApiName.includes("nihol") && normalizedApiName.includes("ilova") && !normalizedApiName.includes("ko'chat");
+                } else if (normalizedStepTitle.includes("ko'chat-va-nihol") || (normalizedStepTitle.includes("ko'chat") && normalizedStepTitle.includes("nihol") && normalizedStepTitle.includes("ilova"))) {
+                  return normalizedApiName.includes("ko'chat-va-nihol") || (normalizedApiName.includes("ko'chat") && normalizedApiName.includes("nihol") && normalizedApiName.includes("ilova"));
+                }
+                return false;
+              });
+            }
+
             // Exclude organization name and reja columns from form count calculation
-            const nonOrgColumns = stepApiColumns.filter(col => {
+            const nonOrgColumns = columnsForFormCount.filter(col => {
               const lowerName = col.statement_column_name.toLowerCase();
               return !lowerName.includes("tashkilot nomi") && 
                      !lowerName.includes("названия регионов") &&
                      !lowerName.includes("reja");
             });
 
-            // Find maximum inners count across all columns in this step
+            // 🔹 Find maximum inners count across all columns in this step
+            // Agar hech qanday column topilmasa, 1 ta form yaratish (minimum)
             const maxInnersCount = nonOrgColumns.length > 0
               ? Math.max(...nonOrgColumns.map(col => col.inners?.length || 0), 0)
               : 0;
 
-            let formCount = maxInnersCount;
+            // 🔹 Agar maxInnersCount 0 bo'lsa, minimum 1 ta form yaratish
+            let formCount = Math.max(maxInnersCount, 1);
 
-            // If no forms found, create one empty form
+            console.log(`DEBUG: Step ${stepIndex} - FormCount: ${formCount}, maxInnersCount: ${maxInnersCount}, nonOrgColumns: ${nonOrgColumns.length}`);
+
+            // 🔹 Agar formCount 0 bo'lsa, minimum 1 ta form yaratish
             if (formCount === 0) {
-              return {
-                step: stepIndex,
-                forms: [{ values: {}, plantId: "" }]
-              };
+              formCount = 1;
             }
 
             // Find columns with plants for plant ID extraction
@@ -502,39 +530,39 @@ function PlantUpdate() {
 
             const forms: Array<{ plantId: string; values: Record<string, string> }> = [];
 
-            for (let formIndex = 0; formIndex < formCount; formIndex++) {
+            // 🔹 SODDA YONDASHUV: Har bir innerIndex uchun bir form yaratish
+            // inner[0] -> form[0], inner[1] -> form[1], va hokazo
+            for (let innerIndex = 0; innerIndex < formCount; innerIndex++) {
               const form: { plantId: string; values: Record<string, string> } = {
                 plantId: "",
                 values: {}
               };
 
-              // Extract plant_id - comprehensive search strategy
-              let foundPlantId = false;
-              
-              // Strategy 1: Try reference column at formIndex
-              if (referenceColumn && referenceColumn.inners?.[formIndex]?.plant_id) {
-                form.plantId = String(referenceColumn.inners[formIndex].plant_id);
+              // 🔹 STEP 1: Plant ID ni olish - innerIndex'dan
+              // Avval referenceColumn yoki columnsWithPlants'dan qidiramiz
+              if (referenceColumn && referenceColumn.inners?.[innerIndex]?.plant_id) {
+                form.plantId = String(referenceColumn.inners[innerIndex].plant_id);
                 dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                foundPlantId = true;
-                console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via referenceColumn: ${form.plantId}`);
+                // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via referenceColumn: ${form.plantId}`);
               }
               
-              // Strategy 2: Search all columns with plant_id at formIndex
-              if (!foundPlantId) {
+              // Strategy 2: Search all columns with plant_id at innerIndex
+              if (!form.plantId) {
                 // First try columnsWithPlants
                 for (const column of columnsWithPlants) {
-                  const inner = column.inners?.[formIndex];
+                  const inner = column.inners?.[innerIndex];
                   if (inner?.plant_id) {
                     form.plantId = String(inner.plant_id);
                     dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                    foundPlantId = true;
-                    console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 2 (columnsWithPlants): ${form.plantId}`);
+                    // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                    console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 2 (columnsWithPlants): ${form.plantId}`);
                     break;
                   }
                 }
                 
                 // If still not found and columnsWithPlants is empty, search all API columns by step title
-                if (!foundPlantId && columnsWithPlants.length === 0 && normalizedStepTitle) {
+                if (!form.plantId && columnsWithPlants.length === 0 && normalizedStepTitle) {
                   const allStepColumns = apiColumns.filter(apiCol => {
                     const normalizedApiName = normalizeText(apiCol.statement_column_name);
                     if (normalizedStepTitle.includes("ko'chat") && normalizedStepTitle.includes("ilova") && !normalizedStepTitle.includes("nihol")) {
@@ -555,20 +583,20 @@ function PlantUpdate() {
                   });
                   
                   for (const column of allStepColumns) {
-                    const inner = column.inners?.[formIndex];
+                    const inner = column.inners?.[innerIndex];
                     if (inner?.plant_id) {
                       form.plantId = String(inner.plant_id);
                       dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                      foundPlantId = true;
-                      console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 2 (allStepColumns): ${form.plantId}`);
+                      // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                      console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 2 (allStepColumns): ${form.plantId}`);
                       break;
                     }
                   }
                 }
               }
               
-              // Strategy 3: Search all non-org columns at formIndex
-              if (!foundPlantId) {
+              // Strategy 3: Search all non-org columns at innerIndex
+              if (!form.plantId) {
                 // First try stepApiColumns
                 for (const column of stepApiColumns) {
                   const lowerName = column.statement_column_name.toLowerCase();
@@ -577,18 +605,18 @@ function PlantUpdate() {
                       lowerName.includes("reja")) {
                     continue;
                   }
-                  const inner = column.inners?.[formIndex];
-                  if (inner?.plant_id) {
-                    form.plantId = String(inner.plant_id);
-                    dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                    foundPlantId = true;
-                    console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 3 (stepApiColumns): ${form.plantId}`);
+                  const inner = column.inners?.[innerIndex];
+                    if (inner?.plant_id) {
+                      form.plantId = String(inner.plant_id);
+                      dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
+                      // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                      console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 3 (stepApiColumns): ${form.plantId}`);
                     break;
                   }
                 }
                 
                 // If still not found and stepApiColumns is empty, search all API columns by step title
-                if (!foundPlantId && stepApiColumns.length === 0 && normalizedStepTitle) {
+                if (!form.plantId && stepApiColumns.length === 0 && normalizedStepTitle) {
                   const allStepColumns = apiColumns.filter(apiCol => {
                     const normalizedApiName = normalizeText(apiCol.statement_column_name);
                     if (normalizedStepTitle.includes("ko'chat") && normalizedStepTitle.includes("ilova") && !normalizedStepTitle.includes("nihol")) {
@@ -608,12 +636,12 @@ function PlantUpdate() {
                         lowerName.includes("reja")) {
                       continue;
                     }
-                    const inner = column.inners?.[formIndex];
+                    const inner = column.inners?.[innerIndex];
                     if (inner?.plant_id) {
                       form.plantId = String(inner.plant_id);
                       dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                      foundPlantId = true;
-                      console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 3 (allStepColumns): ${form.plantId}`);
+                      // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                      console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 3 (allStepColumns): ${form.plantId}`);
                       break;
                     }
                   }
@@ -621,7 +649,7 @@ function PlantUpdate() {
               }
               
               // Strategy 4: For single-form steps, find any inner with plant_id (index-independent)
-              if (!foundPlantId && formCount === 1) {
+              if (!form.plantId && formCount === 1) {
                 // First try stepApiColumns
                 for (const column of stepApiColumns) {
                   const lowerName = column.statement_column_name.toLowerCase();
@@ -635,14 +663,14 @@ function PlantUpdate() {
                   if (innerWithPlant?.plant_id) {
                     form.plantId = String(innerWithPlant.plant_id);
                     dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                    foundPlantId = true;
-                    console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 4 (stepApiColumns): ${form.plantId}`);
+                    // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                    console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 4 (stepApiColumns): ${form.plantId}`);
                     break;
                   }
                 }
                 
                 // If still not found and stepApiColumns is empty, search all API columns by step title
-                if (!foundPlantId && stepApiColumns.length === 0 && normalizedStepTitle) {
+                if (!form.plantId && stepApiColumns.length === 0 && normalizedStepTitle) {
                   const allStepColumns = apiColumns.filter(apiCol => {
                     const normalizedApiName = normalizeText(apiCol.statement_column_name);
                     if (normalizedStepTitle.includes("ko'chat") && normalizedStepTitle.includes("ilova") && !normalizedStepTitle.includes("nihol")) {
@@ -666,17 +694,17 @@ function PlantUpdate() {
                     if (innerWithPlant?.plant_id) {
                       form.plantId = String(innerWithPlant.plant_id);
                       dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                      foundPlantId = true;
-                      console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 4 (allStepColumns): ${form.plantId}`);
+                      // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                      console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 4 (allStepColumns): ${form.plantId}`);
                       break;
                     }
                   }
                 }
               }
               
-              // Strategy 5: For multi-form steps, try to find unique plant_id for this formIndex
+              // Strategy 5: For multi-form steps, try to find unique plant_id for this innerIndex
               // by checking if there are multiple unique plant_ids and matching by position
-              if (!foundPlantId && formCount > 1) {
+              if (!form.plantId && formCount > 1) {
                 // Collect all unique plant_ids from columns with plants
                 const uniquePlantIds = new Set<string>();
                 const plantIdByIndex: Record<number, string> = {};
@@ -694,16 +722,15 @@ function PlantUpdate() {
                 }
                 
                 // If we have unique plant_ids matching form count, use index-based mapping
-                if (uniquePlantIds.size === formCount && plantIdByIndex[formIndex]) {
-                  form.plantId = plantIdByIndex[formIndex];
+                if (uniquePlantIds.size === formCount && plantIdByIndex[innerIndex]) {
+                  form.plantId = plantIdByIndex[innerIndex];
                   dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                  foundPlantId = true;
-                  console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 5: ${form.plantId}`);
+                  console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 5: ${form.plantId}`);
                 }
               }
               
               // Strategy 6: Final fallback - search ALL API columns by step title and get first plant_id
-              if (!foundPlantId && normalizedStepTitle) {
+              if (!form.plantId && normalizedStepTitle) {
                 const allStepColumns = apiColumns.filter(apiCol => {
                   const normalizedApiName = normalizeText(apiCol.statement_column_name);
                   if (normalizedStepTitle.includes("ko'chat") && normalizedStepTitle.includes("ilova") && !normalizedStepTitle.includes("nihol")) {
@@ -725,24 +752,24 @@ function PlantUpdate() {
                     continue;
                   }
                   
-                  // Try formIndex first
-                  const inner = column.inners?.[formIndex];
+                  // Try innerIndex first
+                  const inner = column.inners?.[innerIndex];
                   if (inner?.plant_id) {
                     form.plantId = String(inner.plant_id);
                     dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                    foundPlantId = true;
-                    console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 6 (fallback at index): ${form.plantId}`);
+                    // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                    console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 6 (fallback at index): ${form.plantId}`);
                     break;
                   }
                   
-                  // If formIndex is 0 and no plant_id found, try any inner
-                  if (formIndex === 0) {
+                  // If innerIndex is 0 and no plant_id found, try any inner
+                  if (innerIndex === 0) {
                     const innerWithPlant = column.inners?.find((inner: any) => inner.plant_id);
                     if (innerWithPlant?.plant_id) {
                       form.plantId = String(innerWithPlant.plant_id);
                       dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                      foundPlantId = true;
-                      console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} - Found plant_id via Strategy 6 (fallback any inner): ${form.plantId}`);
+                      // Plant name allaqachon Step 2'da cache'ga qo'shilgan
+                      console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Found plant_id via Strategy 6 (fallback any inner): ${form.plantId}`);
                       break;
                     }
                   }
@@ -750,8 +777,8 @@ function PlantUpdate() {
               }
               
               // Log if plant_id was not found
-              if (!foundPlantId) {
-                console.warn(`DEBUG: Step ${stepIndex} Form ${formIndex} - Plant_id NOT FOUND after all strategies!`);
+              if (!form.plantId) {
+                console.warn(`DEBUG: Step ${stepIndex} Form ${innerIndex} - Plant_id NOT FOUND!`);
                 console.warn(`DEBUG: Step title: "${stepTitle}"`);
                 console.warn(`DEBUG: stepApiColumns count: ${stepApiColumns.length}`);
                 console.warn(`DEBUG: columnsWithPlants count: ${columnsWithPlants.length}`);
@@ -811,45 +838,41 @@ function PlantUpdate() {
                 let value = "";
                 
                 if (matchingApiColumn && matchingApiColumn.inners && matchingApiColumn.inners.length > 0) {
-                  // Strategy 1: If column has plant_id AND form has plant_id, find by plant_id match
-                  const hasPlantId = matchingApiColumn.inners.some((inner: any) => inner.plant_id);
+                  // 🔹 SODDA YONDASHUV: 
+                  // 1. Avval innerIndex bo'yicha qidirish (asosiy yondashuv - inner[0] -> form[0])
+                  // 2. Agar innerIndex'dan topilmasa va plant_id bo'lsa, plant_id bo'yicha qidirish
                   
-                  if (hasPlantId && form.plantId) {
-                    // Find inner with matching plant_id
+                  // Strategy 1: innerIndex'dan to'g'ridan-to'g'ri olish (asosiy yondashuv)
+                  if (matchingApiColumn.inners[innerIndex]) {
+                    value = matchingApiColumn.inners[innerIndex].value || "";
+                    console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} Column "${col.title}" - Found value by innerIndex: ${value}`);
+                  } else if (form.plantId) {
+                    // Strategy 2: Agar innerIndex'dan topilmasa va form'da plant_id bo'lsa, plant_id bo'yicha qidirish
                     const innerWithPlant = matchingApiColumn.inners.find(
                       (inner: any) => String(inner.plant_id) === form.plantId
                     );
                     if (innerWithPlant) {
                       value = innerWithPlant.value || "";
-                      console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} Column "${col.title}" - Found value by plant_id: ${value}`);
-                    } else {
-                      // If plant_id doesn't match, try by index
-                      if (matchingApiColumn.inners[formIndex]) {
-                        value = matchingApiColumn.inners[formIndex].value || "";
-                        console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} Column "${col.title}" - Found value by index (plant_id mismatch): ${value}`);
-                      }
-                    }
-                  } else {
-                    // Strategy 2: Column doesn't have plant_id OR form doesn't have plant_id, use index-based extraction
-                    if (matchingApiColumn.inners[formIndex]) {
-                      value = matchingApiColumn.inners[formIndex].value || "";
-                      console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} Column "${col.title}" - Found value by index: ${value}`);
+                      console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} Column "${col.title}" - Found value by plant_id (fallback): ${value}`);
                     } else if (matchingApiColumn.inners.length > 0) {
-                      // If formIndex is out of bounds, use appropriate inner
+                      // Strategy 3: Agar plant_id ham topilmasa, oxirgi inner'ni olish
                       const lastIndex = matchingApiColumn.inners.length - 1;
-                      if (formIndex > lastIndex) {
-                        // Use last available inner if formIndex exceeds
+                      if (innerIndex > lastIndex && lastIndex >= 0) {
                         value = matchingApiColumn.inners[lastIndex].value || "";
-                        console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} Column "${col.title}" - Found value by lastIndex (${lastIndex}): ${value}`);
-                      } else {
-                        // Use first inner as fallback
+                        console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} Column "${col.title}" - Found value by lastIndex (${lastIndex}): ${value}`);
+                      } else if (lastIndex >= 0) {
+                        // Agar innerIndex 0 bo'lsa va inner mavjud bo'lsa, birinchi inner'ni olish
                         value = matchingApiColumn.inners[0].value || "";
-                        console.log(`DEBUG: Step ${stepIndex} Form ${formIndex} Column "${col.title}" - Found value by fallback (first): ${value}`);
+                        console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} Column "${col.title}" - Found value by first inner (fallback): ${value}`);
                       }
                     }
+                  } else if (matchingApiColumn.inners.length > 0) {
+                    // Strategy 4: Agar plant_id yo'q bo'lsa va innerIndex'dan topilmasa, birinchi inner'ni olish
+                    value = matchingApiColumn.inners[0].value || "";
+                    console.log(`DEBUG: Step ${stepIndex} Form ${innerIndex} Column "${col.title}" - Found value by first inner (no plant_id): ${value}`);
                   }
                 } else {
-                  console.warn(`DEBUG: Step ${stepIndex} Form ${formIndex} Column "${col.title}" - No matching API column found!`);
+                  console.warn(`DEBUG: Step ${stepIndex} Form ${innerIndex} Column "${col.title}" - No matching API column found!`);
                 }
                 
                 form.values[col.id] = formatValue(value);
