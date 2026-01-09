@@ -290,12 +290,14 @@ export const reportApi = createApi({
         report_ids: string[];
         lang: string;
         mode?: string;
+        row_numbers?: Record<string, string>;
+        aggregated?: boolean;
       }
     >({
-      query: ({ report_ids, lang, mode = "json" }) => ({
+      query: ({ report_ids, lang, mode = "json", row_numbers = {}, aggregated = true }) => ({
         url: `/export-excel/`,
         method: "POST",
-        body: { report_ids, lang, mode },
+        body: { report_ids, lang, mode, row_numbers, aggregated },
       }),
     }),
     PlanCreate: builder.mutation({

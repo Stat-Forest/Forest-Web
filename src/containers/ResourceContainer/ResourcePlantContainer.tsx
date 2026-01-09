@@ -21,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Custom Components
 import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
 import PlantTableColumn from "@/components/Table/RecurceTable/PlantTableColumn";
-import { exportToExcel } from "@/utils/exportToExcel";
 import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
@@ -303,48 +302,6 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
     }));
   }, [individualReports, activeLeafIds]);
 
-  // 🔹 Yangi: Export uchun ma'lumotlarni tayyorlash
-  const getExportData = () => {
-    if (!tableRef.current) {
-      alert("Jadval ma'lumotlari topilmadi!");
-      return null;
-    }
-
-    try {
-      // Header qatorlarini olish
-      const headerRows = tableRef.current.getHeaderRows?.() || [];
-
-      // Body ma'lumotlarini tayyorlash
-      const bodyRows = filteredRows.map((row: ReportRow, index: number) => {
-        const rowData = [index + 1]; // TR raqami
-
-        // Har bir row uchun report_items bo'yicha ma'lumotlarni yig'amiz
-        row.report_items?.forEach((reportItem: any) => {
-          reportItem.statement_columns?.forEach((col: any) => {
-            // Faqat active tabdagi columnlarni qo'shamiz
-            if (activeLeafIds.includes(col.statement_column_id)) {
-              // Agar innerlar bo'lsa, ularni qo'shamiz
-              if (col.inners && col.inners.length > 0) {
-                col.inners.forEach((inner: any) => {
-                  rowData.push(inner.value ?? "-");
-                });
-              } else {
-                rowData.push(col.value ?? "-");
-              }
-            }
-          });
-        });
-
-        return rowData;
-      });
-
-      return { headerRows, bodyRows };
-    } catch (error) {
-      console.error("Export data tayyorlashda xatolik:", error);
-      return null;
-    }
-  };
-
   // 🔹 Yangi: To'g'ri print funksiyasi
   const handlePrint = () => {
     if (tableRef.current) {
@@ -552,32 +509,6 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
     }
   };
 
-  // 🔹 Yangi: Excel export funksiyasi
-  const handleExportExcel = () => {
-    const exportData = getExportData();
-
-    if (!exportData) {
-      alert("Eksport qilish uchun ma'lumotlar topilmadi!");
-      return;
-    }
-
-    const { headerRows, bodyRows } = exportData;
-
-    if (headerRows.length === 0 || bodyRows.length === 0) {
-      alert("Eksport qilish uchun yetarli ma'lumotlar mavjud emas!");
-      return;
-    }
-
-    try {
-      const fileName = `${reportName}_${activeTab}_${new Date().toLocaleDateString(
-        "uz-UZ"
-      )}`;
-      exportToExcel(headerRows, bodyRows, fileName);
-    } catch (error) {
-      console.error("Excel export xatosi:", error);
-      alert("Excel faylni yuklab olishda xatolik yuz berdi!");
-    }
-  };
 
   // Skeleton Loading Components
   const TabSkeleton = () => (
@@ -732,8 +663,8 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
                         </button>
                       )}
                     <ExportDropdown
-                      onExportExcel={handleExportExcel}
                       onPrint={handlePrint}
+                      reportsData={tableRowsData}
                     />
                   </div>
 
