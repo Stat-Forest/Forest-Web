@@ -138,17 +138,28 @@ export const reportApi = createApi({
     getPlantsReport: builder.query<
       any,
       {
-        statement: string;
+        statement?: string;
         lang: string;
         parent: string;
         page: number;
         perPage: number;
       }
     >({
-      query: ({ statement, lang, parent, page, perPage }) => ({
-        url: `/plants/?statement=${statement}&lang=${lang}&parent=${parent}&page=${page}&per_page=${perPage}`,
-        method: "GET",
-      }),
+      query: ({ statement, lang, parent, page, perPage }) => {
+        const params = new URLSearchParams({
+          lang,
+          parent,
+          page: String(page),
+          per_page: String(perPage),
+        });
+        if (statement) {
+          params.append("statement", statement);
+        }
+        return {
+          url: `/plants/?${params.toString()}`,
+          method: "GET",
+        };
+      },
       providesTags: ["Reports"],
     }),
     getRepoblicReport: builder.query<any, void>({
