@@ -4,7 +4,9 @@ import InnersUpdate from "./InnersUpdate";
 import { useParams } from "react-router-dom";
 
 function UpdateReportItem() {
-  const { reportName } = useParams();
+  const { reportName: rawReportName } = useParams();
+  // Decode reportName in case it's URL encoded
+  const reportName = rawReportName ? decodeURIComponent(rawReportName) : "";
 
   if (
     reportName === "Xuquqbuzarlik" ||
@@ -15,6 +17,7 @@ function UpdateReportItem() {
   ) {
     return <InnersUpdate />;
   } else if (
+    reportName === "Ko'chat va Nihol" ||
     reportName === "Ko‘chat va Nihol" ||
     reportName === "Urug' xarakati Reja" ||
     reportName === "Посевной материал План" ||
