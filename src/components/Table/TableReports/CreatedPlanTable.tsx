@@ -157,8 +157,52 @@ function CreatedPlantable({
             {openRow === index && (
               <TableRow className="bg-gray-50 transition-all duration-300">
                 <TableCell colSpan={6} className="p-4">
+                  {/* Plants section (for "Daromad 1" statement) */}
+                  {item?.plants && Array.isArray(item.plants) && item.plants.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                        Plantlar:
+                      </h3>
+                      <div className="space-y-4">
+                        {item.plants.map((plant: any, plantIdx: number) => (
+                          <div
+                            key={plant.id || plantIdx}
+                            className="border rounded-lg p-4 bg-white shadow-sm"
+                          >
+                            <h4 className="text-md font-semibold text-gray-700 mb-3">
+                              Plant: {plant.plant_name || plant.plant || `Plant ${plantIdx + 1}`}
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                              {plant.items?.map((item: any, itemIdx: number) => (
+                                <div
+                                  key={item.id || itemIdx}
+                                  className="p-3 border rounded-md shadow-sm bg-ice"
+                                >
+                                  <p className="text-sm font-semibold text-gray-700 break-words whitespace-pre-wrap">
+                                    {item?.column_parent_name || item?.column_name || `Column ${itemIdx + 1}`}
+                                  </p>
+                                  <p className="text-base text-black break-words whitespace-pre-wrap">
+                                    {item.plan_value}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Plan items section (for other columns or regular plans) */}
+                  {item?.plan_items && Array.isArray(item.plan_items) && item.plan_items.length > 0 && (
+                    <div>
+                      {item?.plants && item.plants.length > 0 && (
+                        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                          Qolgan ustunlar:
+                        </h3>
+                      )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {item?.plan_items?.map((plan: any, idx: number) => (
+                        {item.plan_items.map((plan: any, idx: number) => (
                       <div
                         key={plan.id || idx}
                         className="p-3 border rounded-md shadow-sm bg-ice"
@@ -172,6 +216,16 @@ function CreatedPlantable({
                       </div>
                     ))}
                   </div>
+                    </div>
+                  )}
+
+                  {/* No data message */}
+                  {(!item?.plan_items || item.plan_items.length === 0) &&
+                    (!item?.plants || item.plants.length === 0) && (
+                      <div className="text-center text-gray-500 py-4">
+                        Ma'lumotlar topilmadi
+                      </div>
+                    )}
                 </TableCell>
               </TableRow>
             )}

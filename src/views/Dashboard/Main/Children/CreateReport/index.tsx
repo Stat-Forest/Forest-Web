@@ -299,10 +299,10 @@ function CreateReport() {
       }
     } else {
       // Regular validation for other statements (no "Daromad 1" columns)
-      if (Object.values(state.values).some((val) => val === "")) {
-        alert(t("must_fill_all"));
-        return;
-      }
+    if (Object.values(state.values).some((val) => val === "")) {
+      alert(t("must_fill_all"));
+      return;
+    }
     }
 
     // Build plan_items from other columns (not "Daromad 1")
@@ -454,24 +454,24 @@ function CreateReport() {
         {(state.statement ==
           "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
           state.statement == "671577ba-6a86-4619-b31c-86fff20ad305") && (
-            <div className="w-full">
-              <Label className="pb-1.5 text-md block">{t("season")}</Label>
-              <Select
-                value={state.season ?? ""}
-                onValueChange={(value) =>
-                  dispatch({ type: "SET_SEASON", payload: value })
-                }
-              >
-                <SelectTrigger className="w-full min-h-[45px]">
-                  <SelectValue placeholder={t("season")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={"spring"}>Bahor</SelectItem>
-                  <SelectItem value={"autumn"}>Kuz</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="w-full">
+            <Label className="pb-1.5 text-md block">{t("season")}</Label>
+            <Select
+              value={state.season ?? ""}
+              onValueChange={(value) =>
+                dispatch({ type: "SET_SEASON", payload: value })
+              }
+            >
+              <SelectTrigger className="w-full min-h-[45px]">
+                <SelectValue placeholder={t("season")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={"spring"}>Bahor</SelectItem>
+                <SelectItem value={"autumn"}>Kuz</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* PLAN COLUMNS */}
         {state.statement && (
@@ -529,20 +529,21 @@ function CreateReport() {
                             <SelectTrigger className="w-[300px]">
                               {/* SelectValue tanlangan item joriy page'da bo'lmasa label ko'rsatmaydi.
                                   Shuning uchun label'ni o'zimiz cache'dan chiqaramiz. */}
-                              <SelectValue className="hidden" />
-                              <span
-                                className={
-                                  !plant.plantId ? "text-muted-foreground" : ""
-                                }
-                              >
-                                {plant.plantId
-                                  ? getPlantLabel(plant.plantId)
-                                  : plantsLoading
-                                  ? t("loading")
-                                  : plantsError
-                                  ? t("loading_error")
-                                  : t("please_select") || "Plant tanlang"}
-                              </span>
+                              <SelectValue asChild>
+                                <span
+                                  className={
+                                    !plant.plantId ? "text-muted-foreground" : ""
+                                  }
+                                >
+                                  {plant.plantId
+                                    ? getPlantLabel(plant.plantId)
+                                    : plantsLoading
+                                    ? t("loading")
+                                    : plantsError
+                                    ? t("loading_error")
+                                    : t("please_select") || "Plant tanlang"}
+                                </span>
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {plantsLoading ? (
@@ -706,20 +707,20 @@ function CreateReport() {
                   </div>
                 ) : (
                   // Regular form for other statements - show all columns
-                  <div className="w-full overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("columnName")}</TableHead>
-                          <TableHead className="min-w-[300px]">
-                            {t("value")}
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {plan_cols.map((item: any, index: number) => (
-                          <TableRow key={index}>
-                            <TableCell className="whitespace-normal break-words">
+              <div className="w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("columnName")}</TableHead>
+                      <TableHead className="min-w-[300px]">
+                        {t("value")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {plan_cols.map((item: any, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell className="whitespace-normal break-words">
                               {item.parent || item.name}
                             </TableCell>
                             <TableCell>
@@ -760,22 +761,22 @@ function CreateReport() {
                             <TableRow key={index}>
                               <TableCell className="whitespace-normal break-words">
                                 {item.parent || item.name}
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  type="number"
-                                  value={state.values[item.id] || ""}
-                                  onChange={(e) =>
-                                    handleChange(item.id, e.target.value)
-                                  }
-                                  placeholder="Qiymat kiriting"
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={state.values[item.id] || ""}
+                            onChange={(e) =>
+                              handleChange(item.id, e.target.value)
+                            }
+                            placeholder="Qiymat kiriting"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
                   </div>
                 )}
               </>
@@ -808,14 +809,14 @@ function CreateReport() {
               )
             ) : (
               // For other statements
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="min-h-[40px] min-w-[130px] bg-[#3B82F6] text-md flex items-center gap-2"
-              >
-                {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
-                {t("submit")}
-              </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="min-h-[40px] min-w-[130px] bg-[#3B82F6] text-md flex items-center gap-2"
+            >
+              {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
+              {t("submit")}
+            </Button>
             )}
           </div>
         )}
