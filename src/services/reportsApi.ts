@@ -157,7 +157,7 @@ export const reportApi = createApi({
         }
         return {
           url: `/plants/?${params.toString()}`,
-          method: "GET",
+        method: "GET",
         };
       },
       providesTags: ["Reports"],

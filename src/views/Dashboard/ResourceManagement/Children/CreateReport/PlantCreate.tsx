@@ -734,16 +734,17 @@ function PlantCreate() {
                       <SelectTrigger className="w-[300px]">
                         {/* SelectValue tanlangan item joriy page'da bo'lmasa label ko'rsatmaydi.
                             Shuning uchun label'ni o'zimiz cache'dan chiqaramiz. */}
-                        <SelectValue className="hidden" />
-                        <span className={!form.plantId ? "text-muted-foreground" : ""}>
-                          {form.plantId
-                            ? getPlantLabel(form.plantId)
-                            : plantsLoading
-                            ? t("loading")
-                            : plantsError
-                            ? t("loading_error")
-                            : t("please_select")}
-                        </span>
+                        <SelectValue asChild>
+                          <span className={!form.plantId ? "text-muted-foreground" : ""}>
+                            {form.plantId
+                              ? getPlantLabel(form.plantId)
+                              : plantsLoading
+                              ? t("loading")
+                              : plantsError
+                              ? t("loading_error")
+                              : t("please_select")}
+                          </span>
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {plantsLoading ? (
