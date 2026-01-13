@@ -8,9 +8,64 @@ import {
 } from "@/components/ui/accordion";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { useGetHandbooksQuery } from "@/services/generalApi";
 
 function SupportInformation() {
   const { t } = useTranslation();
+  const { data: handbooksData, isLoading: handbooksLoading } = useGetHandbooksQuery();
+
+  const handleDownload = async (handbook: any) => {
+    if (!handbook.file_url) {
+      alert("Fayl manzili topilmadi!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("access_token");
+
+      // 🔹 Agar URL http bo'lsa, avtomatik https ga o'zgartirish
+      let fileUrl = handbook.file_url;
+      if (fileUrl.startsWith("http://")) {
+        fileUrl = fileUrl.replace("http://", "https://");
+      }
+
+      const response = await fetch(fileUrl, {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server xatosi: ${response.status}`);
+      }
+
+      // Faylni blob sifatida olish
+      const blob = await response.blob();
+
+      // Fayl nomini olish
+      const fileExtension =
+        handbook.file_url.split(".").pop()?.split("?")[0] || "pdf";
+      const fileName = `${handbook.name || "document"}.${fileExtension}`;
+
+      // Yuklash uchun link yaratish
+      const a = document.createElement("a");
+      a.href = window.URL.createObjectURL(blob);
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // URLni tozalash
+      window.URL.revokeObjectURL(a.href);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert(
+        "Faylni yuklab bo'lmadi. Iltimos, brauzer konsolini tekshiring yoki administrator bilan bog'laning."
+      );
+    }
+  };
 
   return (
     <div className="pt-2 px-4">
@@ -42,6 +97,22 @@ function SupportInformation() {
           </AccordionTrigger>
           <AccordionContent className="text-lg text-gray-700 pl-2">
             <p>{t("item_68")}</p>
+            {handbooksLoading ? (
+              <p className="mt-2 text-gray-500">Yuklanmoqda...</p>
+            ) : handbooksData?.results && handbooksData.results.length > 0 ? (
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                {handbooksData.results.map((handbook: any) => (
+                  <li key={handbook.id}>
+                    <button
+                      onClick={() => handleDownload(handbook)}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                    >
+                      {handbook.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </AccordionContent>
         </AccordionItem>
 
