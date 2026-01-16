@@ -107,7 +107,7 @@ function SupportInformation() {
                       onClick={() => handleDownload(handbook)}
                       className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
                     >
-                      {handbook.name}
+                    {handbook.name}
                     </button>
                   </li>
                 ))}
