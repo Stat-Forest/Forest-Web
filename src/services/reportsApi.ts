@@ -47,13 +47,19 @@ export const reportApi = createApi({
         page: number;
         perPage: number;
         statement__period: string;
-        is_new_deadline: string;
+        is_new_deadline?: string;
       }
     >({
-      query: ({ statement, page, perPage, statement__period, is_new_deadline }) => ({
-        url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}&is_new_deadline=${is_new_deadline}`,
-        method: "GET",
-      }),
+      query: ({ statement, page, perPage, statement__period, is_new_deadline }) => {
+        let url = `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}`;
+        if (is_new_deadline) {
+          url += `&is_new_deadline=${is_new_deadline}`;
+        }
+        return {
+          url,
+          method: "GET",
+        };
+      },
       providesTags: ["Reports"],
     }),
     getExpiredDeadlinesReport: builder.query<
