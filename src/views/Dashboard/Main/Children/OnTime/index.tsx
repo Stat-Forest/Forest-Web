@@ -34,6 +34,7 @@ function OnTime() {
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,
+    time_status:"on_time"
   });
   const {
     data: statement,

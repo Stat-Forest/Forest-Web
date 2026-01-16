@@ -82,7 +82,7 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_1")}</h2>
             <span className="text-[22px] font-semibold text-yellow-600">
-              {dashboard_data?.sent_reports || 0} ta
+              {dashboard_data?.sent_reports || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -100,7 +100,7 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_2")}</h2>
             <span className="text-[22px] font-semibold text-red-700">
-              {dashboard_data?.returned_reports || 0} ta
+              {dashboard_data?.returned_reports || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -118,7 +118,7 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_3")}</h2>
             <span className="text-[22px] font-semibold text-blue-700">
-              {dashboard_data?.accepted_reports || 0} ta
+              {dashboard_data?.accepted_reports || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -136,7 +136,7 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_4")}</h2>
             <span className="text-[22px] font-semibold text-gray-800">
-              {dashboard_data?.responsible_users || 0} ta
+              {dashboard_data?.responsible_users || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -154,7 +154,7 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_5")}</h2>
             <span className="text-[22px] font-semibold text-blue-700">
-              {dashboard_data?.draft_reports || 0} ta
+              {dashboard_data?.draft_reports || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -172,7 +172,7 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_6")}</h2>
             <span className="text-[22px] font-semibold text-blue-700">
-              {dashboard_data?.deadlines || 0} ta
+              {dashboard_data?.deadlines || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -209,14 +209,14 @@ function MainContainer() {
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
             <span className="text-[22px] font-semibold text-orange-800">
-              {dashboard_data?.plans || 0} ta
+              {dashboard_data?.plans || 0} {t("count")}
             </span>
           </div>
         </div>
 
 
       </div>
-      {/* <hr className="my-4 mx-4" />
+      <hr className="my-4 mx-4" />
       <div className="grid grid-cols-3 gap-5 py-4 px-2">
         <div
           data-aos="fade-up"
@@ -224,29 +224,13 @@ function MainContainer() {
           onClick={() => navigate("/main/on-time")}
           className={cardClasses}
         >
-          <div className="bg-orange-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+          <div className="bg-green-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
             <NotebookText color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
-            <span className="text-[22px] font-semibold text-orange-800">
-              {dashboard_data?.plans || 0} ta
-            </span>
-          </div>
-        </div>
-        <div
-          data-aos="fade-up"
-          data-aos-delay="560"
-          onClick={() => navigate("/main/late")}
-          className={cardClasses}
-        >
-          <div className="bg-orange-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <NotebookText color="white" size={25} />
-          </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
-            <span className="text-[22px] font-semibold text-orange-800">
-              {dashboard_data?.plans || 0} ta
+            <h2 className="font-medium text-[22px] text-gray-800">Bajarilgan</h2>
+            <span className="text-[22px] font-semibold text-green-800">
+              {dashboard_data?.on_time_reports || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -256,17 +240,34 @@ function MainContainer() {
           onClick={() => navigate("/main/expired-deadlines")}
           className={cardClasses}
         >
-          <div className="bg-orange-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+          <div className="bg-yellow-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
             <NotebookText color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
-            <span className="text-[22px] font-semibold text-orange-800">
-              {dashboard_data?.plans || 0} ta
+            <h2 className="font-medium text-[22px] text-gray-800">{t("item_17")}</h2>
+            <span className="text-[22px] font-semibold text-yellow-800">
+              {dashboard_data?.expired_deadlines || 0} {t("count")}
             </span>
           </div>
         </div>
-      </div> */}
+        <div
+          data-aos="fade-up"
+          data-aos-delay="560"
+          onClick={() => navigate("/main/late")}
+          className={cardClasses}
+        >
+          <div className="bg-red-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+            <NotebookText color="white" size={25} />
+          </div>
+          <div>
+            <h2 className="font-medium text-[22px] text-gray-800">Bajarilmagan</h2>
+            <span className="text-[22px] font-semibold text-red-800">
+              {dashboard_data?.late_reports || 0} {t("count")}
+            </span>
+          </div>
+        </div>
+       
+      </div>
     </>
   );
 }

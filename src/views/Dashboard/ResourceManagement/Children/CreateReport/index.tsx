@@ -32,7 +32,8 @@ function CreateReportItem() {
     reportName === "Shakl 10-O‘X" ||
     reportName === "Форма 10-Ох" ||
     reportName === "Shakl 11-O‘X" ||
-    reportName === "Форма 11-Ох"
+    reportName === "Форма 11-Ох" || 
+    reportName === "Daromad 1"
   ) {
     return <PlantCreate />;
   } else {

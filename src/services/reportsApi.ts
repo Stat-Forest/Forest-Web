@@ -17,7 +17,7 @@ export const reportApi = createApi({
         organization__region: string;
         statement__period: string;
         search: string;
-        // time_status?: string;
+        time_status?: string;
       }
     >({
       query: ({
@@ -26,9 +26,9 @@ export const reportApi = createApi({
         organization__region,
         statement__period,
         search,
-        // time_status,
+        time_status,
       }) =>
-        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}`,
+        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&time_status=${time_status}`,
       providesTags: ["Reports"],
     }),
 
@@ -47,10 +47,11 @@ export const reportApi = createApi({
         page: number;
         perPage: number;
         statement__period: string;
+        is_new_deadline: string;
       }
     >({
-      query: ({ statement, page, perPage, statement__period }) => ({
-        url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}`,
+      query: ({ statement, page, perPage, statement__period, is_new_deadline }) => ({
+        url: `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}&is_new_deadline=${is_new_deadline}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -151,10 +152,8 @@ export const reportApi = createApi({
           parent,
           page: String(page),
           per_page: String(perPage),
+          statement: statement || "",
         });
-        if (statement) {
-          params.append("statement", statement);
-        }
         return {
           url: `/plants/?${params.toString()}`,
         method: "GET",
@@ -213,12 +212,16 @@ export const reportApi = createApi({
         year: string;
         column: string;
         season?: string | null;
+        plant_id?: string;
       }
     >({
-      query: ({ organization_id, statement_id, year, column, season }) => {
+      query: ({ organization_id, statement_id, year, column, season, plant_id }) => {
         let url = `/plan-items/?organization=${organization_id}&column=${column}&statement=${statement_id}&year=${year}`;
         if (season) {
           url += `&plan__season=${season}`;
+        }
+        if (plant_id) {
+          url += `&plant=${plant_id}`;
         }
         return {
           url,
@@ -307,6 +310,22 @@ export const reportApi = createApi({
     >({
       query: ({ report_ids, lang, mode = "json", row_numbers = {}, aggregated = true }) => ({
         url: `/export-excel/`,
+        method: "POST",
+        body: { report_ids, lang, mode, row_numbers, aggregated },
+      }),
+    }),
+    exportPdf: builder.mutation<
+      any,
+      {
+        report_ids: string[];
+        lang: string;
+        mode?: string;
+        row_numbers?: Record<string, string>;
+        aggregated?: boolean;
+      }
+    >({
+      query: ({ report_ids, lang, mode = "json", row_numbers = {}, aggregated = true }) => ({
+        url: `/export-pdf/`,
         method: "POST",
         body: { report_ids, lang, mode, row_numbers, aggregated },
       }),
@@ -446,6 +465,7 @@ export const {
   useAcceptReportMutation,
   usePlantCreateMutation,
   useExportExcelMutation,
+  useExportPdfMutation,
 
   // PUT
   useUpdateReportMutation,
