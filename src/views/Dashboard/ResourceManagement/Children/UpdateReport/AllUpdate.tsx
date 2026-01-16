@@ -119,6 +119,7 @@ function AllUpdateReportItem() {
       page: deadlinePage,
       perPage,
       statement__period: "",
+      is_new_deadline:"false"
     },
     { skip: !reportIds }
   );

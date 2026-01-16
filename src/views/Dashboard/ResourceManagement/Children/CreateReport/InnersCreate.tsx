@@ -90,7 +90,8 @@ function InnersCreateReportItem() {
       statement: reportIds as string,
       page: deadlinePage,
       perPage,
-      statement__period: "",
+      statement__period: "", 
+      is_new_deadline:"false"
     },
     { skip: !reportIds }
   );

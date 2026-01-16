@@ -213,5 +213,8 @@
   "toshkent_shahri": "Город Ташкент",
   "toshkent_viloyati": "Ташкентская область",
   "respublika_tashkilotlari": "Республиканские организации",
-  "count":""
+  "count":"",
+  "completed": "Выполненные",
+  "not_completed": "Не выполненные",
+  "late": "Просроченные"
 }

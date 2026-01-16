@@ -233,5 +233,5 @@
   "count":"ta",
   "completed": "Bajarilgan",
   "not_completed": "Bajarilmagan",
-  "expired_deadlines": "Muddatidan kech bajarilgan"
+  "late": "Muddatidan kech bajarilgan"
 }
