@@ -121,6 +121,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
         page: deadlinePage,
         perPage,
         statement__period: "",
+        is_new_deadline:"true"
       },
       { skip: !id }
     );
@@ -291,20 +292,20 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   }, [individualReports, activeLeafIds]);
 
 
-  // 🔹 Yangi: To'g'ri print funksiyasi
-  const handlePrint = () => {
-    if (tableRef.current) {
-      const printContents =
-        tableRef.current.getPrintableTable?.() || tableRef.current.getTable?.();
+  // 🔹 Print HTML yaratish funksiyasi (PDF export uchun ham ishlatiladi)
+  const getPrintHTML = (): string => {
+    if (!tableRef.current) {
+      return "";
+    }
 
-      if (!printContents) {
-        alert("Chop etish uchun ma'lumotlar topilmadi!");
-        return;
-      }
+    const printContents =
+      tableRef.current.getPrintableTable?.() || tableRef.current.getTable?.();
 
-      const printWindow = window.open("", "_blank", "width=1200,height=800");
-      if (printWindow) {
-        printWindow.document.write(`
+    if (!printContents) {
+      return "";
+    }
+
+    return `
           <!DOCTYPE html>
           <html>
             <head>
@@ -488,13 +489,26 @@ function ResourceContainer({ reportName }: { reportName: string }) {
               </script>
             </body>
           </html>
-        `);
-        printWindow.document.close();
-      } else {
-        alert(
-          "Pop-up bloklandi. Iltimas, brauzeringizda pop-up'larni ruxsat bering."
-        );
-      }
+        `;
+  };
+
+  // 🔹 Yangi: To'g'ri print funksiyasi
+  const handlePrint = () => {
+    const printHTML = getPrintHTML();
+    
+    if (!printHTML) {
+      alert("Chop etish uchun ma'lumotlar topilmadi!");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=1200,height=800");
+    if (printWindow) {
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+    } else {
+      alert(
+        "Pop-up bloklandi. Iltimas, brauzeringizda pop-up'larni ruxsat bering."
+      );
     }
   };
 
@@ -652,8 +666,12 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                         </button>
                       )}
                     <ExportDropdown
+                      tableRef={tableRef}
                       onPrint={handlePrint}
                       reportsData={tableRowsData}
+                      reportName={reportName}
+                      activeTab={activeTab}
+                      getPrintHTML={getPrintHTML}
                     />
                   </div>
 

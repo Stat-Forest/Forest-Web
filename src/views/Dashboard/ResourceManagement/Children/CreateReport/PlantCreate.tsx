@@ -165,6 +165,7 @@ function PlantCreate() {
       page: state.deadlinePage,
       perPage: deadlinePerPage,
       statement__period: "",
+      is_new_deadline:"false"
     },
     { skip: !reportIds }
   );

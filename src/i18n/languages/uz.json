@@ -229,5 +229,9 @@
   "all_regions": "Barcha regionlar",
   "toshkent_shahri": "Toshkent shahri",
   "toshkent_viloyati": "Toshkent viloyati",
-  "respublika_tashkilotlari": "Respublika tashkilotlari"
+  "respublika_tashkilotlari": "Respublika tashkilotlari",
+  "count":"ta",
+  "completed": "Bajarilgan",
+  "not_completed": "Bajarilmagan",
+  "expired_deadlines": "Muddatidan kech bajarilgan"
 }

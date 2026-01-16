@@ -327,7 +327,7 @@ function UpdatePlans() {
 
   // ==== Fill initial data when editing ====
   useEffect(() => {
-    if (existingPlan) {
+    if (existingPlan && plan_cols.length > 0) {
       // Debug: log existingPlan structure
       if (process.env.NODE_ENV === "development") {
         console.log("existingPlan:", existingPlan);
@@ -345,11 +345,71 @@ function UpdatePlans() {
       // API returns plant_plans, not plants
       if (existingPlan.plant_plans && Array.isArray(existingPlan.plant_plans) && existingPlan.plant_plans.length > 0) {
         // This is a "Daromad 1" plan with plants
+        // Create a mapping from API column IDs to form column IDs
+        // API uses column_id, form uses id
+        const columnIdMap = new Map<string, string>();
+        const columnNameMap = new Map<string, string>(); // Map by column name as fallback
+        
+        plan_cols.forEach((col: any) => {
+          // Map by column_id if it exists, otherwise use id directly
+          if (col.column_id) {
+            columnIdMap.set(col.column_id, col.id);
+          }
+          // Also map id to id (in case API uses id directly)
+          columnIdMap.set(col.id, col.id);
+          
+          // Map by column name for fallback matching
+          const colName = (col.name || col.parent || col.title || "").toLowerCase().trim();
+          if (colName) {
+            columnNameMap.set(colName, col.id);
+          }
+        });
+
         const plantsData = existingPlan.plant_plans.map((plant: any) => {
           const plantValues: Record<string, string> = {};
           if (plant.items && Array.isArray(plant.items)) {
             plant.items.forEach((item: any) => {
-              plantValues[item.column_id || item.column] = String(item.plan_value ?? "");
+              // Get API column ID
+              const apiColumnId = item.column_id || item.column;
+              let formColumnId: string | undefined;
+              
+              if (apiColumnId) {
+                // First try: direct ID mapping
+                formColumnId = columnIdMap.get(apiColumnId);
+                
+                // Second try: if not found, try to find by column name (if item has column_name)
+                if (!formColumnId && item.column_name) {
+                  const normalizedApiName = item.column_name.toLowerCase().trim();
+                  formColumnId = columnNameMap.get(normalizedApiName);
+                  
+                  // Also try partial matching
+                  if (!formColumnId) {
+                    for (const [colName, colId] of columnNameMap.entries()) {
+                      if (normalizedApiName.includes(colName) || colName.includes(normalizedApiName)) {
+                        formColumnId = colId;
+                        break;
+                      }
+                    }
+                  }
+                }
+                
+                // Fallback: use API column ID directly
+                if (!formColumnId) {
+                  formColumnId = apiColumnId;
+                }
+                
+                if (formColumnId) {
+                  plantValues[formColumnId] = String(item.plan_value ?? "");
+                  
+                  if (process.env.NODE_ENV === "development") {
+                    console.log(`DEBUG: Mapping plant value - API column: ${apiColumnId}, Form column: ${formColumnId}, Value: ${item.plan_value}`);
+                  }
+                } else {
+                  if (process.env.NODE_ENV === "development") {
+                    console.warn(`DEBUG: Could not map plant value - API column: ${apiColumnId}, Available form columns:`, plan_cols.map((c: any) => ({ id: c.id, column_id: c.column_id, name: c.name || c.parent || c.title })));
+                  }
+                }
+              }
             });
           }
           return {
@@ -363,14 +423,101 @@ function UpdatePlans() {
         // Fill other columns from plan_items
         if (existingPlan.plan_items && Array.isArray(existingPlan.plan_items)) {
           existingPlan.plan_items.forEach((item: any) => {
-            initialValues[item.column_id || item.column] = String(item.plan_value ?? "");
+            const apiColumnId = item.column_id || item.column;
+            let formColumnId: string | undefined;
+            
+            if (apiColumnId) {
+              // First try: direct ID mapping
+              formColumnId = columnIdMap.get(apiColumnId);
+              
+              // Second try: if not found, try to find by column name (if item has column_name)
+              if (!formColumnId && item.column_name) {
+                const normalizedApiName = item.column_name.toLowerCase().trim();
+                formColumnId = columnNameMap.get(normalizedApiName);
+                
+                // Also try partial matching
+                if (!formColumnId) {
+                  for (const [colName, colId] of columnNameMap.entries()) {
+                    if (normalizedApiName.includes(colName) || colName.includes(normalizedApiName)) {
+                      formColumnId = colId;
+                      break;
+                    }
+                  }
+                }
+              }
+              
+              // Fallback: use API column ID directly
+              if (!formColumnId) {
+                formColumnId = apiColumnId;
+              }
+              
+              if (formColumnId) {
+                initialValues[formColumnId] = String(item.plan_value ?? "");
+                
+                if (process.env.NODE_ENV === "development") {
+                  console.log(`DEBUG: Mapping plan_item value - API column: ${apiColumnId}, Form column: ${formColumnId}, Value: ${item.plan_value}`);
+                }
+              }
+            }
           });
         }
       } else {
         // Regular plan without plants
+        // Create a mapping from API column IDs to form column IDs
+        const columnIdMap = new Map<string, string>();
+        const columnNameMap = new Map<string, string>(); // Map by column name as fallback
+        
+        plan_cols.forEach((col: any) => {
+          if (col.column_id) {
+            columnIdMap.set(col.column_id, col.id);
+          }
+          columnIdMap.set(col.id, col.id);
+          
+          // Map by column name for fallback matching
+          const colName = (col.name || col.parent || col.title || "").toLowerCase().trim();
+          if (colName) {
+            columnNameMap.set(colName, col.id);
+          }
+        });
+
         if (existingPlan.plan_items && Array.isArray(existingPlan.plan_items)) {
       existingPlan.plan_items.forEach((item: any) => {
-            initialValues[item.column_id || item.column] = String(item.plan_value ?? "");
+            const apiColumnId = item.column_id || item.column;
+            let formColumnId: string | undefined;
+            
+            if (apiColumnId) {
+              // First try: direct ID mapping
+              formColumnId = columnIdMap.get(apiColumnId);
+              
+              // Second try: if not found, try to find by column name (if item has column_name)
+              if (!formColumnId && item.column_name) {
+                const normalizedApiName = item.column_name.toLowerCase().trim();
+                formColumnId = columnNameMap.get(normalizedApiName);
+                
+                // Also try partial matching
+                if (!formColumnId) {
+                  for (const [colName, colId] of columnNameMap.entries()) {
+                    if (normalizedApiName.includes(colName) || colName.includes(normalizedApiName)) {
+                      formColumnId = colId;
+                      break;
+                    }
+                  }
+                }
+              }
+              
+              // Fallback: use API column ID directly
+              if (!formColumnId) {
+                formColumnId = apiColumnId;
+              }
+              
+              if (formColumnId) {
+                initialValues[formColumnId] = String(item.plan_value ?? "");
+                
+                if (process.env.NODE_ENV === "development") {
+                  console.log(`DEBUG: Mapping regular plan_item value - API column: ${apiColumnId}, Form column: ${formColumnId}, Value: ${item.plan_value}`);
+                }
+              }
+            }
           });
         }
         setSelectedPlants([{ plantId: "", plantName: "", values: {} }]);
@@ -398,7 +545,7 @@ function UpdatePlans() {
         },
       });
     }
-  }, [existingPlan]);
+  }, [existingPlan, plan_cols]);
 
   // Filter organizations for search
   const filteredOrganizations = organization?.filter((item: any) =>

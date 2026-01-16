@@ -135,18 +135,23 @@ function CreateReport() {
     };
   }, [plan_cols]);
 
-  // Get plants data - always fetch (statement not required)
+  // Get plants data - only fetch when statement is selected
   const plantsPerPage = 5;
   const {
     data: plantsData,
     isLoading: plantsLoading,
     error: plantsError,
-  } = useGetPlantsReportQuery({
-    lang,
-    parent: "",
-    page: plantsPage,
-    perPage: plantsPerPage,
-  });
+  } = useGetPlantsReportQuery(
+    state.statement
+      ? {
+          lang,
+          parent: "",
+          page: plantsPage,
+          perPage: plantsPerPage,
+          statement: state.statement,
+        }
+      : skipToken
+  );
 
   // 🔹 PlantsData kelgan sayin plant nomlarini cache'ga qo'shib boramiz (pagination almashganda ham tanlanganlar ko'rinib turadi)
   useEffect(() => {
@@ -254,7 +259,11 @@ function CreateReport() {
     } else if (selectedPlants.length === 0) {
       setSelectedPlants([{ plantId: "", plantName: "", values: {} }]);
     }
-  }, [isDaromad1, selectedPlants.length]);
+    // Reset plants page when statement changes
+    if (state.statement) {
+      setPlantsPage(1);
+    }
+  }, [isDaromad1, selectedPlants.length, state.statement]);
 
   const resetForm = () => {
     dispatch({ type: "RESET_FORM" });
