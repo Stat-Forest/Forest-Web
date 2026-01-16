@@ -27,8 +27,14 @@ export const reportApi = createApi({
         statement__period,
         search,
         time_status,
-      }) =>
-        `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&time_status=${time_status}`,
+      }) => {
+        let url = `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}`;
+        // Faqat late_reports va ontime_reports uchun time_status parametrini qo'shish
+        if (time_status) {
+          url += `&time_status=${time_status}`;
+        }
+        return url;
+      },
       providesTags: ["Reports"],
     }),
 

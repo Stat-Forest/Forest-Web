@@ -228,25 +228,11 @@ function MainContainer() {
             <NotebookText color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">Bajarilgan</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("completed")}
+            </h2>
             <span className="text-[22px] font-semibold text-green-800">
               {dashboard_data?.on_time_reports || 0} {t("count")}
-            </span>
-          </div>
-        </div>
-        <div
-          data-aos="fade-up"
-          data-aos-delay="560"
-          onClick={() => navigate("/main/expired-deadlines")}
-          className={cardClasses}
-        >
-          <div className="bg-yellow-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <NotebookText color="white" size={25} />
-          </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_17")}</h2>
-            <span className="text-[22px] font-semibold text-yellow-800">
-              {dashboard_data?.expired_deadlines || 0} {t("count")}
             </span>
           </div>
         </div>
@@ -256,13 +242,30 @@ function MainContainer() {
           onClick={() => navigate("/main/late")}
           className={cardClasses}
         >
+          <div className="bg-yellow-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
+            <NotebookText color="white" size={25} />
+          </div>
+          <div>
+            <h2 className="font-medium text-[22px] text-gray-800">{t("late")}</h2>
+            <span className="text-[22px] font-semibold text-yellow-800">
+              {dashboard_data?.late_reports || 0} {t("count")}
+            </span>
+          </div>
+        </div>
+        <div
+          data-aos="fade-up"
+          data-aos-delay="560"
+          onClick={() => navigate("/main/expired-deadlines")}
+          className={cardClasses}
+        >
           <div className="bg-red-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
             <NotebookText color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">Bajarilmagan</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">{t("not_completed")}</h2>
             <span className="text-[22px] font-semibold text-red-800">
-              {dashboard_data?.late_reports || 0} {t("count")}
+            {dashboard_data?.expired_deadlines || 0} {t("count")}
+              
             </span>
           </div>
         </div>
