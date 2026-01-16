@@ -34,6 +34,7 @@ function Lated() {
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,
+    time_status:"late"
   });
   const {
     data: statement,
