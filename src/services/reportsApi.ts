@@ -216,7 +216,7 @@ export const reportApi = createApi({
       }
     >({
       query: ({ organization_id, statement_id, year, column, season }) => {
-        let url = `/plan-items/?plan__organization=${organization_id}&column=${column}&plan__statement=${statement_id}&plan__year=${year}`;
+        let url = `/plan-items/?organization=${organization_id}&column=${column}&statement=${statement_id}&year=${year}`;
         if (season) {
           url += `&plan__season=${season}`;
         }
