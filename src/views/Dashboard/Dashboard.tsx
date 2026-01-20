@@ -94,13 +94,13 @@ function Dashboard() {
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
         {isOpen && (
-          <div className="w-[310px] fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
+          <div className="w-[320px] fixed top-0 bottom-0 left-0 z-[99] shadow-sm">
             <Sidebar />
           </div>
         )}
 
         {/* Main content */}
-        <div className={`flex-1 ${isOpen ? "ml-[310px]" : "ml-0"} overflow-y-auto relative`}>
+        <div className={`flex-1 ${isOpen ? "ml-[320px]" : "ml-0"} overflow-y-auto relative`}>
           <ScrollToTop />
           <Header onLogout={handleLogout} />
           

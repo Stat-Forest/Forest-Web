@@ -128,7 +128,7 @@ function LandDocumentCreate() {
         </div>
       </div>
 
-      {/* Form Section */}
+      {/* Formula bo'limi */}
       <Card>
         <CardHeader>
           <CardTitle>Hujjat Ma'lumotlari</CardTitle>

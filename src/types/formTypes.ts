@@ -1,4 +1,4 @@
-// CreateReport va UpdatePlans uchun form types
+// CreateReport va UpdatePlans uchun formula turlari
 
 export interface CreateReportFormState {
   selectedOrg: string | null;

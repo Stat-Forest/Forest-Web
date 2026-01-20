@@ -398,12 +398,7 @@ body {
 
 /* Sidebar qish vibe uchun qo'shimcha stillar */
 .sidebar-gradient {
-  background: linear-gradient(
-    180deg,
-    rgba(59, 130, 246, 0.15) 0%,
-    rgba(37, 99, 235, 0.1) 50%,
-    rgba(59, 130, 246, 0.15) 100%
-  );
+  background: white;
 }
 
 .sidebar-menu-item {

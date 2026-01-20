@@ -501,7 +501,7 @@ function CreateReport() {
                   </div>
                 )}
                 {isDaromad1 ? (
-                  // Plant-based form for "Daromad 1"
+                  // O'simlik asosidagi formula "Daromad 1" uchun
                   <div className="w-full space-y-4">
                     {selectedPlants.map((plant, plantIndex) => (
                       <div
@@ -715,7 +715,7 @@ function CreateReport() {
                     </Button>
                   </div>
                 ) : (
-                  // Regular form for other statements - show all columns
+                  // Oddiy formula boshqa statementlar uchun - barcha ustunlarni ko'rsatish
               <div className="w-full overflow-x-auto">
                 <Table>
                   <TableHeader>

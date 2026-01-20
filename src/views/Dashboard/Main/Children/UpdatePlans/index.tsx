@@ -345,8 +345,8 @@ function UpdatePlans() {
       // API returns plant_plans, not plants
       if (existingPlan.plant_plans && Array.isArray(existingPlan.plant_plans) && existingPlan.plant_plans.length > 0) {
         // This is a "Daromad 1" plan with plants
-        // Create a mapping from API column IDs to form column IDs
-        // API uses column_id, form uses id
+        // API column ID laridan formula column ID lariga mapping yaratish
+        // API column_id ishlatadi, formula id ishlatadi
         const columnIdMap = new Map<string, string>();
         const columnNameMap = new Map<string, string>(); // Map by column name as fallback
         
@@ -463,7 +463,7 @@ function UpdatePlans() {
         }
       } else {
         // Regular plan without plants
-        // Create a mapping from API column IDs to form column IDs
+        // API column ID laridan formula column ID lariga mapping yaratish
         const columnIdMap = new Map<string, string>();
         const columnNameMap = new Map<string, string>(); // Map by column name as fallback
         
@@ -814,7 +814,7 @@ function UpdatePlans() {
             ) : plan_cols.length > 0 ? (
               <>
                 {isDaromad1 ? (
-                  // Plant-based form for "Daromad 1"
+                  // O'simlik asosidagi formula "Daromad 1" uchun
                   <div className="w-full space-y-4">
                     {selectedPlants.map((plant, plantIndex) => (
                       <div
@@ -1034,7 +1034,7 @@ function UpdatePlans() {
                     </Button>
                   </div>
                 ) : (
-                  // Regular form for other statements
+                  // Oddiy formula boshqa statementlar uchun
               <div className="w-full overflow-x-auto">
                 <h2 className="text-xl font-semibold my-4">Reja qiymatlari</h2>
                 <Table>

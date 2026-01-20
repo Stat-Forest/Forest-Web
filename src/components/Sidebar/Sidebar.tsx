@@ -41,7 +41,7 @@ function Sidebar() {
 
   if (sidebarLoading || userLoading) {
     return (
-      <div className="w-[310px] h-screen flex justify-center items-center">
+      <div className="w-[320px] h-screen flex justify-center items-center">
         <h2 className="text-lg font-bold">{t("loading")}...</h2>
       </div>
     );
@@ -49,7 +49,7 @@ function Sidebar() {
 
   if (sidebarError || userError) {
     return (
-      <div className="w-[310px] h-screen flex justify-center items-center">
+      <div className="w-[320px] h-screen flex justify-center items-center">
         <h2 className="text-lg font-bold text-red-500">{t("error")}</h2>
       </div>
     );
@@ -80,7 +80,7 @@ function Sidebar() {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="ml-[310px] bg-ice backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-white/20 shadow-2xl z-[100]"
+            className="ml-[320px] bg-ice backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-white/20 shadow-2xl z-[100]"
           >
             <SheetHeader className="bg-gradient-to-r from-blue-600/30 via-blue-500/25 to-blue-400/30 rounded-lg p-4 border border-white/30 shadow-md mb-4">
               <SheetTitle className="text-gray-900 font-bold text-lg">
@@ -133,7 +133,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-[310px] h-screen overflow-y-auto p-4 bg-ice sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-white/20 shadow-2xl">
+    <div className="w-[320px] h-screen overflow-y-auto p-4 bg-ice sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-white/20 shadow-2xl">
       <div>
         {/* Header */}
         <div className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 backdrop-blur-sm shadow-lg border border-white/20">

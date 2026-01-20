@@ -180,7 +180,7 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
     { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
   );
 
-  // ✅ Plant detail query - faqat selectedRow.id mavjud bo'lganda so'rov yuboriladi
+  // ✅ O'simlik tafsilotlari so'rovi - faqat selectedRow.id mavjud bo'lganda so'rov yuboriladi
   const {
     data: _plantById,
     isLoading: isPlantByIdLoading,

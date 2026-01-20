@@ -1,4 +1,4 @@
-// PlantCreate uchun form types
+// PlantCreate uchun formula turlari
 
 export interface EmptyColumn {
   id: string;

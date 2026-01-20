@@ -247,13 +247,13 @@ function InnersCreateReportItem() {
 
       let inners;
       if (isOrganizationColumn) {
-        // ❗ faqat bitta inners (birinchi formdan)
+        // ❗ faqat bitta inners (birinchi formuladan)
         inners = [{ id: col.id, value: selectedOrganizationId || "" }];
       } else if (isRejaColumn) {
         // Plan qiymatini olish
         const planItem = planItems.find((item) => item.columnId === col.id);
         const planValue = planItem ? planItem.plan_value : "";
-        // Plan qiymatini barcha form'lar uchun bir xil qilish
+        // Plan qiymatini barcha formulalar uchun bir xil qilish
         inners = formGroups.map(() => ({
           id: col.id,
           value: planValue,
@@ -492,7 +492,7 @@ function InnersCreateReportItem() {
                 const lowerTitle = col.title.toLowerCase();
 
                 if (lowerTitle.includes("tashkilot")) {
-                  if (formIndex !== 0) return null; // ❗ faqat birinchi formda ko‘rinadi
+                  if (formIndex !== 0) return null; // ❗ faqat birinchi formulada ko‘rinadi
                   return (
                     <TableRow key={col.id}>
                       <TableCell className="whitespace-normal break-words">
@@ -569,7 +569,7 @@ function InnersCreateReportItem() {
         </div>
       ))}
 
-      {/* ✅ ADD FORM BUTTON (PlantCreate dagi kabi) */}
+      {/* ✅ FORMULA QO'SHISH TUGMASI (PlantCreate dagi kabi) */}
       <div className="flex justify-center">
         <Button
           type="button"
