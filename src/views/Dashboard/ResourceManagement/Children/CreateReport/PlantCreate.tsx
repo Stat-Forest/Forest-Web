@@ -78,7 +78,7 @@ function PlantCreate() {
     plantCreateInitialState
   );
 
-  // 🔹 Cache plant label'larini pagination bo'ylab saqlash (Radix Select tanlangan value item ro'yxatida bo'lmasa label ko'rsatmaydi)
+  // 🔹 Cache o'simlik label'larini pagination bo'ylab saqlash (Radix Select tanlangan value item ro'yxatida bo'lmasa label ko'rsatmaydi)
   const [plantMetaById, setPlantMetaById] = useState<
     Record<string, { name: string; categoryName?: string }>
   >({});
@@ -123,7 +123,7 @@ function PlantCreate() {
     { skip: !reportIds }
   );
 
-  // 🔹 PlantsData kelgan sayin plant nomlarini cache'ga qo'shib boramiz (pagination almashganda ham tanlanganlar ko'rinib turadi)
+  // 🔹 PlantsData kelgan sayin o'simlik nomlarini cache'ga qo'shib boramiz (pagination almashganda ham tanlanganlar ko'rinib turadi)
   useEffect(() => {
     const results = (plantsData as any)?.results;
     if (!Array.isArray(results) || results.length === 0) return;
@@ -175,7 +175,7 @@ function PlantCreate() {
     [tableHeadersData]
   );
 
-  // 🔹 Maxsus: "Ko‘chat va Nihol" ilovalari uchun (Ko‘chat-va-Nihol-ilova) plant select kerak emas
+  // 🔹 Maxsus: "Ko‘chat va Nihol" ilovalari uchun (Ko‘chat-va-Nihol-ilova) o'simlik tanlash kerak emas
   const isKoChatVaNiholIlova1Step = (stepIndex: number): boolean => {
     const title =
       (tableHeadersData as TableHeaderData[])?.[stepIndex]?.title ?? "";
@@ -204,12 +204,12 @@ function PlantCreate() {
   useEffect(() => {
     dispatch({ type: "SET_EMPTY_COLUMNS", payload: allEmptyColumnsByStepMemo });
 
-    // 🔹 Har bir step uchun boshlang'ich form guruhini yaratish
+    // 🔹 Har bir step uchun boshlang'ich formula guruhini yaratish
     if (allEmptyColumnsByStepMemo.length > 0) {
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
           step: stepIndex,
-          forms: [{ values: {}, plantId: "" }], // Har bir stepda boshlang'ich 1 forma
+          forms: [{ values: {}, plantId: "" }], // Har bir stepda boshlang'ich 1 formula
         })
       );
       dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
@@ -295,13 +295,13 @@ function PlantCreate() {
     });
   };
 
-  // 🔹 Plant o'zgartirish funksiyasi
+  // 🔹 O'simlik o'zgartirish funksiyasi
   const handlePlantChange = (
     stepIndex: number,
     formIndex: number,
     plantId: string
   ) => {
-    // Yangi plant ID ni qo'shamiz
+    // Yangi o'simlik ID ni qo'shamiz
     if (plantId) {
       dispatch({ type: "ADD_USED_PLANT_ID", payload: plantId });
     }
@@ -322,17 +322,17 @@ function PlantCreate() {
     return plantMetaById[plantId]?.categoryName || "";
   };
 
-  // 🔹 Form qo'shish funksiyasi (faqat joriy step uchun)
+  // 🔹 Formula qo'shish funksiyasi (faqat joriy step uchun)
   const handleAddForm = (stepIndex: number) => {
     dispatch({ type: "ADD_FORM", payload: stepIndex });
   };
 
-  // 🔹 Form o'chirish funksiyasi (faqat joriy step uchun)
+  // 🔹 Formula o'chirish funksiyasi (faqat joriy step uchun)
   const handleRemoveForm = (stepIndex: number, formIndex: number) => {
     dispatch({ type: "REMOVE_FORM", payload: { stepIndex, formIndex } });
   };
 
-  // 🔹 Tanlangan barcha plant ID larni hisoblash
+  // 🔹 Tanlangan barcha o'simlik ID larni hisoblash
   const getAllUsedPlantIds = useMemo(() => {
     const usedIds = new Set<string>();
     state.formGroups.forEach((group) => {
@@ -368,7 +368,7 @@ function PlantCreate() {
       errors.push(t("please_select_organization"));
     }
 
-    // 🔹 Plant duplikatsiyasi va majburiyligini faqat plant-select bor bo'lgan step'lar uchun tekshiramiz
+    // 🔹 O'simlik duplikatsiyasi va majburiyligini faqat o'simlik tanlash bor bo'lgan step'lar uchun tekshiramiz
     const plantIds: string[] = [];
     state.formGroups.forEach((group) => {
       const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
@@ -386,7 +386,7 @@ function PlantCreate() {
       });
     });
 
-    // 🔹 Har bir step va har bir form uchun plant tanlanganligini tekshiramiz
+    // 🔹 Har bir step va har bir formula uchun o'simlik tanlanganligini tekshiramiz
     state.formGroups.forEach((group) => {
       const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
       if (skipPlantForStep) {
@@ -405,7 +405,7 @@ function PlantCreate() {
       });
     });
 
-    // 🔹 Har bir form uchun majburiy maydonlarni tekshiramiz
+    // 🔹 Har bir formula uchun majburiy maydonlarni tekshiramiz
     state.formGroups.forEach((group) => {
       group.forms.forEach((form, formIndex) => {
         state.allEmptyColumnsByStep[group.step]?.forEach((col) => {
@@ -417,7 +417,7 @@ function PlantCreate() {
               form.values[col.id].toString().trim() === "")
           ) {
             errors.push(
-              `${group.step + 1}-qadam ${formIndex + 1}-form uchun "${
+              `${group.step + 1}-qadam ${formIndex + 1}-formula uchun "${
                 col.fullParentChain
               }" qiymati kiritish shart`
             );
@@ -431,7 +431,7 @@ function PlantCreate() {
       return;
     }
 
-    // 🔹 Backend strukturasiga mos report_items yaratish - HAR BIR FORM UCHUN ALOHIDA
+    // 🔹 Backend strukturasiga mos report_items yaratish - HAR BIR FORMULA UCHUN ALOHIDA
     const report_items = state.allEmptyColumnsByStep.flatMap(
       (stepColumns, stepIndex) => {
         const currentFormGroup = state.formGroups.find(
@@ -453,14 +453,14 @@ function PlantCreate() {
               inners: [{ value: state.selectedOrganizationId || "" }],
             };
           } else if (isRejaColumn) {
-            // 🔹 Reja - HAR BIR FORM UCHUN ALOHIDA (plant yuborilmaydi, faqat value)
+            // 🔹 Reja - HAR BIR FORMULA UCHUN ALOHIDA (o'simlik yuborilmaydi, faqat value)
             const planItem = state.planItems.find(
               (item) => item.columnId === col.id
             );
             const planValue = planItem ? planItem.plan_value : "";
 
             const inners = currentFormGroup.forms.map(() => ({
-              value: planValue, // Har bir form uchun reja qiymati (plant yo'q)
+              value: planValue, // Har bir formula uchun reja qiymati (o'simlik yo'q)
             }));
 
             return {
@@ -468,18 +468,18 @@ function PlantCreate() {
               inners,
             };
           } else {
-            // 🔹 Boshqa maydonlar - HAR BIR FORM UCHUN ALOHIDA
-            // 🔹 Maxsus: "Ko'chat va Nihol" ilovalari uchun (Ko'chat-va-Nihol-ilova) plant o'rniga null yuboriladi
+            // 🔹 Boshqa maydonlar - HAR BIR FORMULA UCHUN ALOHIDA
+            // 🔹 Maxsus: "Ko'chat va Nihol" ilovalari uchun (Ko'chat-va-Nihol-ilova) o'simlik o'rniga null yuboriladi
             const isKoChatVaNiholStep = isKoChatVaNiholIlova1Step(stepIndex);
             const inners = currentFormGroup.forms.map((form) => {
               if (isKoChatVaNiholStep) {
-                // "Ko'chat va Nihol" ilovasi uchun plant o'rniga null yuborish
+                // "Ko'chat va Nihol" ilovasi uchun o'simlik o'rniga null yuborish
                 return {
                   plant: null,
                   value: form.values[col.id] || "",
                 };
               } else {
-                // Boshqa ilovalar uchun plant ID yuborish (agar mavjud bo'lsa)
+                // Boshqa ilovalar uchun o'simlik ID yuborish (agar mavjud bo'lsa)
                 return {
                   ...(form.plantId && { plant: form.plantId }),
                   value: form.values[col.id] || "",
@@ -507,7 +507,7 @@ function PlantCreate() {
       removeCookie("reportId");
       navigate(-1);
       toast.success(t("report_created_successfully"));
-      // Reset form groups
+      // Reset formula guruhlari
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
           step: stepIndex,
@@ -689,7 +689,7 @@ function PlantCreate() {
           </div>
         </div>
 
-        {/* ✅ CURRENT STEP FORM GROUPS */}
+        {/* ✅ JORIY QADAM FORMULA GURUHLARI */}
         {currentFormGroup && (
           <div className="space-y-6">
             {currentFormGroup.forms.map((form, formIndex) => (
@@ -699,7 +699,7 @@ function PlantCreate() {
               >
                 <div className="mb-4 flex justify-between items-center">
                   <h2 className="text-lg font-semibold">
-                    {currentStepTitle} – {formIndex + 1}-form
+                    {currentStepTitle} – {formIndex + 1}-formula
                   </h2>
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500">
@@ -720,11 +720,11 @@ function PlantCreate() {
                   </div>
                 </div>
 
-                {/* ✅ FORM SPECIFIC PLANT SELECT (maxsus ilova uchun yashiriladi) */}
+                {/* ✅ FORMULA BO'YICHA O'SIMLIK TANLASH (maxsus ilova uchun yashiriladi) */}
                 {!isKoChatVaNiholIlova1Step(state.currentStep) && (
                   <div className="mb-4">
                     <label className="block mb-1 text-lg font-medium">
-                      {formIndex + 1}-form uchun Plant:
+                      {t("select_plant_for_form", { formIndex: formIndex + 1 })}
                     </label>
                     <Select
                       value={form.plantId}
@@ -845,7 +845,7 @@ function PlantCreate() {
                           </>
                         ) : (
                           <div className="p-2 text-center text-muted-foreground text-sm">
-                            Plant mavjud emas
+                            {t("plant_not_found")}
                           </div>
                         )}
                       </SelectContent>
@@ -894,7 +894,7 @@ function PlantCreate() {
                           lowerTitle.includes("tashkilot nomi") ||
                           lowerTitle.includes("Названия регионов")
                         ) {
-                          // ❗ faqat birinchi formda ko'rinadi
+                          // ❗ faqat birinchi formulada ko'rinadi
                           if (formIndex !== 0) return null;
                           return (
                             <TableRow key={col.id}>
@@ -964,7 +964,7 @@ function PlantCreate() {
               </div>
             ))}
 
-            {/* ✅ ADD FORM BUTTON (faqat joriy step uchun) */}
+            {/* ✅ FORMULA QO'SHISH TUGMASI (faqat joriy step uchun) */}
             <div className="flex justify-center">
               <Button
                 type="button"
@@ -1032,7 +1032,7 @@ function PlantCreate() {
           </div>
         )}
 
-        {/* ✅ TANLANGAN PLANT LARNI KO'RSATISH */}
+        {/* ✅ TANLANGAN O'SIMLIKLARNI KO'RSATISH */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
           <h3 className="font-semibold mb-2">{t("selected_plants")}</h3>
           {state.formGroups.map((group: FormGroup) =>

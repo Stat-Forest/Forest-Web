@@ -156,17 +156,17 @@ function InnersUpdateReportItem() {
   useEffect(() => {
     if (existingReport?.report_items) {
       // 🔹 Har bir column'dan maximum inners sonini topish
-      // Agar N ta object bo'lsa, N ta form bo'lishi kerak
+      // Agar N ta object bo'lsa, N ta formula bo'lishi kerak
       const maxInnersCount = Math.max(
         ...existingReport.report_items.map((item: any) => item.inners?.length || 0),
-        1 // Minimum 1 ta form
+        1 // Minimum 1 ta formula
       );
 
       console.log("DEBUG InnersUpdate: maxInnersCount =", maxInnersCount);
       console.log("DEBUG InnersUpdate: report_items =", existingReport.report_items);
 
-      // Har bir inner uchun alohida form yaratish
-      // inner[0] -> form[0], inner[1] -> form[1], va hokazo
+      // Har bir inner uchun alohida formula yaratish
+      // inner[0] -> formula[0], inner[1] -> formula[1], va hokazo
       const initialFormGroups: Record<string, string>[] = [];
       
       for (let innerIndex = 0; innerIndex < maxInnersCount; innerIndex++) {
@@ -192,7 +192,7 @@ function InnersUpdateReportItem() {
         initialFormGroups.push(form);
       }
 
-      console.log("DEBUG InnersUpdate: Created", initialFormGroups.length, "forms");
+      console.log("DEBUG InnersUpdate: Created", initialFormGroups.length, "formulas");
       setFormGroups(initialFormGroups.length > 0 ? initialFormGroups : [{}]);
       setSelectedDeadlineId(existingReport.deadline || "");
       setFootNote(existingReport.foot_note || "");

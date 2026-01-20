@@ -1,4 +1,4 @@
-// DefaultCreate uchun form types
+// DefaultCreate uchun formula turlari
 
 export interface EmptyColumn {
   id: string;
