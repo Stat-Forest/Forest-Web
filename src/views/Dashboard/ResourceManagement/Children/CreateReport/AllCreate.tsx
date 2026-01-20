@@ -109,7 +109,7 @@ function AllCreateReportItem() {
       page: deadlinePage,
       perPage,
       statement__period: "",
-      is_new_deadline:"false"
+      is_new_deadline:"true"
     },
     { skip: !reportIds }
   );
