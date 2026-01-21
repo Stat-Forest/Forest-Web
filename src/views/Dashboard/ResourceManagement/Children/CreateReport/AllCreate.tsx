@@ -168,7 +168,7 @@ function AllCreateReportItem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, allEmptyColumnsByStep]);
 
-  // 🔹 PLAN MA'LUMOTLARI
+  // 🔹 REJA MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
 
@@ -180,13 +180,13 @@ function AllCreateReportItem() {
       if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
         return;
 
-      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin plan olinadi
+      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin reja olinadi
       const hasSeasonSelect = 
         reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || 
         reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
       
       if (hasSeasonSelect && !selectedSeason) {
-        // Season tanlanmagan bo'lsa, plan ma'lumotlarini tozalash
+        // Season tanlanmagan bo'lsa, reja ma'lumotlarini tozalash
         setPlanItems([]);
         return;
       }
@@ -219,10 +219,10 @@ function AllCreateReportItem() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Plan olishda xatolik:", error);
+          console.error("Reja olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
-            "Plan ma'lumotlarini olishda xatolik yuz berdi",
+            t("plan_fetch_error"),
           ]);
         }
       }

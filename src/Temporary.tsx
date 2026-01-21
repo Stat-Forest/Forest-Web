@@ -214,7 +214,7 @@
 //           return { columnId: col.id, planValue };
 //         } catch (error) {
 //           console.error(
-//             `Error fetching plan value for column ${col.id}:`,
+//             `Reja qiymatini olishda xatolik (ustun ${col.id}):`,
 //             error
 //           );
 //           return { columnId: col.id, planValue: 0 };
@@ -359,7 +359,7 @@
 //       0
 //     );
 
-//     // Find the yearly plan column
+//     // Yillik reja ustunini topish
 //     const yearlyPlanColumn = allColumns.find(
 //       (c) => c.fullParentChain.includes("Yillik reja") && c.type === "plan"
 //     );
@@ -548,7 +548,7 @@
 //                     </TableRow>
 //                   );
 //                 }
-//                 // Plan columns (read-only from database)
+//                 // Reja ustunlari (read-only from database)
 //                 if (col.type === "plan") {
 //                   return (
 //                     <TableRow key={col.id}>

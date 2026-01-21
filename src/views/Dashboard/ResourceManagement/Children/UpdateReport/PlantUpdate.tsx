@@ -102,7 +102,7 @@ interface ExistingReportResponse {
 
 const EMPTY_TABLE_HEADERS: TableHeaderData[] = [];
 
-// Component for fetching and displaying o'simlik plan data for "Daromad 1" columns
+// Component for fetching and displaying o'simlik reja ma'lumotlari for "Daromad 1" columns
 function PlantColumnRow({
   plantId,
   formIndex,
@@ -128,7 +128,7 @@ function PlantColumnRow({
   const [isLoading, setIsLoading] = useState(false);
   const [fetchedValue, setFetchedValue] = useState<string | null>(null);
 
-  // Fetch plan data when o'simlik is selected
+  // Reja ma'lumotlarini olish — o'simlik tanlanganda
   useEffect(() => {
     if (!plantId || !organizationId || !statementId || !year || value) {
       return; // Skip if already has value or missing required params
@@ -488,7 +488,7 @@ function PlantUpdate() {
 
           dispatch({ type: "SET_FORM_GROUPS", payload: formGroups });
 
-          // Plan items
+          // Reja elementlari
           const rejaColumns = allEmptyColumnsByStepMemo.flat().filter(col => col.title.toLowerCase().includes("reja"));
           if (rejaColumns.length > 0) {
             const planItems = rejaColumns.map(col => {
@@ -525,7 +525,7 @@ function PlantUpdate() {
     }
   }, [existingReportData, allEmptyColumnsByStepMemo, tableHeadersData, dispatch, t, isInitialized]);
 
-  // 🔹 PLAN MA'LUMOTLARI
+  // 🔹 REJA MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
 
@@ -568,7 +568,7 @@ function PlantUpdate() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Plan olishda xatolik:", error);
+          console.error("Reja olishda xatolik:", error);
           dispatch({
             type: "ADD_FORM_ERROR",
             payload: t("plan_fetch_error"),

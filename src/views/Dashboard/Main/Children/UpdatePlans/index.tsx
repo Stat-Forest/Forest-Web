@@ -344,7 +344,7 @@ function UpdatePlans() {
       // Separate plan_items (for other columns) and plant_plans (for "Daromad 1")
       // API returns plant_plans, not plants
       if (existingPlan.plant_plans && Array.isArray(existingPlan.plant_plans) && existingPlan.plant_plans.length > 0) {
-        // This is a "Daromad 1" plan with plants
+        // Bu "Daromad 1" rejasi (o'simliklar bilan)
         // API column ID laridan formula column ID lariga mapping yaratish
         // API column_id ishlatadi, formula id ishlatadi
         const columnIdMap = new Map<string, string>();
@@ -462,7 +462,7 @@ function UpdatePlans() {
           });
         }
       } else {
-        // Regular plan without plants
+        // Oddiy reja (o'simliksiz)
         // API column ID laridan formula column ID lariga mapping yaratish
         const columnIdMap = new Map<string, string>();
         const columnNameMap = new Map<string, string>(); // Map by column name as fallback
@@ -791,7 +791,7 @@ function UpdatePlans() {
               />
             </div>
 
-            {/* PLAN COLUMNS */}
+            {/* REJA USTUNLARI */}
             {plan_cols_loading ? (
               <div className="text-center py-4">Ustunlar yuklanmoqda...</div>
             ) : plan_cols_error ? (
@@ -803,9 +803,9 @@ function UpdatePlans() {
                     <br />
                     State Statement: {state.statement || "N/A"}
                     <br />
-                    Existing Plan Statement ID: {existingPlan?.statement_id || "N/A"}
+                    Mavjud reja Statement ID: {existingPlan?.statement_id || "N/A"}
                     <br />
-                    Existing Plan Statement: {existingPlan?.statement || "N/A"}
+                    Mavjud reja Statement: {existingPlan?.statement || "N/A"}
                     <br />
                     Error: {JSON.stringify(plan_cols_error)}
                   </p>
@@ -1116,17 +1116,17 @@ function UpdatePlans() {
                   <div className="text-xs mt-2 text-left bg-gray-100 p-3 rounded max-w-2xl mx-auto">
                     <p><strong>Statement ID (UUID):</strong> {statementId || "N/A"}</p>
                     <p><strong>State Statement:</strong> {state.statement || "N/A"} ({typeof state.statement})</p>
-                    <p><strong>Existing Plan Statement ID:</strong> {existingPlan?.statement_id || "N/A"} ({typeof existingPlan?.statement_id})</p>
-                    <p><strong>Existing Plan Statement:</strong> {typeof existingPlan?.statement === "object" ? JSON.stringify(existingPlan?.statement) : existingPlan?.statement || "N/A"}</p>
-                    <p><strong>Plan Cols Raw:</strong> {plan_cols_raw ? (Array.isArray(plan_cols_raw) ? `Array(${plan_cols_raw.length})` : typeof plan_cols_raw) : "N/A"}</p>
-                    <p><strong>Plan Cols Length:</strong> {plan_cols.length}</p>
+                    <p><strong>Mavjud reja Statement ID:</strong> {existingPlan?.statement_id || "N/A"} ({typeof existingPlan?.statement_id})</p>
+                    <p><strong>Mavjud reja Statement:</strong> {typeof existingPlan?.statement === "object" ? JSON.stringify(existingPlan?.statement) : existingPlan?.statement || "N/A"}</p>
+                    <p><strong>Reja ustunlari (raw):</strong> {plan_cols_raw ? (Array.isArray(plan_cols_raw) ? `Array(${plan_cols_raw.length})` : typeof plan_cols_raw) : "N/A"}</p>
+                    <p><strong>Reja ustunlari soni:</strong> {plan_cols.length}</p>
                     <p><strong>Is Loading:</strong> {plan_cols_loading ? "Yes" : "No"}</p>
                     <p><strong>Has Error:</strong> {plan_cols_error ? "Yes" : "No"}</p>
                     {plan_cols_error && (
                       <p><strong>Error:</strong> {JSON.stringify(plan_cols_error)}</p>
                     )}
                     {plan_cols_raw && !Array.isArray(plan_cols_raw) && (
-                      <p><strong>Plan Cols Raw Keys:</strong> {Object.keys(plan_cols_raw).join(", ")}</p>
+                      <p><strong>Reja ustunlari kalitlari:</strong> {Object.keys(plan_cols_raw).join(", ")}</p>
                     )}
                   </div>
                 )}

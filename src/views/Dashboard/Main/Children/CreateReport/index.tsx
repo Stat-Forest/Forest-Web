@@ -482,7 +482,7 @@ function CreateReport() {
           </div>
         )}
 
-        {/* PLAN COLUMNS */}
+        {/* REJA USTUNLARI */}
         {state.statement && (
           <>
             {plan_cols_loading ? (

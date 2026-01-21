@@ -1,6 +1,7 @@
 import {
     Fragment,
     forwardRef,
+    useEffect,
     useImperativeHandle,
     useRef,
     useState,
@@ -73,7 +74,15 @@ import {
       ref
     ) => {
       const tableRef = useRef<HTMLDivElement>(null);
+      const detailRef = useRef<HTMLDivElement>(null);
       const navigate = useNavigate();
+
+      // Detail ko'rinishga smooth scroll
+      useEffect(() => {
+        if (selectedRow) {
+          detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, [selectedRow]);
       const { t, i18n } = useTranslation();
       const [sendReport, { isLoading: isSending }] = useSendReportMutation();
       const user_role = useSelector((state: RootState) => state.auth.user?.role);
@@ -662,7 +671,7 @@ import {
   
           {/* Detal ko'rinish */}
           {selectedRow && (
-            <div className="p-4 bg-ice rounded-xl">
+            <div ref={detailRef} className="p-4 bg-ice rounded-xl">
               <div className="flex items-center justify-between my-5">
                 <div className="flex gap-2 flex-col">
                   {selectedRow.status === "cancelled" && (
