@@ -73,6 +73,12 @@ function Login() {
     );
   };
 
+  const handleRefreshKeys = () => {
+    setError(null);
+    setIsLoading(true);
+    loadEimzoKeys();
+  };
+
   const loadEimzoKeys = () => {
     window.EIMZOClient.listAllUserKeys(
       (o: any, i: number) => `itm-${o.serialNumber}-${i}`,
@@ -206,8 +212,9 @@ function Login() {
             </TabsTrigger>
           </TabsList>
 
-          {/* ------------ EIMZO LOGIN ------------- */}
+          {/* ------------ E-IMZO / USB-TOKEN LOGIN ------------- */}
           <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
+            <p className="text-sm text-gray-600">{t("eimzoOrUsbDescription")}</p>
             {isLoading ? (
               <p>Yuklanmoqda...</p>
             ) : eimzoKeys.length > 0 ? (
@@ -218,7 +225,7 @@ function Login() {
                   className="w-full p-2 border rounded"
                 >
                   <option value="" disabled>
-                    Sertifikatni tanlang
+                    {t("selectCertificatePlaceholder")}
                   </option>
                   {eimzoKeys.map((key) => (
                     <option
@@ -232,16 +239,38 @@ function Login() {
                   ))}
                 </select>
 
-                <Button
-                  onClick={handleEimzoLogin}
-                  className="bg-blue-600 text-white h-[45px] hover:bg-blue-700"
-                  disabled={!selectedKey || isLoading}
-                >
-                  {isLoading ? "Ishlanmoqda..." : "Kirish"}
-                </Button>
+                <div className="flex gap-2 flex-col sm:flex-row">
+                  <Button
+                    onClick={handleEimzoLogin}
+                    className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
+                    disabled={!selectedKey || isLoading}
+                  >
+                    {isLoading ? "Ishlanmoqda..." : t("enter")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRefreshKeys}
+                    disabled={isLoading}
+                    className="h-[45px]"
+                  >
+                    {t("refreshCertificates")}
+                  </Button>
+                </div>
               </>
             ) : (
-              <p>{t("notFoundSertificate")}</p>
+              <>
+                <p>{t("notFoundSertificate")}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRefreshKeys}
+                  disabled={isLoading}
+                  className="h-[45px] w-fit"
+                >
+                  {t("refreshCertificates")}
+                </Button>
+              </>
             )}
 
             {error && <p className="text-red-600">{error}</p>}
