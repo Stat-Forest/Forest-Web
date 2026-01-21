@@ -202,7 +202,7 @@
   "update": "Yangilash",
   "updated_successfully": "Hisobod muvaffaqiyatli yangilandi!",
   "update_error": "Ma'lumotlarni yangilashda xatolik yuz berdi",
-  "plan_fetch_error": "Plan ma'lumotlarini olishda xatolik yuz berdi",
+  "plan_fetch_error": "Reja ma'lumotlarini olishda xatolik yuz berdi",
   "data_load_error": "Ma'lumotlarni yuklashda xatolik",
   "plant_not_found": "O'simlik mavjud emas",
   "delete": "O'chirish",

@@ -212,7 +212,7 @@ function InnersUpdateReportItem() {
     }
   }, [existingReport]);
 
-  // 🔹 PLAN MA'LUMOTLARI
+  // 🔹 REJA MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
 
@@ -224,7 +224,7 @@ function InnersUpdateReportItem() {
       if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
         return;
 
-      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin plan olinadi
+      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin reja olinadi
       const hasSeasonSelect =
         reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
         reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
@@ -262,7 +262,7 @@ function InnersUpdateReportItem() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Plan olishda xatolik:", error);
+          console.error("Reja olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
             t("plan_fetch_error"),

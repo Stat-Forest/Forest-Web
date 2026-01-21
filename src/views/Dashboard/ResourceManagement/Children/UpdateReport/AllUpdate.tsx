@@ -216,7 +216,7 @@ function AllUpdateReportItem() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Plan olishda xatolik:", error);
+          console.error("Reja olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
             t("plan_fetch_error"),

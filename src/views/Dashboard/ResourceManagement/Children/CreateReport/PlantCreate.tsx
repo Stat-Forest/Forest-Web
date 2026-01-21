@@ -216,7 +216,7 @@ function PlantCreate() {
     }
   }, [allEmptyColumnsByStepMemo]);
 
-  // 🔹 PLAN MA'LUMOTLARI
+  // 🔹 REJA MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
 
@@ -259,7 +259,7 @@ function PlantCreate() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Plan olishda xatolik:", error);
+          console.error("Reja olishda xatolik:", error);
           dispatch({
             type: "ADD_FORM_ERROR",
             payload: t("plan_fetch_error"),

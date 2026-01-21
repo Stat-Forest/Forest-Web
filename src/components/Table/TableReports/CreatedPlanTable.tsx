@@ -193,7 +193,7 @@ function CreatedPlantable({
                     </div>
                   )}
 
-                  {/* Plan items section (for other columns or regular plans) */}
+                  {/* Reja elementlari bo'limi (boshqa ustunlar yoki oddiy rejalar uchun) */}
                   {item?.plan_items && Array.isArray(item.plan_items) && item.plan_items.length > 0 && (
                     <div>
                       {item?.plants && item.plants.length > 0 && (

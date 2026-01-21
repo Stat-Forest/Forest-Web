@@ -177,7 +177,7 @@ function MainContainer() {
           </div>
         </div>
 
-        {/* PLAN YARATISH – faqat adminlar */}
+        {/* REJA YARATISH – faqat adminlar */}
         {(user_role === "bolim_admin" || user_role === "super_admin") && (
           <div
             data-aos="fade-up"

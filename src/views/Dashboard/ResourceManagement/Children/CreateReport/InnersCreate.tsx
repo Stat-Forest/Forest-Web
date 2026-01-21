@@ -129,7 +129,7 @@ function InnersCreateReportItem() {
     setCurrentStep(0);
   }, [allEmptyColumnsByStepMemo]);
 
-  // 🔹 PLAN MA'LUMOTLARI
+  // 🔹 REJA MA'LUMOTLARI
   useEffect(() => {
     let isMounted = true;
 
@@ -141,13 +141,13 @@ function InnersCreateReportItem() {
       if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
         return;
 
-      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin plan olinadi
+      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin reja olinadi
       const hasSeasonSelect =
         reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
         reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
 
       if (hasSeasonSelect && !selectedSeason) {
-        // Season tanlanmagan bo'lsa, plan ma'lumotlarini tozalash
+        // Season tanlanmagan bo'lsa, reja ma'lumotlarini tozalash
         setPlanItems([]);
         return;
       }
@@ -180,7 +180,7 @@ function InnersCreateReportItem() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Plan olishda xatolik:", error);
+          console.error("Reja olishda xatolik:", error);
           setFormErrors((prev) => [
             ...prev,
             t("plan_fetch_error"),
@@ -250,10 +250,10 @@ function InnersCreateReportItem() {
         // ❗ faqat bitta inners (birinchi formuladan)
         inners = [{ id: col.id, value: selectedOrganizationId || "" }];
       } else if (isRejaColumn) {
-        // Plan qiymatini olish
+        // Reja qiymatini olish
         const planItem = planItems.find((item) => item.columnId === col.id);
         const planValue = planItem ? planItem.plan_value : "";
-        // Plan qiymatini barcha formulalar uchun bir xil qilish
+        // Reja qiymatini barcha formulalar uchun bir xil qilish
         inners = formGroups.map(() => ({
           id: col.id,
           value: planValue,
