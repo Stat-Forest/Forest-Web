@@ -67,7 +67,7 @@ export const authApi = createApi({
       }),
     }),
 
-    // ✅ E-IMZO login
+    // ✅ E-imzo / USB-token login — both use e-imzo endpoint (pkcs7, vo)
     eimzoLogin: builder.mutation<LoginResponse, any>({
       query: (data) => ({
         url: "/login/eimzo/",
