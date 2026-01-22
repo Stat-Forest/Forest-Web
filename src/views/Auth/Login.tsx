@@ -89,53 +89,119 @@ function Login() {
 
   const findTokensAndLoadKeys = () => {
     // CAPIWS mavjudligini tekshiramiz
-    if (window.CAPIWS && window.CAPIWS.findTokens) {
+    if (window.CAPIWS && window.CAPIWS.findTokens && window.CAPIWS.findPfxs) {
       // Avval USB-tokenlarni topamiz
       window.CAPIWS.findTokens(
         () => {
+          console.log("findTokens: USB-tokenlar topildi");
           // Keyin .pfx fayllarni topamiz
-          if (window.CAPIWS.findPfxs) {
-            window.CAPIWS.findPfxs(
-              () => {
-                // Ikkalasini ham topgandan keyin listAllUserKeys ni chaqiramiz
+          window.CAPIWS.findPfxs(
+            () => {
+              console.log("findPfxs: PFX fayllar topildi");
+              // Ikkalasini ham topgandan keyin biroz kutib, listAllUserKeys ni chaqiramiz
+              // USB-tokenlarni to'liq yuklash uchun vaqt beramiz
+              setTimeout(() => {
                 loadEimzoKeys();
-              },
-              (err: any) => {
-                console.warn("findPfxs error:", err);
-                // findPfxs xatolik bersa ham listAllUserKeys ni chaqiramiz
+              }, 500);
+            },
+            (err: any) => {
+              console.warn("findPfxs error:", err);
+              // findPfxs xatolik bersa ham listAllUserKeys ni chaqiramiz
+              setTimeout(() => {
                 loadEimzoKeys();
-              }
-            );
-          } else {
-            loadEimzoKeys();
-          }
+              }, 500);
+            }
+          );
         },
         (err: any) => {
           console.warn("findTokens error:", err);
-          // findTokens xatolik bersa ham listAllUserKeys ni chaqiramiz
-          if (window.CAPIWS && window.CAPIWS.findPfxs) {
-            window.CAPIWS.findPfxs(
-              () => loadEimzoKeys(),
-              () => loadEimzoKeys()
-            );
-          } else {
-            loadEimzoKeys();
-          }
+          // findTokens xatolik bersa ham .pfx fayllarni topishga harakat qilamiz
+          window.CAPIWS.findPfxs(
+            () => {
+              setTimeout(() => {
+                loadEimzoKeys();
+              }, 500);
+            },
+            () => {
+              // Ikkalasi ham xatolik bersa ham listAllUserKeys ni chaqiramiz
+              setTimeout(() => {
+                loadEimzoKeys();
+              }, 500);
+            }
+          );
         }
       );
     } else {
-      // CAPIWS topilmasa, to'g'ridan-to'g'ri listAllUserKeys ni chaqiramiz
+      // CAPIWS yoki findTokens/findPfxs topilmasa, to'g'ridan-to'g'ri listAllUserKeys ni chaqiramiz
+      console.warn("CAPIWS.findTokens yoki CAPIWS.findPfxs topilmadi, to'g'ridan-to'g'ri listAllUserKeys chaqirilmoqda");
       loadEimzoKeys();
     }
   };
 
   const loadEimzoKeys = () => {
+    console.log("loadEimzoKeys: listAllUserKeys chaqirilmoqda...");
+    
+    // Agar CAPIWS mavjud bo'lsa, to'g'ridan-to'g'ri list_all_user_keys ni chaqiramiz
+    if (window.CAPIWS && window.CAPIWS.list_all_user_keys) {
+      console.log("CAPIWS.list_all_user_keys to'g'ridan-to'g'ri chaqirilmoqda...");
+      window.CAPIWS.list_all_user_keys(
+        (items: any[]) => {
+          console.log(`CAPIWS.list_all_user_keys: ${items.length} ta key topildi`);
+          
+          const processedItems: EimzoKey[] = [];
+          items.forEach((v: any, i: number) => {
+            const now = new Date();
+            const validTo = new Date(v.validTo);
+            const expired = validTo < now;
+
+            // USB-token yoki E-imzo ekanligini aniqlash
+            const keyType = v.type === "ftjc" ? "USB-token" : v.type === "pfx" ? "E-imzo" : "Noma'lum";
+            console.log(`Key topildi: ${v.CN} (${keyType})`);
+
+            const itemId = `itm-${v.serialNumber}-${i}`;
+            processedItems.push({
+              id: itemId,
+              value: itemId,
+              label: expired ? `${v.CN} ${t("expired")}` : v.CN,
+              disabled: expired,
+              vo: v,
+            });
+          });
+
+          // USB-token va E-imzo keylarini ajratib ko'rsatish
+          const usbTokens = processedItems.filter(item => item.vo?.type === "ftjc");
+          const eimzoKeys = processedItems.filter(item => item.vo?.type === "pfx");
+          console.log(`USB-tokenlar: ${usbTokens.length}, E-imzo keylar: ${eimzoKeys.length}`);
+          
+          setEimzoKeys(processedItems);
+          if (processedItems.length > 0) setSelectedKey(processedItems[0].id);
+          else setError(t("notFoundEImzo"));
+          setIsLoading(false);
+        },
+        (r: any) => {
+          console.error("CAPIWS.list_all_user_keys xatolik:", r);
+          // Xatolik bo'lsa, EIMZOClient orqali sinab ko'ramiz
+          loadEimzoKeysViaEIMZOClient();
+        }
+      );
+    } else {
+      // CAPIWS topilmasa, EIMZOClient orqali chaqiramiz
+      loadEimzoKeysViaEIMZOClient();
+    }
+  };
+
+  const loadEimzoKeysViaEIMZOClient = () => {
+    console.log("loadEimzoKeysViaEIMZOClient: EIMZOClient.listAllUserKeys chaqirilmoqda...");
     window.EIMZOClient.listAllUserKeys(
       (o: any, i: number) => `itm-${o.serialNumber}-${i}`,
       (itemId: string, v: any) => {
         const now = new Date();
         const validTo = new Date(v.validTo);
         const expired = validTo < now;
+
+        // USB-token yoki E-imzo ekanligini aniqlash
+        const keyType = v.type === "ftjc" ? "USB-token" : v.type === "pfx" ? "E-imzo" : "Noma'lum";
+        console.log(`Key topildi: ${v.CN} (${keyType})`);
 
         return {
           id: itemId,
@@ -146,12 +212,19 @@ function Login() {
         };
       },
       (items: EimzoKey[], firstId: string) => {
+        console.log(`EIMZOClient.listAllUserKeys: ${items.length} ta key topildi`);
+        // USB-token va E-imzo keylarini ajratib ko'rsatish
+        const usbTokens = items.filter(item => item.vo?.type === "ftjc");
+        const eimzoKeys = items.filter(item => item.vo?.type === "pfx");
+        console.log(`USB-tokenlar: ${usbTokens.length}, E-imzo keylar: ${eimzoKeys.length}`);
+        
         setEimzoKeys(items);
         if (items.length > 0) setSelectedKey(firstId);
         else setError(t("notFoundEImzo"));
         setIsLoading(false);
       },
       (r: any) => {
+        console.error("EIMZOClient.listAllUserKeys xatolik:", r);
         setError(r || t("cannotFindKeys"));
         setIsLoading(false);
       }
