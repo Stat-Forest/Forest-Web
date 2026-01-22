@@ -14,6 +14,7 @@ import { getEimzoApiKeys } from "@/utils/eimzoConfig";
 declare global {
   interface Window {
     EIMZOClient: any;
+    CAPIWS: any;
     dates: any;
   }
 }
@@ -65,7 +66,7 @@ function Login() {
 
   const installApiKeys = () => {
     window.EIMZOClient.installApiKeys(
-      () => loadEimzoKeys(),
+      () => findTokensAndLoadKeys(),
       (r: any) => {
         setError(r || t("eimzoError3"));
         setIsLoading(false);
@@ -76,7 +77,50 @@ function Login() {
   const handleRefreshKeys = () => {
     setError(null);
     setIsLoading(true);
-    loadEimzoKeys();
+    // USB-tokenlarni topish uchun avval findTokens ni chaqiramiz
+    findTokensAndLoadKeys();
+  };
+
+  const findTokensAndLoadKeys = () => {
+    // CAPIWS mavjudligini tekshiramiz
+    if (window.CAPIWS && window.CAPIWS.findTokens) {
+      // Avval USB-tokenlarni topamiz
+      window.CAPIWS.findTokens(
+        () => {
+          // Keyin .pfx fayllarni topamiz
+          if (window.CAPIWS.findPfxs) {
+            window.CAPIWS.findPfxs(
+              () => {
+                // Ikkalasini ham topgandan keyin listAllUserKeys ni chaqiramiz
+                loadEimzoKeys();
+              },
+              (err: any) => {
+                console.warn("findPfxs error:", err);
+                // findPfxs xatolik bersa ham listAllUserKeys ni chaqiramiz
+                loadEimzoKeys();
+              }
+            );
+          } else {
+            loadEimzoKeys();
+          }
+        },
+        (err: any) => {
+          console.warn("findTokens error:", err);
+          // findTokens xatolik bersa ham listAllUserKeys ni chaqiramiz
+          if (window.CAPIWS && window.CAPIWS.findPfxs) {
+            window.CAPIWS.findPfxs(
+              () => loadEimzoKeys(),
+              () => loadEimzoKeys()
+            );
+          } else {
+            loadEimzoKeys();
+          }
+        }
+      );
+    } else {
+      // CAPIWS topilmasa, to'g'ridan-to'g'ri listAllUserKeys ni chaqiramiz
+      loadEimzoKeys();
+    }
   };
 
   const loadEimzoKeys = () => {
@@ -146,11 +190,15 @@ function Login() {
         );
       });
 
+      // USB-token (ftjc) uchun "vo" yuborilmaydi, faqat E-imzo (pfx) uchun yuboriladi
+      const isUsbToken = selectedItem.vo?.type === "ftjc";
+      const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
+      if (!isUsbToken) {
+        loginData.vo = selectedItem.vo;
+      }
+
       const response = await dispatch(
-        authApi.endpoints.eimzoLogin.initiate({
-          pkcs7,
-          vo: selectedItem.vo,
-        })
+        authApi.endpoints.eimzoLogin.initiate(loginData)
       ).unwrap();
 
       if (response?.access) navigate("/main");
