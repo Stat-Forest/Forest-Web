@@ -30,6 +30,12 @@ function Login() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // -------- E-IMZO START ---------------
+  // 
+  // Test muhiti uchun sertifikatlar:
+  // - USB-token (ID-card, BAIK-token): https://test.e-imzo.uz/registrator/public/ckc.html
+  // - PFX-ключ: https://test.e-imzo.uz/registrator/public/pfx.html
+  // ⚠️ Test sertifikatlar faqat test-vpn e-imzo-server da ishlaydi
+  //
   useEffect(() => {
     if (window.EIMZOClient) {
       initializeEimzo();
