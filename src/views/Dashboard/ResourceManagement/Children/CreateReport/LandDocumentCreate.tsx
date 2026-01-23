@@ -61,7 +61,7 @@ function LandDocumentCreate() {
     e.preventDefault();
 
     if (!selectedFile || !date || !selectedOrg) {
-      alert("Majburiy maydonlarni to‘ldiring!");
+      alert(t("fillRequiredFields"));
       return;
     }
 
@@ -87,12 +87,12 @@ function LandDocumentCreate() {
 
     try {
       await landDocumentCreate(formData).unwrap();
-      alert("Hujjat yaratildi!");
+      alert(t("documentCreated"));
       navigate(-1);
       console.log(formData)
     } catch (error) {
       console.error(error);
-      alert("Xatolik yuz berdi!");
+      alert(t("errorOccurred"));
       console.log(formData)
     }
   };
@@ -120,10 +120,10 @@ function LandDocumentCreate() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Yer Hujjati Yaratish
+            {t("landDocumentCreate")}
           </h1>
           <p className="text-muted-foreground">
-            Tizimga yangi yer hujjatini qo'shing
+            {t("addNewLandDocument")}
           </p>
         </div>
       </div>
@@ -131,10 +131,9 @@ function LandDocumentCreate() {
       {/* Formula bo'limi */}
       <Card>
         <CardHeader>
-          <CardTitle>Hujjat Ma'lumotlari</CardTitle>
+          <CardTitle>{t("documentInfo")}</CardTitle>
           <CardDescription>
-            Yer hujjati tafsilotlarini kiriting. Belgilanmagan maydonlar
-            ixtiyoriy.
+            {t("documentInfoDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -142,12 +141,12 @@ function LandDocumentCreate() {
             {/* Document Name */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
-                Hujjat Nomi *
+                {t("documentName")} *
               </Label>
               <Input
                 id="name"
                 name="name"
-                placeholder="Hujjat nomini kiriting"
+                placeholder={t("enterDocumentName")}
                 className="h-11"
                 required
               />
@@ -157,7 +156,7 @@ function LandDocumentCreate() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="date" className="text-sm font-medium">
-                  Sana *
+                  {t("date")} *
                 </Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -174,7 +173,7 @@ function LandDocumentCreate() {
                           {format(date, "dd MMMM, yyyy", { locale: uz })}
                         </span>
                       ) : (
-                        <span className="text-gray-500">Sana tanlang</span>
+                        <span className="text-gray-500">{t("selectDate")}</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -234,11 +233,11 @@ function LandDocumentCreate() {
 
               <div className="space-y-2">
                 <Label htmlFor="document_type" className="text-sm font-medium">
-                  Hujjat Turi *
+                  {t("documentType")} *
                 </Label>
                 <Select name="document_type" required>
                   <SelectTrigger className="h-11 bg-ice border-gray-300">
-                    <SelectValue placeholder="Hujjat turini tanlang" />
+                    <SelectValue placeholder={t("selectDocumentType")} />
                   </SelectTrigger>
                   <SelectContent className="bg-ice border-gray-200 shadow-lg">
                     {DocumentType.map((doc_type: any, index: number) => (
@@ -265,7 +264,7 @@ function LandDocumentCreate() {
                 <SelectContent>
                   <div className="p-2">
                     <Input
-                      placeholder="Izlash..."
+                      placeholder={t("search")}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full mb-2"
@@ -300,12 +299,12 @@ function LandDocumentCreate() {
             {/* Comment */}
             <div className="space-y-2">
               <Label htmlFor="comment" className="text-sm font-medium">
-                Izoh (Ixtiyoriy)
+                {t("commentOptional")}
               </Label>
               <Textarea
                 id="comment"
                 name="comment"
-                placeholder="Qo'shimcha izoh yoki eslatmalar qoldiring"
+                placeholder={t("enterComment")}
                 className="min-h-[100px] resize-none border-gray-300"
               />
             </div>
@@ -313,7 +312,7 @@ function LandDocumentCreate() {
             {/* File Upload */}
             <div className="space-y-4">
               <Label htmlFor="file" className="text-sm font-medium">
-                Fayl Yuklash *
+                {t("fileUpload")} *
               </Label>
 
               {selectedFile ? (
@@ -363,13 +362,13 @@ function LandDocumentCreate() {
                     </div>
                     <div className="text-center space-y-2">
                       <div className="text-lg font-semibold text-gray-900">
-                        Faylni yuklash uchun bosing
+                        {t("clickToUploadFile")}
                       </div>
                       <p className="text-sm text-gray-600">
-                        yoki faylni shu yerga sudrab keling
+                        {t("orDragFile")}
                       </p>
                       <p className="text-xs text-gray-500">
-                        PDF, DOC, DOCX, JPG, PNG (Maks. 10MB)
+                        {t("fileFormats")}
                       </p>
                     </div>
                   </Label>
@@ -381,8 +380,7 @@ function LandDocumentCreate() {
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <FileText className="h-4 w-4" />
                   <span>
-                    Fayl muvaffaqiyatli yuklandi. Boshqa fayl yuklash uchun
-                    yuqoridagi faylni o'chiring.
+                    {t("fileUploadedSuccessfully")}
                   </span>
                 </div>
               )}
@@ -396,14 +394,14 @@ function LandDocumentCreate() {
                 onClick={() => navigate(-1)}
                 className="min-w-24 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
               >
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
                 className="min-w-24 h-11 bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={!selectedFile || !date}
               >
-                Hujjat Yaratish
+                {t("createDocument")}
               </Button>
             </div>
           </form>
