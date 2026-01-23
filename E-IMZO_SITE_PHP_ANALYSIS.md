@@ -1,5 +1,160 @@
 # E-IMZO test.e-imzo.uz/demo/site.php: Texnik Tahlil va Kod
 
+## 0. Network Request Analysis (Browser DevTools)
+
+### Observed Network Requests:
+
+```
+1. site.php (200) - 2.2 kB, 9 ms
+   - Asosiy HTML sahifa
+   - Document type
+
+2. e-imzo.js (200) - Memory cache
+   - E-IMZO asosiy JavaScript kutubxonasi
+   - CAPIWS WebSocket client
+   - Loaded from: site.php:7
+
+3. e-imzo-client.js?v=1.2 (200) - Memory cache
+   - E-IMZO client wrapper
+   - High-level API
+   - Loaded from: site.php:8
+
+4. micro-ajax.js (200) - Memory cache
+   - AJAX utility kutubxonasi
+   - HTTP request helper
+   - Loaded from: site.php:9
+
+5. e-imzo-init.js?v=1.0 (200) - Memory cache
+   - E-IMZO initialization script
+   - Auto-setup va configuration
+   - Loaded from: site.php:10
+
+6. cryptapi (WebSocket) - e-imzo.js:215, e-imzo.js:187
+   - CAPIWS WebSocket ulanish
+   - Local service bilan aloqa
+   - Persistent connection
+   - Endpoint: ws://localhost:PORT/cryptapi
+   - Status: Finished, Pending (connection established)
+
+7. challenge?_uc=1769148763862_0.2833405804656216 (200) - 0.2 kB, 10 ms
+   - Challenge/Response autentifikatsiya
+   - XHR request (micro-ajax.js:39)
+   - Unique challenge token (_uc = unique challenge)
+   - CSRF protection uchun
+   - Format: timestamp_randomNumber
+```
+
+### WebSocket Connection Details (cryptapi):
+
+```javascript
+// e-imzo.js:215 - WebSocket connection initialization
+// e-imzo.js:187 - WebSocket message handler
+// cryptapi - WebSocket endpoint name
+
+// Connection flow:
+1. e-imzo.js yuklanadi
+2. CAPIWS service portini aniqlash (localhost discovery)
+3. WebSocket ulanish: ws://localhost:PORT/cryptapi
+4. Persistent connection o'rnatiladi
+5. Barcha CAPIWS requestlar shu connection orqali yuboriladi
+
+// e-imzo.js:215 - WebSocket initialization code
+function initCAPIWSWebSocket() {
+  const port = discoverCAPIWSPort(); // Port discovery logic
+  const ws = new WebSocket('ws://localhost:' + port + '/cryptapi');
+  
+  ws.onopen = function() {
+    console.log('CAPIWS WebSocket connected via cryptapi endpoint');
+    window.CAPIWS.ws = ws; // Save connection
+  };
+  
+  ws.onmessage = function(event) {
+    // e-imzo.js:187 - Message handler
+    handleCAPIWSMessage(JSON.parse(event.data));
+  };
+  
+  ws.onerror = function(error) {
+    console.error('CAPIWS WebSocket error:', error);
+  };
+  
+  ws.onclose = function() {
+    console.log('CAPIWS WebSocket closed');
+    // Auto-reconnect logic
+    setTimeout(initCAPIWSWebSocket, 1000);
+  };
+}
+
+// e-imzo.js:187 - Message handler
+function handleCAPIWSMessage(message) {
+  // Request ID ga mos response ni topish
+  const callback = window.CAPIWS.pendingRequests[message.id];
+  if (callback) {
+    delete window.CAPIWS.pendingRequests[message.id];
+    if (message.error) {
+      callback.fail(message.error, message.reason);
+    } else {
+      callback.success(message.result);
+    }
+  }
+}
+```
+
+### Challenge/Response Authentication:
+
+```javascript
+// challenge request - nima uchun?
+
+// 1. CAPIWS service autentifikatsiya
+// 2. Browser va local service o'rtasida xavfsizlik
+// 3. CSRF protection
+// 4. Session management
+
+// micro-ajax.js:39 - Challenge request
+function getChallenge() {
+  // Unique ID yaratish
+  const uniqueId = Date.now() + '_' + Math.random();
+  // Example: 1769148763862_0.2833405804656216
+  
+  return fetch('/challenge?_uc=' + uniqueId)
+    .then(response => response.json())
+    .then(data => {
+      // Response format:
+      // {
+      //   "challenge": "abc123def456...",
+      //   "timestamp": 1769148763862,
+      //   "expires": 1769148800000
+      // }
+      
+      // Challenge token ni saqlash
+      window.challengeToken = data.challenge;
+      window.challengeExpires = data.expires;
+      
+      return data.challenge;
+    })
+    .catch(error => {
+      console.error('Challenge request failed:', error);
+      throw error;
+    });
+}
+
+// Challenge token bilan request yuborish
+function sendAuthenticatedRequest(method, params) {
+  // Challenge token bilan request
+  const request = {
+    id: generateRequestId(),
+    challenge: window.challengeToken,
+    method: method,
+    params: params,
+    timestamp: Date.now()
+  };
+  
+  // WebSocket orqali yuborish
+  window.CAPIWS.ws.send(JSON.stringify(request));
+}
+```
+
+---
+
 ## 1. Saytning Umumiy Tuzilishi
 
 ### HTML Struktura:
@@ -31,14 +186,33 @@
 // STEP 1: E-IMZO Client'ni yuklash va tekshirish
 // ============================================
 
-window.addEventListener('DOMContentLoaded', function() {
-  // E-IMZO client yuklangandan keyin
-  if (window.EIMZOClient && window.CAPIWS) {
-    initializeEimzo();
-  } else {
-    console.error('E-IMZO client yuklanmadi');
-  }
-});
+    // e-imzo-init.js avtomatik initialization
+    // Sahifa yuklangandan keyin avtomatik ishga tushadi
+    
+    window.addEventListener('DOMContentLoaded', function() {
+      // e-imzo-init.js allaqachon ishlagan bo'lishi mumkin
+      // Yoki manual initialization
+      
+      if (window.EIMZOClient && window.CAPIWS) {
+        // WebSocket connection allaqachon o'rnatilgan
+        // cryptapi endpoint orqali ulangan
+        initializeEimzo();
+      } else {
+        console.error('E-IMZO client yuklanmadi');
+      }
+    });
+    
+    // Challenge/Response autentifikatsiya
+    // micro-ajax.js orqali
+    function getChallenge() {
+      const uniqueId = Date.now() + '_' + Math.random();
+      return fetch('/challenge?_uc=' + uniqueId)
+        .then(response => response.json())
+        .then(data => {
+          // Challenge token olinadi
+          return data.challenge;
+        });
+    }
 
 // ============================================
 // STEP 2: CAPIWS Service bilan bog'lanish
