@@ -7,34 +7,28 @@
   <meta name="description" content="Stat-Forest Platform - O'rmon xo'jaligi statistikasi" />
   <link rel="icon" type="image/svg+xml" href="./src/assets/logo.png" />
   <title>Stat-Forest Platform</title>
-  
+
   <!-- Performance optimizatsiyasi - Resource hints -->
   <link rel="preconnect" href="https://test.e-imzo.uz" crossorigin />
   <link rel="dns-prefetch" href="https://test.e-imzo.uz" />
-  
-  <!-- E-IMZO scripts - defer qilingan, blocking operatsiyalarni oldini olish uchun -->
+
+  <!-- E-IMZO scripts - Local versions (from working demo) -->
   <!-- 
     Test muhiti uchun sertifikatlar:
     ✅ USB-token (ID-card, BAIK-token): https://test.e-imzo.uz/registrator/public/ckc.html
     ✅ PFX-ключ: https://test.e-imzo.uz/registrator/public/pfx.html
     ⚠️ Test sertifikatlar faqat test-vpn e-imzo-server da ishlaydi
+    
+    Note: Local scripts are used instead of CDN to match the working demo behavior.
+    CDN scripts may have different API or version, causing compatibility issues.
   -->
-  <script src="https://test.e-imzo.uz/demo/e-imzo.js" defer></script>
-  <script src="https://test.e-imzo.uz/demo/e-imzo-client.js" defer></script>
-  <script>
-    // Add dates comparison utility used by E-IMZO
-    // Defer qilingan - sahifa yuklangandan keyin ishlaydi
-    window.addEventListener('DOMContentLoaded', function() {
-      window.dates = {
-        compare: function (a, b) {
-          return (a > b) ? 1 : (a < b) ? -1 : 0;
-        }
-      };
-    });
-  </script>
+  <script src="/e-imzo.js" type="text/javascript"></script>
+  <script src="/e-imzo-client.js?v=1.2" type="text/javascript"></script>
+  <script src="/micro-ajax.js" type="text/javascript"></script>
+  <script src="/e-imzo-init.js?v=1.0" type="text/javascript"></script>
 </head>
 
-<body style="background-color: #FAFAFA;"> 
+<body style="background-color: #FAFAFA;">
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
