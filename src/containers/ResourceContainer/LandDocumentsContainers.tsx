@@ -42,7 +42,7 @@ function LandDocumentsContainers() {
   // ------------------------------------------------
   const handleDownload = async (doc: any) => {
     if (!doc.file_url) {
-      alert("Fayl manzili topilmadi!");
+      alert(t("fileNotFound") || "Fayl manzili topilmadi!");
       return;
     }
 
@@ -90,12 +90,12 @@ function LandDocumentsContainers() {
 
       // 🔹 Agar fetch https versiyada ham ishlamasa, fallback uchun alert
       alert(
-        "Faylni yuklab bo‘lmadi. Iltimos, brauzer konsolini tekshiring yoki administrator bilan bog‘laning."
+        t("downloadError") || "Faylni yuklab bo'lmadi. Iltimos, brauzer konsolini tekshiring yoki administrator bilan bog'laning."
       );
     }
   };
 
-  // Filtlarni o‘zgartirganda sahifa reset bo‘ladi
+  // Filtlarni o'zgartirganda sahifa reset bo'ladi
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm]);

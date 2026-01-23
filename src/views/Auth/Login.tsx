@@ -28,6 +28,11 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">("login");
+  const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
+  const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
+  const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
+  const [selectedUsbToken, setSelectedUsbToken] = useState<string>("");
 
   // -------- E-IMZO START ---------------
   // 
@@ -174,8 +179,16 @@ function Login() {
           console.log(`USB-tokenlar: ${usbTokens.length}, E-imzo keylar: ${eimzoKeys.length}`);
           
           setEimzoKeys(processedItems);
-          if (processedItems.length > 0) setSelectedKey(processedItems[0].id);
-          else setError(t("notFoundEImzo"));
+          setEimzoKeysOnly(eimzoKeys);
+          setUsbTokensOnly(usbTokens);
+          
+          if (processedItems.length > 0) {
+            setSelectedKey(processedItems[0].id);
+            if (eimzoKeys.length > 0) setSelectedEimzoKey(eimzoKeys[0].id);
+            if (usbTokens.length > 0) setSelectedUsbToken(usbTokens[0].id);
+          } else {
+            setError(t("notFoundEImzo"));
+          }
           setIsLoading(false);
         },
         (r: any) => {
@@ -219,8 +232,16 @@ function Login() {
         console.log(`USB-tokenlar: ${usbTokens.length}, E-imzo keylar: ${eimzoKeys.length}`);
         
         setEimzoKeys(items);
-        if (items.length > 0) setSelectedKey(firstId);
-        else setError(t("notFoundEImzo"));
+        setEimzoKeysOnly(eimzoKeys);
+        setUsbTokensOnly(usbTokens);
+        
+        if (items.length > 0) {
+          setSelectedKey(firstId);
+          if (eimzoKeys.length > 0) setSelectedEimzoKey(eimzoKeys[0].id);
+          if (usbTokens.length > 0) setSelectedUsbToken(usbTokens[0].id);
+        } else {
+          setError(t("notFoundEImzo"));
+        }
         setIsLoading(false);
       },
       (r: any) => {
@@ -231,10 +252,11 @@ function Login() {
     );
   };
 
-  const handleEimzoLogin = async () => {
-    if (!selectedKey) return setError(t("selectCertificate"));
+  const handleEimzoLogin = async (keyId?: string) => {
+    const keyToUse = keyId || selectedKey;
+    if (!keyToUse) return setError(t("selectCertificate"));
 
-    const selectedItem = eimzoKeys.find((item) => item.id === selectedKey);
+    const selectedItem = eimzoKeys.find((item) => item.id === keyToUse);
     if (!selectedItem) return setError(t("invalidSelectedCertificate"));
 
     setIsLoading(true);
@@ -329,32 +351,69 @@ function Login() {
       <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
         <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="w-full gap-3">
-            <TabsTrigger value="eimzo" className="flex-1">
-              {t("eImzoLogin")}
-            </TabsTrigger>
-            <TabsTrigger value="login" className="flex-1">
-              {t("login")}
-            </TabsTrigger>
+        {/* Login method selection buttons */}
+        <div className="w-full flex gap-2 mb-2">
+          <Button
+            type="button"
+            variant={activeTab === "login" ? "default" : "outline"}
+            onClick={() => setActiveTab("login")}
+            className={`flex-1 h-[45px] text-sm ${
+              activeTab === "login"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-white border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            {t("login")}
+          </Button>
+          <Button
+            type="button"
+            variant={activeTab === "eimzo" ? "default" : "outline"}
+            onClick={() => setActiveTab("eimzo")}
+            className={`flex-1 h-[45px] text-sm ${
+              activeTab === "eimzo"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-white border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            E-imzo
+          </Button>
+          <Button
+            type="button"
+            variant={activeTab === "usb-token" ? "default" : "outline"}
+            onClick={() => setActiveTab("usb-token")}
+            className={`flex-1 h-[45px] text-sm ${
+              activeTab === "usb-token"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-white border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            USB-token
+          </Button>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "eimzo" | "login" | "usb-token")} className="w-full">
+          <TabsList className="hidden">
+            <TabsTrigger value="eimzo">E-imzo</TabsTrigger>
+            <TabsTrigger value="usb-token">USB-token</TabsTrigger>
+            <TabsTrigger value="login">{t("login")}</TabsTrigger>
           </TabsList>
 
-          {/* ------------ E-IMZO / USB-TOKEN LOGIN ------------- */}
+          {/* ------------ E-IMZO (PFX) LOGIN ------------- */}
           <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
-            <p className="text-sm text-gray-600">{t("eimzoOrUsbDescription")}</p>
+            <p className="text-sm text-gray-600">E-imzo sertifikati (PFX fayl) orqali kirish</p>
             {isLoading ? (
               <p>Yuklanmoqda...</p>
-            ) : eimzoKeys.length > 0 ? (
+            ) : eimzoKeysOnly.length > 0 ? (
               <>
                 <select
-                  value={selectedKey}
-                  onChange={(e) => setSelectedKey(e.target.value)}
+                  value={selectedEimzoKey}
+                  onChange={(e) => setSelectedEimzoKey(e.target.value)}
                   className="w-full p-2 border rounded"
                 >
                   <option value="" disabled>
-                    {t("selectCertificatePlaceholder")}
+                    E-imzo sertifikatini tanlang
                   </option>
-                  {eimzoKeys.map((key) => (
+                  {eimzoKeysOnly.map((key) => (
                     <option
                       key={key.id}
                       value={key.id}
@@ -368,9 +427,9 @@ function Login() {
 
                 <div className="flex gap-2 flex-col sm:flex-row">
                   <Button
-                    onClick={handleEimzoLogin}
+                    onClick={() => handleEimzoLogin(selectedEimzoKey)}
                     className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
-                    disabled={!selectedKey || isLoading}
+                    disabled={!selectedEimzoKey || isLoading}
                   >
                     {isLoading ? "Ishlanmoqda..." : t("enter")}
                   </Button>
@@ -387,7 +446,71 @@ function Login() {
               </>
             ) : (
               <>
-                <p>{t("notFoundSertificate")}</p>
+                <p>E-imzo sertifikatlari topilmadi</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRefreshKeys}
+                  disabled={isLoading}
+                  className="h-[45px] w-fit"
+                >
+                  {t("refreshCertificates")}
+                </Button>
+              </>
+            )}
+
+            {error && <p className="text-red-600">{error}</p>}
+          </TabsContent>
+
+          {/* ------------ USB-TOKEN LOGIN ------------- */}
+          <TabsContent value="usb-token" className="pt-6 flex flex-col gap-4">
+            <p className="text-sm text-gray-600">USB-token (ID-card, BAIK-token) orqali kirish</p>
+            {isLoading ? (
+              <p>Yuklanmoqda...</p>
+            ) : usbTokensOnly.length > 0 ? (
+              <>
+                <select
+                  value={selectedUsbToken}
+                  onChange={(e) => setSelectedUsbToken(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="" disabled>
+                    USB-token sertifikatini tanlang
+                  </option>
+                  {usbTokensOnly.map((key) => (
+                    <option
+                      key={key.id}
+                      value={key.id}
+                      disabled={key.disabled}
+                      className={key.disabled ? "text-gray-400" : ""}
+                    >
+                      {key.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="flex gap-2 flex-col sm:flex-row">
+                  <Button
+                    onClick={() => handleEimzoLogin(selectedUsbToken)}
+                    className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
+                    disabled={!selectedUsbToken || isLoading}
+                  >
+                    {isLoading ? "Ishlanmoqda..." : t("enter")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRefreshKeys}
+                    disabled={isLoading}
+                    className="h-[45px]"
+                  >
+                    {t("refreshCertificates")}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>USB-token topilmadi. USB-token ulanganligini tekshiring.</p>
                 <Button
                   type="button"
                   variant="outline"
