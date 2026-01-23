@@ -252,6 +252,80 @@ function Login() {
     );
   };
 
+  // Challenge olish (demo kod bilan mos)
+  const getChallenge = async (): Promise<string> => {
+    try {
+      const uniqueId = Date.now() + "_" + Math.random();
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || ""}/authentications/frontend/challenge?_uc=${uniqueId}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.status !== 1) {
+        throw new Error(`${data.status} - ${data.message || "Challenge olinmadi"}`);
+      }
+
+      return data.challenge;
+    } catch (error: any) {
+      // Agar challenge endpoint mavjud bo'lmasa, fallback matn ishlatamiz
+      console.warn("Challenge endpoint mavjud emas, fallback matn ishlatilmoqda:", error);
+      return t("confirmation");
+    }
+  };
+
+  // USB-token login (demo'dagi signinToken funksiyasi)
+  const handleUsbTokenLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 1. Challenge olish
+      const challenge = await getChallenge();
+
+      // 2. USB-token uchun keyId = "ckc" (demo kod bilan mos)
+      const keyId = "ckc";
+
+      // 3. PKCS#7 imzo yaratish
+      const pkcs7 = await new Promise<string>((resolve, reject) => {
+        window.EIMZOClient.createPkcs7(
+          keyId,
+          challenge,
+          null,
+          (signature: string) => resolve(signature),
+          (r: any) => {
+            const msg = r?.includes("BadPaddingException")
+              ? t("inCorrectPass")
+              : r || t("cannotCreateSignature");
+            reject(msg);
+          },
+          false // detached = false
+        );
+      });
+
+      // 4. Backend'ga yuborish (USB-token uchun vo yuborilmaydi)
+      const loginData: { pkcs7: string } = { pkcs7 };
+
+      const response = await dispatch(
+        authApi.endpoints.eimzoLogin.initiate(loginData)
+      ).unwrap();
+
+      if (response?.access) {
+        navigate("/main");
+      } else {
+        throw new Error("Token olinmadi");
+      }
+    } catch (err: any) {
+      setError(err?.message || err || t("eImzoErr"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // E-imzo (PFX) login
   const handleEimzoLogin = async (keyId?: string) => {
     const keyToUse = keyId || selectedKey;
     if (!keyToUse) return setError(t("selectCertificate"));
@@ -263,7 +337,11 @@ function Login() {
     setError(null);
 
     try {
-      const keyId = await new Promise<string>((resolve, reject) => {
+      // 1. Challenge olish
+      const challenge = await getChallenge();
+
+      // 2. Kalitni yuklash
+      const loadedKeyId = await new Promise<string>((resolve, reject) => {
         window.EIMZOClient.loadKey(
           selectedItem.vo,
           (id: string) => resolve(id),
@@ -276,10 +354,11 @@ function Login() {
         );
       });
 
+      // 3. PKCS#7 imzo yaratish
       const pkcs7 = await new Promise<string>((resolve, reject) => {
         window.EIMZOClient.createPkcs7(
-          keyId,
-          t("confirmation"),
+          loadedKeyId,
+          challenge,
           null,
           (signature: string) => resolve(signature),
           (r: any) => {
@@ -287,16 +366,16 @@ function Login() {
               ? t("inCorrectPass")
               : r || t("cannotCreateSignature");
             reject(msg);
-          }
+          },
+          false // detached = false
         );
       });
 
-      // USB-token (ftjc) uchun "vo" yuborilmaydi, faqat E-imzo (pfx) uchun yuboriladi
-      const isUsbToken = selectedItem.vo?.type === "ftjc";
-      const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
-      if (!isUsbToken) {
-        loginData.vo = selectedItem.vo;
-      }
+      // 4. Backend'ga yuborish (PFX uchun vo yuboriladi)
+      const loginData: { pkcs7: string; vo: any } = {
+        pkcs7,
+        vo: selectedItem.vo,
+      };
 
       const response = await dispatch(
         authApi.endpoints.eimzoLogin.initiate(loginData)
@@ -464,63 +543,36 @@ function Login() {
 
           {/* ------------ USB-TOKEN LOGIN ------------- */}
           <TabsContent value="usb-token" className="pt-6 flex flex-col gap-4">
-            <p className="text-sm text-gray-600">USB-token (ID-card, BAIK-token) orqali kirish</p>
-            {isLoading ? (
-              <p>Yuklanmoqda...</p>
-            ) : usbTokensOnly.length > 0 ? (
-              <>
-                <select
-                  value={selectedUsbToken}
-                  onChange={(e) => setSelectedUsbToken(e.target.value)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="" disabled>
-                    USB-token sertifikatini tanlang
-                  </option>
-                  {usbTokensOnly.map((key) => (
-                    <option
-                      key={key.id}
-                      value={key.id}
-                      disabled={key.disabled}
-                      className={key.disabled ? "text-gray-400" : ""}
-                    >
-                      {key.label}
-                    </option>
-                  ))}
-                </select>
+            <p className="text-sm text-gray-600">
+              USB-token (ID-card, BAIK-token) orqali kirish
+            </p>
+            <p className="text-xs text-gray-500">
+              USB-token ulanganligini tekshiring va "Kirish" tugmasini bosing
+            </p>
 
-                <div className="flex gap-2 flex-col sm:flex-row">
-                  <Button
-                    onClick={() => handleEimzoLogin(selectedUsbToken)}
-                    className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
-                    disabled={!selectedUsbToken || isLoading}
-                  >
-                    {isLoading ? "Ishlanmoqda..." : t("enter")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRefreshKeys}
-                    disabled={isLoading}
-                    className="h-[45px]"
-                  >
-                    {t("refreshCertificates")}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p>USB-token topilmadi. USB-token ulanganligini tekshiring.</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleRefreshKeys}
-                  disabled={isLoading}
-                  className="h-[45px] w-fit"
-                >
-                  {t("refreshCertificates")}
-                </Button>
-              </>
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <Button
+                onClick={handleUsbTokenLogin}
+                className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
+                disabled={isLoading}
+              >
+                {isLoading ? "Ishlanmoqda..." : t("enter")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleRefreshKeys}
+                disabled={isLoading}
+                className="h-[45px]"
+              >
+                {t("refreshCertificates")}
+              </Button>
+            </div>
+
+            {usbTokensOnly.length > 0 && (
+              <div className="mt-2 p-2 bg-green-50 rounded text-sm text-green-700">
+                {usbTokensOnly.length} ta USB-token topildi
+              </div>
             )}
 
             {error && <p className="text-red-600">{error}</p>}
