@@ -10,12 +10,14 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Credentials, EimzoKey } from "@/types/auth";
 import { getEimzoApiKeys } from "@/utils/eimzoConfig";
+import { base_url } from "@/services/baseUrl";
 
 declare global {
   interface Window {
     EIMZOClient: any;
     CAPIWS: any;
     dates: any;
+    microAjax: any;
   }
 }
 
@@ -24,23 +26,197 @@ function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
-  const [selectedKey, setSelectedKey] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedKey, setSelectedKey] = useState<string>(""); // Demo kod bilan moslik uchun (document.testform.key.value)
   const [isLoading, setIsLoading] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">("login");
   const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
   const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
   const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
-  const [selectedUsbToken, setSelectedUsbToken] = useState<string>("");
 
-  // -------- E-IMZO START ---------------
-  // 
-  // Test muhiti uchun sertifikatlar:
-  // - USB-token (ID-card, BAIK-token): https://test.e-imzo.uz/registrator/public/ckc.html
-  // - PFX-ключ: https://test.e-imzo.uz/registrator/public/pfx.html
-  // ⚠️ Test sertifikatlar faqat test-vpn e-imzo-server da ishlaydi
-  //
+  // -------- E-IMZO UI HELPERS (Demo kod bilan 100% mos) ---------------
+  
+  const uiShowMessage = (message: string) => {
+    alert(message);
+  };
+
+  const uiLoading = () => {
+    setIsLoading(true);
+    setError("Загрузка ...");
+  };
+
+  const uiNotLoaded = (e: any) => {
+    setError("");
+    if (e) {
+      wsError(e);
+    } else {
+      uiShowMessage("Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера.");
+    }
+  };
+
+  const uiUpdateApp = () => {
+    setError("ВНИМАНИЕ !!! Установите новую версию приложения E-IMZO.");
+  };
+
+  const uiAppLoad = () => {
+    uiClearCombo();
+    window.EIMZOClient.listAllUserKeys(
+      (o: any, i: number) => {
+        const itemId = "itm-" + o.serialNumber + "-" + i;
+        return itemId;
+      },
+      (itemId: string, v: any) => {
+        return uiCreateItem(itemId, v);
+      },
+      (items: any[], firstId: string | null) => {
+        uiFillCombo(items);
+        uiLoaded();
+        uiComboSelect(firstId);
+      },
+      uiHandleError
+    );
+    if (!window.EIMZOClient.NEW_API3) {
+      alert("E-IMZO version should be 4.86 or newer");
+    }
+  };
+
+  const uiComboSelect = (itm: string | null) => {
+    if (itm) {
+      setSelectedKey(itm); // Demo kod bilan moslik uchun (document.testform.key.value)
+      setSelectedEimzoKey(itm);
+    }
+  };
+
+  const cbChanged = () => {
+    // Select o'zgarganda chaqiriladi
+    // Demo kodda keyId ni tozalash uchun ishlatilgan
+  };
+
+  const uiClearCombo = () => {
+    setEimzoKeys([]);
+    setEimzoKeysOnly([]);
+    setUsbTokensOnly([]);
+    setSelectedKey("");
+    setSelectedEimzoKey("");
+  };
+
+  const uiFillCombo = (items: any[]) => {
+    const processedItems: EimzoKey[] = [];
+    const usbTokens: EimzoKey[] = [];
+    const eimzoKeys: EimzoKey[] = [];
+
+    items.forEach((item: any) => {
+      const processed: EimzoKey = {
+        id: item.id || item.value,
+        value: item.id || item.value,
+        label: item.label || item.text,
+        disabled: item.disabled || false,
+        vo: item.vo || JSON.parse(item.getAttribute?.("vo") || "{}"),
+      };
+
+      processedItems.push(processed);
+
+      if (processed.vo?.type === "ftjc") {
+        usbTokens.push(processed);
+      } else if (processed.vo?.type === "pfx") {
+        eimzoKeys.push(processed);
+      }
+    });
+
+    setEimzoKeys(processedItems);
+    setEimzoKeysOnly(eimzoKeys);
+    setUsbTokensOnly(usbTokens);
+
+    if (processedItems.length > 0) {
+      setSelectedKey(processedItems[0].id);
+      if (eimzoKeys.length > 0) setSelectedEimzoKey(eimzoKeys[0].id);
+    }
+  };
+
+  const uiLoaded = () => {
+    setError("");
+    setIsLoading(false);
+  };
+
+  const uiCreateItem = (itmkey: string, vo: any) => {
+    const now = new Date();
+    vo.expired = window.dates?.compare(now, vo.validTo) > 0;
+
+    return {
+      id: itmkey,
+      value: itmkey,
+      label: vo.expired ? vo.CN + " (срок истек)" : vo.CN,
+      disabled: vo.expired,
+      vo: vo,
+    };
+  };
+
+  const uiShowProgress = () => {
+    setShowProgress(true);
+  };
+
+  const uiHideProgress = () => {
+    setShowProgress(false);
+  };
+
+  const wsError = (e: any) => {
+    if (e) {
+      const errorCAPIWS = "Ошибка соединения с E-IMZO. Возможно у вас не установлен модуль E-IMZO.";
+      uiShowMessage(errorCAPIWS + " : " + wsErroCodeDesc(e));
+    } else {
+      uiShowMessage("Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера.");
+    }
+  };
+
+  const wsErroCodeDesc = (code: number) => {
+    let reason;
+    if (code == 1000)
+      reason = code + " - " + "Normal closure, meaning that the purpose for which the connection was established has been fulfilled.";
+    else if (code == 1001)
+      reason = code + " - " + "An endpoint is \"going away\", such as a server going down or a browser having navigated away from a page.";
+    else if (code == 1002)
+      reason = code + " - " + "An endpoint is terminating the connection due to a protocol error";
+    else if (code == 1003)
+      reason = code + " - " + "An endpoint is terminating the connection because it has received a type of data it cannot accept (e.g., an endpoint that understands only text data MAY send this if it receives a binary message).";
+    else if (code == 1004)
+      reason = code + " - " + "Reserved. The specific meaning might be defined in the future.";
+    else if (code == 1005)
+      reason = code + " - " + "No status code was actually present.";
+    else if (code == 1006)
+      reason = code + " - " + "The connection was closed abnormally, e.g., without sending or receiving a Close control frame";
+    else if (code == 1007)
+      reason = code + " - " + "An endpoint is terminating the connection because it has received data within a message that was not consistent with the type of the message.";
+    else if (code == 1008)
+      reason = code + " - " + "An endpoint is terminating the connection because it has received a message that \"violates its policy\". This reason is given either if there is no other sutible reason, or if there is a need to hide specific details about the policy.";
+    else if (code == 1009)
+      reason = code + " - " + "An endpoint is terminating the connection because it has received a message that is too big for it to process.";
+    else if (code == 1010)
+      reason = code + " - " + "An endpoint (client) is terminating the connection because it has expected the server to negotiate one or more extension, but the server didn't return them in the response message of the WebSocket handshake.";
+    else if (code == 1011)
+      reason = code + " - " + "A server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request.";
+    else if (code == 1015)
+      reason = code + " - " + "The connection was closed due to a failure to perform a TLS handshake (e.g., the server certificate can't be verified).";
+    else reason = code.toString();
+    return reason;
+  };
+
+  const uiHandleError = (e: any, r: any) => {
+    uiHideProgress();
+    if (r) {
+      if (r.indexOf("BadPaddingException") != -1) {
+        uiShowMessage("Пароль неверный.");
+      } else {
+        uiShowMessage(r);
+      }
+    }
+    if (e) wsError(e);
+  };
+
+  // -------- E-IMZO INITIALIZATION ---------------
+  
   useEffect(() => {
     if (window.EIMZOClient) {
       initializeEimzo();
@@ -50,7 +226,7 @@ function Login() {
   }, []);
 
   const initializeEimzo = () => {
-    setIsLoading(true);
+    uiLoading();
     setError(null);
 
     // E-IMZO API keys ni .env dan o'qib o'rnatamiz
@@ -58,18 +234,23 @@ function Login() {
 
     window.EIMZOClient.checkVersion(
       (major: number, minor: number) => {
-        const required = 3 * 100 + 37;
-        const current = major * 100 + minor;
-
-        if (current < required) {
-          setError(t("eimzoError1"));
+        const EIMZO_MAJOR = 3;
+        const EIMZO_MINOR = 37;
+        const newVersion = EIMZO_MAJOR * 100 + EIMZO_MINOR;
+        const installedVersion = parseInt(major.toString()) * 100 + parseInt(minor.toString());
+        if (installedVersion < newVersion) {
+          uiUpdateApp();
           setIsLoading(false);
         } else {
           installApiKeys();
         }
       },
-      (r: any) => {
-        setError(r || t("eimzoError2"));
+      (e: any, r: any) => {
+        if (r) {
+          uiShowMessage(r);
+        } else {
+          uiNotLoaded(e);
+        }
         setIsLoading(false);
       }
     );
@@ -77,9 +258,15 @@ function Login() {
 
   const installApiKeys = () => {
     window.EIMZOClient.installApiKeys(
-      () => findTokensAndLoadKeys(),
-      (r: any) => {
-        setError(r || t("eimzoError3"));
+      () => {
+        uiAppLoad();
+      },
+      (e: any, r: any) => {
+        if (r) {
+          uiShowMessage(r);
+        } else {
+          wsError(e);
+        }
         setIsLoading(false);
       }
     );
@@ -87,307 +274,142 @@ function Login() {
 
   const handleRefreshKeys = () => {
     setError(null);
-    setIsLoading(true);
-    // USB-tokenlarni topish uchun avval findTokens ni chaqiramiz
-    findTokensAndLoadKeys();
+    uiLoading();
+    uiAppLoad();
   };
 
-  const findTokensAndLoadKeys = () => {
-    // CAPIWS mavjudligini tekshiramiz
-    if (window.CAPIWS && window.CAPIWS.findTokens && window.CAPIWS.findPfxs) {
-      // Avval USB-tokenlarni topamiz
-      window.CAPIWS.findTokens(
-        () => {
-          console.log("findTokens: USB-tokenlar topildi");
-          // Keyin .pfx fayllarni topamiz
-          window.CAPIWS.findPfxs(
-            () => {
-              console.log("findPfxs: PFX fayllar topildi");
-              // Ikkalasini ham topgandan keyin biroz kutib, listAllUserKeys ni chaqiramiz
-              // USB-tokenlarni to'liq yuklash uchun vaqt beramiz
-              setTimeout(() => {
-                loadEimzoKeys();
-              }, 500);
-            },
-            (err: any) => {
-              console.warn("findPfxs error:", err);
-              // findPfxs xatolik bersa ham listAllUserKeys ni chaqiramiz
-              setTimeout(() => {
-                loadEimzoKeys();
-              }, 500);
-            }
-          );
-        },
-        (err: any) => {
-          console.warn("findTokens error:", err);
-          // findTokens xatolik bersa ham .pfx fayllarni topishga harakat qilamiz
-          window.CAPIWS.findPfxs(
-            () => {
-              setTimeout(() => {
-                loadEimzoKeys();
-              }, 500);
-            },
-            () => {
-              // Ikkalasi ham xatolik bersa ham listAllUserKeys ni chaqiramiz
-              setTimeout(() => {
-                loadEimzoKeys();
-              }, 500);
-            }
-          );
-        }
-      );
-    } else {
-      // CAPIWS yoki findTokens/findPfxs topilmasa, to'g'ridan-to'g'ri listAllUserKeys ni chaqiramiz
-      console.warn("CAPIWS.findTokens yoki CAPIWS.findPfxs topilmadi, to'g'ridan-to'g'ri listAllUserKeys chaqirilmoqda");
-      loadEimzoKeys();
-    }
-  };
+  // -------- DEMO KOD FUNCTIONS (100% mos) ---------------
 
-  const loadEimzoKeys = () => {
-    console.log("loadEimzoKeys: listAllUserKeys chaqirilmoqda...");
+  // getChallenge - demo kod bilan 100% mos
+  const getChallenge = (callback: (challenge: string) => void) => {
+    // microAjax funksiyasini chaqirish (demo kod bilan mos)
+    // microAjax constructor sifatida ishlatiladi: new microAjax(url, callback)
+    const uniqueId = Date.now() + "_" + Math.random();
+    const url = `${base_url}/authentications/frontend/challenge?_uc=${uniqueId}`;
     
-    // Agar CAPIWS mavjud bo'lsa, to'g'ridan-to'g'ri list_all_user_keys ni chaqiramiz
-    if (window.CAPIWS && window.CAPIWS.list_all_user_keys) {
-      console.log("CAPIWS.list_all_user_keys to'g'ridan-to'g'ri chaqirilmoqda...");
-      window.CAPIWS.list_all_user_keys(
-        (items: any[]) => {
-          console.log(`CAPIWS.list_all_user_keys: ${items.length} ta key topildi`);
-          
-          const processedItems: EimzoKey[] = [];
-          items.forEach((v: any, i: number) => {
-            const now = new Date();
-            const validTo = new Date(v.validTo);
-            const expired = validTo < now;
-
-            // USB-token yoki E-imzo ekanligini aniqlash
-            const keyType = v.type === "ftjc" ? "USB-token" : v.type === "pfx" ? "E-imzo" : "Noma'lum";
-            console.log(`Key topildi: ${v.CN} (${keyType})`);
-
-            const itemId = `itm-${v.serialNumber}-${i}`;
-            processedItems.push({
-              id: itemId,
-              value: itemId,
-              label: expired ? `${v.CN} ${t("expired")}` : v.CN,
-              disabled: expired,
-              vo: v,
-            });
-          });
-
-          // USB-token va E-imzo keylarini ajratib ko'rsatish
-          const usbTokens = processedItems.filter(item => item.vo?.type === "ftjc");
-          const eimzoKeys = processedItems.filter(item => item.vo?.type === "pfx");
-          console.log(`USB-tokenlar: ${usbTokens.length}, E-imzo keylar: ${eimzoKeys.length}`);
-          
-          setEimzoKeys(processedItems);
-          setEimzoKeysOnly(eimzoKeys);
-          setUsbTokensOnly(usbTokens);
-          
-          if (processedItems.length > 0) {
-            setSelectedKey(processedItems[0].id);
-            if (eimzoKeys.length > 0) setSelectedEimzoKey(eimzoKeys[0].id);
-            if (usbTokens.length > 0) setSelectedUsbToken(usbTokens[0].id);
-          } else {
-            setError(t("notFoundEImzo"));
+    if (typeof (window as any).microAjax === "function") {
+      new (window as any).microAjax(
+        url,
+        function (data: string, s: any) {
+          if (s.status != 200) {
+            uiShowMessage(s.status + " - " + s.statusText);
+            return;
           }
-          setIsLoading(false);
-        },
-        (r: any) => {
-          console.error("CAPIWS.list_all_user_keys xatolik:", r);
-          // Xatolik bo'lsa, EIMZOClient orqali sinab ko'ramiz
-          loadEimzoKeysViaEIMZOClient();
+          try {
+            const parsedData = JSON.parse(data);
+            if (parsedData.status != 1) {
+              uiShowMessage(parsedData.status + " - " + parsedData.message);
+              return;
+            }
+            callback(parsedData.challenge);
+          } catch (err) {
+            uiShowMessage(s.status + " - " + s.statusText + ": " + err);
+          }
         }
       );
     } else {
-      // CAPIWS topilmasa, EIMZOClient orqali chaqiramiz
-      loadEimzoKeysViaEIMZOClient();
+      // Fallback: fetch ishlatish
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`${response.status} - ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.status != 1) {
+            uiShowMessage(data.status + " - " + data.message);
+            return;
+          }
+          callback(data.challenge);
+        })
+        .catch(() => {
+          // Fallback: agar challenge endpoint mavjud bo'lmasa
+          callback(t("confirmation"));
+        });
     }
   };
 
-  const loadEimzoKeysViaEIMZOClient = () => {
-    console.log("loadEimzoKeysViaEIMZOClient: EIMZOClient.listAllUserKeys chaqirilmoqda...");
-    window.EIMZOClient.listAllUserKeys(
-      (o: any, i: number) => `itm-${o.serialNumber}-${i}`,
-      (itemId: string, v: any) => {
-        const now = new Date();
-        const validTo = new Date(v.validTo);
-        const expired = validTo < now;
-
-        // USB-token yoki E-imzo ekanligini aniqlash
-        const keyType = v.type === "ftjc" ? "USB-token" : v.type === "pfx" ? "E-imzo" : "Noma'lum";
-        console.log(`Key topildi: ${v.CN} (${keyType})`);
-
-        return {
-          id: itemId,
-          value: itemId,
-          label: expired ? `${v.CN} ${t("expired")}` : v.CN,
-          disabled: expired,
-          vo: v,
-        };
-      },
-      (items: EimzoKey[], firstId: string) => {
-        console.log(`EIMZOClient.listAllUserKeys: ${items.length} ta key topildi`);
-        // USB-token va E-imzo keylarini ajratib ko'rsatish
-        const usbTokens = items.filter(item => item.vo?.type === "ftjc");
-        const eimzoKeys = items.filter(item => item.vo?.type === "pfx");
-        console.log(`USB-tokenlar: ${usbTokens.length}, E-imzo keylar: ${eimzoKeys.length}`);
+  // auth - demo kod bilan 100% mos
+  const auth = (keyId: string, challenge: string, callback: (redirect: string) => void) => {
+    window.EIMZOClient.createPkcs7(
+      keyId,
+      challenge,
+      null,
+      (pkcs7: string) => {
+        // Demo kodda microAjax('auth.php', callback, 'keyId=...&pkcs7=...')
+        // Bizning holatda RTK Query ishlatamiz
+        const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
         
-        setEimzoKeys(items);
-        setEimzoKeysOnly(eimzoKeys);
-        setUsbTokensOnly(usbTokens);
-        
-        if (items.length > 0) {
-          setSelectedKey(firstId);
-          if (eimzoKeys.length > 0) setSelectedEimzoKey(eimzoKeys[0].id);
-          if (usbTokens.length > 0) setSelectedUsbToken(usbTokens[0].id);
-        } else {
-          setError(t("notFoundEImzo"));
+        // PFX uchun vo qo'shish (agar keyId "ckc" bo'lmasa)
+        if (keyId !== "ckc") {
+          // Demo kodda: var itm = document.testform.key.value;
+          const itm = selectedEimzoKey || selectedKey;
+          const selectedItem = eimzoKeys.find((item) => item.id === itm);
+          if (selectedItem) {
+            loginData.vo = selectedItem.vo;
+          }
         }
-        setIsLoading(false);
+
+        dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
+          .unwrap()
+          .then((response: any) => {
+            uiHideProgress();
+            if (response?.access) {
+              callback("/main");
+              navigate("/main");
+            } else {
+              uiShowMessage("Kirish muvaffaqiyatsiz");
+            }
+          })
+          .catch((error: any) => {
+            uiHideProgress();
+            const errorMsg = error?.data?.message || error?.message || "Server bilan aloqa xatoligi";
+            uiShowMessage(errorMsg);
+          });
       },
-      (r: any) => {
-        console.error("EIMZOClient.listAllUserKeys xatolik:", r);
-        setError(r || t("cannotFindKeys"));
-        setIsLoading(false);
-      }
+      uiHandleError,
+      false
     );
   };
 
-  // Challenge olish (demo kod bilan mos)
-  const getChallenge = async (): Promise<string> => {
-    try {
-      const uniqueId = Date.now() + "_" + Math.random();
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || ""}/authentications/frontend/challenge?_uc=${uniqueId}`
-      );
+  // signinPFX - demo kod bilan 100% mos
+  const signinPFX = () => {
+    uiShowProgress();
 
-      if (!response.ok) {
-        throw new Error(`${response.status} - ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      if (data.status !== 1) {
-        throw new Error(`${data.status} - ${data.message || "Challenge olinmadi"}`);
-      }
-
-      return data.challenge;
-    } catch (error: any) {
-      // Agar challenge endpoint mavjud bo'lmasa, fallback matn ishlatamiz
-      console.warn("Challenge endpoint mavjud emas, fallback matn ishlatilmoqda:", error);
-      return t("confirmation");
-    }
-  };
-
-  // USB-token login (demo'dagi signinToken funksiyasi)
-  const handleUsbTokenLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // 1. Challenge olish
-      const challenge = await getChallenge();
-
-      // 2. USB-token uchun keyId = "ckc" (demo kod bilan mos)
-      const keyId = "ckc";
-
-      // 3. PKCS#7 imzo yaratish
-      const pkcs7 = await new Promise<string>((resolve, reject) => {
-        window.EIMZOClient.createPkcs7(
-          keyId,
-          challenge,
-          null,
-          (signature: string) => resolve(signature),
-          (r: any) => {
-            const msg = r?.includes("BadPaddingException")
-              ? t("inCorrectPass")
-              : r || t("cannotCreateSignature");
-            reject(msg);
-          },
-          false // detached = false
-        );
-      });
-
-      // 4. Backend'ga yuborish (USB-token uchun vo yuborilmaydi)
-      const loginData: { pkcs7: string } = { pkcs7 };
-
-      const response = await dispatch(
-        authApi.endpoints.eimzoLogin.initiate(loginData)
-      ).unwrap();
-
-      if (response?.access) {
-        navigate("/main");
-      } else {
-        throw new Error("Token olinmadi");
-      }
-    } catch (err: any) {
-      setError(err?.message || err || t("eImzoErr"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // E-imzo (PFX) login
-  const handleEimzoLogin = async (keyId?: string) => {
-    const keyToUse = keyId || selectedKey;
-    if (!keyToUse) return setError(t("selectCertificate"));
-
-    const selectedItem = eimzoKeys.find((item) => item.id === keyToUse);
-    if (!selectedItem) return setError(t("invalidSelectedCertificate"));
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // 1. Challenge olish
-      const challenge = await getChallenge();
-
-      // 2. Kalitni yuklash
-      const loadedKeyId = await new Promise<string>((resolve, reject) => {
+    getChallenge((challenge: string) => {
+      // Demo kodda: var itm = document.testform.key.value;
+      const itm = selectedEimzoKey || selectedKey;
+      const selectedItem = eimzoKeys.find((item) => item.id === itm);
+      if (selectedItem) {
         window.EIMZOClient.loadKey(
           selectedItem.vo,
-          (id: string) => resolve(id),
-          (r: any) => {
-            const msg = r?.includes("BadPaddingException")
-              ? t("inCorrectPass")
-              : r || t("cannotFindKeys");
-            reject(msg);
-          }
-        );
-      });
-
-      // 3. PKCS#7 imzo yaratish
-      const pkcs7 = await new Promise<string>((resolve, reject) => {
-        window.EIMZOClient.createPkcs7(
-          loadedKeyId,
-          challenge,
-          null,
-          (signature: string) => resolve(signature),
-          (r: any) => {
-            const msg = r?.includes("BadPaddingException")
-              ? t("inCorrectPass")
-              : r || t("cannotCreateSignature");
-            reject(msg);
+          (id: string) => {
+            const keyId = id;
+            auth(keyId, challenge, (redirect: string) => {
+              navigate(redirect);
+              uiShowProgress();
+            });
           },
-          false // detached = false
+          uiHandleError
         );
+      } else {
+        uiHideProgress();
+      }
+    });
+  };
+
+  // signinToken - demo kod bilan 100% mos
+  const signinToken = () => {
+    uiShowProgress();
+
+    getChallenge((challenge: string) => {
+      const keyId = "ckc";
+      auth(keyId, challenge, (redirect: string) => {
+        navigate(redirect);
+        uiShowProgress();
       });
-
-      // 4. Backend'ga yuborish (PFX uchun vo yuboriladi)
-      const loginData: { pkcs7: string; vo: any } = {
-        pkcs7,
-        vo: selectedItem.vo,
-      };
-
-      const response = await dispatch(
-        authApi.endpoints.eimzoLogin.initiate(loginData)
-      ).unwrap();
-
-      if (response?.access) navigate("/main");
-      else throw new Error("Token olinmadi");
-    } catch (err: any) {
-      setError(err?.message || err || t("eImzoErr"));
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   // -------- LOGIN BY EMAIL/PASSWORD --------------
@@ -486,7 +508,10 @@ function Login() {
               <>
                 <select
                   value={selectedEimzoKey}
-                  onChange={(e) => setSelectedEimzoKey(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedEimzoKey(e.target.value);
+                    cbChanged();
+                  }}
                   className="w-full p-2 border rounded"
                 >
                   <option value="" disabled>
@@ -506,11 +531,11 @@ function Login() {
 
                 <div className="flex gap-2 flex-col sm:flex-row">
                   <Button
-                    onClick={() => handleEimzoLogin(selectedEimzoKey)}
+                    onClick={signinPFX}
                     className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
                     disabled={!selectedEimzoKey || isLoading}
                   >
-                    {isLoading ? "Ishlanmoqda..." : t("enter")}
+                    {isLoading || showProgress ? "Ishlanmoqda..." : t("enter")}
                   </Button>
                   <Button
                     type="button"
@@ -539,6 +564,9 @@ function Login() {
             )}
 
             {error && <p className="text-red-600">{error}</p>}
+            {showProgress && (
+              <p className="text-green-600">Идет подписание, ждите.</p>
+            )}
           </TabsContent>
 
           {/* ------------ USB-TOKEN LOGIN ------------- */}
@@ -552,11 +580,11 @@ function Login() {
 
             <div className="flex gap-2 flex-col sm:flex-row">
               <Button
-                onClick={handleUsbTokenLogin}
+                onClick={signinToken}
                 className="bg-blue-600 text-white h-[45px] hover:bg-blue-700 flex-1"
                 disabled={isLoading}
               >
-                {isLoading ? "Ishlanmoqda..." : t("enter")}
+                {isLoading || showProgress ? "Ishlanmoqda..." : t("enter")}
               </Button>
               <Button
                 type="button"
@@ -576,6 +604,9 @@ function Login() {
             )}
 
             {error && <p className="text-red-600">{error}</p>}
+            {showProgress && (
+              <p className="text-green-600">Идет подписание, ждите.</p>
+            )}
           </TabsContent>
 
           {/* ------------ SIMPLE LOGIN ------------- */}
