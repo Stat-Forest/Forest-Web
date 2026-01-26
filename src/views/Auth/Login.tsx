@@ -109,14 +109,16 @@ function Login() {
         value: item.id || item.value,
         label: item.label || item.text,
         disabled: item.disabled || false,
-        vo: item.vo || JSON.parse(item.getAttribute?.("vo")),
+        vo: item.vo ,
       };
+
+      // || JSON.parse(item.getAttribute?.("vo"))
 
       processedItems.push(processed);
 
-      if (processed.vo?.type === "ftjc") {
+      if (processed.vo.type === "ftjc") {
         usbTokens.push(processed);
-      } else if (processed.vo?.type === "pfx") {
+      } else if (processed.vo.type === "pfx") {
         eimzoKeys.push(processed);
       }
     });
@@ -267,7 +269,7 @@ function Login() {
     callback(challenge);
   };
 
-  const auth = (keyId: string, challenge: string, vo?: any) => {
+  const auth = (keyId: string, challenge: string, vo: any) => {
     window.EIMZOClient.createPkcs7(
       keyId,
       challenge,
