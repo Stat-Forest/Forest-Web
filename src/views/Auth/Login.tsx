@@ -109,7 +109,7 @@ function Login() {
         value: item.id || item.value,
         label: item.label || item.text,
         disabled: item.disabled || false,
-        vo: item.vo || JSON.parse(item.getAttribute?.("vo") || "{}"),
+        vo: item.vo || JSON.parse(item.getAttribute?.("vo")),
       };
 
       processedItems.push(processed);
@@ -273,12 +273,7 @@ function Login() {
       challenge,
       null,
       (pkcs7: string) => {
-        const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
-        
-        // Add VO data
-        if (vo) {
-          loginData.vo = vo;
-        }
+        const loginData: { pkcs7: string; vo: any } = { pkcs7, vo };
 
         dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
           .unwrap()
