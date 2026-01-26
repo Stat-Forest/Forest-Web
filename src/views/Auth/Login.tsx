@@ -273,8 +273,9 @@ function Login() {
     window.EIMZOClient.createPkcs7(
       keyId,
       challenge,
+      vo,
       null,
-      (pkcs7: string) => {
+      (pkcs7: string, vo: any) => {
         const loginData: { pkcs7: string; vo: any } = { pkcs7, vo };
 
         dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
