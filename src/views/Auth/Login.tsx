@@ -2,7 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { authApi } from "@/services/authApi";
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Credentials, EimzoKey } from "@/types/auth";
+import { getEimzoApiKeys } from "@/utils/eimzoConfig";
+import { toast } from "react-toastify";
 import {
   Loader2,
   Eye,
@@ -12,1098 +20,954 @@ import {
   Usb,
   Key,
   LogIn,
-  Shield,
-  CheckCircle,
 } from "lucide-react";
 
-// ============ TYPES ============
-interface EimzoKey {
-  id: string;
-  value: string;
-  label: string;
-  disabled: boolean;
-  vo: {
-    type?: string;
-    CN: string;
-    serialNumber: string;
-    validTo: string;
-    validFrom: string;
-    issuerCN?: string;
-    disk?: string;
-    path?: string;
-    name?: string;
-    alias?: string;
-  };
-}
-
-// interface Credentials {
-//   email: string;
-//   password: string;
-// }
-
-// ============ GLOBAL DECLARATIONS ============
 declare global {
   interface Window {
     EIMZOClient: any;
     CAPIWS: any;
+    dates: any;
+    microAjax: any;
   }
 }
 
-// ============ E-IMZO CONFIG ============
-const getEimzoApiKeys = () => [
-  "localhost",
-  "127.0.0.1",
-  "null",
-  // Production uchun domeningizni qo'shing:
-  // "yourdomain.uz",
-  // "app.yourdomain.uz"
-];
-
-// ============ E-IMZO WRAPPER ============
-const createEimzoWrapper = () => {
-  const checkClient = (methodName: string) => {
-    if (!window.EIMZOClient) {
-      throw new Error(`E-IMZO klienti yuklanmagan (${methodName})`);
-    }
-    if (typeof window.EIMZOClient[methodName] !== "function") {
-      throw new Error(`E-IMZO metodi topilmadi: ${methodName}`);
-    }
-  };
-
-  return {
-    checkVersion: (
-      success: (major: number, minor: number) => void,
-      error: (e: any, r: any) => void,
-    ) => {
-      try {
-        checkClient("checkVersion");
-        window.EIMZOClient.checkVersion(success, error);
-      } catch (err: any) {
-        error(err, err.message);
-      }
-    },
-
-    installApiKeys: (success: () => void, error: (e: any, r: any) => void) => {
-      try {
-        checkClient("installApiKeys");
-        window.EIMZOClient.installApiKeys(success, error);
-      } catch (err: any) {
-        error(err, err.message);
-      }
-    },
-
-    listAllUserKeys: (
-      idCallback: (o: any, i: number) => string,
-      createItemCallback: (itemId: string, v: any) => any,
-      successCallback: (items: any[], firstId: string | null) => void,
-      errorCallback: (e: any, r: any) => void,
-    ) => {
-      try {
-        checkClient("listAllUserKeys");
-        window.EIMZOClient.listAllUserKeys(
-          idCallback,
-          createItemCallback,
-          successCallback,
-          errorCallback,
-        );
-      } catch (err: any) {
-        errorCallback(err, err.message);
-      }
-    },
-
-    loadKey: (
-      vo: any,
-      success: (id: string) => void,
-      error: (e: any, r: any) => void,
-    ) => {
-      try {
-        checkClient("loadKey");
-        window.EIMZOClient.loadKey(vo, success, error);
-      } catch (err: any) {
-        error(err, err.message);
-      }
-    },
-
-    createPkcs7: (
-      keyId: string,
-      data: string,
-      vo: any,
-      password: string | null,
-      success: (pkcs7: string, vo: any) => void,
-      error: (e: any, r: any) => void,
-    ) => {
-      try {
-        checkClient("createPkcs7");
-        window.EIMZOClient.createPkcs7(
-          keyId,
-          data,
-          vo,
-          password,
-          success,
-          error,
-          false,
-        );
-      } catch (err: any) {
-        error(err, err.message);
-      }
-    },
-
-    // USB-token detection via CAPIWS
-    getCertificatesViaCapiws: (
-      success: (certs: any[]) => void,
-      error: (e: any, r: any) => void,
-    ) => {
-      try {
-        if (!window.CAPIWS) {
-          throw new Error("CAPIWS yuklanmagan");
-        }
-
-        window.CAPIWS.call(
-          {
-            plugin: "ftjc",
-            method: "list_certificates",
-            arguments: [],
-          },
-          (event: any, data: any) => {
-            if (event) {
-              error(event, "CAPIWS xatolik");
-              return;
-            }
-
-            if (data && data.certificates && Array.isArray(data.certificates)) {
-              success(data.certificates);
-            } else {
-              success([]);
-            }
-          },
-          (err: any) => {
-            error(err, "CAPIWS so'rov xatosi");
-          },
-        );
-      } catch (err: any) {
-        error(err, err.message);
-      }
-    },
-  };
-};
-
-// ============ TOAST NOTIFICATIONS ============
-const ToastContainer = ({
-  messages,
-}: {
-  messages: Array<{ id: string; message: string; type: string }>;
-}) => {
-  return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
-      {messages.map((toast) => (
-        <div
-          key={toast.id}
-          className={`min-w-[300px] p-4 rounded-lg shadow-lg border animate-in slide-in-from-top-5 ${
-            toast.type === "success"
-              ? "bg-green-50 border-green-200 text-green-800"
-              : toast.type === "info"
-                ? "bg-blue-50 border-blue-200 text-blue-800"
-                : "bg-red-50 border-red-200 text-red-800"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {toast.type === "success" && <CheckCircle className="w-5 h-5" />}
-            {toast.type === "error" && <AlertCircle className="w-5 h-5" />}
-            <p className="text-sm font-medium">{toast.message}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ============ MAIN COMPONENT ============
 function Login() {
-  // State management
+  const dispatch = useDispatch<any>();
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
+  const [selectedKey, setSelectedKey] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const { t } = useTranslation();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">(
     "login",
   );
-  const [toastMessages, setToastMessages] = useState<
-    Array<{ id: string; message: string; type: string }>
-  >([]);
+  const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
+  const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
+  const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
+  const [usbTokenLoading, setUsbTokenLoading] = useState(false);
+  const [isEimzoInitialized, setIsEimzoInitialized] = useState(false);
 
-  // E-IMZO state
-  const [isEimzoLoading, setIsEimzoLoading] = useState(true);
-  const [isEimzoReady, setIsEimzoReady] = useState(false);
-  const [eimzoCerts, setEimzoCerts] = useState<EimzoKey[]>([]);
-  const [selectedCert, setSelectedCert] = useState("");
-  const [isSigningInProgress, setIsSigningInProgress] = useState(false);
-
-  // USB-token state
-  const [usbTokens, setUsbTokens] = useState<EimzoKey[]>([]);
-  const [selectedToken, setSelectedToken] = useState("");
-  const [isUsbLoading, setIsUsbLoading] = useState(false);
-
-  // Login state
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
-
-  // Refs
-  const eimzoClient = useRef(createEimzoWrapper());
-  const initAttempts = useRef(0);
-  const maxInitAttempts = 5;
-
-  // Toast helper
-  const showToast = useCallback(
-    (message: string, type: "success" | "error" | "info" = "error") => {
-      const id = Math.random().toString(36);
-      setToastMessages((prev) => [...prev, { id, message, type }]);
-
-      setTimeout(() => {
-        setToastMessages((prev) => prev.filter((t) => t.id !== id));
-      }, 4000);
-    },
-    [],
-  );
-
-  // Error formatter
-  const formatError = useCallback((e: any, r: any): string => {
-    if (r && typeof r === "string") {
-      if (r.includes("BadPaddingException")) return "Parol noto'g'ri";
-      if (r.includes("Token not found") || r.includes("No token"))
-        return "USB-token topilmadi";
-      if (r.includes("PIN") || r.includes("pin")) return "PIN-kod noto'g'ri";
-      if (r.includes("expired")) return "Sertifikatning muddati tugagan";
-      if (r.includes("CAPI") || r.includes("WebSocket"))
-        return "E-IMZO bilan aloqa xatosi";
-      return r;
+  // -------- TOAST NOTIFICATION HELPERS ---------------
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "error",
+  ) => {
+    if (type === "error") {
+      toast.error(message);
+    } else if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.info(message);
     }
-    if (e && e.message) return e.message;
-    return "Noma'lum xatolik";
-  }, []);
+  };
 
-  // Initialize E-IMZO
-  const initializeEimzo = useCallback(() => {
-    if (!window.EIMZOClient) {
-      if (initAttempts.current < maxInitAttempts) {
-        initAttempts.current++;
-        console.log(
-          `E-IMZO yuklash urinishi ${initAttempts.current}/${maxInitAttempts}`,
-        );
-        setTimeout(initializeEimzo, 1000);
-        return;
-      }
-      setError(
-        "E-IMZO klienti yuklanmadi. Sahifani yangilang yoki dasturni o'rnating.",
+  // -------- E-IMZO UI HELPERS ---------------
+  const uiShowMessage = (message: string, type: "error" | "info" = "error") => {
+    setError(message);
+    if (type === "error") {
+      showToast(message, "error");
+    }
+  };
+
+  const uiLoading = () => {
+    setIsLoading(true);
+    setError("Yuklanmoqda...");
+  };
+
+  const uiNotLoaded = (e: any) => {
+    setError("");
+    if (e) {
+      wsError(e);
+    } else {
+      uiShowMessage(
+        "Brauzer WebSocket texnologiyasini qo'llab-quvvatlamaydi. Brauzeringizni yangilang.",
+        "error",
       );
-      setIsEimzoLoading(false);
+    }
+  };
+
+  const uiUpdateApp = () => {
+    uiShowMessage(
+      "DIQQAT! E-IMZO dasturining yangi versiyasini o'rnating.",
+      "error",
+    );
+  };
+
+  const uiAppLoad = useCallback(() => {
+    uiClearCombo();
+    if (!window.EIMZOClient) {
+      uiShowMessage("E-IMZO klienti yuklanmagan. Sahifani yangilang.", "error");
       return;
     }
 
-    console.log("E-IMZO klienti topildi, tekshirilmoqda...");
+    window.EIMZOClient.listAllUserKeys(
+      (o: any, i: number) => {
+        const itemId = "itm-" + o.serialNumber + "-" + i;
+        return itemId;
+      },
+      (itemId: string, v: any) => {
+        return uiCreateItem(itemId, v);
+      },
+      (items: any[], firstId: string | null) => {
+        uiFillCombo(items);
+        uiLoaded();
+        uiComboSelect(firstId);
+      },
+      uiHandleError,
+    );
+  }, []);
 
-    // Set API keys
+  const uiComboSelect = (itm: string | null) => {
+    if (itm) {
+      setSelectedKey(itm);
+      const item = eimzoKeys.find((k) => k.id === itm);
+      if (item?.vo?.type === "pfx") {
+        setSelectedEimzoKey(itm);
+      }
+    }
+  };
+
+  const uiClearCombo = () => {
+    setEimzoKeys([]);
+    setEimzoKeysOnly([]);
+    setUsbTokensOnly([]);
+    setSelectedKey("");
+    setSelectedEimzoKey("");
+  };
+
+  const uiFillCombo = (items: any[]) => {
+    const processedItems: EimzoKey[] = [];
+    const usbTokens: EimzoKey[] = [];
+    const eimzoKeysList: EimzoKey[] = [];
+
+    items.forEach((item: any) => {
+      try {
+        const vo =
+          item.vo ||
+          (typeof item.getAttribute === "function"
+            ? JSON.parse(item.getAttribute("vo"))
+            : null);
+
+        if (!vo) return;
+
+        const processed: EimzoKey = {
+          id: item.id || item.value,
+          value: item.id || item.value,
+          label: item.label || item.text || vo.CN,
+          disabled: item.disabled || false,
+          vo: vo,
+        };
+
+        processedItems.push(processed);
+
+        if (vo.type === "ftjc") {
+          usbTokens.push(processed);
+        } else if (vo.type === "pfx") {
+          eimzoKeysList.push(processed);
+        }
+      } catch (error) {
+        console.error("Error processing certificate:", error);
+      }
+    });
+
+    setEimzoKeys(processedItems);
+    setEimzoKeysOnly(eimzoKeysList);
+    setUsbTokensOnly(usbTokens);
+
+    if (processedItems.length > 0) {
+      const firstKey =
+        processedItems.find((k) => !k.disabled)?.id || processedItems[0].id;
+      setSelectedKey(firstKey);
+
+      const firstEimzoKey =
+        eimzoKeysList.find((k) => !k.disabled)?.id || eimzoKeysList[0]?.id;
+      if (firstEimzoKey) setSelectedEimzoKey(firstEimzoKey);
+    }
+  };
+
+  const uiLoaded = () => {
+    setError("");
+    setIsLoading(false);
+    setUsbTokenLoading(false);
+  };
+
+  const uiCreateItem = (itmkey: string, vo: any): any => {
+    const now = new Date();
+    vo.expired = window.dates?.compare(now, vo.validTo) > 0;
+
+    return {
+      id: itmkey,
+      value: itmkey,
+      label: vo.expired ? vo.CN + " (muddati tugagan)" : vo.CN,
+      disabled: vo.expired,
+      vo: vo,
+    };
+  };
+
+  const uiShowProgress = () => {
+    setShowProgress(true);
+  };
+
+  const uiHideProgress = () => {
+    setShowProgress(false);
+  };
+
+  const wsError = (e: any) => {
+    if (e) {
+      const errorCAPIWS =
+        "E-IMZO bilan ulanishda xatolik. E-IMZO moduli o'rnatilmagan bo'lishi mumkin.";
+      uiShowMessage(errorCAPIWS + " : " + wsErroCodeDesc(e), "error");
+    } else {
+      uiShowMessage(
+        "Brauzer WebSocket texnologiyasini qo'llab-quvvatlamaydi. Brauzeringizni yangilang.",
+        "error",
+      );
+    }
+  };
+
+  const wsErroCodeDesc = (code: number) => {
+    const reasons: { [key: number]: string } = {
+      1000: "Normal yopish",
+      1001: "Ketish",
+      1002: "Protokol xatosi",
+      1003: "Qo'llab-quvvatlanmaydigan ma'lumot",
+      1006: "Noormal yopish",
+      1007: "Noto'g'ri freym ma'lumoti",
+      1008: "Siyosat buzilishi",
+      1009: "Xabar juda katta",
+      1010: "Kengaytma yo'q",
+      1011: "Ichki xato",
+      1015: "TLS qo'l siqish xatosi",
+    };
+    return code + " - " + (reasons[code] || "Noma'lum xato");
+  };
+
+  const uiHandleError = (e: any, r: any) => {
+    uiHideProgress();
+    if (r) {
+      if (r.includes("BadPaddingException")) {
+        uiShowMessage("Parol noto'g'ri.", "error");
+      } else if (
+        r.includes("Token not found") ||
+        r.includes("No token present")
+      ) {
+        uiShowMessage("USB-token topilmadi. Iltimos, token ulang.", "error");
+      } else if (r.includes("PIN") || r.includes("pin")) {
+        uiShowMessage("PIN-kod noto'g'ri yoki token bloklangan.", "error");
+      } else if (r.includes("expired") || r.includes("muddati")) {
+        uiShowMessage("Sertifikatning muddati tugagan.", "error");
+      } else {
+        uiShowMessage(r, "error");
+      }
+    }
+    if (e) wsError(e);
+  };
+
+  // -------- E-IMZO INITIALIZATION ---------------
+  useEffect(() => {
+    if (!window.EIMZOClient) {
+      setError(
+        "E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang yoki E-IMZO dasturini o'rnating.",
+      );
+      return;
+    }
+
+    initializeEimzo();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "usb-token" && isEimzoInitialized) {
+      detectUsbTokens();
+    }
+  }, [activeTab, isEimzoInitialized]);
+
+  const initializeEimzo = () => {
+    uiLoading();
+    setError(null);
+
     const apiKeys = getEimzoApiKeys();
     window.EIMZOClient.API_KEYS = apiKeys;
 
-    // Check version
-    eimzoClient.current.checkVersion(
+    window.EIMZOClient.checkVersion(
       (major: number, minor: number) => {
-        console.log(`E-IMZO versiyasi: ${major}.${minor}`);
+        const EIMZO_MAJOR = 3;
+        const EIMZO_MINOR = 37;
+        const newVersion = EIMZO_MAJOR * 100 + EIMZO_MINOR;
+        const installedVersion =
+          parseInt(major.toString()) * 100 + parseInt(minor.toString());
 
-        const REQUIRED_MAJOR = 3;
-        const REQUIRED_MINOR = 37;
-        const currentVersion = major * 100 + minor;
-        const requiredVersion = REQUIRED_MAJOR * 100 + REQUIRED_MINOR;
-
-        if (currentVersion < requiredVersion) {
-          setError(
-            `E-IMZO dasturini yangilang (hozirgi: ${major}.${minor}, kerak: ${REQUIRED_MAJOR}.${REQUIRED_MINOR}+)`,
-          );
-          setIsEimzoLoading(false);
-          return;
+        if (installedVersion < newVersion) {
+          uiUpdateApp();
+          setIsLoading(false);
+        } else {
+          installApiKeys();
         }
-
-        // Install API keys
-        eimzoClient.current.installApiKeys(
-          () => {
-            console.log("API kalitlar o'rnatildi");
-            setIsEimzoReady(true);
-            setIsEimzoLoading(false);
-            loadEimzoCertificates();
-            showToast("E-IMZO tayyor", "success");
-          },
-          (e: any, r: any) => {
-            const msg = formatError(e, r);
-            setError(msg);
-            setIsEimzoLoading(false);
-            showToast(msg, "error");
-          },
-        );
       },
       (e: any, r: any) => {
-        const msg = formatError(e, r);
-        setError(msg);
-        setIsEimzoLoading(false);
-        showToast(msg, "error");
+        if (r) {
+          uiShowMessage(r, "error");
+        } else {
+          uiNotLoaded(e);
+        }
+        setIsLoading(false);
       },
     );
-  }, [formatError, showToast]);
+  };
 
-  // Load E-IMZO certificates (PFX)
-  const loadEimzoCertificates = useCallback(() => {
-    if (!isEimzoReady) return;
-
-    setIsEimzoLoading(true);
-    eimzoClient.current.listAllUserKeys(
-      (o: any, i: number) => `pfx-${o.serialNumber || i}`,
-      (itemId: string, vo: any) => {
-        const now = new Date();
-        const validTo = new Date(vo.validTo);
-        const expired = validTo < now;
-
-        return {
-          id: itemId,
-          value: itemId,
-          label: expired ? `${vo.CN} (muddati tugagan)` : vo.CN,
-          disabled: expired,
-          vo: vo,
-        };
-      },
-      (items: any[]) => {
-        console.log(`${items.length} ta sertifikat topildi`);
-
-        // Filter only PFX types
-        const pfxCerts = items.filter(
-          (item) => !item.vo.type || item.vo.type === "pfx",
-        );
-
-        setEimzoCerts(pfxCerts);
-        setIsEimzoLoading(false);
-
-        if (pfxCerts.length > 0) {
-          const firstValid = pfxCerts.find((c) => !c.disabled);
-          if (firstValid) setSelectedCert(firstValid.id);
-        }
+  const installApiKeys = () => {
+    window.EIMZOClient.installApiKeys(
+      () => {
+        uiAppLoad();
+        setIsEimzoInitialized(true);
+        showToast("E-IMZO muvaffaqiyatli ishga tushirildi", "success");
       },
       (e: any, r: any) => {
-        const msg = formatError(e, r);
-        setError(msg);
-        setIsEimzoLoading(false);
-        showToast(msg, "error");
+        if (r) {
+          uiShowMessage(r, "error");
+        } else {
+          wsError(e);
+        }
+        setIsLoading(false);
       },
     );
-  }, [isEimzoReady, formatError, showToast]);
+  };
 
-  // Load USB tokens (FTJC)
-  const loadUsbTokens = useCallback(() => {
-    if (!isEimzoReady) {
-      showToast("E-IMZO tayyor emas", "error");
-      return;
-    }
+  // -------- USB TOKEN DETECTION ---------------
+  const detectUsbTokens = async () => {
+    if (!isEimzoInitialized) return;
 
-    setIsUsbLoading(true);
-    setError(null);
-
-    eimzoClient.current.getCertificatesViaCapiws(
-      (certificates: any[]) => {
-        console.log(`${certificates.length} ta USB-token topildi`);
-
-        if (certificates.length === 0) {
-          setUsbTokens([]);
-          setIsUsbLoading(false);
-          return;
-        }
-
-        const tokens: EimzoKey[] = certificates.map(
-          (cert: any, index: number) => {
-            const now = new Date();
-            const validTo = cert.validTo ? new Date(cert.validTo) : now;
-            const expired = validTo < now;
-
-            return {
-              id: `usb-${cert.serialNumber || cert.serial || index}`,
-              value: `usb-${cert.serialNumber || cert.serial || index}`,
-              label: expired
-                ? `${cert.subjectCN || cert.CN || `Token ${index + 1}`} (muddati tugagan)`
-                : cert.subjectCN || cert.CN || `USB Token ${index + 1}`,
-              disabled: expired,
-              vo: {
-                type: "ftjc",
-                CN: cert.subjectCN || cert.CN,
-                serialNumber: cert.serialNumber || cert.serial,
-                validTo: cert.validTo,
-                validFrom: cert.validFrom,
-                issuerCN: cert.issuerCN,
-                disk: cert.disk,
-                path: cert.path,
-                name: cert.name,
-                alias: cert.alias,
-              },
-            };
+    setUsbTokenLoading(true);
+    try {
+      if (window.CAPIWS) {
+        // Direct CAPIWS detection for USB tokens
+        window.CAPIWS.call(
+          {
+            plugin: "ftjc",
+            method: "get_certificates",
+            arguments: [],
           },
-        );
-
-        setUsbTokens(tokens);
-        setIsUsbLoading(false);
-
-        if (tokens.length > 0) {
-          const firstValid = tokens.find((t) => !t.disabled);
-          if (firstValid) setSelectedToken(firstValid.id);
-        }
-
-        showToast(`${tokens.length} ta USB-token topildi`, "success");
-      },
-      (e: any, r: any) => {
-        console.error("USB-token yuklashda xato:", e, r);
-
-        // Fallback: try listing all keys
-        eimzoClient.current.listAllUserKeys(
-          (o: any, i: number) => `token-${o.serialNumber || i}`,
-          (itemId: string, vo: any) => {
-            const now = new Date();
-            const validTo = new Date(vo.validTo);
-            const expired = validTo < now;
-
-            return {
-              id: itemId,
-              value: itemId,
-              label: expired ? `${vo.CN} (muddati tugagan)` : vo.CN,
-              disabled: expired,
-              vo: vo,
-            };
-          },
-          (items: any[]) => {
-            const tokenItems = items.filter(
-              (item) =>
-                item.vo.type === "ftjc" ||
-                item.vo.type === "usb" ||
-                item.vo.type === "ftjctoken",
-            );
-
-            console.log(`Fallback: ${tokenItems.length} ta token topildi`);
-            setUsbTokens(tokenItems);
-            setIsUsbLoading(false);
-
-            if (tokenItems.length > 0) {
-              const firstValid = tokenItems.find((t) => !t.disabled);
-              if (firstValid) setSelectedToken(firstValid.id);
+          (response: any) => {
+            if (
+              response &&
+              response.certificates &&
+              response.certificates.length > 0
+            ) {
+              const usbCertificates = response.certificates.map(
+                (cert: any, index: number) => ({
+                  id: `usb-token-${cert.serialNumber}-${index}`,
+                  value: `usb-token-${cert.serialNumber}-${index}`,
+                  label: cert.subjectCN || `USB Token ${index + 1}`,
+                  disabled: false,
+                  vo: {
+                    type: "ftjc",
+                    CN: cert.subjectCN,
+                    serialNumber: cert.serialNumber,
+                    validTo: cert.validTo,
+                    validFrom: cert.validFrom,
+                    issuerCN: cert.issuerCN,
+                  },
+                }),
+              );
+              setUsbTokensOnly(usbCertificates);
+              if (usbCertificates.length > 0 && !selectedKey) {
+                setSelectedKey(usbCertificates[0].id);
+              }
+            } else {
+              // Fallback to EIMZOClient if CAPIWS doesn't return certificates
+              refreshAllKeys();
             }
-          },
-          (e2: any, r2: any) => {
-            const msg = formatError(e2, r2);
-            setError(msg);
-            setIsUsbLoading(false);
-            showToast(msg, "error");
+            setUsbTokenLoading(false);
           },
         );
-      },
-    );
-  }, [isEimzoReady, formatError, showToast]);
-
-  // Generate challenge for signing
-  const generateChallenge = useCallback(() => {
-    return Math.random().toString(36).substring(2) + Date.now().toString(36);
-  }, []);
-
-  // Handle E-IMZO login (mock - replace with your API)
-  const handleEimzoLogin = useCallback(
-    async (pkcs7: string, vo: any) => {
-      try {
-        console.log("E-IMZO login:", {
-          pkcs7: pkcs7.substring(0, 50) + "...",
-          vo,
-        });
-
-        // MOCK API CALL - Replace with your actual API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Simulate success
-        showToast("Muvaffaqiyatli kirish", "success");
-        setLoginSuccess(true);
-
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          // window.location.href = "/main"; // Replace with your navigation
-          console.log("Redirecting to /main...");
-        }, 2000);
-      } catch (error: any) {
-        const msg = error?.message || "Server xatosi";
-        showToast(msg, "error");
-        setError(msg);
-      } finally {
-        setIsSigningInProgress(false);
+      } else {
+        // Fallback to EIMZOClient
+        refreshAllKeys();
       }
-    },
-    [showToast],
-  );
-
-  // Sign with E-IMZO (PFX)
-  const signWithEimzo = useCallback(() => {
-    if (!selectedCert) {
-      showToast("Sertifikatni tanlang", "error");
-      return;
+    } catch (error) {
+      console.error("USB token detection error:", error);
+      refreshAllKeys();
     }
+  };
 
-    const cert = eimzoCerts.find((c) => c.id === selectedCert);
-    if (!cert) {
-      showToast("Sertifikat topilmadi", "error");
-      return;
-    }
+  const refreshAllKeys = () => {
+    uiAppLoad();
+  };
 
-    setIsSigningInProgress(true);
+  const handleRefreshKeys = () => {
     setError(null);
+    if (activeTab === "usb-token") {
+      detectUsbTokens();
+    } else {
+      uiLoading();
+      uiAppLoad();
+    }
+  };
 
-    const challenge = generateChallenge();
+  // -------- AUTHENTICATION FUNCTIONS ---------------
+  const getChallenge = (callback: (challenge: string) => void) => {
+    const challenge =
+      Math.random().toString(36).substring(2) + Date.now().toString(36);
+    callback(challenge);
+  };
 
-    eimzoClient.current.loadKey(
-      cert.vo,
-      (keyId: string) => {
-        eimzoClient.current.createPkcs7(
-          keyId,
-          challenge,
-          cert.vo,
-          null,
-          (pkcs7: string, vo: any) => {
-            handleEimzoLogin(pkcs7, vo);
-          },
-          (e: any, r: any) => {
-            const msg = formatError(e, r);
-            setError(msg);
-            setIsSigningInProgress(false);
-            showToast(msg, "error");
-          },
-        );
+  const handleEimzoLogin = (pkcs7: string, vo: any) => {
+    const loginData = { pkcs7, vo };
+
+    dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
+      .unwrap()
+      .then((response: any) => {
+        uiHideProgress();
+        if (response?.access) {
+          showToast("Muvaffaqiyatli kirish", "success");
+          navigate("/main");
+        } else {
+          uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi", "error");
+        }
+      })
+      .catch((error: any) => {
+        uiHideProgress();
+        const errorMsg =
+          error?.data?.message ||
+          error?.message ||
+          "Server bilan aloqa xatoligi";
+        uiShowMessage(errorMsg, "error");
+      });
+  };
+
+  const auth = (keyId: string, challenge: string, vo: any) => {
+    window.EIMZOClient.createPkcs7(
+      keyId,
+      challenge,
+      vo,
+      null,
+      (pkcs7: string, vo: any) => {
+        handleEimzoLogin(pkcs7, vo);
       },
       (e: any, r: any) => {
-        const msg = formatError(e, r);
-        setError(msg);
-        setIsSigningInProgress(false);
-        showToast(msg, "error");
+        uiHandleError(e, r);
       },
+      false,
     );
-  }, [
-    selectedCert,
-    eimzoCerts,
-    generateChallenge,
-    handleEimzoLogin,
-    formatError,
-    showToast,
-  ]);
+  };
 
-  // Sign with USB token
-  const signWithUsbToken = useCallback(() => {
-    if (usbTokens.length === 0) {
-      showToast("USB-token topilmadi", "error");
+  const signinPFX = () => {
+    uiShowProgress();
+
+    const itm = selectedEimzoKey || selectedKey;
+    if (!itm) {
+      uiShowMessage("Iltimos, sertifikatni tanlang", "error");
+      uiHideProgress();
       return;
     }
 
-    if (!selectedToken) {
-      showToast("USB-token tanlang", "error");
+    getChallenge((challenge: string) => {
+      const selectedItem = eimzoKeysOnly.find((item) => item.id === itm);
+      if (selectedItem) {
+        window.EIMZOClient.loadKey(
+          selectedItem.vo,
+          (id: string) => {
+            auth(id, challenge, selectedItem.vo);
+          },
+          uiHandleError,
+        );
+      } else {
+        uiHideProgress();
+        uiShowMessage("Sertifikat topilmadi", "error");
+      }
+    });
+  };
+
+  const signinToken = () => {
+    if (usbTokensOnly.length === 0) {
+      uiShowMessage(
+        "USB-token topilmadi. Iltimos, USB-token ulang va 'Yangilash' tugmasini bosing.",
+        "error",
+      );
       return;
     }
 
-    const token = usbTokens.find((t) => t.id === selectedToken);
-    if (!token) {
-      showToast("Token topilmadi", "error");
+    uiShowProgress();
+
+    const itm =
+      selectedKey || (usbTokensOnly.length > 0 ? usbTokensOnly[0].id : "");
+    if (!itm) {
+      uiHideProgress();
+      uiShowMessage("USB-token sertifikati tanlanmagan", "error");
       return;
     }
 
-    setIsSigningInProgress(true);
+    getChallenge((challenge: string) => {
+      const selectedItem = usbTokensOnly.find((item) => item.id === itm);
+      if (selectedItem) {
+        // For USB tokens, we need to load the key first
+        window.EIMZOClient.loadKey(
+          selectedItem.vo,
+          (id: string) => {
+            // Create PKCS7 for USB token
+            window.EIMZOClient.createPkcs7(
+              id,
+              challenge,
+              selectedItem.vo,
+              null,
+              (pkcs7: string, vo: any) => {
+                handleEimzoLogin(pkcs7, vo);
+              },
+              uiHandleError,
+              false,
+            );
+          },
+          uiHandleError,
+        );
+      } else {
+        uiHideProgress();
+        uiShowMessage("USB-token sertifikati topilmadi", "error");
+      }
+    });
+  };
+
+  // -------- LOGIN BY EMAIL/PASSWORD --------------
+  const checkAuthHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setError(null);
 
-    const challenge = generateChallenge();
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    eimzoClient.current.loadKey(
-      token.vo,
-      (keyId: string) => {
-        eimzoClient.current.createPkcs7(
-          keyId,
-          challenge,
-          token.vo,
-          null,
-          (pkcs7: string, vo: any) => {
-            handleEimzoLogin(pkcs7, vo);
-          },
-          (e: any, r: any) => {
-            const msg = formatError(e, r);
-            setError(msg);
-            setIsSigningInProgress(false);
-            showToast(msg, "error");
-          },
-        );
-      },
-      (e: any, r: any) => {
-        const msg = formatError(e, r);
-        setError(msg);
-        setIsSigningInProgress(false);
-        showToast(msg, "error");
-      },
-    );
-  }, [
-    selectedToken,
-    usbTokens,
-    generateChallenge,
-    handleEimzoLogin,
-    formatError,
-    showToast,
-  ]);
-
-  // Regular login
-  const handleRegularLogin = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setError(null);
-      setIsLoggingIn(true);
-
-      const formData = new FormData(e.currentTarget);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-
-      if (!email || !password) {
-        setError("Email va parol kiriting");
-        setIsLoggingIn(false);
-        return;
-      }
-
-      try {
-        console.log("Regular login:", { email, password: "***" });
-
-        // MOCK API CALL - Replace with your actual API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Simulate success
-        showToast("Muvaffaqiyatli kirish", "success");
-        setLoginSuccess(true);
-
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          // window.location.href = "/main"; // Replace with your navigation
-          console.log("Redirecting to /main...");
-        }, 2000);
-      } catch (error: any) {
-        const msg = error?.message || "Kirish xatosi";
-        setError(msg);
-        showToast(msg, "error");
-      } finally {
-        setIsLoggingIn(false);
-      }
-    },
-    [showToast],
-  );
-
-  // Initialize on mount
-  useEffect(() => {
-    initializeEimzo();
-  }, [initializeEimzo]);
-
-  // Load USB tokens when tab changes
-  useEffect(() => {
-    if (activeTab === "usb-token" && isEimzoReady && usbTokens.length === 0) {
-      loadUsbTokens();
+    if (!email || !password) {
+      setError("Email yoki parol bo'sh bo'lishi mumkin emas!");
+      return;
     }
-  }, [activeTab, isEimzoReady, usbTokens.length, loadUsbTokens]);
 
-  // Render loading state
-  if (isEimzoLoading && initAttempts.current < maxInitAttempts) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 p-4">
-        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">
-              E-IMZO yuklanmoqda
-            </h3>
-            <p className="text-sm text-gray-600 mt-2">
-              Urinish: {initAttempts.current}/{maxInitAttempts}
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Sahifani yangilash
-          </Button>
-        </div>
-      </div>
-    );
-  }
+    const credentials: Credentials = { email, password };
 
-  // Success state
-  if (loginSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
-        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 text-center space-y-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800">Muvaffaqiyatli!</h3>
-          <p className="text-gray-600">Tizimga kirilmoqda...</p>
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
-        </div>
-      </div>
-    );
-  }
+    try {
+      await dispatch(authApi.endpoints.login.initiate(credentials)).unwrap();
+      showToast("Muvaffaqiyatli kirish", "success");
+      navigate("/main");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+
+      let msg =
+        error?.data ||
+        error?.data?.detail ||
+        error?.data?.errors ||
+        error?.data?.message ||
+        "Авторизация не удалась.";
+
+      if (Array.isArray(msg)) msg = msg.join(", ");
+      if (typeof msg === "object") msg = Object.values(msg).join(", ");
+
+      setError(msg);
+      showToast(msg, "error");
+    }
+  };
 
   return (
-    <>
-      <ToastContainer messages={toastMessages} />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 p-4">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl px-8 py-10 flex flex-col gap-6">
+        {/* Header */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-800">
+            {t("loginTitle")}
+          </h2>
+          <p className="text-gray-600 mt-2">Tizimga kirish</p>
+        </div>
 
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 p-4">
-        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 space-y-6">
-          {/* Header */}
-          <div className="text-center">
-            <Shield className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-800">Tizimga kirish</h2>
-            <p className="text-gray-600 mt-2">Xavfsiz autentifikatsiya</p>
-          </div>
+        {/* Login method selection */}
+        <div className="w-full grid grid-cols-3 gap-2 mb-4">
+          <Button
+            type="button"
+            variant={activeTab === "login" ? "default" : "outline"}
+            onClick={() => setActiveTab("login")}
+            className={`h-12 text-sm font-medium transition-all duration-200 ${
+              activeTab === "login"
+                ? "bg-blue-600 hover:bg-blue-700 shadow-sm"
+                : "hover:bg-gray-50"
+            }`}
+          >
+            <LogIn className="w-4 h-4 mr-2" />
+            {t("login")}
+          </Button>
+          <Button
+            type="button"
+            variant={activeTab === "eimzo" ? "default" : "outline"}
+            onClick={() => setActiveTab("eimzo")}
+            className={`h-12 text-sm font-medium transition-all duration-200 ${
+              activeTab === "eimzo"
+                ? "bg-blue-600 hover:bg-blue-700 shadow-sm"
+                : "hover:bg-gray-50"
+            }`}
+          >
+            <Key className="w-4 h-4 mr-2" />
+            E-imzo
+          </Button>
+          <Button
+            type="button"
+            variant={activeTab === "usb-token" ? "default" : "outline"}
+            onClick={() => setActiveTab("usb-token")}
+            className={`h-12 text-sm font-medium transition-all duration-200 ${
+              activeTab === "usb-token"
+                ? "bg-blue-600 hover:bg-blue-700 shadow-sm"
+                : "hover:bg-gray-50"
+            }`}
+          >
+            <Usb className="w-4 h-4 mr-2" />
+            USB-token
+          </Button>
+        </div>
 
-          {/* Tab selector */}
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant={activeTab === "login" ? "default" : "outline"}
-              onClick={() => setActiveTab("login")}
-              className="h-11"
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Kirish
-            </Button>
-            <Button
-              type="button"
-              variant={activeTab === "eimzo" ? "default" : "outline"}
-              onClick={() => setActiveTab("eimzo")}
-              className="h-11"
-            >
-              <Key className="w-4 h-4 mr-2" />
-              E-imzo
-            </Button>
-            <Button
-              type="button"
-              variant={activeTab === "usb-token" ? "default" : "outline"}
-              onClick={() => setActiveTab("usb-token")}
-              className="h-11"
-            >
-              <Usb className="w-4 h-4 mr-2" />
-              USB
-            </Button>
-          </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="w-full"
+        >
+          {/* ------------ E-IMZO (PFX) LOGIN ------------- */}
+          <TabsContent value="eimzo" className="space-y-4">
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+              <p className="text-sm text-blue-700 font-medium">
+                E-imzo sertifikati (PFX fayl) orqali kirish
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Kompyuteringizda saqlangan sertifikat
+              </p>
+            </div>
 
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            {/* Regular Login */}
-            <TabsContent value="login" className="space-y-4">
-              <form onSubmit={handleRegularLogin} className="space-y-4">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <p className="mt-2 text-gray-600">
+                  Sertifikatlar yuklanmoqda...
+                </p>
+              </div>
+            ) : eimzoKeysOnly.length > 0 ? (
+              <>
                 <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="email@example.com"
-                    required
-                    className="h-11 mt-2"
-                    disabled={isLoggingIn}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="password">Parol</Label>
-                  <div className="relative mt-2">
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="********"
-                      required
-                      className="h-11 pr-10"
-                      disabled={isLoggingIn}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
-                      disabled={isLoggingIn}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="flex justify-end mt-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        showToast("Parolni tiklash funksiyasi", "info")
-                      }
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      Parolni unutdingizmi?
-                    </button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full h-11"
-                  disabled={isLoggingIn}
-                >
-                  {isLoggingIn ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Kirilmoqda...
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Kirish
-                    </>
-                  )}
-                </Button>
-              </form>
-
-              <div className="text-center pt-4 border-t">
-                <p className="text-sm text-gray-600">
-                  Hisobingiz yo'qmi?{" "}
-                  <button
-                    onClick={() =>
-                      showToast("Ro'yxatdan o'tish funksiyasi", "info")
-                    }
-                    className="text-blue-600 hover:underline font-medium"
+                  <Label htmlFor="eimzo-select" className="mb-2 block">
+                    Sertifikatni tanlang:
+                  </Label>
+                  <select
+                    id="eimzo-select"
+                    value={selectedEimzoKey}
+                    onChange={(e) => {
+                      setSelectedEimzoKey(e.target.value);
+                      setSelectedKey(e.target.value);
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
                   >
-                    Ro'yxatdan o'tish
-                  </button>
-                </p>
-              </div>
-            </TabsContent>
-
-            {/* E-IMZO Login */}
-            <TabsContent value="eimzo" className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-700 font-medium">
-                  E-imzo sertifikati (PFX)
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Kompyuterda saqlangan sertifikat
-                </p>
-              </div>
-
-              {isEimzoLoading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
-                  <p className="text-gray-600 mt-2">Yuklanmoqda...</p>
+                    <option value="" disabled>
+                      E-imzo sertifikatini tanlang
+                    </option>
+                    {eimzoKeysOnly.map((key) => (
+                      <option
+                        key={key.id}
+                        value={key.id}
+                        disabled={key.disabled}
+                        className={key.disabled ? "text-gray-400" : ""}
+                      >
+                        {key.label}
+                        {key.disabled && " (muddati tugagan)"}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              ) : eimzoCerts.length > 0 ? (
-                <>
-                  <div>
-                    <Label htmlFor="eimzo-cert">Sertifikat:</Label>
-                    <select
-                      id="eimzo-cert"
-                      value={selectedCert}
-                      onChange={(e) => setSelectedCert(e.target.value)}
-                      className="w-full h-11 mt-2 px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={isSigningInProgress}
-                    >
-                      <option value="">Tanlang</option>
-                      {eimzoCerts.map((cert) => (
-                        <option
-                          key={cert.id}
-                          value={cert.id}
-                          disabled={cert.disabled}
-                        >
-                          {cert.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={signWithEimzo}
-                      disabled={!selectedCert || isSigningInProgress}
-                      className="flex-1 h-11"
-                    >
-                      {isSigningInProgress ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Imzolanmoqda...
-                        </>
-                      ) : (
-                        <>
-                          <Key className="w-4 h-4 mr-2" />
-                          Kirish
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={loadEimzoCertificates}
-                      disabled={isEimzoLoading}
-                      className="h-11 px-4"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6 border-2 border-dashed rounded-lg">
-                  <Key className="w-12 h-12 text-gray-400 mx-auto" />
-                  <p className="text-gray-600 mt-2">Sertifikat topilmadi</p>
+                <div className="flex gap-2">
                   <Button
-                    variant="outline"
-                    onClick={loadEimzoCertificates}
-                    className="mt-4"
+                    onClick={signinPFX}
+                    className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
+                    disabled={!selectedEimzoKey || isLoading || showProgress}
                   >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Yangilash
+                    {showProgress ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Imzolanmoqda...
+                      </>
+                    ) : (
+                      <>
+                        <Key className="w-4 h-4 mr-2" />
+                        {t("enter")}
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRefreshKeys}
+                    disabled={isLoading || showProgress}
+                    className="h-12 px-4"
+                  >
+                    <RefreshCw className="w-4 h-4" />
                   </Button>
                 </div>
-              )}
-            </TabsContent>
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <Key className="w-12 h-12 mx-auto text-gray-400" />
+                <p className="mt-2 text-gray-600">
+                  E-imzo sertifikatlari topilmadi
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  E-IMZO dasturini o'rnating yoki sertifikat qo'shing
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRefreshKeys}
+                  disabled={isLoading}
+                  className="mt-4"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t("refreshCertificates")}
+                </Button>
+              </div>
+            )}
 
-            {/* USB Token Login */}
-            <TabsContent value="usb-token" className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm text-green-700 font-medium">USB-token</p>
-                <p className="text-xs text-green-600 mt-1">
-                  ID-card yoki BAIK-token
+            {showProgress && (
+              <div className="flex items-center justify-center p-3 bg-blue-50 rounded-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" />
+                <span className="text-blue-700">Imzolanmoqda, kuting...</span>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ------------ USB-TOKEN LOGIN ------------- */}
+          <TabsContent value="usb-token" className="space-y-4">
+            <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+              <p className="text-sm text-green-700 font-medium">
+                USB-token (ID-card, BAIK-token) orqali kirish
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                Fizik USB token ulanib turgan bo'lishi kerak
+              </p>
+            </div>
+
+            {usbTokenLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                <p className="mt-2 text-gray-600">
+                  USB-tokenlar qidirilmoqda...
                 </p>
               </div>
-
-              {isUsbLoading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto" />
-                  <p className="text-gray-600 mt-2">
-                    USB-token qidirilmoqda...
-                  </p>
+            ) : usbTokensOnly.length > 0 ? (
+              <>
+                <div>
+                  <Label htmlFor="usb-select" className="mb-2 block">
+                    USB-token tanlang:
+                  </Label>
+                  <select
+                    id="usb-select"
+                    value={selectedKey}
+                    onChange={(e) => setSelectedKey(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    disabled={isLoading}
+                  >
+                    <option value="" disabled>
+                      USB-token tanlang
+                    </option>
+                    {usbTokensOnly.map((token) => (
+                      <option
+                        key={token.id}
+                        value={token.id}
+                        className="text-gray-800"
+                      >
+                        {token.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              ) : usbTokens.length > 0 ? (
-                <>
-                  <div>
-                    <Label htmlFor="usb-token">Token:</Label>
-                    <select
-                      id="usb-token"
-                      value={selectedToken}
-                      onChange={(e) => setSelectedToken(e.target.value)}
-                      className="w-full h-11 mt-2 px-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      disabled={isSigningInProgress}
-                    >
-                      <option value="">Tanlang</option>
-                      {usbTokens.map((token) => (
-                        <option
-                          key={token.id}
-                          value={token.id}
-                          disabled={token.disabled}
-                        >
-                          {token.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
 
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                      <span className="text-green-700 text-sm font-medium">
-                        {usbTokens.length} ta token topildi
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={signWithUsbToken}
-                      disabled={!selectedToken || isSigningInProgress}
-                      className="flex-1 h-11 bg-green-600 hover:bg-green-700"
-                    >
-                      {isSigningInProgress ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Imzolanmoqda...
-                        </>
-                      ) : (
-                        <>
-                          <Usb className="w-4 h-4 mr-2" />
-                          Kirish
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={loadUsbTokens}
-                      disabled={isUsbLoading}
-                      className="h-11 px-4"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6 border-2 border-dashed rounded-lg">
-                  <Usb className="w-16 h-16 text-gray-400 mx-auto" />
-                  <p className="text-gray-700 font-medium mt-3">
-                    USB-token ulanmagan
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Token ulang va qayta urinib ko'ring
-                  </p>
-                  <div className="mt-4 space-y-2">
-                    <Button
-                      onClick={loadUsbTokens}
-                      disabled={isUsbLoading}
-                      className="w-full h-11 bg-green-600 hover:bg-green-700"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Qidirish
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        window.open("https://e-imzo.uz/help", "_blank")
-                      }
-                      className="w-full h-11"
-                    >
-                      <AlertCircle className="w-4 h-4 mr-2" />
-                      Yordam
-                    </Button>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-green-700 font-medium">
+                      {usbTokensOnly.length} ta USB-token topildi
+                    </span>
                   </div>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
 
-          {/* Error display */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="flex items-start">
-                <AlertCircle className="w-5 h-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-red-700">{error}</p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={signinToken}
+                    className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+                    disabled={isLoading || showProgress}
+                  >
+                    {showProgress ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Imzolanmoqda...
+                      </>
+                    ) : (
+                      <>
+                        <Usb className="w-4 h-4 mr-2" />
+                        {t("enter")}
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRefreshKeys}
+                    disabled={isLoading || showProgress}
+                    className="h-12 px-4"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                <Usb className="w-16 h-16 mx-auto text-gray-400" />
+                <p className="mt-3 text-gray-700 font-medium">
+                  USB-token ulanmagan
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Iltimos, USB-tokeningizni ulang
+                </p>
+                <div className="mt-4 space-y-2">
+                  <Button
+                    type="button"
+                    onClick={handleRefreshKeys}
+                    disabled={isLoading}
+                    className="w-full h-12"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    USB-tokenni qidirish
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      window.open("https://e-imzo.uz/help", "_blank")
+                    }
+                    className="w-full h-12"
+                  >
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Yordam
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="text-center pt-4 border-t">
-            <p className="text-xs text-gray-500">
-              E-IMZO v3.37+ talab etiladi.{" "}
-              <a
-                href="https://e-imzo.uz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                e-imzo.uz
-              </a>
-            </p>
-            {!isEimzoReady && initAttempts.current >= maxInitAttempts && (
-              <p className="text-xs text-yellow-600 mt-2">
-                E-IMZO yuklanmadi. E-IMZO dasturini o'rnating yoki sahifani
-                yangilang.
-              </p>
             )}
+
+            {showProgress && (
+              <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-green-600 mr-2" />
+                <span className="text-green-700">Imzolanmoqda, kuting...</span>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ------------ SIMPLE LOGIN ------------- */}
+          <TabsContent value="login" className="space-y-4">
+            <form onSubmit={checkAuthHandler} className="space-y-5">
+              <div>
+                <Label htmlFor="email" className="mb-2 block">
+                  {t("email")}
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  required
+                  className="h-12"
+                  autoComplete="username"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password" className="mb-2 block">
+                  {t("password")}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
+                    required
+                    className="h-12 pr-10"
+                    autoComplete="current-password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex justify-end mt-2">
+                  <Link
+                    to="/auth/forget-password"
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {t("forgotPassword")}
+                  </Link>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                {t("enter")}
+              </Button>
+            </form>
+
+            <div className="text-center pt-4 border-t border-gray-200">
+              <p className="text-gray-600 text-sm">
+                Hisobingiz yo'qmi?{" "}
+                <Link
+                  to="/auth/register"
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Ro'yxatdan o'tish
+                </Link>
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Error display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
           </div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center pt-4">
+          <p className="text-xs text-gray-500">
+            E-IMZO v3.37+ talab etiladi. Agar muammo bo'lsa,{" "}
+            <a
+              href="https://e-imzo.uz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              e-imzo.uz
+            </a>{" "}
+            saytiga murojaat qiling.
+          </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
