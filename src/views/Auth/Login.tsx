@@ -36,27 +36,16 @@ function Login() {
   const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
   const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
   const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-
-  // Debug logging helper
-  const addDebugLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    const log = `[${timestamp}] ${message}`;
-    console.log(log);
-    setDebugLogs((prev) => [...prev, log].slice(-10)); // Keep last 10 logs
-  };
 
   // -------- E-IMZO UI HELPERS ---------------
 
   const uiShowMessage = (message: string) => {
-    addDebugLog(`Error: ${message}`);
     alert(message);
   };
 
   const uiLoading = () => {
     setIsLoading(true);
     setError("Загрузка ...");
-    addDebugLog("Loading started");
   };
 
   const uiNotLoaded = (e: any) => {
@@ -72,11 +61,9 @@ function Login() {
 
   const uiUpdateApp = () => {
     setError("ВНИМАНИЕ !!! Установите новую версию приложения E-IMZO.");
-    addDebugLog("E-IMZO update required");
   };
 
   const uiAppLoad = () => {
-    addDebugLog("Loading E-IMZO keys...");
     uiClearCombo();
     window.EIMZOClient.listAllUserKeys(
       (o: any, i: number) => {
@@ -87,7 +74,6 @@ function Login() {
         return uiCreateItem(itemId, v);
       },
       (items: any[], firstId: string | null) => {
-        addDebugLog(`Found ${items.length} certificates`);
         uiFillCombo(items);
         uiLoaded();
         uiComboSelect(firstId);
@@ -100,7 +86,6 @@ function Login() {
     if (itm) {
       setSelectedKey(itm);
       setSelectedEimzoKey(itm);
-      addDebugLog(`Selected key: ${itm}`);
     }
   };
 
@@ -134,10 +119,8 @@ function Login() {
 
       if (processed.vo?.type === "ftjc") {
         usbTokens.push(processed);
-        addDebugLog(`USB Token: ${processed.label}`);
       } else if (processed.vo?.type === "pfx") {
         eimzoKeys.push(processed);
-        addDebugLog(`E-IMZO Key: ${processed.label}`);
       }
     });
 
@@ -154,7 +137,6 @@ function Login() {
   const uiLoaded = () => {
     setError("");
     setIsLoading(false);
-    addDebugLog("E-IMZO loaded successfully");
   };
 
   const uiCreateItem = (itmkey: string, vo: any) => {
@@ -172,12 +154,10 @@ function Login() {
 
   const uiShowProgress = () => {
     setShowProgress(true);
-    addDebugLog("Progress started");
   };
 
   const uiHideProgress = () => {
     setShowProgress(false);
-    addDebugLog("Progress ended");
   };
 
   const wsError = (e: any) => {
@@ -211,7 +191,6 @@ function Login() {
 
   const uiHandleError = (e: any, r: any) => {
     uiHideProgress();
-    addDebugLog(`Error occurred: ${r || e}`);
     if (r) {
       if (r.indexOf("BadPaddingException") != -1) {
         uiShowMessage("Пароль неверный.");
@@ -225,18 +204,13 @@ function Login() {
   // -------- E-IMZO INITIALIZATION ---------------
 
   useEffect(() => {
-    addDebugLog("Component mounted");
-
-    // Check if scripts are loaded
     if (!window.EIMZOClient) {
-      addDebugLog("ERROR: EIMZOClient not found in window object");
       setError(
         "E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang yoki E-IMZO dasturini o'rnating."
       );
       return;
     }
 
-    addDebugLog("EIMZOClient found, initializing...");
     initializeEimzo();
   }, []);
 
@@ -244,14 +218,11 @@ function Login() {
     uiLoading();
     setError(null);
 
-    // Set API keys
     const apiKeys = getEimzoApiKeys();
-    addDebugLog(`API Keys loaded: ${apiKeys.length} keys`);
     window.EIMZOClient.API_KEYS = apiKeys;
 
     window.EIMZOClient.checkVersion(
       (major: number, minor: number) => {
-        addDebugLog(`E-IMZO version: ${major}.${minor}`);
         const EIMZO_MAJOR = 3;
         const EIMZO_MINOR = 37;
         const newVersion = EIMZO_MAJOR * 100 + EIMZO_MINOR;
@@ -262,12 +233,10 @@ function Login() {
           uiUpdateApp();
           setIsLoading(false);
         } else {
-          addDebugLog("Version check passed, installing API keys...");
           installApiKeys();
         }
       },
       (e: any, r: any) => {
-        addDebugLog(`Version check failed: ${r || e}`);
         if (r) {
           uiShowMessage(r);
         } else {
@@ -279,14 +248,11 @@ function Login() {
   };
 
   const installApiKeys = () => {
-    addDebugLog("Installing API keys...");
     window.EIMZOClient.installApiKeys(
       () => {
-        addDebugLog("API keys installed successfully");
         uiAppLoad();
       },
       (e: any, r: any) => {
-        addDebugLog(`API key installation failed: ${r || e}`);
         if (r) {
           uiShowMessage(r);
         } else {
@@ -299,7 +265,6 @@ function Login() {
 
   const handleRefreshKeys = () => {
     setError(null);
-    addDebugLog("Refreshing keys...");
     uiLoading();
     uiAppLoad();
   };
@@ -307,10 +272,8 @@ function Login() {
   // -------- AUTHENTICATION FUNCTIONS ---------------
 
   const getChallenge = (callback: (challenge: string) => void) => {
-    // Generate a random challenge string locally
     const challenge =
       Math.random().toString(36).substring(2) + Date.now().toString(36);
-    addDebugLog(`Generated challenge: ${challenge.substring(0, 20)}...`);
     callback(challenge);
   };
 
@@ -319,47 +282,33 @@ function Login() {
     challenge: string,
     callback: (redirect: string) => void
   ) => {
-    addDebugLog(`Starting authentication with keyId: ${keyId}`);
-    addDebugLog(`Challenge: ${challenge.substring(0, 20)}...`);
-
     window.EIMZOClient.createPkcs7(
       keyId,
       challenge,
       null,
       (pkcs7: string) => {
-        addDebugLog(
-          `PKCS7 signature created successfully (length: ${pkcs7.length})`
-        );
-
         const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
 
-        // Add VO for PFX certificates
         if (keyId !== "ckc") {
           const itm = selectedEimzoKey || selectedKey;
           const selectedItem = eimzoKeys.find((item) => item.id === itm);
           if (selectedItem) {
             loginData.vo = selectedItem.vo;
-            addDebugLog(`Added VO data: ${selectedItem.vo.CN}`);
           }
         }
 
-        addDebugLog("Sending login request to backend...");
         dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
           .unwrap()
           .then((response: any) => {
-            addDebugLog(`Login response: ${JSON.stringify(response)}`);
             uiHideProgress();
             if (response?.access) {
-              addDebugLog("Login successful! Navigating to /main");
               callback("/main");
               navigate("/main");
             } else {
-              addDebugLog("Login failed: No access token in response");
               uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi");
             }
           })
           .catch((error: any) => {
-            addDebugLog(`Login error: ${JSON.stringify(error)}`);
             uiHideProgress();
             const errorMsg =
               error?.data?.message ||
@@ -369,7 +318,6 @@ function Login() {
           });
       },
       (e: any, r: any) => {
-        addDebugLog(`PKCS7 creation failed: ${r || e}`);
         uiHandleError(e, r);
       },
       false
@@ -377,12 +325,10 @@ function Login() {
   };
 
   const signinPFX = () => {
-    addDebugLog("=== Starting PFX Sign In ===");
     uiShowProgress();
 
     const itm = selectedEimzoKey || selectedKey;
     if (!itm) {
-      addDebugLog("ERROR: No certificate selected");
       uiShowMessage("Iltimos, sertifikatni tanlang");
       uiHideProgress();
       return;
@@ -391,11 +337,9 @@ function Login() {
     getChallenge((challenge: string) => {
       const selectedItem = eimzoKeys.find((item) => item.id === itm);
       if (selectedItem) {
-        addDebugLog(`Loading key for: ${selectedItem.label}`);
         window.EIMZOClient.loadKey(
           selectedItem.vo,
           (id: string) => {
-            addDebugLog(`Key loaded successfully, ID: ${id}`);
             auth(id, challenge, (redirect: string) => {
               navigate(redirect);
             });
@@ -403,7 +347,6 @@ function Login() {
           uiHandleError
         );
       } else {
-        addDebugLog("ERROR: Selected certificate not found in list");
         uiHideProgress();
         uiShowMessage("Sertifikat topilmadi");
       }
@@ -411,12 +354,10 @@ function Login() {
   };
 
   const signinToken = () => {
-    addDebugLog("=== Starting USB Token Sign In ===");
     uiShowProgress();
 
     getChallenge((challenge: string) => {
       const keyId = "ckc";
-      addDebugLog("Using USB Token (ckc)");
       auth(keyId, challenge, (redirect: string) => {
         navigate(redirect);
       });
@@ -462,18 +403,6 @@ function Login() {
     <>
       <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
         <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
-
-        {/* Debug Panel - Only in development */}
-        {import.meta.env.DEV && debugLogs.length > 0 && (
-          <div className="w-full bg-gray-100 p-3 rounded text-xs max-h-40 overflow-y-auto">
-            <div className="font-bold mb-2">Debug Logs:</div>
-            {debugLogs.map((log, i) => (
-              <div key={i} className="font-mono text-gray-700">
-                {log}
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Login method selection buttons */}
         <div className="w-full flex gap-2 mb-2">
