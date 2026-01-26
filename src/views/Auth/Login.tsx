@@ -10,7 +10,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Credentials, EimzoKey } from "@/types/auth";
 import { getEimzoApiKeys } from "@/utils/eimzoConfig";
-import { base_url } from "@/services/baseUrl";
 
 declare global {
   interface Window {
@@ -308,34 +307,11 @@ function Login() {
   // -------- AUTHENTICATION FUNCTIONS ---------------
 
   const getChallenge = (callback: (challenge: string) => void) => {
-    const uniqueId = Date.now() + "_" + Math.random();
-    const url = `${base_url}/authentications/frontend/challenge?_uc=${uniqueId}`;
-
-    addDebugLog(`Requesting challenge from: ${url}`);
-
-    fetch(url)
-      .then((response) => {
-        addDebugLog(`Challenge response status: ${response.status}`);
-        if (!response.ok) {
-          throw new Error(`${response.status} - ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        addDebugLog(`Challenge data received: ${JSON.stringify(data)}`);
-        if (data.status != 1) {
-          uiShowMessage(data.status + " - " + data.message);
-          uiHideProgress();
-          return;
-        }
-        addDebugLog(`Challenge: ${data.challenge}`);
-        callback(data.challenge);
-      })
-      .catch((error) => {
-        addDebugLog(`Challenge request failed: ${error.message}`);
-        uiShowMessage("Challenge olishda xatolik: " + error.message);
-        uiHideProgress();
-      });
+    // Generate a random challenge string locally
+    const challenge =
+      Math.random().toString(36).substring(2) + Date.now().toString(36);
+    addDebugLog(`Generated challenge: ${challenge.substring(0, 20)}...`);
+    callback(challenge);
   };
 
   const auth = (
