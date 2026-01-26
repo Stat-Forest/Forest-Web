@@ -26,26 +26,38 @@ function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedKey, setSelectedKey] = useState<string>(""); // Demo kod bilan moslik uchun (document.testform.key.value)
+  const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">(
+    "login"
+  );
   const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
   const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
   const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
-  // -------- E-IMZO UI HELPERS (Demo kod bilan 100% mos) ---------------
-  
+  // Debug logging helper
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const log = `[${timestamp}] ${message}`;
+    console.log(log);
+    setDebugLogs((prev) => [...prev, log].slice(-10)); // Keep last 10 logs
+  };
+
+  // -------- E-IMZO UI HELPERS ---------------
+
   const uiShowMessage = (message: string) => {
+    addDebugLog(`Error: ${message}`);
     alert(message);
   };
 
   const uiLoading = () => {
     setIsLoading(true);
     setError("Загрузка ...");
+    addDebugLog("Loading started");
   };
 
   const uiNotLoaded = (e: any) => {
@@ -53,15 +65,19 @@ function Login() {
     if (e) {
       wsError(e);
     } else {
-      uiShowMessage("Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера.");
+      uiShowMessage(
+        "Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера."
+      );
     }
   };
 
   const uiUpdateApp = () => {
     setError("ВНИМАНИЕ !!! Установите новую версию приложения E-IMZO.");
+    addDebugLog("E-IMZO update required");
   };
 
   const uiAppLoad = () => {
+    addDebugLog("Loading E-IMZO keys...");
     uiClearCombo();
     window.EIMZOClient.listAllUserKeys(
       (o: any, i: number) => {
@@ -72,27 +88,25 @@ function Login() {
         return uiCreateItem(itemId, v);
       },
       (items: any[], firstId: string | null) => {
+        addDebugLog(`Found ${items.length} certificates`);
         uiFillCombo(items);
         uiLoaded();
         uiComboSelect(firstId);
       },
       uiHandleError
     );
-    if (!window.EIMZOClient.NEW_API3) {
-      alert("E-IMZO version should be 4.86 or newer");
-    }
   };
 
   const uiComboSelect = (itm: string | null) => {
     if (itm) {
-      setSelectedKey(itm); // Demo kod bilan moslik uchun (document.testform.key.value)
+      setSelectedKey(itm);
       setSelectedEimzoKey(itm);
+      addDebugLog(`Selected key: ${itm}`);
     }
   };
 
   const cbChanged = () => {
-    // Select o'zgarganda chaqiriladi
-    // Demo kodda keyId ni tozalash uchun ishlatilgan
+    // Select changed callback
   };
 
   const uiClearCombo = () => {
@@ -121,8 +135,10 @@ function Login() {
 
       if (processed.vo?.type === "ftjc") {
         usbTokens.push(processed);
+        addDebugLog(`USB Token: ${processed.label}`);
       } else if (processed.vo?.type === "pfx") {
         eimzoKeys.push(processed);
+        addDebugLog(`E-IMZO Key: ${processed.label}`);
       }
     });
 
@@ -139,6 +155,7 @@ function Login() {
   const uiLoaded = () => {
     setError("");
     setIsLoading(false);
+    addDebugLog("E-IMZO loaded successfully");
   };
 
   const uiCreateItem = (itmkey: string, vo: any) => {
@@ -156,55 +173,46 @@ function Login() {
 
   const uiShowProgress = () => {
     setShowProgress(true);
+    addDebugLog("Progress started");
   };
 
   const uiHideProgress = () => {
     setShowProgress(false);
+    addDebugLog("Progress ended");
   };
 
   const wsError = (e: any) => {
     if (e) {
-      const errorCAPIWS = "Ошибка соединения с E-IMZO. Возможно у вас не установлен модуль E-IMZO.";
+      const errorCAPIWS =
+        "Ошибка соединения с E-IMZO. Возможно у вас не установлен модуль E-IMZO.";
       uiShowMessage(errorCAPIWS + " : " + wsErroCodeDesc(e));
     } else {
-      uiShowMessage("Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера.");
+      uiShowMessage(
+        "Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера."
+      );
     }
   };
 
   const wsErroCodeDesc = (code: number) => {
-    let reason;
-    if (code == 1000)
-      reason = code + " - " + "Normal closure, meaning that the purpose for which the connection was established has been fulfilled.";
-    else if (code == 1001)
-      reason = code + " - " + "An endpoint is \"going away\", such as a server going down or a browser having navigated away from a page.";
-    else if (code == 1002)
-      reason = code + " - " + "An endpoint is terminating the connection due to a protocol error";
-    else if (code == 1003)
-      reason = code + " - " + "An endpoint is terminating the connection because it has received a type of data it cannot accept (e.g., an endpoint that understands only text data MAY send this if it receives a binary message).";
-    else if (code == 1004)
-      reason = code + " - " + "Reserved. The specific meaning might be defined in the future.";
-    else if (code == 1005)
-      reason = code + " - " + "No status code was actually present.";
-    else if (code == 1006)
-      reason = code + " - " + "The connection was closed abnormally, e.g., without sending or receiving a Close control frame";
-    else if (code == 1007)
-      reason = code + " - " + "An endpoint is terminating the connection because it has received data within a message that was not consistent with the type of the message.";
-    else if (code == 1008)
-      reason = code + " - " + "An endpoint is terminating the connection because it has received a message that \"violates its policy\". This reason is given either if there is no other sutible reason, or if there is a need to hide specific details about the policy.";
-    else if (code == 1009)
-      reason = code + " - " + "An endpoint is terminating the connection because it has received a message that is too big for it to process.";
-    else if (code == 1010)
-      reason = code + " - " + "An endpoint (client) is terminating the connection because it has expected the server to negotiate one or more extension, but the server didn't return them in the response message of the WebSocket handshake.";
-    else if (code == 1011)
-      reason = code + " - " + "A server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request.";
-    else if (code == 1015)
-      reason = code + " - " + "The connection was closed due to a failure to perform a TLS handshake (e.g., the server certificate can't be verified).";
-    else reason = code.toString();
-    return reason;
+    const reasons: { [key: number]: string } = {
+      1000: "Normal closure",
+      1001: "Going away",
+      1002: "Protocol error",
+      1003: "Unsupported data",
+      1006: "Abnormal closure",
+      1007: "Invalid frame payload data",
+      1008: "Policy violation",
+      1009: "Message too big",
+      1010: "Missing extension",
+      1011: "Internal error",
+      1015: "TLS handshake failure",
+    };
+    return code + " - " + (reasons[code] || "Unknown error");
   };
 
   const uiHandleError = (e: any, r: any) => {
     uiHideProgress();
+    addDebugLog(`Error occurred: ${r || e}`);
     if (r) {
       if (r.indexOf("BadPaddingException") != -1) {
         uiShowMessage("Пароль неверный.");
@@ -216,36 +224,51 @@ function Login() {
   };
 
   // -------- E-IMZO INITIALIZATION ---------------
-  
+
   useEffect(() => {
-    if (window.EIMZOClient) {
-      initializeEimzo();
-    } else {
-      setError("E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang.");
+    addDebugLog("Component mounted");
+
+    // Check if scripts are loaded
+    if (!window.EIMZOClient) {
+      addDebugLog("ERROR: EIMZOClient not found in window object");
+      setError(
+        "E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang yoki E-IMZO dasturini o'rnating."
+      );
+      return;
     }
+
+    addDebugLog("EIMZOClient found, initializing...");
+    initializeEimzo();
   }, []);
 
   const initializeEimzo = () => {
     uiLoading();
     setError(null);
 
-    // E-IMZO API keys ni .env dan o'qib o'rnatamiz
-    window.EIMZOClient.API_KEYS = getEimzoApiKeys();
+    // Set API keys
+    const apiKeys = getEimzoApiKeys();
+    addDebugLog(`API Keys loaded: ${apiKeys.length} keys`);
+    window.EIMZOClient.API_KEYS = apiKeys;
 
     window.EIMZOClient.checkVersion(
       (major: number, minor: number) => {
+        addDebugLog(`E-IMZO version: ${major}.${minor}`);
         const EIMZO_MAJOR = 3;
         const EIMZO_MINOR = 37;
         const newVersion = EIMZO_MAJOR * 100 + EIMZO_MINOR;
-        const installedVersion = parseInt(major.toString()) * 100 + parseInt(minor.toString());
+        const installedVersion =
+          parseInt(major.toString()) * 100 + parseInt(minor.toString());
+
         if (installedVersion < newVersion) {
           uiUpdateApp();
           setIsLoading(false);
         } else {
+          addDebugLog("Version check passed, installing API keys...");
           installApiKeys();
         }
       },
       (e: any, r: any) => {
+        addDebugLog(`Version check failed: ${r || e}`);
         if (r) {
           uiShowMessage(r);
         } else {
@@ -257,11 +280,14 @@ function Login() {
   };
 
   const installApiKeys = () => {
+    addDebugLog("Installing API keys...");
     window.EIMZOClient.installApiKeys(
       () => {
+        addDebugLog("API keys installed successfully");
         uiAppLoad();
       },
       (e: any, r: any) => {
+        addDebugLog(`API key installation failed: ${r || e}`);
         if (r) {
           uiShowMessage(r);
         } else {
@@ -274,140 +300,149 @@ function Login() {
 
   const handleRefreshKeys = () => {
     setError(null);
+    addDebugLog("Refreshing keys...");
     uiLoading();
     uiAppLoad();
   };
 
-  // -------- DEMO KOD FUNCTIONS (100% mos) ---------------
+  // -------- AUTHENTICATION FUNCTIONS ---------------
 
-  // getChallenge - demo kod bilan 100% mos
   const getChallenge = (callback: (challenge: string) => void) => {
-    // microAjax funksiyasini chaqirish (demo kod bilan mos)
-    // microAjax constructor sifatida ishlatiladi: new microAjax(url, callback)
     const uniqueId = Date.now() + "_" + Math.random();
     const url = `${base_url}/authentications/frontend/challenge?_uc=${uniqueId}`;
-    
-    if (typeof (window as any).microAjax === "function") {
-      new (window as any).microAjax(
-        url,
-        function (data: string, s: any) {
-          if (s.status != 200) {
-            uiShowMessage(s.status + " - " + s.statusText);
-            return;
-          }
-          try {
-            const parsedData = JSON.parse(data);
-            if (parsedData.status != 1) {
-              uiShowMessage(parsedData.status + " - " + parsedData.message);
-              return;
-            }
-            callback(parsedData.challenge);
-          } catch (err) {
-            uiShowMessage(s.status + " - " + s.statusText + ": " + err);
-          }
+
+    addDebugLog(`Requesting challenge from: ${url}`);
+
+    fetch(url)
+      .then((response) => {
+        addDebugLog(`Challenge response status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`${response.status} - ${response.statusText}`);
         }
-      );
-    } else {
-      // Fallback: fetch ishlatish
-      fetch(url)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`${response.status} - ${response.statusText}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          if (data.status != 1) {
-            uiShowMessage(data.status + " - " + data.message);
-            return;
-          }
-          callback(data.challenge);
-        })
-        .catch(() => {
-          // Fallback: agar challenge endpoint mavjud bo'lmasa
-          callback(t("confirmation"));
-        });
-    }
+        return response.json();
+      })
+      .then((data) => {
+        addDebugLog(`Challenge data received: ${JSON.stringify(data)}`);
+        if (data.status != 1) {
+          uiShowMessage(data.status + " - " + data.message);
+          uiHideProgress();
+          return;
+        }
+        addDebugLog(`Challenge: ${data.challenge}`);
+        callback(data.challenge);
+      })
+      .catch((error) => {
+        addDebugLog(`Challenge request failed: ${error.message}`);
+        uiShowMessage("Challenge olishda xatolik: " + error.message);
+        uiHideProgress();
+      });
   };
 
-  // auth - demo kod bilan 100% mos
-  const auth = (keyId: string, challenge: string, callback: (redirect: string) => void) => {
+  const auth = (
+    keyId: string,
+    challenge: string,
+    callback: (redirect: string) => void
+  ) => {
+    addDebugLog(`Starting authentication with keyId: ${keyId}`);
+    addDebugLog(`Challenge: ${challenge.substring(0, 20)}...`);
+
     window.EIMZOClient.createPkcs7(
       keyId,
       challenge,
       null,
       (pkcs7: string) => {
-        // Demo kodda microAjax('auth.php', callback, 'keyId=...&pkcs7=...')
-        // Bizning holatda RTK Query ishlatamiz
+        addDebugLog(
+          `PKCS7 signature created successfully (length: ${pkcs7.length})`
+        );
+
         const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
-        
-        // PFX uchun vo qo'shish (agar keyId "ckc" bo'lmasa)
+
+        // Add VO for PFX certificates
         if (keyId !== "ckc") {
-          // Demo kodda: var itm = document.testform.key.value;
           const itm = selectedEimzoKey || selectedKey;
           const selectedItem = eimzoKeys.find((item) => item.id === itm);
           if (selectedItem) {
             loginData.vo = selectedItem.vo;
+            addDebugLog(`Added VO data: ${selectedItem.vo.CN}`);
           }
         }
 
+        addDebugLog("Sending login request to backend...");
         dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
           .unwrap()
           .then((response: any) => {
+            addDebugLog(`Login response: ${JSON.stringify(response)}`);
             uiHideProgress();
             if (response?.access) {
+              addDebugLog("Login successful! Navigating to /main");
               callback("/main");
               navigate("/main");
             } else {
-              uiShowMessage("Kirish muvaffaqiyatsiz");
+              addDebugLog("Login failed: No access token in response");
+              uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi");
             }
           })
           .catch((error: any) => {
+            addDebugLog(`Login error: ${JSON.stringify(error)}`);
             uiHideProgress();
-            const errorMsg = error?.data?.message || error?.message || "Server bilan aloqa xatoligi";
+            const errorMsg =
+              error?.data?.message ||
+              error?.message ||
+              "Server bilan aloqa xatoligi";
             uiShowMessage(errorMsg);
           });
       },
-      uiHandleError,
+      (e: any, r: any) => {
+        addDebugLog(`PKCS7 creation failed: ${r || e}`);
+        uiHandleError(e, r);
+      },
       false
     );
   };
 
-  // signinPFX - demo kod bilan 100% mos
   const signinPFX = () => {
+    addDebugLog("=== Starting PFX Sign In ===");
     uiShowProgress();
 
+    const itm = selectedEimzoKey || selectedKey;
+    if (!itm) {
+      addDebugLog("ERROR: No certificate selected");
+      uiShowMessage("Iltimos, sertifikatni tanlang");
+      uiHideProgress();
+      return;
+    }
+
     getChallenge((challenge: string) => {
-      // Demo kodda: var itm = document.testform.key.value;
-      const itm = selectedEimzoKey || selectedKey;
       const selectedItem = eimzoKeys.find((item) => item.id === itm);
       if (selectedItem) {
+        addDebugLog(`Loading key for: ${selectedItem.label}`);
         window.EIMZOClient.loadKey(
           selectedItem.vo,
           (id: string) => {
-            const keyId = id;
-            auth(keyId, challenge, (redirect: string) => {
+            addDebugLog(`Key loaded successfully, ID: ${id}`);
+            auth(id, challenge, (redirect: string) => {
               navigate(redirect);
-              uiShowProgress();
             });
           },
           uiHandleError
         );
       } else {
+        addDebugLog("ERROR: Selected certificate not found in list");
         uiHideProgress();
+        uiShowMessage("Sertifikat topilmadi");
       }
     });
   };
 
-  // signinToken - demo kod bilan 100% mos
   const signinToken = () => {
+    addDebugLog("=== Starting USB Token Sign In ===");
     uiShowProgress();
 
     getChallenge((challenge: string) => {
       const keyId = "ckc";
+      addDebugLog("Using USB Token (ckc)");
       auth(keyId, challenge, (redirect: string) => {
         navigate(redirect);
-        uiShowProgress();
       });
     });
   };
@@ -452,6 +487,18 @@ function Login() {
       <div className="bg-ice w-[480px] rounded-2xl shadow-md px-7 py-13 flex flex-col gap-4 items-center">
         <h2 className="text-[30px] font-bold">{t("loginTitle")}</h2>
 
+        {/* Debug Panel - Only in development */}
+        {import.meta.env.DEV && debugLogs.length > 0 && (
+          <div className="w-full bg-gray-100 p-3 rounded text-xs max-h-40 overflow-y-auto">
+            <div className="font-bold mb-2">Debug Logs:</div>
+            {debugLogs.map((log, i) => (
+              <div key={i} className="font-mono text-gray-700">
+                {log}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Login method selection buttons */}
         <div className="w-full flex gap-2 mb-2">
           <Button
@@ -492,7 +539,13 @@ function Login() {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "eimzo" | "login" | "usb-token")} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) =>
+            setActiveTab(v as "eimzo" | "login" | "usb-token")
+          }
+          className="w-full"
+        >
           <TabsList className="hidden">
             <TabsTrigger value="eimzo">E-imzo</TabsTrigger>
             <TabsTrigger value="usb-token">USB-token</TabsTrigger>
@@ -501,7 +554,9 @@ function Login() {
 
           {/* ------------ E-IMZO (PFX) LOGIN ------------- */}
           <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
-            <p className="text-sm text-gray-600">E-imzo sertifikati (PFX fayl) orqali kirish</p>
+            <p className="text-sm text-gray-600">
+              E-imzo sertifikati (PFX fayl) orqali kirish
+            </p>
             {isLoading ? (
               <p>Yuklanmoqda...</p>
             ) : eimzoKeysOnly.length > 0 ? (
