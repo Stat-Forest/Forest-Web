@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Credentials, EimzoKey } from "@/types/auth";
 import { getEimzoApiKeys } from "@/utils/eimzoConfig";
+import { toast } from "react-toastify";
 
 declare global {
   interface Window {
@@ -30,17 +31,15 @@ function Login() {
   const [showProgress, setShowProgress] = useState(false);
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">(
-    "login"
-  );
+  const [activeTab, setActiveTab] = useState<"login" | "eimzo" | "usb-token">("login");
   const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
   const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
   const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
 
   // -------- E-IMZO UI HELPERS ---------------
-
+  
   const uiShowMessage = (message: string) => {
-    alert(message);
+    toast.error(message);
   };
 
   const uiLoading = () => {
@@ -53,9 +52,7 @@ function Login() {
     if (e) {
       wsError(e);
     } else {
-      uiShowMessage(
-        "Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера."
-      );
+      uiShowMessage("Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера.");
     }
   };
 
@@ -162,13 +159,10 @@ function Login() {
 
   const wsError = (e: any) => {
     if (e) {
-      const errorCAPIWS =
-        "Ошибка соединения с E-IMZO. Возможно у вас не установлен модуль E-IMZO.";
+      const errorCAPIWS = "Ошибка соединения с E-IMZO. Возможно у вас не установлен модуль E-IMZO.";
       uiShowMessage(errorCAPIWS + " : " + wsErroCodeDesc(e));
     } else {
-      uiShowMessage(
-        "Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера."
-      );
+      uiShowMessage("Браузер не поддерживает технологию WebSocket. Установите последнюю версию браузера.");
     }
   };
 
@@ -184,7 +178,7 @@ function Login() {
       1009: "Message too big",
       1010: "Missing extension",
       1011: "Internal error",
-      1015: "TLS handshake failure",
+      1015: "TLS handshake failure"
     };
     return code + " - " + (reasons[code] || "Unknown error");
   };
@@ -202,15 +196,13 @@ function Login() {
   };
 
   // -------- E-IMZO INITIALIZATION ---------------
-
+  
   useEffect(() => {
     if (!window.EIMZOClient) {
-      setError(
-        "E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang yoki E-IMZO dasturini o'rnating."
-      );
+      setError("E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang yoki E-IMZO dasturini o'rnating.");
       return;
     }
-
+    
     initializeEimzo();
   }, []);
 
@@ -226,9 +218,8 @@ function Login() {
         const EIMZO_MAJOR = 3;
         const EIMZO_MINOR = 37;
         const newVersion = EIMZO_MAJOR * 100 + EIMZO_MINOR;
-        const installedVersion =
-          parseInt(major.toString()) * 100 + parseInt(minor.toString());
-
+        const installedVersion = parseInt(major.toString()) * 100 + parseInt(minor.toString());
+        
         if (installedVersion < newVersion) {
           uiUpdateApp();
           setIsLoading(false);
@@ -272,29 +263,21 @@ function Login() {
   // -------- AUTHENTICATION FUNCTIONS ---------------
 
   const getChallenge = (callback: (challenge: string) => void) => {
-    const challenge =
-      Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const challenge = Math.random().toString(36).substring(2) + Date.now().toString(36);
     callback(challenge);
   };
 
-  const auth = (
-    keyId: string,
-    challenge: string,
-    callback: (redirect: string) => void
-  ) => {
+  const auth = (keyId: string, challenge: string, vo?: any) => {
     window.EIMZOClient.createPkcs7(
       keyId,
       challenge,
       null,
       (pkcs7: string) => {
         const loginData: { pkcs7: string; vo?: any } = { pkcs7 };
-
-        if (keyId !== "ckc") {
-          const itm = selectedEimzoKey || selectedKey;
-          const selectedItem = eimzoKeys.find((item) => item.id === itm);
-          if (selectedItem) {
-            loginData.vo = selectedItem.vo;
-          }
+        
+        // Add VO data
+        if (vo) {
+          loginData.vo = vo;
         }
 
         dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
@@ -302,7 +285,6 @@ function Login() {
           .then((response: any) => {
             uiHideProgress();
             if (response?.access) {
-              callback("/main");
               navigate("/main");
             } else {
               uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi");
@@ -310,10 +292,7 @@ function Login() {
           })
           .catch((error: any) => {
             uiHideProgress();
-            const errorMsg =
-              error?.data?.message ||
-              error?.message ||
-              "Server bilan aloqa xatoligi";
+            const errorMsg = error?.data?.message || error?.message || "Server bilan aloqa xatoligi";
             uiShowMessage(errorMsg);
           });
       },
@@ -340,9 +319,7 @@ function Login() {
         window.EIMZOClient.loadKey(
           selectedItem.vo,
           (id: string) => {
-            auth(id, challenge, (redirect: string) => {
-              navigate(redirect);
-            });
+            auth(id, challenge, selectedItem.vo);
           },
           uiHandleError
         );
@@ -357,10 +334,10 @@ function Login() {
     uiShowProgress();
 
     getChallenge((challenge: string) => {
+      // Get USB token VO data
+      const usbToken = usbTokensOnly.length > 0 ? usbTokensOnly[0] : null;
       const keyId = "ckc";
-      auth(keyId, challenge, (redirect: string) => {
-        navigate(redirect);
-      });
+      auth(keyId, challenge, usbToken?.vo);
     });
   };
 
@@ -444,13 +421,7 @@ function Login() {
           </Button>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) =>
-            setActiveTab(v as "eimzo" | "login" | "usb-token")
-          }
-          className="w-full"
-        >
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "eimzo" | "login" | "usb-token")} className="w-full">
           <TabsList className="hidden">
             <TabsTrigger value="eimzo">E-imzo</TabsTrigger>
             <TabsTrigger value="usb-token">USB-token</TabsTrigger>
@@ -459,9 +430,7 @@ function Login() {
 
           {/* ------------ E-IMZO (PFX) LOGIN ------------- */}
           <TabsContent value="eimzo" className="pt-6 flex flex-col gap-4">
-            <p className="text-sm text-gray-600">
-              E-imzo sertifikati (PFX fayl) orqali kirish
-            </p>
+            <p className="text-sm text-gray-600">E-imzo sertifikati (PFX fayl) orqali kirish</p>
             {isLoading ? (
               <p>Yuklanmoqda...</p>
             ) : eimzoKeysOnly.length > 0 ? (
