@@ -1,11 +1,17 @@
 import { RootState } from "@/app/store";
 import { useGetDashboardReportQuery } from "@/services/reportsApi";
 import {
-  ClipboardIcon,
+  CalendarPlus,
+  CalendarRange,
+  CircleCheck,
+  CircleX,
+  ClipboardCheck,
   FileText,
-  NotebookPen,
-  NotebookText,
-  Users,
+  FolderSync,
+  History,
+  IdCard,
+  Mail,
+  PencilLine,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -95,7 +101,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center bg-red-600 shadow-md">
-            <FileText color="white" size={25} />
+            <FolderSync color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_2")}</h2>
@@ -113,7 +119,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-600">
-            <FileText color="white" size={25} />
+            <ClipboardCheck color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_3")}</h2>
@@ -130,8 +136,8 @@ function MainContainer() {
           onClick={() => navigate("/main/responsible-representative")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-gray-700">
-            <Users color="white" size={25} />
+          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-green-600">
+            <IdCard color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_4")}</h2>
@@ -148,12 +154,12 @@ function MainContainer() {
           onClick={() => navigate("/main/draft")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-600">
-            <FileText color="white" size={25} />
+          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-gray-600">
+            <PencilLine color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_5")}</h2>
-            <span className="text-[22px] font-semibold text-blue-700">
+            <h2 className="font-medium text-[22px] text-gray-700">{t("item_5")}</h2>
+            <span className="text-[22px] font-semibold text-gray-800">
               {dashboard_data?.draft_reports || 0} {t("count")}
             </span>
           </div>
@@ -167,7 +173,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-300">
-            <ClipboardIcon color="white" size={25} />
+            <Mail color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_6")}</h2>
@@ -186,7 +192,7 @@ function MainContainer() {
             className={cardClasses}
           >
             <div className="bg-purple-600 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-              <NotebookPen color="white" size={25} />
+              <CalendarPlus color="white" size={25} />
             </div>
             <div>
               <h2 className="font-medium text-[22px] text-gray-800">
@@ -204,7 +210,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="bg-orange-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <NotebookText color="white" size={25} />
+            <CalendarRange color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
@@ -225,7 +231,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="bg-green-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <NotebookText color="white" size={25} />
+            <CircleCheck color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">
@@ -243,7 +249,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="bg-yellow-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <NotebookText color="white" size={25} />
+            <CircleX color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("late")}</h2>
@@ -259,7 +265,7 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="bg-red-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <NotebookText color="white" size={25} />
+            <History color="white" size={25} />
           </div>
           <div>
             <h2 className="font-medium text-[22px] text-gray-800">{t("not_completed")}</h2>
