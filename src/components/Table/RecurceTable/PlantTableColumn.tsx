@@ -50,7 +50,7 @@ import {
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu";
   import { Input } from "@/components/ui/input";
-  import { periods, regions, statuses } from "@/services/constants";
+  import { regions2, statuses } from "@/services/constants";
   
   const PlantTableColumn = forwardRef(
     (
@@ -66,7 +66,6 @@ import {
         setSelectedStatusReport,
         setSearchTermReport,
         selectedOrganizationReport,
-        selectedPeriodReport,
         selectedStatusReport,
         searchTermReport,
         reportName,
@@ -530,35 +529,15 @@ import {
                     <SelectValue placeholder={t("region")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {regions.map((region) => {
+                    {regions2.map((region) => {
                       // regions array faqat Uzbek tilida label ga ega, shuning uchun faqat Uzbek tilida ko'rsatamiz
                       // Yoki regions2 ni ishlatish kerak, lekin regions2 da "all" yo'q
                       return (
                         <SelectItem key={region.value} value={region.value}>
-                          {region.value === "all" ? t("all_regions") : region.label}
+                          {region.value}
                         </SelectItem>
                       );
                     })}
-                  </SelectContent>
-                </Select>
-              </div>
-  
-              <div>
-                <Select
-                  value={selectedPeriodReport}
-                  onValueChange={(value) => setSelectedPeriodReport(value)}
-                >
-                  <SelectTrigger className="w-[200px] text-xl min-h-[40px] border-black">
-                    <SelectValue placeholder={`${t("reportType")}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {periods.map((period) => (
-                      <SelectItem key={period.value} value={period.value}>
-                        {i18n.language === "uz"
-                          ? period.label_uz
-                          : period.label_ru}
-                      </SelectItem>
-                    ))}
                   </SelectContent>
                 </Select>
               </div>
