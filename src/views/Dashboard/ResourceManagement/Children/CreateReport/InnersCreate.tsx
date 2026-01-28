@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 
 function findEmptyChildrenColumnIds(
-  children: any[]
+  children: any[],
 ): { id: string; title: string; fullParentChain: string }[] {
   const result: { id: string; title: string; fullParentChain: string }[] = [];
   const traverse = (cols: any[], parentChain: string[] = []) => {
@@ -68,6 +68,7 @@ function InnersCreateReportItem() {
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [yearPlan, setYearPlan] = useState<string>("");
   const [planItems, setPlanItems] = useState<
     { columnId: string; plan_value: string; fullParentChain: string }[]
   >([]);
@@ -90,10 +91,10 @@ function InnersCreateReportItem() {
       statement: reportIds as string,
       page: deadlinePage,
       perPage,
-      statement__period: "", 
-      is_new_deadline:"true"
+      statement__period: "",
+      is_new_deadline: "true",
     },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   const {
@@ -108,19 +109,19 @@ function InnersCreateReportItem() {
     error: headersError,
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds as string, lang, isUser: "true" },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
-    [tableHeadersData]
+    [tableHeadersData],
   );
 
   const allEmptyColumnsByStepMemo = useMemo(() => {
     return tableHeadersDataMemo.map((obj: any) =>
       Array.isArray(obj.children)
         ? findEmptyChildrenColumnIds(obj.children)
-        : []
+        : [],
     );
   }, [tableHeadersDataMemo]);
 
@@ -159,12 +160,12 @@ function InnersCreateReportItem() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: selectedOrganizationId,
                 statement_id: reportIds as string,
-                year: "2025",
+                year: yearPlan,
                 column: col.id,
                 ...(selectedSeason && { season: selectedSeason }),
-              })
-            ).unwrap()
-          )
+              }),
+            ).unwrap(),
+          ),
         );
 
         if (isMounted) {
@@ -181,10 +182,7 @@ function InnersCreateReportItem() {
       } catch (error) {
         if (isMounted) {
           console.error("Reja olishda xatolik:", error);
-          setFormErrors((prev) => [
-            ...prev,
-            t("plan_fetch_error"),
-          ]);
+          setFormErrors((prev) => [...prev, t("plan_fetch_error")]);
         }
       }
     };
@@ -193,7 +191,13 @@ function InnersCreateReportItem() {
     return () => {
       isMounted = false;
     };
-  }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, selectedSeason, dispatch]);
+  }, [
+    allEmptyColumnsByStep,
+    selectedOrganizationId,
+    reportIds,
+    selectedSeason,
+    dispatch,
+  ]);
 
   const [createReportItem, { isLoading: isSubmitting }] =
     useCreateReportMutation();
@@ -201,8 +205,8 @@ function InnersCreateReportItem() {
   const handleInputChange = (formIndex: number, id: string, value: string) => {
     setFormGroups((prev) =>
       prev.map((form, idx) =>
-        idx === formIndex ? { ...form, [id]: value } : form
-      )
+        idx === formIndex ? { ...form, [id]: value } : form,
+      ),
     );
   };
 
@@ -226,7 +230,7 @@ function InnersCreateReportItem() {
     }
     if (
       allEmptyColumnsByStep[currentStep]?.some((col) =>
-        col.title.toLowerCase().includes("tashkilot")
+        col.title.toLowerCase().includes("tashkilot"),
       ) &&
       !selectedOrganizationId
     ) {
@@ -275,7 +279,7 @@ function InnersCreateReportItem() {
       deadline: selectedDeadlineId,
       report_items,
       ...(selectedSeason && { season: selectedSeason }),
-      foot_note: footNote || ""
+      foot_note: footNote || "",
     };
 
     try {
@@ -287,9 +291,7 @@ function InnersCreateReportItem() {
       setFormErrors([]);
     } catch (err: any) {
       const errorMessage =
-        err?.data?.message ||
-        err?.message ||
-        t("submit_error");
+        err?.data?.message || err?.message || t("submit_error");
       setFormErrors((prev) => [...prev, errorMessage]);
       console.error("Yuborishda xatolik:", err);
     }
@@ -324,8 +326,9 @@ function InnersCreateReportItem() {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${isSubmitting ? "opacity-50 pointer-events-none" : ""
-        }`}
+      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${
+        isSubmitting ? "opacity-50 pointer-events-none" : ""
+      }`}
     >
       {formErrors.length > 0 && (
         <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
@@ -352,8 +355,8 @@ function InnersCreateReportItem() {
                   deadlineLoading
                     ? t("loading")
                     : deadlineError
-                    ? t("loading_error")
-                    : t("selectDeadline") || "Tanlang"
+                      ? t("loading_error")
+                      : t("selectDeadline") || "Tanlang"
                 }
               />
             </SelectTrigger>
@@ -402,16 +405,13 @@ function InnersCreateReportItem() {
                       size="sm"
                       variant="outline"
                       disabled={deadlinePage === 1}
-                      onClick={() =>
-                        setDeadlinePage((p) => Math.max(p - 1, 1))
-                      }
+                      onClick={() => setDeadlinePage((p) => Math.max(p - 1, 1))}
                     >
                       {t("before")}
                     </Button>
 
                     <span className="text-xs text-gray-500">
-                      {deadlinePage} /{" "}
-                      {Math.ceil(deadlineData.count / perPage)}
+                      {deadlinePage} / {Math.ceil(deadlineData.count / perPage)}
                     </span>
 
                     <Button
@@ -419,15 +419,14 @@ function InnersCreateReportItem() {
                       size="sm"
                       variant="outline"
                       disabled={
-                        deadlinePage >=
-                        Math.ceil(deadlineData.count / perPage)
+                        deadlinePage >= Math.ceil(deadlineData.count / perPage)
                       }
                       onClick={() =>
                         setDeadlinePage((p) =>
                           Math.min(
                             p + 1,
-                            Math.ceil(deadlineData.count / perPage)
-                          )
+                            Math.ceil(deadlineData.count / perPage),
+                          ),
                         )
                       }
                     >
@@ -438,7 +437,22 @@ function InnersCreateReportItem() {
             </SelectContent>
           </Select>
         </div>
-        {(reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || reportIds === "671577ba-6a86-4619-b31c-86fff20ad305") && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="year">{t("year")}</label>
+          <div className="flex flex-col gap-1">
+            <input
+              value={yearPlan}
+              onChange={(e) => setYearPlan(e.target.value)}
+              type="number"
+              className="no-spinner border border-gray-950 shadow py-1 rounded-md p-3"
+            />
+            <span className="text-sm">
+              Faqatkina "reja" mavjud bo'lgan hisobodlar uchun
+            </span>
+          </div>
+        </div>
+        {(reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
+          reportIds === "671577ba-6a86-4619-b31c-86fff20ad305") && (
           <div>
             <label className="block mb-1 text-sm font-medium">Season:</label>
             <select
@@ -459,26 +473,26 @@ function InnersCreateReportItem() {
           key={formIndex}
           className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
         >
-                <div className="mb-4 flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">
-                    {currentStepTitle} – {formIndex + 1}-{t("table")}
-                  </h2>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-500">
-                      {currentStep + 1} / {totalSteps}
-                    </span>
-                    {formGroups.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRemoveForm(formIndex)}
-                      >
-                        {t("delete") || "O'chirish"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+          <div className="mb-4 flex justify-between items-center">
+            <h2 className="text-lg font-semibold">
+              {currentStepTitle} – {formIndex + 1}-{t("table")}
+            </h2>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">
+                {currentStep + 1} / {totalSteps}
+              </span>
+              {formGroups.length > 1 && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleRemoveForm(formIndex)}
+                >
+                  {t("delete") || "O'chirish"}
+                </Button>
+              )}
+            </div>
+          </div>
 
           <Table>
             <TableHeader>
@@ -506,7 +520,7 @@ function InnersCreateReportItem() {
                             handleInputChange(
                               formIndex,
                               col.id,
-                              e.target.value
+                              e.target.value,
                             );
                           }}
                           className="w-full border rounded px-2 py-1"
@@ -526,7 +540,7 @@ function InnersCreateReportItem() {
 
                 if (lowerTitle.includes("reja")) {
                   const planItem = planItems.find(
-                    (item) => item.columnId === col.id
+                    (item) => item.columnId === col.id,
                   );
                   const planValue = planItem ? planItem.plan_value : "";
                   return (
