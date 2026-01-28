@@ -7,6 +7,8 @@
  * E-IMZO API keys ni .env dan o'qib qaytaradi
  * Agar .env da bo'lmasa, fallback qiymatlar qaytariladi (development uchun)
  */
+
+//  ./utils/eimzoConfig.ts
 export const getEimzoApiKeys = (): string[] => {
   try {
     const envKeys = import.meta.env.VITE_EIMZO_API_KEYS;

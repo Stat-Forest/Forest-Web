@@ -169,7 +169,10 @@ function Login() {
           eimzoKeysList.push(processed);
         }
       } catch (error) {
-        console.error("Error processing certificate:", error);
+        // Sertifikatni qayta ishlashda xatolik - o'tkazib yuborish
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error processing certificate:", error);
+        }
       }
     });
 
@@ -248,19 +251,20 @@ function Login() {
   const uiHandleError = (e: any, r: any) => {
     uiHideProgress();
     if (r) {
-      if (r.includes("BadPaddingException")) {
+      const errorMessage = String(r);
+      if (errorMessage.includes("BadPaddingException")) {
         uiShowMessage("Parol noto'g'ri.", "error");
       } else if (
-        r.includes("Token not found") ||
-        r.includes("No token present")
+        errorMessage.includes("Token not found") ||
+        errorMessage.includes("No token present")
       ) {
         uiShowMessage("USB-token topilmadi. Iltimos, token ulang.", "error");
-      } else if (r.includes("PIN") || r.includes("pin")) {
+      } else if (errorMessage.includes("PIN") || errorMessage.includes("pin")) {
         uiShowMessage("PIN-kod noto'g'ri yoki token bloklangan.", "error");
-      } else if (r.includes("expired") || r.includes("muddati")) {
+      } else if (errorMessage.includes("expired") || errorMessage.includes("muddati")) {
         uiShowMessage("Sertifikatning muddati tugagan.", "error");
       } else {
-        uiShowMessage(r, "error");
+        uiShowMessage(errorMessage, "error");
       }
     }
     if (e) wsError(e);
@@ -387,7 +391,9 @@ function Login() {
         refreshAllKeys();
       }
     } catch (error) {
-      console.error("USB token detection error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("USB token detection error:", error);
+      }
       refreshAllKeys();
     }
   };
@@ -456,6 +462,7 @@ function Login() {
       window.EIMZOClient.createPkcs7(
         keyId,
         challenge,
+        undefined, // optional timestamper
 
         // ✅ SUCCESS
         (pkcs7: string) => {
@@ -464,10 +471,6 @@ function Login() {
             uiShowMessage("PKCS7 yaratilmadi", "error");
             return;
           }
-
-          // DEBUG (xohlasangiz olib tashlaysiz)
-          console.log("PKCS7:", pkcs7);
-          console.log("CHALLENGE:", challenge);
 
           handleEimzoLogin(pkcs7, vo);
         },
@@ -506,10 +509,7 @@ function Login() {
           if (e) {
             wsError(e);
           }
-        },
-
-        // attach = false (DETACHED PKCS7)
-        false,
+        }
       );
     } catch (err) {
       uiHideProgress();
@@ -599,7 +599,9 @@ function Login() {
       showToast("Muvaffaqiyatli kirish", "success");
       navigate("/main");
     } catch (error: any) {
-      console.error("Login failed:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Login failed:", error);
+      }
 
       let msg =
         error?.data ||
@@ -977,17 +979,7 @@ function Login() {
               </Button>
             </form>
 
-            <div className="text-center pt-4 border-t border-gray-200">
-              <p className="text-gray-600 text-sm">
-                Hisobingiz yo'qmi?{" "}
-                <Link
-                  to="/auth/register"
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Ro'yxatdan o'tish
-                </Link>
-              </p>
-            </div>
+            
           </TabsContent>
         </Tabs>
 
