@@ -438,99 +438,145 @@ function Login() {
   };
 
   const auth = (keyId: string, challenge: string, vo: any) => {
-    window.EIMZOClient.createPkcs7(
-      keyId,
-      challenge,
-      (pkcs7: string) => {
-        // SUCCESS
-        handleEimzoLogin(pkcs7, vo);
-      },
-      (e: any, r: any) => {
-        // ERROR
-        uiHandleError(e, r);
-      },
-      false, // attach = false
-    );
+    // Himoya: E-IMZO mavjudmi
+    if (!window.EIMZOClient) {
+      uiShowMessage("E-IMZO klienti yuklanmagan", "error");
+      uiHideProgress();
+      return;
+    }
+
+    // Himoya: majburiy parametrlar
+    if (!keyId || !challenge) {
+      uiShowMessage("Imzolash uchun ma'lumotlar yetarli emas", "error");
+      uiHideProgress();
+      return;
+    }
+
+    try {
+      window.EIMZOClient.createPkcs7(
+        keyId,
+        challenge,
+
+        // ✅ SUCCESS
+        (pkcs7: string) => {
+          if (!pkcs7) {
+            uiHideProgress();
+            uiShowMessage("PKCS7 yaratilmadi", "error");
+            return;
+          }
+
+          // DEBUG (xohlasangiz olib tashlaysiz)
+          console.log("PKCS7:", pkcs7);
+          console.log("CHALLENGE:", challenge);
+
+          handleEimzoLogin(pkcs7, vo);
+        },
+
+        // ❌ ERROR
+        (e: any, r: any) => {
+          uiHideProgress();
+
+          if (r) {
+            if (r.includes("BadPaddingException")) {
+              uiShowMessage("Parol noto‘g‘ri", "error");
+              return;
+            }
+
+            if (r.includes("PIN") || r.includes("pin")) {
+              uiShowMessage("PIN-kod noto‘g‘ri yoki token bloklangan", "error");
+              return;
+            }
+
+            if (
+              r.includes("Token not found") ||
+              r.includes("No token present")
+            ) {
+              uiShowMessage("USB-token topilmadi", "error");
+              return;
+            }
+
+            if (r.includes("expired") || r.includes("muddati")) {
+              uiShowMessage("Sertifikat muddati tugagan", "error");
+              return;
+            }
+
+            uiShowMessage(r, "error");
+          }
+
+          if (e) {
+            wsError(e);
+          }
+        },
+
+        // attach = false (DETACHED PKCS7)
+        false,
+      );
+    } catch (err) {
+      uiHideProgress();
+      console.error("E-IMZO createPkcs7 exception:", err);
+      uiShowMessage("E-IMZO bilan imzolashda kutilmagan xatolik", "error");
+    }
   };
-  
 
   const signinPFX = () => {
     uiShowProgress();
-  
+
     const itm = selectedEimzoKey;
     if (!itm) {
       uiShowMessage("Iltimos, E-IMZO sertifikatni tanlang", "error");
       uiHideProgress();
       return;
     }
-  
+
     getChallenge((challenge: string) => {
       const selectedItem = eimzoKeysOnly.find((item) => item.id === itm);
-  
+
       if (!selectedItem) {
         uiHideProgress();
         uiShowMessage("Sertifikat topilmadi", "error");
         return;
       }
-  
+
       window.EIMZOClient.loadKey(
         selectedItem.vo,
         (keyId: string) => {
-          // Key yuklandi → PKCS7 yaratamiz
           auth(keyId, challenge, selectedItem.vo);
         },
-        (e: any, r: any) => {
-          uiHandleError(e, r);
-        },
+        uiHandleError,
       );
     });
   };
 
+  const signinToken = () => {
+    if (usbTokensOnly.length === 0) {
+      uiShowMessage(
+        "USB-token topilmadi. Tokenni ulang va 'Yangilash' tugmasini bosing.",
+        "error",
+      );
+      return;
+    }
 
- const signinToken = () => {
-  if (usbTokensOnly.length === 0) {
-    uiShowMessage(
-      "USB-token topilmadi. Tokenni ulang va 'Yangilash' tugmasini bosing.",
-      "error",
-    );
-    return;
-  }
+    uiShowProgress();
 
-  uiShowProgress();
+    const itm = selectedKey || usbTokensOnly[0].id;
+    const selectedItem = usbTokensOnly.find((item) => item.id === itm);
 
-  const itm = selectedKey || usbTokensOnly[0].id;
-  const selectedItem = usbTokensOnly.find((item) => item.id === itm);
+    if (!selectedItem) {
+      uiHideProgress();
+      uiShowMessage("USB-token sertifikati topilmadi", "error");
+      return;
+    }
 
-  if (!selectedItem) {
-    uiHideProgress();
-    uiShowMessage("USB-token sertifikati topilmadi", "error");
-    return;
-  }
-
-  getChallenge((challenge: string) => {
-    window.EIMZOClient.loadKey(
-      selectedItem.vo,
-      (keyId: string) => {
-        // USB token → PKCS7
-        window.EIMZOClient.createPkcs7(
-          keyId,
-          challenge,
-          (pkcs7: string) => {
-            handleEimzoLogin(pkcs7, selectedItem.vo);
-          },
-          (e: any, r: any) => {
-            uiHandleError(e, r);
-          },
-          false,
-        );
-      },
-      (e: any, r: any) => {
-        uiHandleError(e, r);
-      },
-    );
-  });
-};
-
+    getChallenge((challenge: string) => {
+      window.EIMZOClient.loadKey(
+        selectedItem.vo,
+        (keyId: string) => {
+          auth(keyId, challenge, selectedItem.vo);
+        },
+        uiHandleError,
+      );
+    });
+  };
 
   // -------- LOGIN BY EMAIL/PASSWORD --------------
   const checkAuthHandler = async (e: React.FormEvent<HTMLFormElement>) => {
