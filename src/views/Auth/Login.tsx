@@ -441,92 +441,96 @@ function Login() {
     window.EIMZOClient.createPkcs7(
       keyId,
       challenge,
-      vo,
-      null,
-      (pkcs7: string, vo: any) => {
+      (pkcs7: string) => {
+        // SUCCESS
         handleEimzoLogin(pkcs7, vo);
+      },
+      (e: any, r: any) => {
+        // ERROR
+        uiHandleError(e, r);
+      },
+      false, // attach = false
+    );
+  };
+  
+
+  const signinPFX = () => {
+    uiShowProgress();
+  
+    const itm = selectedEimzoKey;
+    if (!itm) {
+      uiShowMessage("Iltimos, E-IMZO sertifikatni tanlang", "error");
+      uiHideProgress();
+      return;
+    }
+  
+    getChallenge((challenge: string) => {
+      const selectedItem = eimzoKeysOnly.find((item) => item.id === itm);
+  
+      if (!selectedItem) {
+        uiHideProgress();
+        uiShowMessage("Sertifikat topilmadi", "error");
+        return;
+      }
+  
+      window.EIMZOClient.loadKey(
+        selectedItem.vo,
+        (keyId: string) => {
+          // Key yuklandi → PKCS7 yaratamiz
+          auth(keyId, challenge, selectedItem.vo);
+        },
+        (e: any, r: any) => {
+          uiHandleError(e, r);
+        },
+      );
+    });
+  };
+
+
+ const signinToken = () => {
+  if (usbTokensOnly.length === 0) {
+    uiShowMessage(
+      "USB-token topilmadi. Tokenni ulang va 'Yangilash' tugmasini bosing.",
+      "error",
+    );
+    return;
+  }
+
+  uiShowProgress();
+
+  const itm = selectedKey || usbTokensOnly[0].id;
+  const selectedItem = usbTokensOnly.find((item) => item.id === itm);
+
+  if (!selectedItem) {
+    uiHideProgress();
+    uiShowMessage("USB-token sertifikati topilmadi", "error");
+    return;
+  }
+
+  getChallenge((challenge: string) => {
+    window.EIMZOClient.loadKey(
+      selectedItem.vo,
+      (keyId: string) => {
+        // USB token → PKCS7
+        window.EIMZOClient.createPkcs7(
+          keyId,
+          challenge,
+          (pkcs7: string) => {
+            handleEimzoLogin(pkcs7, selectedItem.vo);
+          },
+          (e: any, r: any) => {
+            uiHandleError(e, r);
+          },
+          false,
+        );
       },
       (e: any, r: any) => {
         uiHandleError(e, r);
       },
-      false,
     );
-  };
+  });
+};
 
-  const signinPFX = () => {
-    uiShowProgress();
-
-    const itm = selectedEimzoKey || selectedKey;
-    if (!itm) {
-      uiShowMessage("Iltimos, sertifikatni tanlang", "error");
-      uiHideProgress();
-      return;
-    }
-
-    getChallenge((challenge: string) => {
-      const selectedItem = eimzoKeysOnly.find((item) => item.id === itm);
-      if (selectedItem) {
-        window.EIMZOClient.loadKey(
-          selectedItem.vo,
-          (id: string) => {
-            auth(id, challenge, selectedItem.vo);
-          },
-          uiHandleError,
-        );
-      } else {
-        uiHideProgress();
-        uiShowMessage("Sertifikat topilmadi", "error");
-      }
-    });
-  };
-
-  const signinToken = () => {
-    if (usbTokensOnly.length === 0) {
-      uiShowMessage(
-        "USB-token topilmadi. Iltimos, USB-token ulang va 'Yangilash' tugmasini bosing.",
-        "error",
-      );
-      return;
-    }
-
-    uiShowProgress();
-
-    const itm =
-      selectedKey || (usbTokensOnly.length > 0 ? usbTokensOnly[0].id : "");
-    if (!itm) {
-      uiHideProgress();
-      uiShowMessage("USB-token sertifikati tanlanmagan", "error");
-      return;
-    }
-
-    getChallenge((challenge: string) => {
-      const selectedItem = usbTokensOnly.find((item) => item.id === itm);
-      if (selectedItem) {
-        // For USB tokens, we need to load the key first
-        window.EIMZOClient.loadKey(
-          selectedItem.vo,
-          (id: string) => {
-            // Create PKCS7 for USB token
-            window.EIMZOClient.createPkcs7(
-              id,
-              challenge,
-              selectedItem.vo,
-              null,
-              (pkcs7: string, vo: any) => {
-                handleEimzoLogin(pkcs7, vo);
-              },
-              uiHandleError,
-              false,
-            );
-          },
-          uiHandleError,
-        );
-      } else {
-        uiHideProgress();
-        uiShowMessage("USB-token sertifikati topilmadi", "error");
-      }
-    });
-  };
 
   // -------- LOGIN BY EMAIL/PASSWORD --------------
   const checkAuthHandler = async (e: React.FormEvent<HTMLFormElement>) => {
