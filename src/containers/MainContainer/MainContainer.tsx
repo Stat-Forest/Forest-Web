@@ -86,7 +86,9 @@ function MainContainer() {
             <FileText color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_1")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("item_1")}
+            </h2>
             <span className="text-[22px] font-semibold text-yellow-600">
               {dashboard_data?.sent_reports || 0} {t("count")}
             </span>
@@ -104,7 +106,9 @@ function MainContainer() {
             <FolderSync color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_2")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("item_2")}
+            </h2>
             <span className="text-[22px] font-semibold text-red-700">
               {dashboard_data?.returned_reports || 0} {t("count")}
             </span>
@@ -122,7 +126,9 @@ function MainContainer() {
             <ClipboardCheck color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_3")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("item_3")}
+            </h2>
             <span className="text-[22px] font-semibold text-blue-700">
               {dashboard_data?.accepted_reports || 0} {t("count")}
             </span>
@@ -140,7 +146,9 @@ function MainContainer() {
             <IdCard color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_4")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("item_4")}
+            </h2>
             <span className="text-[22px] font-semibold text-gray-800">
               {dashboard_data?.responsible_users || 0} {t("count")}
             </span>
@@ -158,7 +166,9 @@ function MainContainer() {
             <PencilLine color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-700">{t("item_5")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-700">
+              {t("item_5")}
+            </h2>
             <span className="text-[22px] font-semibold text-gray-800">
               {dashboard_data?.draft_reports || 0} {t("count")}
             </span>
@@ -176,7 +186,9 @@ function MainContainer() {
             <Mail color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_6")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("item_6")}
+            </h2>
             <span className="text-[22px] font-semibold text-blue-700">
               {dashboard_data?.deadlines || 0} {t("count")}
             </span>
@@ -213,14 +225,14 @@ function MainContainer() {
             <CalendarRange color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("item_7")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("item_7")}
+            </h2>
             <span className="text-[22px] font-semibold text-orange-800">
               {dashboard_data?.plans || 0} {t("count")}
             </span>
           </div>
         </div>
-
-
       </div>
       <hr className="my-4 mx-4" />
       <div className="grid grid-cols-3 gap-5 py-4 px-2">
@@ -249,10 +261,12 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="bg-yellow-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <CircleX color="white" size={25} />
+            <History color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("late")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("late")}
+            </h2>
             <span className="text-[22px] font-semibold text-yellow-800">
               {dashboard_data?.late_reports || 0} {t("count")}
             </span>
@@ -265,17 +279,17 @@ function MainContainer() {
           className={cardClasses}
         >
           <div className="bg-red-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <History color="white" size={25} />
+            <CircleX color="white" size={25} />
           </div>
           <div>
-            <h2 className="font-medium text-[22px] text-gray-800">{t("not_completed")}</h2>
+            <h2 className="font-medium text-[22px] text-gray-800">
+              {t("not_completed")}
+            </h2>
             <span className="text-[22px] font-semibold text-red-800">
-            {dashboard_data?.expired_deadlines || 0} {t("count")}
-              
+              {dashboard_data?.expired_deadlines || 0} {t("count")}
             </span>
           </div>
         </div>
-       
       </div>
     </>
   );
