@@ -102,8 +102,8 @@ export default function FiltersSection({
             <>
               <SelectItem value=" ">{`${t("allReports")}`}</SelectItem>
               {deadline.results.map((item: any) => (
-                <SelectItem key={item.id} value={item.id.toString()}>
-                  {new Date(item.submit_at).toLocaleDateString("uz-UZ")}
+                <SelectItem key={item.id} value={item.id}>
+                  {item.submit_at}
                 </SelectItem>
               ))}
 
@@ -113,9 +113,7 @@ export default function FiltersSection({
                   size="sm"
                   variant="outline"
                   disabled={deadlinePage === 1}
-                  onClick={() =>
-                    setDeadlinePage((p) => Math.max(p - 1, 1))
-                  }
+                  onClick={() => setDeadlinePage((p) => Math.max(p - 1, 1))}
                 >
                   {t("before")}
                 </Button>
@@ -131,7 +129,7 @@ export default function FiltersSection({
                   }
                   onClick={() =>
                     setDeadlinePage((p) =>
-                      Math.min(p + 1, Math.ceil(deadline.count / perPage))
+                      Math.min(p + 1, Math.ceil(deadline.count / perPage)),
                     )
                   }
                 >
