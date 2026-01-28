@@ -89,6 +89,7 @@ function PlantCreate() {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
+  const [yearPlan, setYearPlan] = useState<string>("");
 
   const {
     data: organizationsData,
@@ -239,7 +240,7 @@ function PlantCreate() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: state.selectedOrganizationId,
                 statement_id: reportIds,
-                year: "2025",
+                year: yearPlan,
                 column: col.id,
               })
             ).unwrap()
@@ -686,6 +687,20 @@ function PlantCreate() {
                 )}
               </SelectContent>
             </Select>
+          </div>
+           <div className="flex flex-col gap-2">
+            <label htmlFor="year">{t("year")}</label>
+            <div className="flex flex-col gap-1">
+              <input
+              value={yearPlan}
+                onChange={(e) => setYearPlan(e.target.value)}
+                type="number"
+                className="no-spinner border border-gray-950 shadow py-1 rounded-md p-3"
+              />
+              <span className="text-sm">
+                Faqatkina "reja" mavjud bo'lgan hisobodlar uchun
+              </span>
+            </div>
           </div>
         </div>
 
