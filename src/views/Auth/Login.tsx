@@ -619,14 +619,13 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl px-8 py-10 flex flex-col gap-6">
+    <div className="flex items-center justify-center bg-white rounded-2xl">
+      <div className=" w-full max-w-xl rounded-2xl shadow-xl px-8 py-8 flex flex-col gap-5">
         {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-800">
             {t("loginTitle")}
           </h2>
-          <p className="text-gray-600 mt-2">Tizimga kirish</p>
         </div>
 
         {/* Login method selection */}
@@ -992,22 +991,6 @@ function Login() {
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <div className="text-center pt-4">
-          <p className="text-xs text-gray-500">
-            E-IMZO v3.37+ talab etiladi. Agar muammo bo'lsa,{" "}
-            <a
-              href="https://e-imzo.uz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              e-imzo.uz
-            </a>{" "}
-            saytiga murojaat qiling.
-          </p>
-        </div>
       </div>
     </div>
   );
