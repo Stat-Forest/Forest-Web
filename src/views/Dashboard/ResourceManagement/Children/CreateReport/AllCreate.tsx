@@ -33,7 +33,7 @@ import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
 
 function findEmptyChildrenColumnIds(
-  children: any[]
+  children: any[],
 ): { id: string; title: string; fullParentChain: string }[] {
   const result: { id: string; title: string; fullParentChain: string }[] = [];
   const traverse = (cols: any[], parentChain: string[] = []) => {
@@ -73,6 +73,7 @@ function AllCreateReportItem() {
   const [planItems, setPlanItems] = useState<
     { columnId: string; plan_value: string; fullParentChain: string }[]
   >([]);
+  const [yearPlan, setYearPlan] = useState<string>("");
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -92,7 +93,7 @@ function AllCreateReportItem() {
     error: headersError,
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds as string, lang, isUser: "true" },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   // 🔹 Deadline state
@@ -109,21 +110,21 @@ function AllCreateReportItem() {
       page: deadlinePage,
       perPage,
       statement__period: "",
-      is_new_deadline:"true"
+      is_new_deadline: "true",
     },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
-    [tableHeadersData]
+    [tableHeadersData],
   );
 
   const allEmptyColumnsByStepMemo = useMemo(() => {
     return tableHeadersDataMemo.map((obj: any) =>
       Array.isArray(obj.children)
         ? findEmptyChildrenColumnIds(obj.children)
-        : []
+        : [],
     );
   }, [tableHeadersDataMemo]);
 
@@ -131,7 +132,7 @@ function AllCreateReportItem() {
     // Faqat o'zgarganda yangilash - JSON.stringify bilan solishtirish
     const currentString = JSON.stringify(allEmptyColumnsByStep);
     const newString = JSON.stringify(allEmptyColumnsByStepMemo);
-    
+
     if (currentString !== newString) {
       setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
       setCurrentStep(0);
@@ -155,12 +156,12 @@ function AllCreateReportItem() {
         }
       }
     });
-    
+
     // Faqat yangi qiymatlar bo'lsa yangilash
     if (Object.keys(initialValues).length > 0) {
       setFormValues((prev) => {
         const hasNewValues = Object.keys(initialValues).some(
-          (key) => !prev[key]
+          (key) => !prev[key],
         );
         return hasNewValues ? { ...prev, ...initialValues } : prev;
       });
@@ -181,10 +182,10 @@ function AllCreateReportItem() {
         return;
 
       // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin reja olinadi
-      const hasSeasonSelect = 
-        reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" || 
+      const hasSeasonSelect =
+        reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
         reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
-      
+
       if (hasSeasonSelect && !selectedSeason) {
         // Season tanlanmagan bo'lsa, reja ma'lumotlarini tozalash
         setPlanItems([]);
@@ -198,12 +199,12 @@ function AllCreateReportItem() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: selectedOrganizationId,
                 statement_id: reportIds as string,
-                year: "2025",
+                year: yearPlan,
                 column: col.id,
                 ...(selectedSeason && { season: selectedSeason }),
-              })
-            ).unwrap()
-          )
+              }),
+            ).unwrap(),
+          ),
         );
 
         if (isMounted) {
@@ -220,10 +221,7 @@ function AllCreateReportItem() {
       } catch (error) {
         if (isMounted) {
           console.error("Reja olishda xatolik:", error);
-          setFormErrors((prev) => [
-            ...prev,
-            t("plan_fetch_error"),
-          ]);
+          setFormErrors((prev) => [...prev, t("plan_fetch_error")]);
         }
       }
     };
@@ -232,7 +230,13 @@ function AllCreateReportItem() {
     return () => {
       isMounted = false;
     };
-  }, [allEmptyColumnsByStep, selectedOrganizationId, reportIds, selectedSeason, dispatch]);
+  }, [
+    allEmptyColumnsByStep,
+    selectedOrganizationId,
+    reportIds,
+    selectedSeason,
+    dispatch,
+  ]);
 
   const [
     createReportItem,
@@ -311,7 +315,7 @@ function AllCreateReportItem() {
       allEmptyColumnsByStep[currentStep]?.some(
         (col) =>
           col.title.toLowerCase().includes("tashkilot nomi") ||
-          col.title.toLowerCase().includes("Названия регионов")
+          col.title.toLowerCase().includes("Названия регионов"),
       ) &&
       !selectedOrganizationId
     ) {
@@ -360,11 +364,11 @@ function AllCreateReportItem() {
       };
     });
 
-    const payload = { 
-      deadline: selectedDeadlineId, 
+    const payload = {
+      deadline: selectedDeadlineId,
       report_items,
       season: selectedSeason || null,
-      foot_note: footNote || ""
+      foot_note: footNote || "",
     };
 
     try {
@@ -450,8 +454,8 @@ function AllCreateReportItem() {
                     deadlineLoading
                       ? t("loading")
                       : deadlineError
-                      ? t("loading_error")
-                      : t("selectDeadline")
+                        ? t("loading_error")
+                        : t("selectDeadline")
                   }
                 />
               </SelectTrigger>
@@ -459,9 +463,9 @@ function AllCreateReportItem() {
               <SelectContent>
                 {/* LOADING */}
                 {deadlineLoading && (
-                    <div className="p-2 text-center text-muted-foreground text-sm">
-                      {t("loading")}
-                    </div>
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    {t("loading")}
+                  </div>
                 )}
 
                 {/* ERROR */}
@@ -524,8 +528,8 @@ function AllCreateReportItem() {
                           setDeadlinePage((p) =>
                             Math.min(
                               p + 1,
-                              Math.ceil(deadlineData.count / perPage)
-                            )
+                              Math.ceil(deadlineData.count / perPage),
+                            ),
                           )
                         }
                       >
@@ -536,25 +540,38 @@ function AllCreateReportItem() {
               </SelectContent>
             </Select>
           </div>
-         {(reportIds == "1186b75c-d84c-44e6-999e-d6be3c5118ff" || reportIds == "671577ba-6a86-4619-b31c-86fff20ad305") && (
-          <div>
-            <label className="block mb-1 text-lg font-medium">
-              Season:
-            </label>
-            <Select
-              value={selectedSeason}
-              onValueChange={(val) => setSelectedSeason(val)}
-            >
-              <SelectTrigger className="w-[300px]">
-                <SelectValue placeholder="Tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="spring">Bahor</SelectItem>
-                <SelectItem value="autumn">Kuz</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="year">{t("year")}</label>
+            <div className="flex flex-col gap-1">
+              <input
+              value={yearPlan}
+                onChange={(e) => setYearPlan(e.target.value)}
+                type="number"
+                className="no-spinner border border-gray-950 shadow py-1 rounded-md p-3"
+              />
+              <span className="text-sm">
+                Faqatkina "reja" mavjud bo'lgan hisobodlar uchun
+              </span>
+            </div>
           </div>
-        )}
+          {(reportIds == "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
+            reportIds == "671577ba-6a86-4619-b31c-86fff20ad305") && (
+            <div>
+              <label className="block mb-1 text-lg font-medium">Season:</label>
+              <Select
+                value={selectedSeason}
+                onValueChange={(val) => setSelectedSeason(val)}
+              >
+                <SelectTrigger className="w-[300px]">
+                  <SelectValue placeholder="Tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spring">Bahor</SelectItem>
+                  <SelectItem value="autumn">Kuz</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {/* ✅ QOLGAN KOD — TABLE STEP */}
@@ -579,7 +596,7 @@ function AllCreateReportItem() {
 
                   if (lowerTitle.includes("reja")) {
                     const planItem = planItems.find(
-                      (item) => item.columnId === col.id
+                      (item) => item.columnId === col.id,
                     );
                     const planValue = planItem ? planItem.plan_value : "";
                     return (
@@ -645,7 +662,7 @@ function AllCreateReportItem() {
                           required
                           className={
                             formErrors.some((err) =>
-                              err.includes(col.fullParentChain)
+                              err.includes(col.fullParentChain),
                             )
                               ? "border-red-500"
                               : ""
