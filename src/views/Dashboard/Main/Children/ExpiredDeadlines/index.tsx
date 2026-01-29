@@ -119,9 +119,9 @@ function ExpiredDeadlines() {
 
           <div>
             <Select
-              value={selectedStatement?.toString() || "all"}
+              value={selectedStatement?.toString() || ""}
               onValueChange={(value) => {
-                setSelectedStatement(value === "all" ? undefined : Number(value));
+                setSelectedStatement(value === "" ? undefined : Number(value));
                 setPage(1);
               }}
             >

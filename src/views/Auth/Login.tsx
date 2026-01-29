@@ -343,53 +343,11 @@ function Login() {
   const detectUsbTokens = async () => {
     if (!isEimzoInitialized) return;
 
+    // Start spinner and refresh keys via the standard E-IMZO flow.
+    // IMPORTANT: do NOT fabricate or construct `vo` objects for USB tokens here.
     setUsbTokenLoading(true);
     try {
-      if (window.CAPIWS) {
-        // Direct CAPIWS detection for USB tokens
-        window.CAPIWS.call(
-          {
-            plugin: "ftjc",
-            method: "get_certificates",
-            arguments: [],
-          },
-          (response: any) => {
-            if (
-              response &&
-              response.certificates &&
-              response.certificates.length > 0
-            ) {
-              const usbCertificates = response.certificates.map(
-                (cert: any, index: number) => ({
-                  id: `usb-token-${cert.serialNumber}-${index}`,
-                  value: `usb-token-${cert.serialNumber}-${index}`,
-                  label: cert.subjectCN || `USB Token ${index + 1}`,
-                  disabled: false,
-                  vo: {
-                    type: "ftjc",
-                    CN: cert.subjectCN,
-                    serialNumber: cert.serialNumber,
-                    validTo: cert.validTo,
-                    validFrom: cert.validFrom,
-                    issuerCN: cert.issuerCN,
-                  },
-                }),
-              );
-              setUsbTokensOnly(usbCertificates);
-              if (usbCertificates.length > 0 && !selectedKey) {
-                setSelectedKey(usbCertificates[0].id);
-              }
-            } else {
-              // Fallback to EIMZOClient if CAPIWS doesn't return certificates
-              refreshAllKeys();
-            }
-            setUsbTokenLoading(false);
-          },
-        );
-      } else {
-        // Fallback to EIMZOClient
-        refreshAllKeys();
-      }
+      refreshAllKeys();
     } catch (error) {
       if (process.env.NODE_ENV === "development") {
         console.error("USB token detection error:", error);
@@ -419,8 +377,11 @@ function Login() {
     callback(challenge);
   };
 
-  const handleEimzoLogin = (pkcs7: string, vo: any) => {
-    const loginData = { pkcs7, vo };
+  const handleEimzoLogin = (pkcs7: string, vo?: any) => {
+    // For USB tokens (type === 'ftjc') send only `{ pkcs7 }` to backend.
+    // For PFX certificates send `{ pkcs7, vo }`.
+    const isUsbToken = vo && vo.type === "ftjc";
+    const loginData = isUsbToken ? { pkcs7 } : { pkcs7, vo };
 
     dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
       .unwrap()
