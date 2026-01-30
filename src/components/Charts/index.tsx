@@ -2,6 +2,8 @@ import EmployeeAnalysisChart from "./EmployeeAnalysisChart";
 import EmployeeReportChart from "./EmployeeReportChart";
 import EmployeeFundChart from "./FinanceFundChart";
 import EmployeeIncomeChart from "./FinanceIncomeChart";
+import GolofitChart from "./GolofitChart";
+import TerrasaChart from "./TerassaChart";
 
 function ReportChartItem({
   reportName,
@@ -18,9 +20,12 @@ function ReportChartItem({
     return <EmployeeReportChart activeTab={activeTab} />;
   } else if (reportName === "Xodimlar hisobi taxlili") {
     return <EmployeeAnalysisChart activeTab={activeTab} />;
-  } else if (reportName === "Yer uchastkalarini egallash") {
-    return <div>Land Acquisition Chart</div>;
-  } else {
+  } else if (reportName === "Terassa") {
+    return <TerrasaChart />;
+  } else if (reportName === "Golofit") {
+    return <GolofitChart />;
+  } 
+  else {
     return <div></div>;
   }
 }
