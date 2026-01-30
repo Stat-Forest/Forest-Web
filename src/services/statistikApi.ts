@@ -28,6 +28,18 @@ export const statistikApi = createApi({
     getLandRented: builder.query<any, void>({
       query: () => `/land-rented-stat/`,
     }),
+    getBuildForestGolofitStat: builder.query<any, void>({
+      query: () => `/build-forest-golofit/`,
+    }),
+    getBuildForestTeressaStat: builder.query<any, void>({
+      query: () => `/build-forest-teressa/`,
+    }),
+    getMonitorForestUzlashtirish: builder.query<any, void>({
+      query: () => `/monitor-forest-uzlashtirish/`,
+    }),
+    getProtectForestZararkunanda: builder.query<any, void>({
+      query: () => `/protect-forest-zararkunanda/`,
+    }),
   }),
 });
 
@@ -39,4 +51,8 @@ export const {
   useGetLandAcquisitionQuery,
   useGetLandForestQuery,
   useGetLandRentedQuery,
+  useGetBuildForestGolofitStatQuery,
+  useGetBuildForestTeressaStatQuery,
+  useGetMonitorForestUzlashtirishQuery,
+  useGetProtectForestZararkunandaQuery,
 } = statistikApi;
