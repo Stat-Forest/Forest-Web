@@ -37,10 +37,7 @@ import {
   plantCreateReducer,
   plantCreateInitialState,
 } from "@/reducers/plantCreateReducer";
-import {
-  FormGroup,
-  EmptyColumn,
-} from "@/types/plantCreateTypes";
+import { FormGroup, EmptyColumn } from "@/types/plantCreateTypes";
 
 // Interface for API response data
 interface Category {
@@ -75,7 +72,7 @@ const EMPTY_TABLE_HEADERS: TableHeaderData[] = [];
 function PlantCreate() {
   const [state, dispatch] = useReducer(
     plantCreateReducer,
-    plantCreateInitialState
+    plantCreateInitialState,
   );
 
   // 🔹 Cache o'simlik label'larini pagination bo'ylab saqlash (Radix Select tanlangan value item ro'yxatida bo'lmasa label ko'rsatmaydi)
@@ -103,7 +100,7 @@ function PlantCreate() {
     error: headersError,
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds || "", lang, isUser: "true" },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   // 🔹 Plants state with pagination
@@ -121,7 +118,7 @@ function PlantCreate() {
       page: state.plantsPage,
       perPage: plantsPerPage,
     },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   // 🔹 PlantsData kelgan sayin o'simlik nomlarini cache'ga qo'shib boramiz (pagination almashganda ham tanlanganlar ko'rinib turadi)
@@ -166,14 +163,14 @@ function PlantCreate() {
       page: state.deadlinePage,
       perPage: deadlinePerPage,
       statement__period: "",
-      is_new_deadline:"true"
+      is_new_deadline: "true",
     },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
-    [tableHeadersData]
+    [tableHeadersData],
   );
 
   // 🔹 Maxsus: "Ko‘chat va Nihol" ilovalari uchun (Ko‘chat-va-Nihol-ilova) o'simlik tanlash kerak emas
@@ -198,7 +195,7 @@ function PlantCreate() {
     return (tableHeadersDataMemo as TableHeaderData[]).map((obj) =>
       Array.isArray(obj.children)
         ? findEmptyChildrenColumnIds(obj.children)
-        : []
+        : [],
     );
   }, [tableHeadersDataMemo]);
 
@@ -211,72 +208,103 @@ function PlantCreate() {
         (_: any, stepIndex: number) => ({
           step: stepIndex,
           forms: [{ values: {}, plantId: "" }], // Har bir stepda boshlang'ich 1 formula
-        })
+        }),
       );
       dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
     }
   }, [allEmptyColumnsByStepMemo]);
 
-  // 🔹 REJA MA'LUMOTLARI
+  // 🔹 REJA MA'LUMOTLARI (per-plant per-column)
+  const [planByColumnAndPlant, setPlanByColumnAndPlant] = useState<
+    Record<string, Record<string, string>>
+  >({});
+
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
-    const fetchPlanDataForColumns = async () => {
-      const rejaColumns = state.allEmptyColumnsByStep
-        .flat()
-        .filter((col) => col.title.toLowerCase().includes("reja"));
+    const rejaColumns = state.allEmptyColumnsByStep
+      .flat()
+      .filter((col) => col.title.toLowerCase().includes("reja"));
 
-      if (
-        rejaColumns.length === 0 ||
-        !reportIds ||
-        !state.selectedOrganizationId
-      )
-        return;
+    if (
+      rejaColumns.length === 0 ||
+      !reportIds ||
+      !state.selectedOrganizationId ||
+      !yearPlan
+    ) {
+      if (mounted) setPlanByColumnAndPlant({});
+      return;
+    }
 
-      try {
-        const results = await Promise.all(
-          rejaColumns.map((col) =>
-            reduxDispatch(
+    const allPlantIds = Array.from(
+      new Set(
+        state.formGroups.flatMap((g) => g.forms.map((f) => f.plantId)).filter(Boolean),
+      ),
+    );
+
+    if (allPlantIds.length === 0) {
+      if (mounted) setPlanByColumnAndPlant({});
+      return;
+    }
+
+    const tasks: Promise<void>[] = [];
+
+    rejaColumns.forEach((col) => {
+      allPlantIds.forEach((pId) => {
+        // skip if already fetched
+        if (planByColumnAndPlant[col.id]?.[pId] !== undefined) return;
+
+        const task = (async () => {
+          try {
+            const res = await reduxDispatch(
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: state.selectedOrganizationId,
                 statement_id: reportIds,
                 year: yearPlan,
                 column: col.id,
-              })
-            ).unwrap()
-          )
-        );
+                plant_id: pId,
+              }),
+            ).unwrap();
 
-        if (isMounted) {
-          const mergedResults = rejaColumns.map((col, idx) => {
-            const res = results[idx]?.[0] as any;
-            return {
-              columnId: col.id,
-              fullParentChain: col.fullParentChain,
-              plan_value: res?.plan_value?.toString() || "",
-            };
-          });
-          dispatch({ type: "SET_PLAN_ITEMS", payload: mergedResults });
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error("Reja olishda xatolik:", error);
-          dispatch({
-            type: "ADD_FORM_ERROR",
-            payload: t("plan_fetch_error"),
-          });
-        }
-      }
-    };
+            const planValue = (res?.[0]?.plan_value ?? "")?.toString?.() || "";
 
-    fetchPlanDataForColumns();
+            if (!mounted) return;
+
+            setPlanByColumnAndPlant((prev) => ({
+              ...prev,
+              [col.id]: {
+                ...(prev[col.id] || {}),
+                [pId]: planValue,
+              },
+            }));
+          } catch (err) {
+            console.error("Plan fetch error", col.id, pId, err);
+            if (!mounted) return;
+            setPlanByColumnAndPlant((prev) => ({
+              ...prev,
+              [col.id]: {
+                ...(prev[col.id] || {}),
+                [pId]: "",
+              },
+            }));
+          }
+        })();
+
+        tasks.push(task);
+      });
+    });
+
+    Promise.all(tasks).catch((e) => console.error(e));
+
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [
     state.allEmptyColumnsByStep,
+    state.formGroups,
     state.selectedOrganizationId,
     reportIds,
+    yearPlan,
     reduxDispatch,
   ]);
 
@@ -288,7 +316,7 @@ function PlantCreate() {
     stepIndex: number,
     formIndex: number,
     id: string,
-    value: string
+    value: string,
   ) => {
     dispatch({
       type: "UPDATE_FORM_VALUE",
@@ -300,7 +328,7 @@ function PlantCreate() {
   const handlePlantChange = (
     stepIndex: number,
     formIndex: number,
-    plantId: string
+    plantId: string,
   ) => {
     // Yangi o'simlik ID ni qo'shamiz
     if (plantId) {
@@ -362,7 +390,7 @@ function PlantCreate() {
       state.allEmptyColumnsByStep[state.currentStep]?.some(
         (col) =>
           col.title.toLowerCase().includes("tashkilot nomi") ||
-          col.title.toLowerCase().includes("Названия регионов")
+          col.title.toLowerCase().includes("Названия регионов"),
       ) &&
       !state.selectedOrganizationId
     ) {
@@ -400,7 +428,7 @@ function PlantCreate() {
             t("please_select_plant", {
               step: group.step + 1,
               form: formIndex + 1,
-            })
+            }),
           );
         }
       });
@@ -420,7 +448,7 @@ function PlantCreate() {
             errors.push(
               `${group.step + 1}-qadam ${formIndex + 1}-formula uchun "${
                 col.fullParentChain
-              }" qiymati kiritish shart`
+              }" qiymati kiritish shart`,
             );
           }
         });
@@ -436,7 +464,7 @@ function PlantCreate() {
     const report_items = state.allEmptyColumnsByStep.flatMap(
       (stepColumns, stepIndex) => {
         const currentFormGroup = state.formGroups.find(
-          (group) => group.step === stepIndex
+          (group) => group.step === stepIndex,
         );
 
         if (!currentFormGroup) return [];
@@ -454,15 +482,16 @@ function PlantCreate() {
               inners: [{ value: state.selectedOrganizationId || "" }],
             };
           } else if (isRejaColumn) {
-            // 🔹 Reja - HAR BIR FORMULA UCHUN ALOHIDA (o'simlik yuborilmaydi, faqat value)
-            const planItem = state.planItems.find(
-              (item) => item.columnId === col.id
-            );
-            const planValue = planItem ? planItem.plan_value : "";
+            // 🔹 Reja - HAR BIR FORMULA UCHUN ALOHIDA (har bir inner uchun plant ham yuboriladi)
+            const inners = currentFormGroup.forms.map((form) => {
+              const value = planByColumnAndPlant?.[col.id]?.[form.plantId] || form.values[col.id] || "";
+              const plant = isKoChatVaNiholIlova1Step(stepIndex) ? null : form.plantId || null;
 
-            const inners = currentFormGroup.forms.map(() => ({
-              value: planValue, // Har bir formula uchun reja qiymati (o'simlik yo'q)
-            }));
+              return {
+                plant,
+                value,
+              };
+            });
 
             return {
               statement_column: col.id,
@@ -494,13 +523,13 @@ function PlantCreate() {
             };
           }
         });
-      }
+      },
     );
 
-    const payload = { 
-      deadline: state.selectedDeadlineId, 
+    const payload = {
+      deadline: state.selectedDeadlineId,
       report_items,
-      foot_note: footNote || ""
+      foot_note: footNote || "",
     };
 
     try {
@@ -513,7 +542,7 @@ function PlantCreate() {
         (_: any, stepIndex: number) => ({
           step: stepIndex,
           forms: [{ values: {}, plantId: "" }],
-        })
+        }),
       );
       dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
       dispatch({ type: "SET_CURRENT_STEP", payload: 0 });
@@ -521,9 +550,7 @@ function PlantCreate() {
       dispatch({ type: "RESET_FORM" });
     } catch (err: any) {
       const errorMessage =
-        err?.data?.message ||
-        err?.message ||
-        t("submit_error");
+        err?.data?.message || err?.message || t("submit_error");
       dispatch({ type: "ADD_FORM_ERROR", payload: errorMessage });
       console.error("Yuborishda xatolik:", err);
       toast.error(errorMessage);
@@ -549,7 +576,7 @@ function PlantCreate() {
     (tableHeadersData as TableHeaderData[])?.[state.currentStep]?.title ??
     `Qadam ${state.currentStep + 1}`;
   const currentFormGroup = state.formGroups.find(
-    (group) => group.step === state.currentStep
+    (group) => group.step === state.currentStep,
   );
 
   // 🔹 Deadline matnini formatlash funksiyasi
@@ -608,8 +635,8 @@ function PlantCreate() {
                     deadlineLoading
                       ? "Yuklanmoqda..."
                       : deadlineError
-                      ? "Xatolik yuz berdi"
-                      : t("selectDeadline")
+                        ? "Xatolik yuz berdi"
+                        : t("selectDeadline")
                   }
                 />
               </SelectTrigger>
@@ -650,7 +677,7 @@ function PlantCreate() {
                         <span className="text-xs text-gray-500">
                           {state.deadlinePage} /{" "}
                           {Math.ceil(
-                            (deadlineData as any).count / deadlinePerPage
+                            (deadlineData as any).count / deadlinePerPage,
                           )}
                         </span>
                         <Button
@@ -660,7 +687,7 @@ function PlantCreate() {
                           disabled={
                             state.deadlinePage >=
                             Math.ceil(
-                              (deadlineData as any).count / deadlinePerPage
+                              (deadlineData as any).count / deadlinePerPage,
                             )
                           }
                           onClick={() =>
@@ -669,8 +696,8 @@ function PlantCreate() {
                               payload: Math.min(
                                 state.deadlinePage + 1,
                                 Math.ceil(
-                                  (deadlineData as any).count / deadlinePerPage
-                                )
+                                  (deadlineData as any).count / deadlinePerPage,
+                                ),
                               ),
                             })
                           }
@@ -688,11 +715,11 @@ function PlantCreate() {
               </SelectContent>
             </Select>
           </div>
-           <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <label htmlFor="year">{t("year")}</label>
             <div className="flex flex-col gap-1">
               <input
-              value={yearPlan}
+                value={yearPlan}
                 onChange={(e) => setYearPlan(e.target.value)}
                 type="number"
                 className="no-spinner border border-gray-950 shadow py-1 rounded-md p-3"
@@ -751,14 +778,18 @@ function PlantCreate() {
                         {/* SelectValue tanlangan item joriy page'da bo'lmasa label ko'rsatmaydi.
                             Shuning uchun label'ni o'zimiz cache'dan chiqaramiz. */}
                         <SelectValue asChild>
-                          <span className={!form.plantId ? "text-muted-foreground" : ""}>
+                          <span
+                            className={
+                              !form.plantId ? "text-muted-foreground" : ""
+                            }
+                          >
                             {form.plantId
                               ? getPlantLabel(form.plantId)
                               : plantsLoading
-                              ? t("loading")
-                              : plantsError
-                              ? t("loading_error")
-                              : t("please_select")}
+                                ? t("loading")
+                                : plantsError
+                                  ? t("loading_error")
+                                  : t("please_select")}
                           </span>
                         </SelectValue>
                       </SelectTrigger>
@@ -785,7 +816,7 @@ function PlantCreate() {
                                 </SelectItem>,
                                 ...category.children.map((child: Plant) => {
                                   const isUsed = getAllUsedPlantIds.has(
-                                    child.id.toString()
+                                    child.id.toString(),
                                   );
                                   const isCurrentFormPlant =
                                     form.plantId === child.id.toString();
@@ -804,7 +835,7 @@ function PlantCreate() {
                                     </SelectItem>
                                   );
                                 }),
-                              ]
+                              ],
                             )}
 
                             {/* ✅ Plants Pagination Controls */}
@@ -818,7 +849,10 @@ function PlantCreate() {
                                   onClick={() =>
                                     dispatch({
                                       type: "SET_PLANTS_PAGE",
-                                      payload: Math.max(state.plantsPage - 1, 1),
+                                      payload: Math.max(
+                                        state.plantsPage - 1,
+                                        1,
+                                      ),
                                     })
                                   }
                                 >
@@ -827,7 +861,7 @@ function PlantCreate() {
                                 <span className="text-xs text-gray-500">
                                   {state.plantsPage} /{" "}
                                   {Math.ceil(
-                                    (plantsData as any).count / plantsPerPage
+                                    (plantsData as any).count / plantsPerPage,
                                   )}
                                 </span>
                                 <Button
@@ -837,7 +871,7 @@ function PlantCreate() {
                                   disabled={
                                     state.plantsPage >=
                                     Math.ceil(
-                                      (plantsData as any).count / plantsPerPage
+                                      (plantsData as any).count / plantsPerPage,
                                     )
                                   }
                                   onClick={() =>
@@ -847,8 +881,8 @@ function PlantCreate() {
                                         state.plantsPage + 1,
                                         Math.ceil(
                                           (plantsData as any).count /
-                                            plantsPerPage
-                                        )
+                                            plantsPerPage,
+                                        ),
                                       ),
                                     })
                                   }
@@ -884,22 +918,40 @@ function PlantCreate() {
                         const lowerTitle = col.title.toLowerCase();
 
                         if (lowerTitle.includes("reja")) {
-                          const planItem = state.planItems.find(
-                            (item) => item.columnId === col.id
-                          );
-                          const planValue = planItem ? planItem.plan_value : "";
+                          const planValue = form.plantId
+                            ? planByColumnAndPlant?.[col.id]?.[form.plantId] || form.values[col.id] || ""
+                            : form.values[col.id] || "";
+
                           return (
                             <TableRow key={col.id}>
                               <TableCell className="whitespace-normal break-words">
                                 {col.fullParentChain}
+                                {form.plantId && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {t("for_plant")}: {getPlantLabel(form.plantId)}
+                                  </div>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <Input
                                   type="text"
                                   value={planValue}
-                                  disabled
-                                  className="bg-gray-100 cursor-not-allowed"
+                                  onChange={(e) =>
+                                    handleInputChange(
+                                      state.currentStep,
+                                      formIndex,
+                                      col.id,
+                                      e.target.value,
+                                    )
+                                  }
+                                  className={planValue ? "bg-green-50" : ""}
+                                  disabled={!!planByColumnAndPlant?.[col.id]?.[form.plantId]}
                                 />
+                                {planByColumnAndPlant?.[col.id]?.[form.plantId] && (
+                                  <div className="text-xs text-green-600 mt-1">
+                                    {t("auto_filled_from_plan")}
+                                  </div>
+                                )}
                               </TableCell>
                             </TableRow>
                           );
@@ -928,7 +980,7 @@ function PlantCreate() {
                                       state.currentStep,
                                       formIndex,
                                       col.id,
-                                      e.target.value
+                                      e.target.value,
                                     );
                                   }}
                                   className="w-full border rounded px-2 py-1"
@@ -940,7 +992,7 @@ function PlantCreate() {
                                       <option key={item.id} value={item.id}>
                                         {item.name}
                                       </option>
-                                    )
+                                    ),
                                   )}
                                 </select>
                               </TableCell>
@@ -962,7 +1014,7 @@ function PlantCreate() {
                                     state.currentStep,
                                     formIndex,
                                     col.id,
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 required
@@ -1075,7 +1127,7 @@ function PlantCreate() {
                   )}
                 </div>
               );
-            })
+            }),
           )}
         </div>
       </form>
