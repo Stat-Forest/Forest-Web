@@ -19,10 +19,11 @@ import {
   useGetExpiredDeadlinesReportQuery,
   useGetStatementsReportQuery,
 } from "@/services/reportsApi";
-import { useState, useMemo, Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { getSimpleCookie } from "@/utils/cookie";
+import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 
 interface ExpiredDeadline {
   id: string;
@@ -34,323 +35,245 @@ interface ExpiredDeadline {
     period: string;
     parent_name: string;
   };
-  organizations: Array<{
+  organizations: {
     id: string;
     name: string;
-  }>;
+  }[];
 }
 
 function ExpiredDeadlines() {
-  const [selectedStatement, setSelectedStatement] = useState<number | undefined>(undefined);
+  const { t } = useTranslation();
+  const lang = getSimpleCookie("lang") || "uz";
+
+  const [selectedStatement, setSelectedStatement] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
-  const [selectedOrganization, setSelectedOrganization] = useState<number | undefined>(undefined);
+  const [selectedOrganization, setSelectedOrganization] = useState<string>("");
   const [deadlineAt, setDeadlineAt] = useState("");
   const [submitAt, setSubmitAt] = useState("");
   const [page, setPage] = useState(1);
   const [openRow, setOpenRow] = useState<string | null>(null);
+
   const perPage = 10;
-  const lang = getSimpleCookie("lang") || "uz";
-  const { t } = useTranslation();
 
   const toggleRow = (id: string) => {
     setOpenRow((prev) => (prev === id ? null : id));
   };
 
-  // Build query parameters
-  const queryParams = useMemo(() => {
-    const params: {
-      deadline_at?: string;
-      organizations?: number;
-      page?: number;
-      per_page?: number;
-      statement?: number;
-      submit_at?: string;
-    } = {};
-
-    if (deadlineAt) params.deadline_at = deadlineAt;
-    if (selectedOrganization) params.organizations = selectedOrganization;
-    if (page) params.page = page;
-    if (perPage) params.per_page = perPage;
-    if (selectedStatement) params.statement = selectedStatement;
-    if (submitAt) params.submit_at = submitAt;
-
-    return params;
-  }, [deadlineAt, selectedOrganization, page, perPage, selectedStatement, submitAt]);
+  const { data: organizations, isLoading: orgLoading } =
+    useGetOrganizationReportsQuery({ lang });
 
   const {
-    data: expiredDeadlinesData,
-    isLoading: isDeadlinesLoading,
-    error: deadlinesError,
-  } = useGetExpiredDeadlinesReportQuery(queryParams);
-
-  const {
-    data: statement,
-    isLoading: isStatementLoading,
+    data: statements,
+    isLoading: statementLoading,
     error: statementError,
-  } = useGetStatementsReportQuery({
-    lang,
+  } = useGetStatementsReportQuery({ lang });
+
+  const { data, isLoading, error } = useGetExpiredDeadlinesReportQuery({
+    page,
+    per_page: perPage,
+    statement: selectedStatement,
+    organizations: selectedOrganization,
+    deadline_at: deadlineAt,
+    submit_at: submitAt,
   });
 
-  // Handle pagination response
-  const deadlinesList = Array.isArray(expiredDeadlinesData)
-    ? expiredDeadlinesData
-    : expiredDeadlinesData?.results || [];
-  const totalCount = expiredDeadlinesData?.count || deadlinesList.length;
+  const list = Array.isArray(data) ? data : (data?.results ?? []);
+  const totalCount = data?.count ?? list.length;
   const totalPages = Math.ceil(totalCount / perPage);
 
   return (
     <div className="px-5 w-full">
-      {isDeadlinesLoading && <h1>Yuklanmoqda...</h1>}
-      {deadlinesError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
-      <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <div>
-            <Input
-              type="text"
-              placeholder={`${t("item_79")}...`}
-              className="w-[260px] text-xl min-h-[40px] border-black"
-              value={submitAt}
-              onChange={(e) => {
-                setSubmitAt(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
+      {isLoading && <p>Yuklanmoqda...</p>}
+      {error && <p className="text-red-500">Xatolik yuz berdi</p>}
 
-          <div>
-            <Select
-              value={selectedStatement?.toString() || ""}
-              onValueChange={(value) => {
-                setSelectedStatement(value === "" ? undefined : Number(value));
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder="Yo'nalishni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                {isStatementLoading && (
-                  <div className="px-3 py-2 text-gray-500">Yuklanmoqda...</div>
+      <div className="bg-ice border rounded-xl px-3 py-5">
+        {/* FILTERS */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <Input
+            className="w-[260px] text-xl border-black"
+            placeholder={`${t("item_79")}...`}
+            value={submitAt}
+            onChange={(e) => {
+              setSubmitAt(e.target.value);
+              setPage(1);
+            }}
+          />
+
+          {/* STATEMENT */}
+          <Select
+            value={selectedStatement ? String(selectedStatement) : undefined}
+            onValueChange={(v) => {
+              setSelectedStatement(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[260px] text-xl border-black">
+              <SelectValue placeholder="Yo'nalishni tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {statementLoading && <p className="px-3">Yuklanmoqda...</p>}
+              {!statementLoading &&
+                !statementError &&
+                statements?.results?.flatMap((p: any) =>
+                  p.children?.map((c: any) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  )),
                 )}
-                {statementError && (
-                  <div className="px-3 py-2 text-red-500">
-                    Xatolik yuz berdi! Ma'lumotlar olinmadi.
-                  </div>
-                )}
-                <SelectItem value="all">{t("all") || "Barchasi"}</SelectItem>
-                {!isStatementLoading &&
-                  !statementError &&
-                  statement?.results?.flatMap((parent: any) =>
-                    parent.children?.map((child: any) => (
-                      <SelectItem key={child.id} value={child.id}>
-                        {child.name}
-                      </SelectItem>
-                    ))
-                  )}
-              </SelectContent>
-            </Select>
-          </div>
+            </SelectContent>
+          </Select>
 
-          <div>
-            <Select
-              value={selectedPeriod || "all"}
-              onValueChange={(value) => {
-                setSelectedPeriod(value === "all" ? "" : value);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder={`${t("reportType")}`} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("all") || "Barchasi"}</SelectItem>
-                <SelectItem value="daily">{t("daily")}</SelectItem>
-                <SelectItem value="weekly">{t("weekly")}</SelectItem>
-                <SelectItem value="monthly">{t("monthly")}</SelectItem>
-                <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
-                <SelectItem value="yearly">{t("yearly")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* PERIOD */}
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-[260px] text-xl border-black">
+              <SelectValue placeholder={t("reportType")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">{t("daily")}</SelectItem>
+              <SelectItem value="weekly">{t("weekly")}</SelectItem>
+              <SelectItem value="monthly">{t("monthly")}</SelectItem>
+              <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
+              <SelectItem value="yearly">{t("yearly")}</SelectItem>
+            </SelectContent>
+          </Select>
 
-          <div>
-            <Input
-              type="date"
-              placeholder="Deadline at"
-              className="w-[260px] text-xl min-h-[40px] border-black"
-              value={deadlineAt}
-              onChange={(e) => {
-                setDeadlineAt(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
+          <Input
+            type="date"
+            className="w-[260px] text-xl border-black"
+            value={deadlineAt}
+            onChange={(e) => {
+              setDeadlineAt(e.target.value);
+              setPage(1);
+            }}
+          />
 
-          <div>
-            <Input
-              type="number"
-              placeholder="Organizations ID"
-              className="w-[260px] text-xl min-h-[40px] border-black"
-              value={selectedOrganization || ""}
-              onChange={(e) => {
-                setSelectedOrganization(
-                  e.target.value ? Number(e.target.value) : undefined
-                );
-                setPage(1);
-              }}
-            />
-          </div>
+          {/* ORGANIZATION */}
+          <Select
+            value={
+              selectedOrganization ? String(selectedOrganization) : undefined
+            }
+            onValueChange={(v) => {
+              setSelectedOrganization(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[260px] text-xl border-black">
+              <SelectValue placeholder={t("organizations")} />
+            </SelectTrigger>
+            <SelectContent>
+              {orgLoading && <p className="px-3">Yuklanmoqda...</p>}
+              {!orgLoading &&
+                organizations?.map((o: any) => (
+                  <SelectItem key={o.id} value={String(o.id)}>
+                    {o.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
 
-          <div>
-            <Button
-              onClick={() => {
-                setSelectedStatement(undefined);
-                setSelectedPeriod("");
-                setSelectedOrganization(undefined);
-                setDeadlineAt("");
-                setSubmitAt("");
-                setPage(1);
-              }}
-              className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
-            >
-              {t("reset")}
-            </Button>
-          </div>
+          {/* RESET */}
+          <Button
+            onClick={() => {
+              setSelectedStatement("");
+              setSelectedOrganization("");
+              setSelectedPeriod("");
+              setDeadlineAt("");
+              setSubmitAt("");
+              setPage(1);
+            }}
+          >
+            {t("reset")}
+          </Button>
         </div>
 
-        {deadlinesList.length === 0 && !isDeadlinesLoading ? (
-          <div className="text-center py-8 text-gray-500">
+        {/* TABLE */}
+        {list.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">
             {t("noData") || "Ma'lumot topilmadi"}
-          </div>
+          </p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow className="bg-[#eaeaea] h-[50px]">
-                  <TableHead className="w-[5%] pl-2 text-lg text-[#717171] rounded-tl-lg text-left border-none">
-                    №
-                  </TableHead>
-                  <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-                    {t("statement") || "Yo'nalish"}
-                  </TableHead>
-                  <TableHead className="text-[#717171] text-left text-lg w-[15%] border-none">
-                    {t("period") || "Davr"}
-                  </TableHead>
-                  <TableHead className="text-[#717171] text-left text-lg w-[15%] border-none">
-                    {t("deadline") || "Muddat"}
-                  </TableHead>
-                  <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-                    {t("organizations") || "Tashkilotlar"}
-                  </TableHead>
-                  <TableHead className="text-right pr-2 text-[#717171] text-lg w-[15%] border-none">
-                    {t("submitDate") || "Topshirilgan sana"}
-                  </TableHead>
-                  <TableHead className="text-center text-[#717171] text-lg rounded-tr-lg rounded-br-lg w-[5%] border-none">
-                    {t("actions") || "Amallar"}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {deadlinesList.map((deadline: ExpiredDeadline, index: number) => (
-                  <Fragment key={deadline.id}>
-                    <TableRow
-                      className="h-[50px] cursor-pointer hover:bg-gray-100"
-                      onClick={() => toggleRow(deadline.id)}
-                    >
-                      <TableCell className="pl-2 text-left border-none">
-                        {(page - 1) * perPage + index + 1}
-                      </TableCell>
-                      <TableCell className="text-left border-none">
-                        <div className="break-words whitespace-normal">
-                          <div className="font-semibold break-words">
-                            {deadline.statement?.name || "-"}
-                          </div>
-                          <div className="text-sm text-gray-500 break-words">
-                            {deadline.statement?.parent_name || ""}
-                          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-200">
+                <TableHead>№</TableHead>
+                <TableHead>{t("statement")}</TableHead>
+                <TableHead>{t("period")}</TableHead>
+                <TableHead>{t("deadline")}</TableHead>
+                <TableHead>{t("organizations")}</TableHead>
+                <TableHead className="text-right">{t("submitDate")}</TableHead>
+                <TableHead className="text-center">{t("actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {list.map((d: ExpiredDeadline, i: number) => (
+                <Fragment key={d.id}>
+                  <TableRow
+                    onClick={() => toggleRow(d.id)}
+                    className="cursor-pointer hover:bg-gray-100"
+                  >
+                    <TableCell>{(page - 1) * perPage + i + 1}</TableCell>
+                    <TableCell>
+                      <b>{d.statement?.name}</b>
+                      <p className="text-sm text-gray-500">
+                        {d.statement?.parent_name}
+                      </p>
+                    </TableCell>
+                    <TableCell>{d.statement?.period}</TableCell>
+                    <TableCell className="text-red-600">
+                      {d.deadline_at}
+                    </TableCell>
+                    <TableCell>
+                      {d.organizations.length} {t("organizations")}
+                    </TableCell>
+                    <TableCell className="text-right">{d.submit_at}</TableCell>
+                    <TableCell className="text-center">
+                      {openRow === d.id ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </TableCell>
+                  </TableRow>
+
+                  {openRow === d.id && (
+                    <TableRow>
+                      <TableCell colSpan={7}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {d.organizations.map((o) => (
+                            <div key={o.id} className="border p-2 rounded">
+                              {o.name}
+                            </div>
+                          ))}
                         </div>
                       </TableCell>
-                      <TableCell className="text-left border-none break-words whitespace-normal">
-                        {deadline.statement?.period || "-"}
-                      </TableCell>
-                      <TableCell className="text-left border-none text-red-600 font-semibold break-words whitespace-normal">
-                        {deadline.deadline_at || "-"}
-                      </TableCell>
-                      <TableCell className="text-left border-none break-words whitespace-normal">
-                        {deadline.organizations?.length > 0
-                          ? `${deadline.organizations.length} ${t("organizations") || "tashkilot"}`
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="text-right pr-2 border-none break-words whitespace-normal">
-                        {deadline.submit_at || "-"}
-                      </TableCell>
-                      <TableCell className="text-center border-none">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleRow(deadline.id);
-                          }}
-                        >
-                          {openRow === deadline.id ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          )}
-                        </Button>
-                      </TableCell>
                     </TableRow>
-
-                    {openRow === deadline.id && (
-                      <TableRow className="bg-gray-50 transition-all duration-300">
-                        <TableCell colSpan={7} className="p-4">
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-lg mb-3">
-                              {t("organizations") || "Tashkilotlar"} ({deadline.organizations?.length || 0})
-                            </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                              {deadline.organizations?.map((org) => (
-                                <div
-                                  key={org.id}
-                                  className="p-3 border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors"
-                                >
-                                  <p className="text-sm font-medium text-gray-700 break-words whitespace-normal text-wrap">
-                                    {org.name}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </Fragment>
+              ))}
+            </TableBody>
+          </Table>
         )}
 
+        {/* PAGINATION */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-600">
-              {t("page") || "Sahifa"} {page} / {totalPages} ({t("total") || "Jami"}: {totalCount})
-            </div>
+          <div className="flex justify-between mt-4">
+            <p>
+              {t("page")} {page} / {totalPages}
+            </p>
             <div className="flex gap-2">
               <Button
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
                 disabled={page === 1}
-                className="bg-[#3B82F6] text-white hover:bg-[#2563EB]"
+                onClick={() => setPage((p) => p - 1)}
               >
-                {t("before") || "Oldingi"}
+                {t("before")}
               </Button>
               <Button
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                disabled={page >= totalPages}
-                className="bg-[#3B82F6] text-white hover:bg-[#2563EB]"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
               >
-                {t("next") || "Keyingi"}
+                {t("next")}
               </Button>
             </div>
           </div>

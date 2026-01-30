@@ -109,7 +109,7 @@ function CreateReport() {
         });
       }
 
-      if (columnName.includes("daromad 1")) {
+      if (columnName.includes("daromad")) {
         daromad1.push(col);
       } else {
         others.push(col);
@@ -290,7 +290,7 @@ function CreateReport() {
         for (const col of daromad1Columns) {
           if (!plant.values[col.id] || plant.values[col.id] === "") {
             alert(
-              `Plant "${plant.plantName}" uchun "Daromad 1" ustunidagi barcha qiymatlar to'ldirilishi kerak!`
+              `Plant "${plant.plantName}" uchun "Daromad" ustunidagi barcha qiymatlar to'ldirilishi kerak!`
             );
             return;
           }
@@ -496,7 +496,7 @@ function CreateReport() {
                 {/* Debug info */}
                 {process.env.NODE_ENV === "development" && (
                   <div className="text-xs text-gray-500 mb-2">
-                    Daromad 1 columns: {daromad1Columns.length}, Other columns:{" "}
+                    Daromad columns: {daromad1Columns.length}, Other columns:{" "}
                     {otherColumns.length}
                   </div>
                 )}
@@ -696,7 +696,7 @@ function CreateReport() {
                             </Table>
                           ) : (
                             <div className="text-center text-sm text-gray-500 py-4 border rounded p-4">
-                              "Daromad 1" ustunlari topilmadi. Barcha ustunlar:{" "}
+                              "Daromad" ustunlari topilmadi. Barcha ustunlar:{" "}
                               {plan_cols.length}
                             </div>
                           )}

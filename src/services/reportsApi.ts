@@ -38,8 +38,14 @@ export const reportApi = createApi({
       providesTags: ["Reports"],
     }),
 
-    getReportById: builder.query<any, {id:string | number; is_user_input:any}>({
-      query: ({ id, is_user_input }) => ({ url: `/${id}/?is_user_input=${is_user_input}`, method: "GET" }),
+    getReportById: builder.query<
+      any,
+      { id: string | number; is_user_input: any }
+    >({
+      query: ({ id, is_user_input }) => ({
+        url: `/${id}/?is_user_input=${is_user_input}`,
+        method: "GET",
+      }),
       providesTags: ["Reports"],
     }),
     getDashboardReport: builder.query<any, void>({
@@ -56,7 +62,13 @@ export const reportApi = createApi({
         is_new_deadline?: string;
       }
     >({
-      query: ({ statement, page, perPage, statement__period, is_new_deadline }) => {
+      query: ({
+        statement,
+        page,
+        perPage,
+        statement__period,
+        is_new_deadline,
+      }) => {
         let url = `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}`;
         if (is_new_deadline) {
           url += `&is_new_deadline=${is_new_deadline}`;
@@ -71,39 +83,17 @@ export const reportApi = createApi({
     getExpiredDeadlinesReport: builder.query<
       any,
       {
-        deadline_at?: string;
-        organizations?: number;
+        deadline_at?: any;
+        organizations?: any;
         page?: number;
         per_page?: number;
-        statement?: number;
+        statement?: any;
         submit_at?: string;
       }
     >({
       query: (params = {}) => {
-        const queryParams = new URLSearchParams();
-        
-        if (params.deadline_at !== undefined && params.deadline_at !== "") {
-          queryParams.append("deadline_at", params.deadline_at);
-        }
-        if (params.organizations !== undefined && params.organizations !== null) {
-          queryParams.append("organizations", params.organizations.toString());
-        }
-        if (params.page !== undefined && params.page !== null) {
-          queryParams.append("page", params.page.toString());
-        }
-        if (params.per_page !== undefined && params.per_page !== null) {
-          queryParams.append("per_page", params.per_page.toString());
-        }
-        if (params.statement !== undefined && params.statement !== null) {
-          queryParams.append("statement", params.statement.toString());
-        }
-        if (params.submit_at !== undefined && params.submit_at !== "") {
-          queryParams.append("submit_at", params.submit_at);
-        }
-
-        const queryString = queryParams.toString();
         return {
-          url: `/expired-deadlines/${queryString ? `?${queryString}` : ""}`,
+          url: `/expired-deadlines/?deadline_at=${params.deadline_at}&organizations=${params.organizations}&page=${params.page || 1}&per_page=${params.per_page || 10}&statement=${params.statement}&submit_at=${params.submit_at}`,
           method: "GET",
         };
       },
@@ -168,7 +158,7 @@ export const reportApi = createApi({
         });
         return {
           url: `/plants/?${params.toString()}`,
-        method: "GET",
+          method: "GET",
         };
       },
       providesTags: ["Reports"],
@@ -227,7 +217,14 @@ export const reportApi = createApi({
         plant_id?: string;
       }
     >({
-      query: ({ organization_id, statement_id, year, column, season, plant_id }) => {
+      query: ({
+        organization_id,
+        statement_id,
+        year,
+        column,
+        season,
+        plant_id,
+      }) => {
         let url = `/plan-items/?organization=${organization_id}&column=${column}&statement=${statement_id}&year=${year}`;
         if (season) {
           url += `&plan__season=${season}`;
@@ -269,7 +266,10 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
-    getReportPlantById: builder.query<any, { id: string; is_user_input:string }>({
+    getReportPlantById: builder.query<
+      any,
+      { id: string; is_user_input: string }
+    >({
       query: ({ id, is_user_input }) => ({
         url: `/report-plant/${id}/?is_user_input=${is_user_input}`,
         method: "GET",
@@ -320,7 +320,13 @@ export const reportApi = createApi({
         aggregated?: boolean;
       }
     >({
-      query: ({ report_ids, lang, mode = "json", row_numbers = {}, aggregated = true }) => ({
+      query: ({
+        report_ids,
+        lang,
+        mode = "json",
+        row_numbers = {},
+        aggregated = true,
+      }) => ({
         url: `/export-excel/`,
         method: "POST",
         body: { report_ids, lang, mode, row_numbers, aggregated },
@@ -336,7 +342,13 @@ export const reportApi = createApi({
         aggregated?: boolean;
       }
     >({
-      query: ({ report_ids, lang, mode = "json", row_numbers = {}, aggregated = true }) => ({
+      query: ({
+        report_ids,
+        lang,
+        mode = "json",
+        row_numbers = {},
+        aggregated = true,
+      }) => ({
         url: `/export-pdf/`,
         method: "POST",
         body: { report_ids, lang, mode, row_numbers, aggregated },
@@ -404,7 +416,7 @@ export const reportApi = createApi({
     // ==== 🟥 DELETE endpoint ====
     deleteReport: builder.mutation({
       query: (id: string | number) => ({
-        url: `/${id}/delete/`,  
+        url: `/${id}/delete/`,
         method: "DELETE",
       }),
       invalidatesTags: ["Reports"],
@@ -434,7 +446,7 @@ export const fetchReportDeadlines = async (page: number, perPage: number) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 
   if (!res.ok) {

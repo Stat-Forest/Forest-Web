@@ -1,3 +1,13 @@
+# Ignore sensitive key files for CAPIWS
+capiws/keys/*.key
+capiws/keys/*.jks
+
+# Node/Vite defaults
+node_modules/
+dist/
+.env.local
+.env.*.local
+/.vite
 # Logs
 logs
 *.log

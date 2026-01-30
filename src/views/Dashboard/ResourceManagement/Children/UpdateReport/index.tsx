@@ -34,7 +34,7 @@ function UpdateReportItem() {
     reportName === "Форма 10-Ох" ||
     reportName === "Shakl 11-O'X" ||
     reportName === "Форма 11-Ох" ||
-    reportName === "Daromad 1"
+    reportName === "Daromad"
   ) {
     return <PlantUpdate />;
   } else {
