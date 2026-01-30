@@ -178,15 +178,27 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
           <ResponsiveContainer width="100%" height={600}>
             <BarChart
               data={chartData}
-              margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
+              margin={{ top: 10, right: 10, left: 0, bottom: 30 }}
             >
               <CartesianGrid strokeDasharray="8 4" />
               <XAxis
-                dataKey="name"
+                dataKey="hudud"
                 interval={0}
-                height={80}
-                tick={{ fontSize: 14, fill: "#555" }}
+                height={90}
+                tick={({ x, y, payload }) => (
+                  <text
+                    x={x}
+                    y={y + 20}
+                    transform={`rotate(-15, ${x}, ${y})`}
+                    textAnchor="end"
+                    fontSize={12}
+                    fill="#555"
+                  >
+                    {payload.value}
+                  </text>
+                )}
               />
+
               <YAxis />
               <Tooltip cursor={false} />
               <Legend />
@@ -218,74 +230,62 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
 
         {activeTab === "2-ilova" && (
           <ResponsiveContainer width="100%" height={600}>
-            <BarChart
-              data={chartData}
-              margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
-            >
+            <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="8 4" />
               <XAxis
-                dataKey="name"
+                dataKey="hudud"
                 interval={0}
-                height={80}
-                tick={{ fontSize: 14, fill: "#555" }}
+                height={90}
+                tick={({ x, y, payload }) => (
+                  <text
+                    x={x}
+                    y={y + 20}
+                    transform={`rotate(-15, ${x}, ${y})`}
+                    textAnchor="end"
+                    fontSize={12}
+                    fill="#555"
+                  >
+                    {payload.value}
+                  </text>
+                )}
               />
               <YAxis />
-              <Tooltip cursor={false} />
+              <Tooltip />
               <Legend />
-              <Bar dataKey="Oliy" stackId={"a"} fill={colors?.ishlab} />
-              <Bar
-                dataKey="O`rta maxsus"
-                stackId={"a"}
-                fill={colors?.xizmat}
-              />
-              <Bar dataKey="O`rta" stackId={"a"} fill={colors?.boshqaruv} />
-              <Bar dataKey="Ayol" stackId={"a"} fill={colors?.ishchi} />
-              <Bar
-                dataKey="Erkak xodimlar"
-                stackId={"a"}
-                fill={colors?.mutaxassis}
-              />
-              <Bar
-                dataKey="Yoshlar Jami"
-                stackId={"a"}
-                fill={colors?.texnik}
-              />
+
+              <Bar dataKey="Oliy" stackId="a" fill={colors.ishlab} />
+              <Bar dataKey="O`rta-mahsus" stackId="a" fill={colors.xizmat} />
+              <Bar dataKey="O'rta-maxsus" stackId="a" fill={colors.boshqaruv} />
             </BarChart>
           </ResponsiveContainer>
         )}
         {activeTab === "3-ilova" && (
           <ResponsiveContainer width="100%" height={500}>
-            <BarChart
-              data={chartData}
-              margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
-            >
+            <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="8 4" />
               <XAxis
-                dataKey="name"
+                dataKey="hudud"
                 interval={0}
-                height={80}
-                tick={{ fontSize: 14, fill: "#555" }}
+                height={90}
+                tick={({ x, y, payload }) => (
+                  <text
+                    x={x}
+                    y={y + 20}
+                    transform={`rotate(-15, ${x}, ${y})`}
+                    textAnchor="end"
+                    fontSize={12}
+                    fill="#555"
+                  >
+                    {payload.value}
+                  </text>
+                )}
               />
               <YAxis />
-              <Tooltip cursor={false} />
+              <Tooltip />
               <Legend />
-              <Bar dataKey="Doimiy" stackId={"a"} fill={colors?.ishlab} />
-              <Bar dataKey="Mavsumiy" stackId={"a"} fill={colors?.boshqaruv} />
-              <Bar
-                dataKey="Temir daftar va ayollar daftariga kiritilgan"
-                stackId={"a"}
-                fill={colors?.ishchi}
-              />
-              <Bar
-                dataKey="Kambag’al axolidan olingan"
-                stackId={"a"}
-                fill={colors?.mutaxassis}
-              />
-              <Bar
-                dataKey="Kasanachilik asosida"
-                stackId={"a"}
-                fill={colors?.xizmat}
-              />
+
+              <Bar dataKey="Doimiy" stackId="a" fill={colors.ishlab} />
+              <Bar dataKey="Mavsumiy" stackId="a" fill={colors.boshqaruv} />
             </BarChart>
           </ResponsiveContainer>
         )}

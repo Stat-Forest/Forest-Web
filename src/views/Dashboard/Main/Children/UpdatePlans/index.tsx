@@ -228,7 +228,7 @@ function UpdatePlans() {
         ""
       ).toLowerCase();
 
-      if (columnName.includes("daromad 1")) {
+      if (columnName.includes("daromad")) {
         daromad1.push(col);
       } else {
         others.push(col);
