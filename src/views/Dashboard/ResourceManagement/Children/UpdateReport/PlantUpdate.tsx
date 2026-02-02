@@ -18,6 +18,7 @@ import {
   useGetDeadlinesReportQuery,
   useGetPlantsReportQuery,
   useUpdateReportMutation,
+  usePatchPlantReportMutation,
   useGetReportPlantByIdQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
@@ -31,17 +32,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { findEmptyChildrenColumnIds } from "@/utils/findEmptyChildrenColumnIds";
 import {
   plantCreateReducer,
   plantCreateInitialState,
 } from "@/reducers/plantCreateReducer";
-import {
-  FormGroup,
-  EmptyColumn,
-} from "@/types/plantCreateTypes";
+import { FormGroup, EmptyColumn } from "@/types/plantCreateTypes";
 
 // Interface for API response data
 interface Category {
@@ -122,7 +120,12 @@ function PlantColumnRow({
   statementId: string;
   year: string;
   value: string;
-  onValueChange: (stepIndex: number, formIndex: number, id: string, value: string) => void;
+  onValueChange: (
+    stepIndex: number,
+    formIndex: number,
+    id: string,
+    value: string,
+  ) => void;
 }) {
   const reduxDispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState(false);
@@ -142,7 +145,7 @@ function PlantColumnRow({
         year: year,
         column: column.id,
         plant_id: plantId,
-      })
+      }),
     )
       .unwrap()
       .then((result: any) => {
@@ -159,11 +162,22 @@ function PlantColumnRow({
       .catch((error: any) => {
         console.error(
           `O'simlik ${plantId} uchun column ${column.id} ma'lumot olishda xatolik:`,
-          error
+          error,
         );
         setIsLoading(false);
       });
-  }, [plantId, organizationId, statementId, year, column.id, value, stepIndex, formIndex, onValueChange, reduxDispatch]);
+  }, [
+    plantId,
+    organizationId,
+    statementId,
+    year,
+    column.id,
+    value,
+    stepIndex,
+    formIndex,
+    onValueChange,
+    reduxDispatch,
+  ]);
 
   const displayValue = value || fetchedValue || "";
 
@@ -176,7 +190,9 @@ function PlantColumnRow({
         <Input
           type="text"
           value={displayValue}
-          onChange={(e) => onValueChange(stepIndex, formIndex, column.id, e.target.value)}
+          onChange={(e) =>
+            onValueChange(stepIndex, formIndex, column.id, e.target.value)
+          }
           placeholder={isLoading ? "Yuklanmoqda..." : "Qiymat kiriting"}
           disabled={isLoading}
           required
@@ -189,8 +205,8 @@ function PlantColumnRow({
 const normalizeText = (text: string): string => {
   return text
     .toLowerCase()
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 };
 
@@ -206,7 +222,7 @@ const formatValue = (value: string): string => {
 
 const findMatchingColumnId = (
   apiColumnName: string,
-  formColumns: EmptyColumn[]
+  formColumns: EmptyColumn[],
 ): string | null => {
   const normalizedApiName = normalizeText(apiColumnName);
 
@@ -225,12 +241,16 @@ const findMatchingColumnId = (
       return formCol.id;
     }
 
-    const apiKeywords = normalizedApiName.split(' ').filter((k) => k.length > 2);
-    const formKeywords = normalizedFormName.split(' ').filter((k) => k.length > 2);
+    const apiKeywords = normalizedApiName
+      .split(" ")
+      .filter((k) => k.length > 2);
+    const formKeywords = normalizedFormName
+      .split(" ")
+      .filter((k) => k.length > 2);
 
     if (apiKeywords.length > 0 && formKeywords.length > 0) {
       const matchingKeywords = apiKeywords.filter((keyword) =>
-        formKeywords.includes(keyword)
+        formKeywords.includes(keyword),
       );
 
       if (
@@ -249,7 +269,7 @@ function PlantUpdate() {
   const { id } = useParams<{ id: string }>();
   const [state, dispatch] = useReducer(
     plantCreateReducer,
-    plantCreateInitialState
+    plantCreateInitialState,
   );
 
   // 🔹 Cache o'simlik label'larini pagination bo'ylab saqlash
@@ -258,6 +278,19 @@ function PlantUpdate() {
   >({});
   const [footNote, setFootNote] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initialPlantNames, setInitialPlantNames] = useState<
+    Record<string, string>
+  >({});
+  const [originalValues, setOriginalValues] = useState<{
+    report_items: any[];
+    deadline: string;
+    foot_note: string;
+  }>({
+    report_items: [],
+    deadline: "",
+    foot_note: "",
+  });
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -272,7 +305,7 @@ function PlantUpdate() {
     error: existingDataError,
     refetch: refetchExistingData,
   } = useGetReportPlantByIdQuery(
-    id ? { id: String(id), is_user_input: "true" } : skipToken
+    id ? { id: String(id), is_user_input: "true" } : skipToken,
   );
 
   const {
@@ -287,7 +320,7 @@ function PlantUpdate() {
     error: headersError,
   } = useGetStatementColumnsReportQuery(
     { statementId: reportIds || "", lang, isUser: "true" },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   // 🔹 Plants state with pagination
@@ -305,7 +338,7 @@ function PlantUpdate() {
       page: state.plantsPage,
       perPage: plantsPerPage,
     },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   // 🔹 PlantsData kelgan sayin o'simlik nomlarini cache'ga qo'shib boramiz
@@ -350,14 +383,14 @@ function PlantUpdate() {
       page: state.deadlinePage,
       perPage: deadlinePerPage,
       statement__period: "",
-      is_new_deadline:"true"
+      is_new_deadline: "true",
     },
-    { skip: !reportIds }
+    { skip: !reportIds },
   );
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
-    [tableHeadersData]
+    [tableHeadersData],
   );
 
   // 🔹 Maxsus: "Ko'chat va Nihol" ilovalari uchun (Ko'chat-va-Nihol-ilova) o'simlik tanlash kerak emas
@@ -382,7 +415,7 @@ function PlantUpdate() {
     return (tableHeadersDataMemo as TableHeaderData[]).map((obj) =>
       Array.isArray(obj.children)
         ? findEmptyChildrenColumnIds(obj.children)
-        : []
+        : [],
     );
   }, [tableHeadersDataMemo]);
 
@@ -392,11 +425,25 @@ function PlantUpdate() {
 
   // 🔹 Mavjud ma'lumotlarni yuklash va formulani to'ldirish
   useEffect(() => {
-    if (existingReportData && allEmptyColumnsByStepMemo.length > 0 && !isInitialized) {
+    if (
+      existingReportData &&
+      allEmptyColumnsByStepMemo.length > 0 &&
+      !isInitialized
+    ) {
       try {
         const data = existingReportData as ExistingReportResponse;
-        if (data.deadline) dispatch({ type: "SET_DEADLINE", payload: data.deadline });
-        if (data.organization) dispatch({ type: "SET_ORGANIZATION", payload: data.organization });
+
+        // Original qiymatlarni saqlash
+        setOriginalValues({
+          report_items: data.report_items || [],
+          deadline: data.deadline || "",
+          foot_note: data.foot_note || "",
+        });
+
+        if (data.deadline)
+          dispatch({ type: "SET_DEADLINE", payload: data.deadline });
+        if (data.organization)
+          dispatch({ type: "SET_ORGANIZATION", payload: data.organization });
         if (data.foot_note) setFootNote(data.foot_note);
 
         if (data.report_items && data.report_items.length > 0) {
@@ -406,107 +453,174 @@ function PlantUpdate() {
 
           // Column mapping
           const columnIdMap = new Map<string, string>();
-          const plantMetaMap: Record<string, { name: string; categoryName?: string }> = {};
-          
-          apiColumns.forEach(apiColumn => {
-            const formColId = findMatchingColumnId(apiColumn.statement_column_name, allColumns) || apiColumn.statement_column_id;
+          const plantMetaMap: Record<
+            string,
+            { name: string; categoryName?: string }
+          > = {};
+
+          apiColumns.forEach((apiColumn) => {
+            const formColId =
+              findMatchingColumnId(
+                apiColumn.statement_column_name,
+                allColumns,
+              ) || apiColumn.statement_column_id;
             columnIdMap.set(apiColumn.statement_column_id, formColId);
-            
+
             apiColumn.inners?.forEach((inner: any) => {
-              if (inner.plant_id && inner.plant_name && !plantMetaMap[String(inner.plant_id)]) {
-                plantMetaMap[String(inner.plant_id)] = { name: String(inner.plant_name), categoryName: "" };
+              if (
+                inner.plant_id &&
+                inner.plant_name &&
+                !plantMetaMap[String(inner.plant_id)]
+              ) {
+                plantMetaMap[String(inner.plant_id)] = {
+                  name: String(inner.plant_name),
+                  categoryName: "",
+                };
               }
             });
           });
-          
+
           if (Object.keys(plantMetaMap).length > 0) {
-            setPlantMetaById(prev => ({ ...prev, ...plantMetaMap }));
+            setPlantMetaById((prev) => ({ ...prev, ...plantMetaMap }));
           }
 
           // Formula guruhlarini yaratish
-          const formGroups = allEmptyColumnsByStepMemo.map((stepColumns, stepIndex) => {
-            const stepColumnIds = new Set(stepColumns.map(col => col.id));
-            const stepApiColumns = apiColumns.filter(apiCol => {
-              const formColId = columnIdMap.get(apiCol.statement_column_id);
-              return formColId && stepColumnIds.has(formColId);
-            });
+          const initialPlantNamesLocal: Record<string, string> = {};
+          const usedPlantIdsLocal = new Set<string>();
+          const formGroups = allEmptyColumnsByStepMemo.map(
+            (stepColumns, stepIndex) => {
+              const stepColumnIds = new Set(stepColumns.map((col) => col.id));
+              const stepApiColumns = apiColumns.filter((apiCol) => {
+                const formColId = columnIdMap.get(apiCol.statement_column_id);
+                return formColId && stepColumnIds.has(formColId);
+              });
 
-            // Har bir column'dan maximum inner sonini topish
-            const maxInnerCount = Math.max(...stepApiColumns.map(col => col.inners?.length || 0), 0);
-            if (maxInnerCount === 0) {
-              return { step: stepIndex, forms: [{ values: {}, plantId: "" }] };
-            }
+              // Har bir column'dan maximum inner sonini topish
+              const maxInnerCount = Math.max(
+                ...stepApiColumns.map((col) => col.inners?.length || 0),
+                0,
+              );
+              if (maxInnerCount === 0) {
+                return {
+                  step: stepIndex,
+                  forms: [{ values: {}, plantId: "" }],
+                };
+              }
 
-            // Har bir inner index uchun formula yaratish
-            const forms: Array<{ plantId: string; values: Record<string, string> }> = [];
-            
-            for (let innerIndex = 0; innerIndex < maxInnerCount; innerIndex++) {
-              const form: { plantId: string; values: Record<string, string> } = {
-                plantId: "",
-                values: {}
+              // Har bir inner index uchun formula yaratish
+              const forms: Array<{
+                plantId: string;
+                values: Record<string, string>;
+              }> = [];
+
+              for (
+                let innerIndex = 0;
+                innerIndex < maxInnerCount;
+                innerIndex++
+              ) {
+                const form: {
+                  plantId: string;
+                  values: Record<string, string>;
+                } = {
+                  plantId: "",
+                  values: {},
+                };
+
+                // Har bir column'dan shu index'dagi inner'ni olish
+                stepApiColumns.forEach((apiCol) => {
+                  const formColId =
+                    columnIdMap.get(apiCol.statement_column_id) ||
+                    apiCol.statement_column_id;
+                  const lowerName = apiCol.statement_column_name.toLowerCase();
+                  const isOrgOrReja =
+                    lowerName.includes("tashkilot nomi") ||
+                    lowerName.includes("названия регионов") ||
+                    lowerName.includes("reja");
+
+                  if (isOrgOrReja) return;
+
+                  const inner = apiCol.inners?.[innerIndex];
+                  if (inner) {
+                    // O'simlik ID ni olish (faqat birinchi marta topilganda)
+                    if (inner.plant_id && !form.plantId) {
+                      form.plantId = String(inner.plant_id);
+                      usedPlantIdsLocal.add(String(inner.plant_id));
+                      // store initial plant name for this form
+                      initialPlantNamesLocal[`${stepIndex}-${innerIndex}`] =
+                        inner.plant_name || String(inner.plant_id);
+                    }
+
+                    // Value ni olish
+                    if (inner.value !== undefined && inner.value !== null) {
+                      form.values[formColId] = formatValue(String(inner.value));
+                    }
+                  }
+                });
+
+                // Step columns uchun value'larni to'ldirish
+                stepColumns.forEach((col: EmptyColumn) => {
+                  const lowerTitle = col.title.toLowerCase();
+                  if (
+                    lowerTitle.includes("tashkilot nomi") ||
+                    lowerTitle.includes("названия регионов") ||
+                    lowerTitle.includes("reja")
+                  ) {
+                    return;
+                  }
+                  if (!form.values[col.id]) {
+                    form.values[col.id] = "";
+                  }
+                });
+
+                forms.push(form);
+              }
+
+              return {
+                step: stepIndex,
+                forms: forms.length > 0 ? forms : [{ values: {}, plantId: "" }],
               };
-
-              // Har bir column'dan shu index'dagi inner'ni olish
-              stepApiColumns.forEach(apiCol => {
-                const formColId = columnIdMap.get(apiCol.statement_column_id) || apiCol.statement_column_id;
-                const lowerName = apiCol.statement_column_name.toLowerCase();
-                const isOrgOrReja = lowerName.includes("tashkilot nomi") || lowerName.includes("названия регионов") || lowerName.includes("reja");
-                
-                if (isOrgOrReja) return;
-
-                const inner = apiCol.inners?.[innerIndex];
-                if (inner) {
-                  // O'simlik ID ni olish (faqat birinchi marta topilganda)
-                  if (inner.plant_id && !form.plantId) {
-                    form.plantId = String(inner.plant_id);
-                    dispatch({ type: "ADD_USED_PLANT_ID", payload: form.plantId });
-                  }
-                  
-                  // Value ni olish
-                  if (inner.value !== undefined && inner.value !== null) {
-                    form.values[formColId] = formatValue(String(inner.value));
-                  }
-                }
-              });
-
-              // Step columns uchun value'larni to'ldirish
-              stepColumns.forEach((col: EmptyColumn) => {
-                const lowerTitle = col.title.toLowerCase();
-                if (lowerTitle.includes("tashkilot nomi") || lowerTitle.includes("названия регионов") || lowerTitle.includes("reja")) {
-                  return;
-                }
-                if (!form.values[col.id]) {
-                  form.values[col.id] = "";
-                }
-              });
-
-              forms.push(form);
-            }
-
-            return { step: stepIndex, forms: forms.length > 0 ? forms : [{ values: {}, plantId: "" }] };
-          });
+            },
+          );
 
           dispatch({ type: "SET_FORM_GROUPS", payload: formGroups });
+          if (Object.keys(initialPlantNamesLocal).length > 0) {
+            setInitialPlantNames((prev) => ({
+              ...prev,
+              ...initialPlantNamesLocal,
+            }));
+          }
+          // Dispatch used plant ids AFTER form groups are set to avoid race conditions
+          if (usedPlantIdsLocal.size > 0) {
+            Array.from(usedPlantIdsLocal).forEach((pid) => {
+              dispatch({ type: "ADD_USED_PLANT_ID", payload: pid });
+            });
+          }
 
           // Reja elementlari
-          const rejaColumns = allEmptyColumnsByStepMemo.flat().filter(col => col.title.toLowerCase().includes("reja"));
+          const rejaColumns = allEmptyColumnsByStepMemo
+            .flat()
+            .filter((col) => col.title.toLowerCase().includes("reja"));
           if (rejaColumns.length > 0) {
-            const planItems = rejaColumns.map(col => {
-              const apiCol = apiColumns.find(ac => columnIdMap.get(ac.statement_column_id) === col.id);
+            const planItems = rejaColumns.map((col) => {
+              const apiCol = apiColumns.find(
+                (ac) => columnIdMap.get(ac.statement_column_id) === col.id,
+              );
               return {
                 columnId: col.id,
                 fullParentChain: col.fullParentChain || col.title,
-                plan_value: formatValue(apiCol?.inners?.[0]?.value || "")
+                plan_value: formatValue(apiCol?.inners?.[0]?.value || ""),
               };
             });
             dispatch({ type: "SET_PLAN_ITEMS", payload: planItems });
           }
           setIsInitialized(true);
         } else {
-          const initialFormGroups = allEmptyColumnsByStepMemo.map((_, stepIndex) => ({
-            step: stepIndex,
-            forms: [{ values: {}, plantId: "" }]
-          }));
+          const initialFormGroups = allEmptyColumnsByStepMemo.map(
+            (_, stepIndex) => ({
+              step: stepIndex,
+              forms: [{ values: {}, plantId: "" }],
+            }),
+          );
           dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
           setIsInitialized(true);
         }
@@ -515,15 +629,28 @@ function PlantUpdate() {
         toast.error(t("existing_data_load_error"));
         setIsInitialized(true);
       }
-    } else if (allEmptyColumnsByStepMemo.length > 0 && !existingReportData && !isInitialized) {
-      const initialFormGroups = allEmptyColumnsByStepMemo.map((_, stepIndex) => ({
-        step: stepIndex,
-        forms: [{ values: {}, plantId: "" }]
-      }));
+    } else if (
+      allEmptyColumnsByStepMemo.length > 0 &&
+      !existingReportData &&
+      !isInitialized
+    ) {
+      const initialFormGroups = allEmptyColumnsByStepMemo.map(
+        (_, stepIndex) => ({
+          step: stepIndex,
+          forms: [{ values: {}, plantId: "" }],
+        }),
+      );
       dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
       setIsInitialized(true);
     }
-  }, [existingReportData, allEmptyColumnsByStepMemo, tableHeadersData, dispatch, t, isInitialized]);
+  }, [
+    existingReportData,
+    allEmptyColumnsByStepMemo,
+    tableHeadersData,
+    dispatch,
+    t,
+    isInitialized,
+  ]);
 
   // 🔹 REJA MA'LUMOTLARI
   useEffect(() => {
@@ -550,9 +677,9 @@ function PlantUpdate() {
                 statement_id: reportIds,
                 year: "2025",
                 column: col.id,
-              })
-            ).unwrap()
-          )
+              }),
+            ).unwrap(),
+          ),
         );
 
         if (isMounted) {
@@ -588,16 +715,22 @@ function PlantUpdate() {
     reduxDispatch,
   ]);
 
-  const [updateReport, { isLoading: isSubmitting }] =
-    useUpdateReportMutation();
+  const [, { isLoading: isUpdating }] = useUpdateReportMutation();
+  const [patchPlantReport, { isLoading: isPatching }] =
+    usePatchPlantReportMutation();
+  const isSubmitting = isUpdating || isPatching;
 
   // 🔹 Input o'zgartirish funksiyasi
   const handleInputChange = (
     stepIndex: number,
     formIndex: number,
     id: string,
-    value: string
+    value: string,
   ) => {
+    // Field touched qilish
+    const fieldKey = `${stepIndex}-${formIndex}-${id}`;
+    setTouchedFields((prev) => new Set([...prev, fieldKey]));
+
     dispatch({
       type: "UPDATE_FORM_VALUE",
       payload: { stepIndex, formIndex, id, value },
@@ -608,8 +741,12 @@ function PlantUpdate() {
   const handlePlantChange = (
     stepIndex: number,
     formIndex: number,
-    plantId: string
+    plantId: string,
   ) => {
+    // Field touched qilish
+    const fieldKey = `${stepIndex}-${formIndex}-plant`;
+    setTouchedFields((prev) => new Set([...prev, fieldKey]));
+
     // 1. Eski o'simlik ID ni olib tashlash
     const currentFormGroup = state.formGroups.find((g) => g.step === stepIndex);
     if (currentFormGroup && currentFormGroup.forms[formIndex]?.plantId) {
@@ -631,7 +768,7 @@ function PlantUpdate() {
         if (Array.isArray(results)) {
           for (const category of results) {
             foundPlant = category?.children?.find(
-              (child: Plant) => child.id.toString() === plantId
+              (child: Plant) => child.id.toString() === plantId,
             );
             if (foundPlant) {
               setPlantMetaById((prev) => ({
@@ -695,6 +832,110 @@ function PlantUpdate() {
     return usedIds;
   }, [state.formGroups]);
 
+  // 🔹 O'zgartirilgan maydonlarni aniqlash
+  const getChangedFields = () => {
+    const delta: any = {};
+
+    // 1. Deadline o'zgarishlari
+    if (state.selectedDeadlineId !== originalValues.deadline) {
+      delta.deadline = state.selectedDeadlineId;
+    }
+
+    // 2. Foot note o'zgarishlari
+    if (footNote !== originalValues.foot_note) {
+      delta.foot_note = footNote;
+    }
+
+    // 3. Report items o'zgarishlari
+    const changedReportItems: any[] = [];
+
+    state.allEmptyColumnsByStep.forEach((stepColumns, stepIndex) => {
+      const currentFormGroup = state.formGroups.find(
+        (g) => g.step === stepIndex,
+      );
+      if (!currentFormGroup) return;
+
+      stepColumns.forEach((col) => {
+        const originalItem = originalValues.report_items.find(
+          (ri) =>
+            ri.statement_column === col.id || ri.statement_column_id === col.id,
+        );
+
+        const lowerTitle = col.title.toLowerCase();
+        const isOrganizationColumn =
+          lowerTitle.includes("tashkilot nomi") ||
+          lowerTitle.includes("названия регионов");
+        const isRejaColumn = lowerTitle.includes("reja");
+
+        if (isOrganizationColumn) {
+          // Tashkilot nomi
+          const currentValue = state.selectedOrganizationId || "";
+          const originalValue = originalItem?.inners?.[0]?.value || "";
+
+          if (currentValue !== originalValue) {
+            changedReportItems.push({
+              statement_column: col.id,
+              inners: [{ value: currentValue }],
+            });
+          }
+        } else if (isRejaColumn) {
+          // Reja - faqat value
+          const planItem = state.planItems.find(
+            (item) => item.columnId === col.id,
+          );
+          const currentValue = planItem?.plan_value || "";
+          const originalValue = originalItem?.inners?.[0]?.value || "";
+
+          if (currentValue !== originalValue) {
+            changedReportItems.push({
+              statement_column: col.id,
+              inners: [{ value: currentValue }],
+            });
+          }
+        } else {
+          // Boshqa maydonlar
+          const inners: any[] = [];
+          let hasChanges = false;
+
+          currentFormGroup.forms.forEach((form, formIndex) => {
+            const currentValue = form.values[col.id] || "";
+            const originalInner = originalItem?.inners?.[formIndex];
+            const originalPlantId =
+              originalInner?.plant_id || originalInner?.plant || null;
+            const originalValue = originalInner?.value || "";
+
+            const inner: any = { value: currentValue };
+
+            // Plant ID ni faqat o'zgartirilgan bo'lsa yoki yangi bo'lsa yuborish
+            if (form.plantId !== originalPlantId) {
+              inner.plant = form.plantId || null;
+              hasChanges = true;
+            }
+
+            if (currentValue !== originalValue) {
+              hasChanges = true;
+            }
+
+            inners.push(inner);
+          });
+
+          if (hasChanges) {
+            changedReportItems.push({
+              statement_column: col.id,
+              inners,
+            });
+          }
+        }
+      });
+    });
+
+    if (changedReportItems.length > 0) {
+      delta.report_items = changedReportItems;
+    }
+
+    return delta;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch({ type: "SET_FORM_ERRORS", payload: [] });
@@ -711,7 +952,7 @@ function PlantUpdate() {
       state.allEmptyColumnsByStep[state.currentStep]?.some(
         (col) =>
           col.title.toLowerCase().includes("tashkilot nomi") ||
-          col.title.toLowerCase().includes("Названия регионов")
+          col.title.toLowerCase().includes("Названия регионов"),
       ) &&
       !state.selectedOrganizationId
     ) {
@@ -749,7 +990,7 @@ function PlantUpdate() {
             t("please_select_plant", {
               step: group.step + 1,
               form: formIndex + 1,
-            })
+            }),
           );
         }
       });
@@ -769,7 +1010,7 @@ function PlantUpdate() {
             errors.push(
               `${group.step + 1}-qadam ${formIndex + 1}-formula uchun "${
                 col.fullParentChain
-              }" qiymati kiritish shart`
+              }" qiymati kiritish shart`,
             );
           }
         });
@@ -781,94 +1022,28 @@ function PlantUpdate() {
       return;
     }
 
-    // 🔹 Backend strukturasiga mos report_items yaratish - HAR BIR FORMULA UCHUN ALOHIDA
-    const report_items = state.allEmptyColumnsByStep.flatMap(
-      (stepColumns, stepIndex) => {
-        const currentFormGroup = state.formGroups.find(
-          (group) => group.step === stepIndex
-        );
+    const delta = getChangedFields();
 
-        if (!currentFormGroup) return [];
-
-        return stepColumns.map((col) => {
-          const isOrganizationColumn =
-            col.title.toLowerCase().includes("tashkilot nomi") ||
-            col.title.toLowerCase().includes("Названия регионов");
-          const isRejaColumn = col.title.toLowerCase().includes("reja");
-
-          if (isOrganizationColumn) {
-            // Tashkilot nomi - faqat bir marta
-            return {
-              statement_column: col.id,
-              inners: [{ value: state.selectedOrganizationId || "" }],
-            };
-          } else if (isRejaColumn) {
-            // 🔹 Reja - HAR BIR FORMULA UCHUN ALOHIDA (o'simlik yuborilmaydi, faqat value)
-            const planItem = state.planItems.find(
-              (item) => item.columnId === col.id
-            );
-            const planValue = planItem ? planItem.plan_value : "";
-
-            const inners = currentFormGroup.forms.map(() => ({
-              value: planValue, // Har bir formula uchun reja qiymati (o'simlik yo'q)
-            }));
-
-            return {
-              statement_column: col.id,
-              inners,
-            };
-          } else {
-            // 🔹 Boshqa maydonlar - HAR BIR FORMULA UCHUN ALOHIDA
-            // 🔹 Maxsus: "Ko'chat va Nihol" ilovalari uchun (Ko'chat-va-Nihol-ilova) o'simlik o'rniga null yuboriladi
-            const isKoChatVaNiholStep = isKoChatVaNiholIlova1Step(stepIndex);
-            const inners = currentFormGroup.forms.map((form) => {
-              if (isKoChatVaNiholStep) {
-                // "Ko'chat va Nihol" ilovasi uchun o'simlik o'rniga null yuborish
-                return {
-                  plant: null,
-                  value: form.values[col.id] || "",
-                };
-              } else {
-                // Boshqa ilovalar uchun o'simlik ID yuborish (agar mavjud bo'lsa)
-                return {
-                  ...(form.plantId && { plant: form.plantId }),
-                  value: form.values[col.id] || "",
-                };
-              }
-            });
-
-            return {
-              statement_column: col.id,
-              inners,
-            };
-          }
-        });
-      }
-    );
-
-    const payload = {
-      deadline: state.selectedDeadlineId,
-      report_items,
-      foot_note: footNote || ""
-    };
+    if (Object.keys(delta).length === 0) {
+      toast.info(t("no_changes_detected"));
+      return;
+    }
 
     if (!id) {
       dispatch({
         type: "ADD_FORM_ERROR",
-        payload: "Report ID topilmadi"
+        payload: "Report ID topilmadi",
       });
       return;
     }
 
     try {
-      await updateReport({ id, ...payload }).unwrap();
+      await patchPlantReport({ id, ...delta }).unwrap();
       toast.success(t("updated_successfully"));
       navigate(-1);
     } catch (err: any) {
       const errorMessage =
-        err?.data?.message ||
-        err?.message ||
-        t("submit_error");
+        err?.data?.message || err?.message || t("submit_error");
       dispatch({ type: "ADD_FORM_ERROR", payload: errorMessage });
       console.error("Yuborishda xatolik:", err);
       toast.error(errorMessage);
@@ -876,7 +1051,13 @@ function PlantUpdate() {
   };
 
   // Yuklash holatini ko'rsatish
-  if (isReportLoading || isHeaderLoading || isOrgLoading || deadlineLoading || plantsLoading)
+  if (
+    isReportLoading ||
+    isHeaderLoading ||
+    isOrgLoading ||
+    deadlineLoading ||
+    plantsLoading
+  )
     return (
       <div className="p-4 text-lg flex items-center gap-2">
         <Loader2 className="animate-spin" size={20} />
@@ -912,7 +1093,7 @@ function PlantUpdate() {
     (tableHeadersData as TableHeaderData[])?.[state.currentStep]?.title ??
     `Qadam ${state.currentStep + 1}`;
   const currentFormGroup = state.formGroups.find(
-    (group) => group.step === state.currentStep
+    (group) => group.step === state.currentStep,
   );
 
   // 🔹 Deadline matnini formatlash funksiyasi
@@ -961,9 +1142,10 @@ function PlantUpdate() {
             </label>
             <Select
               value={state.selectedDeadlineId}
-              onValueChange={(val) =>
-                dispatch({ type: "SET_DEADLINE", payload: val })
-              }
+              onValueChange={(val) => {
+                setTouchedFields((prev) => new Set([...prev, "deadline"]));
+                dispatch({ type: "SET_DEADLINE", payload: val });
+              }}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue
@@ -971,8 +1153,8 @@ function PlantUpdate() {
                     deadlineLoading
                       ? "Yuklanmoqda..."
                       : deadlineError
-                      ? "Xatolik yuz berdi"
-                      : t("selectDeadline")
+                        ? "Xatolik yuz berdi"
+                        : t("selectDeadline")
                   }
                 />
               </SelectTrigger>
@@ -1013,7 +1195,7 @@ function PlantUpdate() {
                         <span className="text-xs text-gray-500">
                           {state.deadlinePage} /{" "}
                           {Math.ceil(
-                            (deadlineData as any).count / deadlinePerPage
+                            (deadlineData as any).count / deadlinePerPage,
                           )}
                         </span>
                         <Button
@@ -1023,7 +1205,7 @@ function PlantUpdate() {
                           disabled={
                             state.deadlinePage >=
                             Math.ceil(
-                              (deadlineData as any).count / deadlinePerPage
+                              (deadlineData as any).count / deadlinePerPage,
                             )
                           }
                           onClick={() =>
@@ -1032,8 +1214,8 @@ function PlantUpdate() {
                               payload: Math.min(
                                 state.deadlinePage + 1,
                                 Math.ceil(
-                                  (deadlineData as any).count / deadlinePerPage
-                                )
+                                  (deadlineData as any).count / deadlinePerPage,
+                                ),
                               ),
                             })
                           }
@@ -1078,7 +1260,7 @@ function PlantUpdate() {
                           handleRemoveForm(state.currentStep, formIndex)
                         }
                       >
-                        {t("delete")}
+                        <X size={16} />
                       </Button>
                     )}
                   </div>
@@ -1090,135 +1272,188 @@ function PlantUpdate() {
                     <label className="block mb-1 text-lg font-medium">
                       {t("select_plant_for_form", { formIndex: formIndex + 1 })}
                     </label>
-                    <Select
-                      value={form.plantId}
-                      onValueChange={(plantId) =>
-                        handlePlantChange(state.currentStep, formIndex, plantId)
-                      }
-                    >
-                      <SelectTrigger className="w-[300px]">
-                        <SelectValue asChild>
-                          <span className={!form.plantId ? "text-muted-foreground" : ""}>
-                            {form.plantId
-                              ? getPlantLabel(form.plantId)
-                              : plantsLoading
-                              ? t("loading")
-                              : plantsError
-                              ? t("loading_error")
-                              : t("please_select")}
-                          </span>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {plantsLoading ? (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            {t("loading")}
-                          </div>
-                        ) : plantsError ? (
-                          <div className="p-2 text-center text-red-500 text-sm">
-                            {t("data_load_error")}
-                          </div>
-                        ) : (plantsData as any)?.results?.length > 0 ? (
-                          <>
-                            {(plantsData as any).results.flatMap(
-                              (category: Category) => [
-                                <SelectItem
-                                  key={category.id}
-                                  value={category.id}
-                                  disabled
-                                  className="font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
-                                >
-                                  {category.name}
-                                </SelectItem>,
-                                ...category.children.map((child: Plant) => {
-                                  const isUsed = getAllUsedPlantIds.has(
-                                    child.id.toString()
-                                  );
-                                  const isCurrentFormPlant =
-                                    form.plantId === child.id.toString();
-
-                                  return (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2 items-center">
+                        <Select
+                          value={form.plantId}
+                          onValueChange={(plantId) =>
+                            handlePlantChange(
+                              state.currentStep,
+                              formIndex,
+                              plantId,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue asChild>
+                              <span
+                                className={
+                                  !form.plantId ? "text-muted-foreground" : ""
+                                }
+                              >
+                                {form.plantId
+                                  ? getPlantLabel(form.plantId)
+                                  : plantsLoading
+                                    ? t("loading")
+                                    : plantsError
+                                      ? t("loading_error")
+                                      : t("please_select")}
+                              </span>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {plantsLoading ? (
+                              <div className="p-2 text-center text-muted-foreground text-sm">
+                                {t("loading")}
+                              </div>
+                            ) : plantsError ? (
+                              <div className="p-2 text-center text-red-500 text-sm">
+                                {t("data_load_error")}
+                              </div>
+                            ) : (plantsData as any)?.results?.length > 0 ? (
+                              <>
+                                {(plantsData as any).results.flatMap(
+                                  (category: Category) => [
                                     <SelectItem
-                                      key={child.id}
-                                      value={child.id.toString()}
-                                      className="pl-6"
-                                      disabled={isUsed && !isCurrentFormPlant}
+                                      key={category.id}
+                                      value={category.id}
+                                      disabled
+                                      className="font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
                                     >
-                                      {child.name}
-                                      {isUsed &&
-                                        !isCurrentFormPlant &&
-                                        ` (${t("selected")})`}
-                                    </SelectItem>
-                                  );
-                                }),
-                              ]
-                            )}
+                                      {category.name}
+                                    </SelectItem>,
+                                    ...category.children.map((child: Plant) => {
+                                      const isUsed = getAllUsedPlantIds.has(
+                                        child.id.toString(),
+                                      );
+                                      const isCurrentFormPlant =
+                                        form.plantId === child.id.toString();
 
-                            {/* ✅ Plants Pagination Controls */}
-                            {(plantsData as any).count > plantsPerPage && (
-                              <div className="flex items-center justify-between px-2 py-1 border-t">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={state.plantsPage === 1}
-                                  onClick={() =>
-                                    dispatch({
-                                      type: "SET_PLANTS_PAGE",
-                                      payload: Math.max(state.plantsPage - 1, 1),
-                                    })
-                                  }
-                                >
-                                  {t("before")}
-                                </Button>
-                                <span className="text-xs text-gray-500">
-                                  {state.plantsPage} /{" "}
-                                  {Math.ceil(
-                                    (plantsData as any).count / plantsPerPage
-                                  )}
-                                </span>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={
-                                    state.plantsPage >=
-                                    Math.ceil(
-                                      (plantsData as any).count / plantsPerPage
-                                    )
-                                  }
-                                  onClick={() =>
-                                    dispatch({
-                                      type: "SET_PLANTS_PAGE",
-                                      payload: Math.min(
-                                        state.plantsPage + 1,
+                                      return (
+                                        <SelectItem
+                                          key={child.id}
+                                          value={child.id.toString()}
+                                          className="pl-6"
+                                          disabled={
+                                            isUsed && !isCurrentFormPlant
+                                          }
+                                        >
+                                          {child.name}
+                                          {isUsed &&
+                                            !isCurrentFormPlant &&
+                                            ` (${t("selected")})`}
+                                        </SelectItem>
+                                      );
+                                    }),
+                                  ],
+                                )}
+
+                                {/* ✅ Plants Pagination Controls */}
+                                {(plantsData as any).count > plantsPerPage && (
+                                  <div className="flex items-center justify-between px-2 py-1 border-t">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={state.plantsPage === 1}
+                                      onClick={() =>
+                                        dispatch({
+                                          type: "SET_PLANTS_PAGE",
+                                          payload: Math.max(
+                                            state.plantsPage - 1,
+                                            1,
+                                          ),
+                                        })
+                                      }
+                                    >
+                                      {t("before")}
+                                    </Button>
+                                    <span className="text-xs text-gray-500">
+                                      {state.plantsPage} /{" "}
+                                      {Math.ceil(
+                                        (plantsData as any).count /
+                                          plantsPerPage,
+                                      )}
+                                    </span>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={
+                                        state.plantsPage >=
                                         Math.ceil(
                                           (plantsData as any).count /
-                                            plantsPerPage
+                                            plantsPerPage,
                                         )
-                                      ),
-                                    })
-                                  }
-                                >
-                                  {t("next")}
-                                </Button>
+                                      }
+                                      onClick={() =>
+                                        dispatch({
+                                          type: "SET_PLANTS_PAGE",
+                                          payload: Math.min(
+                                            state.plantsPage + 1,
+                                            Math.ceil(
+                                              (plantsData as any).count /
+                                                plantsPerPage,
+                                            ),
+                                          ),
+                                        })
+                                      }
+                                    >
+                                      {t("next")}
+                                    </Button>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="p-2 text-center text-muted-foreground text-sm">
+                                {t("plant_not_found")}
                               </div>
                             )}
-                          </>
-                        ) : (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            {t("plant_not_found")}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* ✅ O'simlik nomi select ostida - faqat tanlangan bo'lsa */}
+                      {form.plantId && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                          <div className="text-sm text-gray-800">
+                            <span className="font-medium">
+                              {t("selected_plant")}:{" "}
+                            </span>
+                            <span className="text-blue-700 font-semibold">
+                              {getPlantLabel(form.plantId)}
+                            </span>
+                          </div>
+                          {getPlantCategory(form.plantId) && (
+                            <div className="text-xs text-gray-600 mt-1">
+                              <span className="font-medium">Kategoriya: </span>
+                              {getPlantCategory(form.plantId)}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ✅ Avvalgi (existing) plant name - agar o'zgartirilgan bo'lsa */}
+                      {initialPlantNames[`${state.currentStep}-${formIndex}`] &&
+                        initialPlantNames[
+                          `${state.currentStep}-${formIndex}`
+                        ] !== getPlantLabel(form.plantId) && (
+                          <div className="mt-1 p-2 bg-yellow-50 rounded border border-yellow-200">
+                            <div className="text-xs text-gray-700">
+                              <span className="font-medium">
+                                {t("previous_plant")}:{" "}
+                              </span>
+                              <span className="text-yellow-700">
+                                {
+                                  initialPlantNames[
+                                    `${state.currentStep}-${formIndex}`
+                                  ]
+                                }
+                              </span>
+                            </div>
                           </div>
                         )}
-                      </SelectContent>
-                    </Select>
-                    {/* ✅ O'simlik nomi select ostida */}
-                    {form.plantId && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        <span className="font-medium">{t("plant_name")}: </span>
-                        <span>{getPlantLabel(form.plantId)}</span>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 )}
 
@@ -1236,11 +1471,13 @@ function PlantUpdate() {
                     <TableBody>
                       {currentEmptyColumns.map((col: EmptyColumn) => {
                         const lowerTitle = col.title.toLowerCase();
-                        const isDaromad1Column = lowerTitle.includes("daromad 1") || lowerTitle.includes("daromad1");
+                        const isDaromad1Column =
+                          lowerTitle.includes("daromad 1") ||
+                          lowerTitle.includes("daromad1");
 
                         if (lowerTitle.includes("reja")) {
                           const planItem = state.planItems.find(
-                            (item) => item.columnId === col.id
+                            (item) => item.columnId === col.id,
                           );
                           const planValue = planItem ? planItem.plan_value : "";
                           return (
@@ -1269,7 +1506,9 @@ function PlantUpdate() {
                               formIndex={formIndex}
                               stepIndex={state.currentStep}
                               column={col}
-                              organizationId={state.selectedOrganizationId || ""}
+                              organizationId={
+                                state.selectedOrganizationId || ""
+                              }
                               statementId={reportIds || ""}
                               year="2025"
                               value={form.values[col.id] || ""}
@@ -1293,16 +1532,16 @@ function PlantUpdate() {
                                 <select
                                   value={state.selectedOrganizationId}
                                   onChange={(e) => {
-                                    dispatch({
-                                      type: "SET_ORGANIZATION",
-                                      payload: e.target.value,
-                                    });
                                     handleInputChange(
                                       state.currentStep,
                                       formIndex,
                                       col.id,
-                                      e.target.value
+                                      e.target.value,
                                     );
+                                    dispatch({
+                                      type: "SET_ORGANIZATION",
+                                      payload: e.target.value,
+                                    });
                                   }}
                                   className="w-full border rounded px-2 py-1"
                                   required
@@ -1313,7 +1552,7 @@ function PlantUpdate() {
                                       <option key={item.id} value={item.id}>
                                         {item.name}
                                       </option>
-                                    )
+                                    ),
                                   )}
                                 </select>
                               </TableCell>
@@ -1335,7 +1574,7 @@ function PlantUpdate() {
                                     state.currentStep,
                                     formIndex,
                                     col.id,
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 required
@@ -1412,11 +1651,30 @@ function PlantUpdate() {
             </label>
             <Textarea
               value={footNote}
-              onChange={(e) => setFootNote(e.target.value)}
+              onChange={(e) => {
+                setTouchedFields((prev) => new Set([...prev, "foot_note"]));
+                setFootNote(e.target.value);
+              }}
               placeholder={t("enter_note")}
               className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
               rows={4}
             />
+          </div>
+        )}
+
+        {/* ✅ O'ZGARTIRILGAN MAYLONLARNI KO'RSATISH */}
+        {touchedFields.size > 0 && (
+          <div className="mt-4 p-4 bg-yellow-50 rounded border border-yellow-200">
+            <h3 className="font-semibold mb-2 text-yellow-800">
+              {t("changed_fields")} ({touchedFields.size})
+            </h3>
+            <div className="text-sm text-yellow-700">
+              {Array.from(touchedFields).map((field, idx) => (
+                <div key={idx} className="mb-1">
+                  • {field}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1448,7 +1706,7 @@ function PlantUpdate() {
                   )}
                 </div>
               );
-            })
+            }),
           )}
         </div>
       </form>
@@ -1457,4 +1715,3 @@ function PlantUpdate() {
 }
 
 export default PlantUpdate;
-

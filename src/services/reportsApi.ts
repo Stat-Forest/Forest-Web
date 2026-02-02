@@ -413,6 +413,16 @@ export const reportApi = createApi({
       invalidatesTags: ["Reports"],
     }),
 
+    // patch endpoints ====
+    patchPlantReport: builder.mutation({
+      query: ({ id, ...rest }) => ({
+        url: `/report-plant/${id}/update/`,
+        method: "PATCH",
+        body: rest,
+      }),
+      invalidatesTags: ["Reports"],
+    }),
+    
     // ==== 🟥 DELETE endpoint ====
     deleteReport: builder.mutation({
       query: (id: string | number) => ({
@@ -497,6 +507,9 @@ export const {
   useUpdateReportSummaryMutation,
   useUpdateReportOwnerMutation,
   useUpdatePlanMutation,
+
+  // PATCH
+    usePatchPlantReportMutation,
 
   // DELETE
   useDeleteReportMutation,
