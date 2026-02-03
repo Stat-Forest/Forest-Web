@@ -95,7 +95,6 @@ function ExpiredDeadlines() {
       <div className="bg-ice border rounded-xl px-3 py-5">
         {/* FILTERS */}
         <div className="flex gap-2 mb-6 flex-wrap">
-
           {/* STATEMENT */}
           <Select
             value={selectedStatement ? String(selectedStatement) : undefined}
@@ -195,13 +194,19 @@ function ExpiredDeadlines() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-200">
-                <TableHead>№</TableHead>
-                <TableHead>{t("statement")}</TableHead>
-                <TableHead>{t("period")}</TableHead>
-                <TableHead>{t("deadline")}</TableHead>
-                <TableHead>{t("organizations")}</TableHead>
-                <TableHead className="text-right">{t("submitDate")}</TableHead>
-                <TableHead className="text-center">{t("actions")}</TableHead>
+                <TableHead>{t("item_18")}</TableHead> {/* T/r: */}
+                <TableHead>{t("statments_name")}</TableHead> {/* Bo'lim */}
+                <TableHead>{t("item_14")}</TableHead> {/* Hisobot davri */}
+                <TableHead>{t("deadline")}</TableHead> {/* Muddati */}
+                <TableHead>{t("organization")}</TableHead> {/* Tashkilot */}
+                <TableHead className="text-right">
+                  {t("item_17")}
+                </TableHead>{" "}
+                {/* Hisobot topshirish vaqti */}
+                <TableHead className="text-center">
+                  {t("actions")}
+                </TableHead>{" "}
+                {/* Amallar */}
               </TableRow>
             </TableHeader>
 
@@ -224,7 +229,7 @@ function ExpiredDeadlines() {
                       {d.deadline_at}
                     </TableCell>
                     <TableCell>
-                      {d.organizations.length} {t("organizations")}
+                      {d.organizations.length} {t("organization")}
                     </TableCell>
                     <TableCell className="text-right">{d.submit_at}</TableCell>
                     <TableCell className="text-center">
