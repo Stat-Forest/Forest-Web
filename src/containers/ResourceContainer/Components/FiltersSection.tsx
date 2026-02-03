@@ -1,4 +1,3 @@
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -8,7 +7,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { regions2 } from "@/services/constants";
 import { useTranslation } from "react-i18next";
 
 interface FiltersSectionProps {
@@ -29,14 +27,8 @@ interface FiltersSectionProps {
 }
 
 export default function FiltersSection({
-  searchTerm,
-  setSearchTerm,
-  selectedRegion,
-  setSelectedRegion,
   selectedPeriod,
   setSelectedPeriod,
-  selectedYear,
-  setSelectedYear,
   deadline,
   deadlinePage,
   setDeadlinePage,
@@ -44,7 +36,7 @@ export default function FiltersSection({
   onSearch,
   isLoading,
 }: FiltersSectionProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -64,30 +56,6 @@ export default function FiltersSection({
       data-aos="fade-left"
       data-aos-delay="100"
     >
-      <Input
-        placeholder={`${t("item_79")}...`}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full md:w-[250px] border-white/30 bg-ice min-h-[40px] focus:border-[#3B82F6] transition-colors duration-300"
-        data-aos="fade-up"
-        data-aos-delay="120"
-      />
-      <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-        <SelectTrigger
-          className="w-full md:w-[220px] text-xl min-h-[40px] bg-ice border-white/30 focus:border-[#3B82F6] transition-colors duration-300"
-          data-aos="fade-up"
-          data-aos-delay="140"
-        >
-          <SelectValue placeholder={`${t("region")}`} />
-        </SelectTrigger>
-        <SelectContent>
-          {regions2.map((region) => (
-            <SelectItem key={region.value} value={region.value}>
-              {i18n.language === "uz" ? region.label : region.label2}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
       <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
         <SelectTrigger
@@ -144,16 +112,6 @@ export default function FiltersSection({
           )}
         </SelectContent>
       </Select>
-
-      <Input
-        className="w-full border border-white/30 bg-ice md:w-[150px] focus:border-[#3B82F6] transition-colors duration-300"
-        type="number"
-        placeholder={`${t("year")}`}
-        value={selectedYear}
-        onChange={(e) => setSelectedYear(e.target.value)}
-        data-aos="fade-up"
-        data-aos-delay="180"
-      />
       <Button
         onClick={onSearch}
         data-aos="zoom-in"
