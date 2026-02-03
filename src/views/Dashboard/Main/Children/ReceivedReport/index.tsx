@@ -9,19 +9,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { regions2 } from "@/services/constants";
-import { useGetAllReportsQuery, useGetStatementsReportQuery } from "@/services/reportsApi";
+import {
+  useGetAllReportsQuery,
+  useGetStatementsReportQuery,
+} from "@/services/reportsApi";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
 import { getSimpleCookie } from "@/utils/cookie";
+import { exportReportsToExcel } from "@/utils/exportToExcel";
 
 function ReceivedReport() {
   const dispatch = useDispatch();
-  const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
-    useSelector((state: RootState) => state.ui.reportsFilters.accepted);
+  const {
+    selectedOrganization,
+    selectedPeriod,
+    searchTerm,
+    selectedStatement,
+  } = useSelector((state: RootState) => state.ui.reportsFilters.accepted);
   const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
+  const deadline_at = false;
 
   const {
     data: reportsData,
@@ -59,7 +68,7 @@ function ReceivedReport() {
                   setReportsFilter({
                     key: "accepted",
                     changes: { searchTerm: e.target.value },
-                  })
+                  }),
                 )
               }
             />
@@ -73,7 +82,7 @@ function ReceivedReport() {
                   setReportsFilter({
                     key: "accepted",
                     changes: { selectedOrganization: value },
-                  })
+                  }),
                 )
               }
             >
@@ -98,7 +107,7 @@ function ReceivedReport() {
                   setReportsFilter({
                     key: "accepted",
                     changes: { selectedStatement: value },
-                  })
+                  }),
                 )
               }
             >
@@ -127,7 +136,7 @@ function ReceivedReport() {
                       <SelectItem key={child.id} value={child.id}>
                         {child.name}
                       </SelectItem>
-                    ))
+                    )),
                   )}
               </SelectContent>
             </Select>
@@ -141,7 +150,7 @@ function ReceivedReport() {
                   setReportsFilter({
                     key: "accepted",
                     changes: { selectedPeriod: value },
-                  })
+                  }),
                 )
               }
             >
@@ -158,7 +167,7 @@ function ReceivedReport() {
             </Select>
           </div>
 
-          <div>
+          <div className="flex items-center gap-5">
             <Button
               onClick={() => {
                 dispatch(resetReportsFilter("accepted"));
@@ -167,6 +176,16 @@ function ReceivedReport() {
             >
               {t("reset")}
             </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  exportReportsToExcel(reportsData, t, deadline_at)
+                }
+              >
+                XLSX export
+              </Button>
+            </div>
           </div>
         </div>
         <TableReports data={reportsData} />

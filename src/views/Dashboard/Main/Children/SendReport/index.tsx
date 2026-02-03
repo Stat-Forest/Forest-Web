@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
 import { getSimpleCookie } from "@/utils/cookie";
+import { exportReportsToExcel } from "@/utils/exportToExcel";
 
 function MainDetail() {
   const dispatch = useDispatch();
@@ -22,6 +23,7 @@ function MainDetail() {
     useSelector((state: RootState) => state.ui.reportsFilters.sent);
   const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
+  const deadline_at = false;
 
   const {
     data: reportsData,
@@ -158,7 +160,7 @@ function MainDetail() {
             </Select>
           </div>
 
-          <div>
+          <div className="flex items-center gap-5">
             <Button
               onClick={() => {
                 dispatch(resetReportsFilter("sent"));
@@ -167,6 +169,16 @@ function MainDetail() {
             >
               {t("reset")}
             </Button>
+            <div className="flex justify-end">
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              exportReportsToExcel(reportsData, t, deadline_at)
+                            }
+                          >
+                            XLSX export
+                          </Button>
+                        </div>
           </div>
         </div>
         <TableReports data={reportsData} />
