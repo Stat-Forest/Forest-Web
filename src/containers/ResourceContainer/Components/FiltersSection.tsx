@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
+import { ArrowRight } from "lucide-react";
 
 interface FiltersSectionProps {
   searchTerm: string;
@@ -52,10 +53,11 @@ export default function FiltersSection({
 
   return (
     <div
-      className="flex flex-wrap gap-1 w-full md:w-auto"
+      className="flex flex-wrap gap-2 w-full md:w-auto items-center"
       data-aos="fade-left"
       data-aos-delay="100"
     >
+      <span className="font-[500] bg-white min-h-[40px] py-2 px-3 rounded-xl text-md flex items-center gap-3">Davrni tanlang va umumiy hisobotlarni oling <ArrowRight /></span>
 
       <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
         <SelectTrigger
