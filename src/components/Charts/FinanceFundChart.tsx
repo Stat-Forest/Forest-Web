@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileDown, FileImage, FileCode, Printer } from "lucide-react";
 import { useGetEmployeeFundStatQuery } from "@/services/statistikApi";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const colors = {
   boshqaruv: "#2ECC71",
@@ -31,15 +32,27 @@ const colors = {
   ishchi: "#FF00FF",
 };
 
-const EmployeeFundChart = ({ activeTab }: { activeTab: string }) => {
-  const { data, isLoading } = useGetEmployeeFundStatQuery();
+const EmployeeFundChart = ({
+  activeTab,
+  lang,
+  deadlines,
+}: {
+  activeTab: string;
+  lang: string;
+  deadlines: any;
+}) => {
+  const [deadline, setDeadline] = useState<any>();
+  const { data, isLoading } = useGetEmployeeFundStatQuery({
+    deadline: deadline || "",
+    lang,
+  });
+
   const chartRef = useRef<HTMLDivElement>(null);
 
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
     if (data && data.length > 0) {
-
       let ilovaData = [];
 
       if (activeTab === "Jamg'arma") {
@@ -125,7 +138,27 @@ const EmployeeFundChart = ({ activeTab }: { activeTab: string }) => {
         style={{ background: "white", borderRadius: "10px", filter: "none" }}
         className="shadow"
       >
-        <div className="flex items-center justify-end px-5 py-2">
+        <div className="flex items-center justify-between px-5 py-2">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {deadline || "Barcha muddatlar"}
+            </h2>
+            <Select
+              value={deadline}
+              onValueChange={(v) => setDeadline(v || undefined)}
+            >
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Muddatni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {(deadlines?.results || []).map((item: any) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.submit_at}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

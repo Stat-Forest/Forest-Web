@@ -1,31 +1,53 @@
-import EmployeeAnalysisChart from "./EmployeeAnalysisChart";
+import { useSelector } from "react-redux";
 import EmployeeReportChart from "./EmployeeReportChart";
 import EmployeeFundChart from "./FinanceFundChart";
-import EmployeeIncomeChart from "./FinanceIncomeChart";
 import GolofitChart from "./GolofitChart";
 import TerrasaChart from "./TerassaChart";
+import { RootState } from "@/app/store";
+import { useGetDeadlinesReportQuery } from "@/services/reportsApi";
 
 function ReportChartItem({
   reportName,
   activeTab,
+  statmentId,
 }: {
   activeTab: string;
   reportName: string;
+  statmentId: string;
 }) {
-  if (reportName === "Daromad") {
-    return <EmployeeIncomeChart activeTab={activeTab} data={"financeChart"} />;
-  } else if (reportName === "Jamg'arma") {
-    return <EmployeeFundChart activeTab={activeTab} />;
+  const lang = useSelector((state: RootState) => state.language.lang);
+
+  const { data: deadlines, isLoading: isDeadlineLoading } =
+    useGetDeadlinesReportQuery({
+      statement: statmentId,
+      page: 1,
+      perPage: 100,
+      statement__period: "",
+    });
+
+  if (isDeadlineLoading) return <div></div>;
+
+  if (reportName === "Jamg'arma") {
+    return (
+      <EmployeeFundChart
+        activeTab={activeTab}
+        lang={lang}
+        deadlines={deadlines}
+      />
+    );
   } else if (reportName === "Xodimlar hisobi") {
-    return <EmployeeReportChart activeTab={activeTab} />;
-  } else if (reportName === "Xodimlar hisobi taxlili") {
-    return <EmployeeAnalysisChart activeTab={activeTab} />;
+    return (
+      <EmployeeReportChart
+        activeTab={activeTab}
+        lang={lang}
+        deadlines={deadlines}
+      />
+    );
   } else if (reportName === "Terassa") {
-    return <TerrasaChart />;
+    return <TerrasaChart lang={lang} deadlines={deadlines} />;
   } else if (reportName === "Golofit") {
-    return <GolofitChart />;
-  } 
-  else {
+    return <GolofitChart lang={lang} deadlines={deadlines} />;
+  } else {
     return <div></div>;
   }
 }

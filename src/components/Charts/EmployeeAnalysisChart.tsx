@@ -31,8 +31,8 @@ const colors = {
   ishchi: "#FF00FF",
 };
 
-const EmployeeAnalysisChart = ({ activeTab }: { activeTab: string }) => {
-  const { data, isLoading } = useGetEmployeeAnalysisStatQuery();
+const EmployeeAnalysisChart = ({ activeTab, lang }: { activeTab: string; lang: string }) => {
+  const { data, isLoading } = useGetEmployeeAnalysisStatQuery({ deadline: "", lang });
   const chartRef = useRef<HTMLDivElement>(null);
 
   const [chartData, setChartData] = useState<any[]>([]);
@@ -128,7 +128,10 @@ const EmployeeAnalysisChart = ({ activeTab }: { activeTab: string }) => {
         style={{ background: "white", borderRadius: "10px", filter: "none" }}
         className="shadow"
       >
-        <div className="flex items-center justify-end px-5 py-2">
+        <div className="flex items-center justify-between px-5 py-2">
+          <div>
+            <h2 className="text-lg font-semibold">{"deadline"}</h2>
+          </div>
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

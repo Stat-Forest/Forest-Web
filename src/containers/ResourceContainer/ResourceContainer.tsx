@@ -18,7 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Custom Components
-import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
+// import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
 import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -633,11 +633,12 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                     <ReportChartItem
                       activeTab={activeTab}
                       reportName={reportName}
+                      statmentId={id || ""}
                     />
                   )}
                 </div>
 
-                <div>
+                {/* <div>
                   {isRowsLoading ? (
                     <div className="space-y-2">
                       <Skeleton className="h-6 w-48 rounded-md" />
@@ -649,7 +650,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                       activeTab={activeTab}
                     />
                   )}
-                </div>
+                </div> */}
 
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   {/* Filters */}
