@@ -18,14 +18,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
 import { getSimpleCookie } from "@/utils/cookie";
+import { exportReportsToExcel } from "@/utils/exportToExcel";
 
 function ReturnedReport() {
   const dispatch = useDispatch();
-  const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
-    useSelector((state: RootState) => state.ui.reportsFilters.cancelled);
+  const {
+    selectedOrganization,
+    selectedPeriod,
+    searchTerm,
+    selectedStatement,
+  } = useSelector((state: RootState) => state.ui.reportsFilters.cancelled);
   const { t, i18n } = useTranslation();
 
   const lang = getSimpleCookie("lang") || "uz";
+  const deadline_at = false;
 
   const {
     data: reportsData,
@@ -62,7 +68,7 @@ function ReturnedReport() {
                   setReportsFilter({
                     key: "cancelled",
                     changes: { searchTerm: e.target.value },
-                  })
+                  }),
                 )
               }
             />
@@ -76,7 +82,7 @@ function ReturnedReport() {
                   setReportsFilter({
                     key: "cancelled",
                     changes: { selectedOrganization: value },
-                  })
+                  }),
                 )
               }
             >
@@ -101,7 +107,7 @@ function ReturnedReport() {
                   setReportsFilter({
                     key: "cancelled",
                     changes: { selectedStatement: value },
-                  })
+                  }),
                 )
               }
             >
@@ -130,7 +136,7 @@ function ReturnedReport() {
                       <SelectItem key={child.id} value={child.id}>
                         {child.name}
                       </SelectItem>
-                    ))
+                    )),
                   )}
               </SelectContent>
             </Select>
@@ -144,7 +150,7 @@ function ReturnedReport() {
                   setReportsFilter({
                     key: "cancelled",
                     changes: { selectedPeriod: value },
-                  })
+                  }),
                 )
               }
             >
@@ -161,7 +167,7 @@ function ReturnedReport() {
             </Select>
           </div>
 
-          <div>
+          <div className="flex items-center gap-5">
             <Button
               onClick={() => {
                 dispatch(resetReportsFilter("cancelled"));
@@ -170,6 +176,16 @@ function ReturnedReport() {
             >
               {t("reset")}
             </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  exportReportsToExcel(reportsData, t, deadline_at)
+                }
+              >
+                XLSX export
+              </Button>
+            </div>
           </div>
         </div>
         <TableReports data={reportsData} />

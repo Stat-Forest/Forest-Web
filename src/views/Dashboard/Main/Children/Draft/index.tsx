@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getSimpleCookie } from "@/utils/cookie";
+import { exportReportsToExcel } from "@/utils/exportToExcel";
 
 function Draft() {
   const [selectedOrganization, setSelectedOrganization] = useState("");
@@ -24,6 +25,7 @@ function Draft() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const { t, i18n } = useTranslation();
+  const deadline_at = false;
   const {
     data: reportsData,
     isLoading: isReportsLoading,
@@ -105,7 +107,7 @@ function Draft() {
                       <SelectItem key={child.id} value={child.id}>
                         {child.name}
                       </SelectItem>
-                    ))
+                    )),
                   )}
               </SelectContent>
             </Select>
@@ -129,7 +131,7 @@ function Draft() {
             </Select>
           </div>
 
-          <div>
+          <div className="flex items-center gap-5">
             <Button
               onClick={() => {
                 setSelectedOrganization("");
@@ -141,6 +143,16 @@ function Draft() {
             >
               {t("reset")}
             </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  exportReportsToExcel(reportsData, t, deadline_at)
+                }
+              >
+                XLSX export
+              </Button>
+            </div>
           </div>
         </div>
         <TableReports data={reportsData} />
