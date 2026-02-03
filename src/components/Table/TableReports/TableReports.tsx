@@ -80,7 +80,7 @@ function TableReports({ data, deadline_at = false }: any) {
               </TableCell>
 
               {deadline_at && (
-                <TableCell className="w-[20%] text-base font-[300] border-none">
+                <TableCell className="w-[20%] text-base font-[600] border-none text-red-500">
                   {item?.deadline_at}
                 </TableCell>
               )}
