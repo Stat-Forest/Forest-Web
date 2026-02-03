@@ -51,4 +51,3 @@ function microAjax(url, callback, postBody) {
     req.send(this.postBody);
   }
 }
-
