@@ -144,7 +144,7 @@ function Lated() {
             </Button>
           </div>
         </div>
-        <TableReports data={reportsData} />
+        <TableReports data={reportsData} deadline_at={true} />
       </div>
     </div>
   );
