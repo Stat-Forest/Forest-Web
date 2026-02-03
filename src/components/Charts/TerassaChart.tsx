@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -21,6 +21,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileDown, FileImage, FileCode, Printer } from "lucide-react";
 import { useGetBuildForestTeressaStatQuery } from "@/services/statistikApi";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { useTranslation } from "react-i18next";
 
 const colors = {
   boshqaruv: "#2ECC71",
@@ -31,9 +39,20 @@ const colors = {
   ishchi: "#FF00FF",
 };
 
-const TerrasaChart = () => {
-  const { data, isLoading } = useGetBuildForestTeressaStatQuery();
+const TerrasaChart = ({
+  lang,
+  deadlines,
+}: {
+  lang: string;
+  deadlines: any;
+}) => {
+  const [deadline, setDeadline] = useState<any>();
+  const { data, isLoading } = useGetBuildForestTeressaStatQuery({
+    lang,
+    deadline: deadline || "",
+  });
   const chartRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   const exportAs = async (type: "pdf" | "png" | "svg" | "print") => {
     if (!chartRef.current) return;
@@ -110,7 +129,25 @@ const TerrasaChart = () => {
         style={{ background: "white", borderRadius: "10px", filter: "none" }}
         className="shadow"
       >
-        <div className="flex items-center justify-end px-5 py-2">
+        <div className="flex items-center justify-between px-5 py-2">
+          <div>
+            <h2 className="text-lg font-semibold">{t("deadline")}</h2>
+            <Select
+              value={deadline}
+              onValueChange={(v) => setDeadline(v || undefined)}
+            >
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Muddatni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {(deadlines?.results).map((item: any) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.submit_at}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

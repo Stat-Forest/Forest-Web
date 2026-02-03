@@ -21,6 +21,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileDown, FileImage, FileCode, Printer } from "lucide-react";
 import { useGetEmployeeReportStatQuery } from "@/services/statistikApi";
+import { useTranslation } from "react-i18next";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const colors = {
   boshqaruv: "#2ECC71",
@@ -31,9 +39,22 @@ const colors = {
   ishchi: "#FF00FF",
 };
 
-const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
-  const { data, isLoading } = useGetEmployeeReportStatQuery();
+const EmployeeReportChart = ({
+  activeTab,
+  lang,
+  deadlines,
+}: {
+  activeTab: string;
+  lang: string;
+  deadlines: any;
+}) => {
+  const [deadline, setDeadline] = useState<any>();
+  const { data, isLoading } = useGetEmployeeReportStatQuery({
+    deadline: deadline || "",
+    lang,
+  });
   const chartRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   const [chartData, setChartData] = useState<any[]>([]);
 
@@ -128,7 +149,25 @@ const EmployeeReportChart = ({ activeTab }: { activeTab: string }) => {
         style={{ background: "white", borderRadius: "10px", filter: "none" }}
         className="shadow"
       >
-        <div className="flex items-center justify-end px-5 py-2">
+        <div className="flex items-center justify-between px-5 py-2">
+          <div>
+            <h2 className="text-lg font-semibold">{t("deadline")}</h2>
+            <Select
+              value={deadline}
+              onValueChange={(v) => setDeadline(v || undefined)}
+            >
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Muddatni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {(deadlines?.results).map((item: any) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.submit_at}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

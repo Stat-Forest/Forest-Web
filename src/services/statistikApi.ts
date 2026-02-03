@@ -7,38 +7,38 @@ export const statistikApi = createApi({
   baseQuery: createBaseQueryWithReauth(`${base_url}/statistics`),
   tagTypes: ["Reports"],
   endpoints: (builder) => ({
-    getEmployeeIncomeStat: builder.query<any, void>({
-      query: () => `/finance-income-stat/`,
+    getEmployeeIncomeStat: builder.query<any, any>({
+      query: ({deadline, lang}) => `/finance-income-stat/?deadline=${deadline}&lang=${lang}`,
     }),
-    getEmployeeReportStat: builder.query<any, void>({
-      query: () => `/employee-report-stat/`,
+    getEmployeeReportStat: builder.query<any, any>({
+      query: ({deadline, lang}) => `/employee-report-stat/?deadline=${deadline}&lang=${lang}`,
     }),
-    getEmployeeFundStat: builder.query<any, void>({
-      query: () => `/finance-fund-stat/`,
+    getEmployeeFundStat: builder.query<any, any>({
+      query: ({deadline, lang}) => `/finance-fund-stat/?deadline=${deadline}&lang=${lang}`,
     }),
-    getEmployeeAnalysisStat: builder.query<any, void>({
-      query: () => `/employee-analysis-stat/`,
+    getEmployeeAnalysisStat: builder.query<any, any>({
+      query: ({deadline, lang}) => `/employee-analysis-stat/?deadline=${deadline}&lang=${lang}`,
     }),
-    getLandForest: builder.query<any, void>({
-      query: () => `/land-forest-stat/`,
+    getLandForest: builder.query<any, any>({
+      query: ({lang,deadline}) => `/land-forest-stat/?lang=${lang}&deadline=${deadline}`,
     }),
-    getLandAcquisition: builder.query<any, void>({
-      query: () => `/land-acquisition-stat/`,
+    getLandAcquisition: builder.query<any, any>({
+      query: ({lang,deadline}) => `/land-acquisition-stat/?lang=${lang}&deadline=${deadline}`,
     }),
-    getLandRented: builder.query<any, void>({
-      query: () => `/land-rented-stat/`,
+    getLandRented: builder.query<any, any>({
+      query: ({lang,deadline}) => `/land-rented-stat/?lang=${lang}&deadline=${deadline}`,
     }),
-    getBuildForestGolofitStat: builder.query<any, void>({
-      query: () => `/build-forest-golofit/`,
+    getBuildForestGolofitStat: builder.query<any, any>({
+      query: ({lang,deadline}) => `/build-forest-golofit/?lang=${lang}&deadline=${deadline}`,
     }),
-    getBuildForestTeressaStat: builder.query<any, void>({
-      query: () => `/build-forest-teressa/`,
+    getBuildForestTeressaStat: builder.query<any, any>({
+      query: ({lang,deadline}) => `/build-forest-teressa/?lang=${lang}&deadline=${deadline}`,
     }),
-    getMonitorForestUzlashtirish: builder.query<any, void>({
-      query: () => `/monitor-forest-uzlashtirish/`,
+    getMonitorForestUzlashtirish: builder.query<any, any>({
+      query: ({lang,deadline}) => `/monitor-forest-uzlashtirish/?lang=${lang}&deadline=${deadline}`,
     }),
-    getProtectForestZararkunanda: builder.query<any, void>({
-      query: () => `/protect-forest-zararkunanda/`,
+    getProtectForestZararkunanda: builder.query<any, any>({
+      query: ({lang,deadline}) => `/protect-forest-zararkunanda/?lang=${lang}&deadline=${deadline}`,
     }),
   }),
 });
