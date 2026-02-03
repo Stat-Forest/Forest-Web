@@ -89,11 +89,12 @@ export const reportApi = createApi({
         per_page?: number;
         statement?: any;
         submit_at?: string;
+        period?: string;
       }
     >({
       query: (params = {}) => {
         return {
-          url: `/expired-deadlines/?deadline_at=${params.deadline_at}&organizations=${params.organizations}&page=${params.page || 1}&per_page=${params.per_page || 10}&statement=${params.statement}&submit_at=${params.submit_at}`,
+          url: `/expired-deadlines/?deadline_at=${params.deadline_at}&organizations=${params.organizations}&page=${params.page || 1}&per_page=${params.per_page || 10}&statement=${params.statement}&submit_at=${params.submit_at}&period=${params.period}`,
           method: "GET",
         };
       },

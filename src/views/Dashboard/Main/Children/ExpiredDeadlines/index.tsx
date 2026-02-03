@@ -24,6 +24,8 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { getSimpleCookie } from "@/utils/cookie";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 interface ExpiredDeadline {
   id: string;
@@ -44,6 +46,9 @@ interface ExpiredDeadline {
 function ExpiredDeadlines() {
   const { t } = useTranslation();
   const lang = getSimpleCookie("lang") || "uz";
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
+
+  console.log("USER ROLE:", user_role);
 
   const [selectedStatement, setSelectedStatement] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
@@ -75,6 +80,7 @@ function ExpiredDeadlines() {
     organizations: selectedOrganization,
     deadline_at: deadlineAt,
     submit_at: submitAt,
+    period: selectedPeriod,
   });
 
   const list = Array.isArray(data) ? data : (data?.results ?? []);
@@ -89,15 +95,6 @@ function ExpiredDeadlines() {
       <div className="bg-ice border rounded-xl px-3 py-5">
         {/* FILTERS */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          <Input
-            className="w-[260px] text-xl border-black"
-            placeholder={`${t("item_79")}...`}
-            value={submitAt}
-            onChange={(e) => {
-              setSubmitAt(e.target.value);
-              setPage(1);
-            }}
-          />
 
           {/* STATEMENT */}
           <Select
@@ -149,28 +146,30 @@ function ExpiredDeadlines() {
           />
 
           {/* ORGANIZATION */}
-          <Select
-            value={
-              selectedOrganization ? String(selectedOrganization) : undefined
-            }
-            onValueChange={(v) => {
-              setSelectedOrganization(v);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[260px] text-xl border-black">
-              <SelectValue placeholder={t("organizations")} />
-            </SelectTrigger>
-            <SelectContent>
-              {orgLoading && <p className="px-3">Yuklanmoqda...</p>}
-              {!orgLoading &&
-                organizations?.map((o: any) => (
-                  <SelectItem key={o.id} value={String(o.id)}>
-                    {o.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+          {(user_role == "super_admin" || user_role == "tashkilot_rahbari") && (
+            <Select
+              value={
+                selectedOrganization ? String(selectedOrganization) : undefined
+              }
+              onValueChange={(v) => {
+                setSelectedOrganization(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[260px] text-xl border-black">
+                <SelectValue placeholder={t("organizations")} />
+              </SelectTrigger>
+              <SelectContent>
+                {orgLoading && <p className="px-3">Yuklanmoqda...</p>}
+                {!orgLoading &&
+                  organizations?.map((o: any) => (
+                    <SelectItem key={o.id} value={String(o.id)}>
+                      {o.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          )}
 
           {/* RESET */}
           <Button
@@ -242,7 +241,10 @@ function ExpiredDeadlines() {
                       <TableCell colSpan={7}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           {d.organizations.map((o) => (
-                            <div key={o.id} className="border p-2 rounded">
+                            <div
+                              key={o.id}
+                              className="border p-2 rounded break-words whitespace-normal"
+                            >
                               {o.name}
                             </div>
                           ))}
