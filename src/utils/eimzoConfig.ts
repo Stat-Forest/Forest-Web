@@ -35,7 +35,7 @@ export const getEimzoApiKeys = (): string[] => {
   } catch (error) {
     console.warn("E-IMZO API keys .env dan o'qib bo'lmadi:", error);
   }
-  
+
   // Fallback - development uchun (agar .env da bo'lmasa)
   // Production'da bu xato bo'ladi, shuning uchun .env ni to'ldirish majburiy
   if (import.meta.env.DEV) {
@@ -48,6 +48,8 @@ export const getEimzoApiKeys = (): string[] => {
       "E0A205EC4E7B78BBB56AFF83A733A1BB9FD39D562E67978CC5E7D73B0951DB1954595A20672A63332535E13CC6EC1E1FC8857BB09E0855D7E76E411B6FA16E9D",
       "stat-urmon.uz",
       "HEX_API_KEY_FOR_stat-urmon.uz",
+      "ruxsatnoma-urmon.uz",
+      "57081C44AC4FD8FA104A4A4E359524F6632FB589618B4C9A380D176CEC4789407135BE5C4417898FA172596031A95562B4B021C67BFE53D4FB1B53B811E6DF17",
     ];
   }
 
