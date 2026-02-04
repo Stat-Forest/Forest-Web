@@ -138,6 +138,8 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
           organization__region: selectedOrganizationReport,
           statement__period: selectedPeriodReport,
           search: searchTermReport,
+          page: 1,
+          per_page: 2000,
           // time_status: "",
         }
       : skipToken,
