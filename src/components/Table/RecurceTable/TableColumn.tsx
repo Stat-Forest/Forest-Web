@@ -68,7 +68,7 @@ const TableColumn = forwardRef(
       searchTermReport,
       reportName,
     }: any,
-    ref
+    ref,
   ) => {
     const tableRef = useRef<HTMLDivElement>(null);
     const detailRef = useRef<HTMLDivElement>(null);
@@ -77,7 +77,10 @@ const TableColumn = forwardRef(
     // Detail ko'rinishga smooth scroll
     useEffect(() => {
       if (selectedRow) {
-        detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        detailRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
     }, [selectedRow]);
     const { t, i18n } = useTranslation();
@@ -120,11 +123,16 @@ const TableColumn = forwardRef(
 
           // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
           if (downloadUrl.startsWith("/")) {
-            const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
+            const baseUrl =
+              import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
             downloadUrl = `${baseUrl}${downloadUrl}`;
-          } else if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://")) {
+          } else if (
+            !downloadUrl.startsWith("http://") &&
+            !downloadUrl.startsWith("https://")
+          ) {
             // Agar protocol bo'lmasa, base_url qo'shish
-            const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
+            const baseUrl =
+              import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
             downloadUrl = `${baseUrl}/${downloadUrl}`;
           }
 
@@ -157,7 +165,9 @@ const TableColumn = forwardRef(
                   alert(result.detail);
                 }
               } else {
-                throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+                throw new Error(
+                  `Download failed: ${response.status} ${response.statusText}`,
+                );
               }
             } catch (downloadError: any) {
               console.error("Download xatolik:", downloadError);
@@ -170,7 +180,10 @@ const TableColumn = forwardRef(
           }
         } else {
           console.warn("Download URL topilmadi, response:", result);
-          alert(result?.detail || "Export muvaffaqiyatli bajarildi, lekin download URL topilmadi");
+          alert(
+            result?.detail ||
+              "Export muvaffaqiyatli bajarildi, lekin download URL topilmadi",
+          );
         }
       } catch (error: any) {
         console.error("Export xatolik:", error);
@@ -191,8 +204,6 @@ const TableColumn = forwardRef(
       }
     };
 
-
-
     // 🔹 Yangi: Print uchun to'liq jadvalni olish
     const getPrintableTable = () => {
       if (!tableRef.current) return "";
@@ -208,7 +219,7 @@ const TableColumn = forwardRef(
       const allElements = clonedTable.querySelectorAll("*");
       allElements.forEach((el) => {
         const originalEl = table.querySelector(
-          `[data-print-id="${el.getAttribute("data-print-id")}"]`
+          `[data-print-id="${el.getAttribute("data-print-id")}"]`,
         );
         if (originalEl) {
           (el as HTMLElement).style.cssText = (
@@ -301,7 +312,7 @@ const TableColumn = forwardRef(
       if (!item.children || item.children.length === 0) return 1;
       return item.children.reduce(
         (sum: number, child: any) => sum + getColSpan(child),
-        0
+        0,
       );
     };
 
@@ -347,10 +358,10 @@ const TableColumn = forwardRef(
                   ...row.report_items.map((reportItem: any) =>
                     Math.max(
                       ...reportItem.statement_columns.map(
-                        (col: any) => col.inners?.length || 0
-                      )
-                    )
-                  )
+                        (col: any) => col.inners?.length || 0,
+                      ),
+                    ),
+                  ),
                 );
 
                 return (
@@ -379,7 +390,7 @@ const TableColumn = forwardRef(
                             >
                               {col.inners?.[innerIndex]?.value || ""}
                             </td>
-                          ))
+                          )),
                         )}
                       </tr>
                     ))}
@@ -392,10 +403,10 @@ const TableColumn = forwardRef(
                             ...child.report_items.map((reportItem: any) =>
                               Math.max(
                                 ...reportItem.statement_columns.map(
-                                  (col: any) => col.inners?.length || 0
-                                )
-                              )
-                            )
+                                  (col: any) => col.inners?.length || 0,
+                                ),
+                              ),
+                            ),
                           );
 
                           return (
@@ -428,15 +439,15 @@ const TableColumn = forwardRef(
                                               {col.inners?.[innerIndex]
                                                 ?.value || ""}
                                             </td>
-                                          )
-                                        )
+                                          ),
+                                        ),
                                     )}
                                   </tr>
-                                )
+                                ),
                               )}
                             </Fragment>
                           );
-                        }
+                        },
                       )}
                   </Fragment>
                 );
@@ -536,8 +547,9 @@ const TableColumn = forwardRef(
               {allReports?.results?.map((item: any) => (
                 <TableRow
                   key={item.id}
-                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${selectedRow?.id === item.id ? "bg-gray-200" : ""
-                    }`}
+                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${
+                    selectedRow?.id === item.id ? "bg-gray-200" : ""
+                  }`}
                   onClick={() =>
                     onRowClick?.(selectedRow?.id === item.id ? null : item)
                   }
@@ -561,14 +573,15 @@ const TableColumn = forwardRef(
                   </TableCell>
                   <TableCell className="text-right text-base font-[400] border-none">
                     <span
-                      className={`px-4 py-1 rounded-full ${item.status === "accepted"
+                      className={`px-4 py-1 rounded-full ${
+                        item.status === "accepted"
                           ? "bg-[#7fa1f84f] text-[#4579FF]"
                           : item.status === "cancelled"
                             ? "bg-[#f9695c74] text-[#FF5445]"
                             : item.status == "saved"
                               ? "bg-[#65656555] text-[#4D4D4D]"
                               : "bg-[#fcc7544a] text-[#fd9c15]"
-                        }`}
+                      }`}
                     >
                       {item?.status == "accepted"
                         ? t("received")
@@ -606,7 +619,8 @@ const TableColumn = forwardRef(
                   <span className="text-xl">{selectedRow.submit_at}</span>
                 </div>
                 <div className="text-lg">
-                  <b className="font-bold">{t('item_12')}:</b> {selectedRow.organization_name}
+                  <b className="font-bold">{t("item_12")}:</b>{" "}
+                  {selectedRow.organization_name}
                 </div>
                 {selectedRow.foot_note && (
                   <div className="text-lg mt-2">
@@ -620,14 +634,14 @@ const TableColumn = forwardRef(
                   {((user_role === "tashkilot_rahbari" &&
                     selectedRow?.status == "saved") ||
                     (user_role === "bolim_admin" &&
-                      selectedRow?.status == "sent")) && (
-                      <Button
-                        onClick={() => setIsCancelModalOpen(true)}
-                        className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
-                      >
-                        {t("recycle")}
-                      </Button>
-                    )}
+                      selectedRow?.status == "sent") || (user_role === "hududiy_boshqarma" && selectedRow?.status == "sent")) && (
+                    <Button
+                      onClick={() => setIsCancelModalOpen(true)}
+                      className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                    >
+                      {t("recycle")}
+                    </Button>
+                  )}
 
                   {/* 🔹 Yuborish (Send) button - faqat tashkilot_rahbari va saved status'da */}
                   {user_role == "tashkilot_rahbari" &&
@@ -763,87 +777,92 @@ const TableColumn = forwardRef(
                 <tbody>
                   {/* 🔹 Selected Row (jami) */}
                   {selectedRow.report_items?.map(
-                      (reportItem: any, reportIndex: number) => {
-                        const maxInners = Math.max(
-                          ...reportItem.statement_columns.map(
-                            (col: any) => col.inners?.length || 0
-                          )
-                        );
+                    (reportItem: any, reportIndex: number) => {
+                      const maxInners = Math.max(
+                        ...reportItem.statement_columns.map(
+                          (col: any) => col.inners?.length || 0,
+                        ),
+                      );
 
-                        return (
-                          <Fragment key={reportIndex}>
-                            {Array.from({ length: maxInners }).map(
-                              (_, innerIndex) => (
-                                <tr key={innerIndex}>
-                                  {/* T/R faqat birinchi qatorda chiqsin */}
-                                  {innerIndex === 0 && (
+                      return (
+                        <Fragment key={reportIndex}>
+                          {Array.from({ length: maxInners }).map(
+                            (_, innerIndex) => (
+                              <tr key={innerIndex}>
+                                {/* T/R faqat birinchi qatorda chiqsin */}
+                                {innerIndex === 0 && (
+                                  <td
+                                    className="border border-black px-2 py-1 text-center"
+                                    rowSpan={maxInners}
+                                  >
+                                    1
+                                  </td>
+                                )}
+
+                                {reportItem.statement_columns?.map(
+                                  (col: any) => (
+                                    <td
+                                      key={col.id}
+                                      className="border min-w-[350px] border-black px-2 py-1 text-center"
+                                    >
+                                      {col.inners?.[innerIndex]?.value || ""}
+                                    </td>
+                                  ),
+                                )}
+
+                                {/* Amallar faqat birinchi qatorda chiqsin */}
+                                {innerIndex === 0 &&
+                                  (selectedRow.status == "saved" ||
+                                    selectedRow.status == "cancelled") &&
+                                  user_role == "tashkilot_hodimi" && (
                                     <td
                                       className="border border-black px-2 py-1 text-center"
                                       rowSpan={maxInners}
                                     >
-                                      1
-                                    </td>
-                                  )}
-
-                                  {reportItem.statement_columns?.map(
-                                    (col: any) => (
-                                      <td
-                                        key={col.id}
-                                        className="border min-w-[350px] border-black px-2 py-1 text-center"
-                                      >
-                                        {col.inners?.[innerIndex]?.value || ""}
-                                      </td>
-                                    )
-                                  )}
-
-                                  {/* Amallar faqat birinchi qatorda chiqsin */}
-                                  {innerIndex === 0 &&
-                                    (selectedRow.status == "saved" ||
-                                      selectedRow.status == "cancelled") &&
-                                    user_role == "tashkilot_hodimi" && (
-                                      <td
-                                        className="border border-black px-2 py-1 text-center"
-                                        rowSpan={maxInners}
-                                      >
-                                        <div className="flex items-center justify-center gap-2">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Button
+                                          className="bg-[#3B82F6] hover:bg-[#2563EB]"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(
+                                              `/resource-management/update/${selectedRow?.id}/${reportName}`,
+                                            );
+                                          }}
+                                        >
+                                          <Edit2 />
+                                        </Button>
+                                        {selectedRow.status == "saved" && (
                                           <Button
                                             className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                            onClick={(e) => {
+                                            onClick={async (e) => {
                                               e.stopPropagation();
-                                              navigate(
-                                                `/resource-management/update/${selectedRow?.id}/${reportName}`
-                                              );
+                                              try {
+                                                await deleteReport(
+                                                  selectedRow.id,
+                                                ).unwrap();
+                                                // Mutasyon muvaffaqiyatli bo'lgandan keyin sahifani yangilash
+                                                window.location.reload();
+                                              } catch (error) {
+                                                console.error(
+                                                  "Delete error:",
+                                                  error,
+                                                );
+                                              }
                                             }}
                                           >
-                                            <Edit2 />
+                                            <Trash2 />
                                           </Button>
-                                          {selectedRow.status == "saved" && (
-                                            <Button
-                                              className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                              onClick={async (e) => {
-                                                e.stopPropagation();
-                                                try {
-                                                  await deleteReport(selectedRow.id).unwrap();
-                                                  // Mutasyon muvaffaqiyatli bo'lgandan keyin sahifani yangilash
-                                                  window.location.reload();
-                                                } catch (error) {
-                                                  console.error("Delete error:", error);
-                                                }
-                                              }}
-                                            >
-                                              <Trash2 />
-                                            </Button>
-                                          )}
-                                        </div>
-                                      </td>
-                                    )}
-                                </tr>
-                              )
-                            )}
-                          </Fragment>
-                        );
-                      }
-                    )}
+                                        )}
+                                      </div>
+                                    </td>
+                                  )}
+                              </tr>
+                            ),
+                          )}
+                        </Fragment>
+                      );
+                    },
+                  )}
 
                   {/* 🔥 Individual Rows (Jami) */}
                   {individualRows?.length > 0 &&
@@ -852,8 +871,8 @@ const TableColumn = forwardRef(
                         (reportItem: any, reportIndex: number) => {
                           const maxInners = Math.max(
                             ...reportItem.statement_columns.map(
-                              (col: any) => col.inners?.length || 0
-                            )
+                              (col: any) => col.inners?.length || 0,
+                            ),
                           );
 
                           return (
@@ -866,7 +885,9 @@ const TableColumn = forwardRef(
                                       <td
                                         className="border border-black px-2 py-1 text-center"
                                         rowSpan={maxInners}
-                                      >{innerIndex + 1}</td>
+                                      >
+                                        {innerIndex + 1}
+                                      </td>
                                     )}
 
                                     {reportItem.statement_columns?.map(
@@ -878,18 +899,20 @@ const TableColumn = forwardRef(
                                           {col.inners?.[innerIndex]?.value ||
                                             ""}
                                         </td>
-                                      )
+                                      ),
                                     )}
 
                                     {/* Amallar faqat birinchi qatorda chiqsin */}
-                                    <td className="flex items-center justify-center">-</td>
+                                    <td className="flex items-center justify-center">
+                                      -
+                                    </td>
                                   </tr>
-                                )
+                                ),
                               )}
                             </Fragment>
                           );
-                        }
-                      )
+                        },
+                      ),
                     )}
                 </tbody>
               </table>
@@ -924,7 +947,7 @@ const TableColumn = forwardRef(
         )}
       </>
     );
-  }
+  },
 );
 
 export default TableColumn;
