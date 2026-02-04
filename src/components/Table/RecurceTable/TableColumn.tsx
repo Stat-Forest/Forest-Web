@@ -342,7 +342,7 @@ const TableColumn = forwardRef(
               ))}
             </thead>
             <tbody>
-              {rows?.results?.map((row: any, rowIndex: number) => {
+              {rows?.map((row: any, rowIndex: number) => {
                 const maxInners = Math.max(
                   ...row.report_items.map((reportItem: any) =>
                     Math.max(
