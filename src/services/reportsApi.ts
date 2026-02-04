@@ -18,6 +18,8 @@ export const reportApi = createApi({
         statement__period: string;
         search: string;
         time_status?: string;
+        page?: number;
+        per_page?: number;
       }
     >({
       query: ({
@@ -27,8 +29,10 @@ export const reportApi = createApi({
         statement__period,
         search,
         time_status,
+        page,
+        per_page,
       }) => {
-        let url = `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}`;
+        let url = `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&page=${page}&per_page=${per_page}`;
         // Faqat late_reports va ontime_reports uchun time_status parametrini qo'shish
         if (time_status) {
           url += `&time_status=${time_status}`;

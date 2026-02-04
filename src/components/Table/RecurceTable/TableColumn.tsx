@@ -342,7 +342,7 @@ const TableColumn = forwardRef(
               ))}
             </thead>
             <tbody>
-              {rows.map((row: any, rowIndex: number) => {
+              {rows?.results?.map((row: any, rowIndex: number) => {
                 const maxInners = Math.max(
                   ...row.report_items.map((reportItem: any) =>
                     Math.max(
@@ -533,7 +533,7 @@ const TableColumn = forwardRef(
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allReports?.map((item: any) => (
+              {allReports?.results?.map((item: any) => (
                 <TableRow
                   key={item.id}
                   className={`h-[50px] cursor-pointer hover:bg-gray-100 ${selectedRow?.id === item.id ? "bg-gray-200" : ""

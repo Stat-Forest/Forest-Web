@@ -9,7 +9,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { regions2 } from "@/services/constants";
-import { useGetAllReportsQuery, useGetStatementsReportQuery } from "@/services/reportsApi";
+import {
+  useGetAllReportsQuery,
+  useGetStatementsReportQuery,
+} from "@/services/reportsApi";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
@@ -19,8 +22,12 @@ import { exportReportsToExcel } from "@/utils/exportToExcel";
 
 function MainDetail() {
   const dispatch = useDispatch();
-  const { selectedOrganization, selectedPeriod, searchTerm, selectedStatement } =
-    useSelector((state: RootState) => state.ui.reportsFilters.sent);
+  const {
+    selectedOrganization,
+    selectedPeriod,
+    searchTerm,
+    selectedStatement,
+  } = useSelector((state: RootState) => state.ui.reportsFilters.sent);
   const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
   const deadline_at = false;
@@ -61,7 +68,7 @@ function MainDetail() {
                   setReportsFilter({
                     key: "sent",
                     changes: { searchTerm: e.target.value },
-                  })
+                  }),
                 )
               }
             />
@@ -75,7 +82,7 @@ function MainDetail() {
                   setReportsFilter({
                     key: "sent",
                     changes: { selectedOrganization: value },
-                  })
+                  }),
                 )
               }
             >
@@ -100,7 +107,7 @@ function MainDetail() {
                   setReportsFilter({
                     key: "sent",
                     changes: { selectedStatement: value },
-                  })
+                  }),
                 )
               }
             >
@@ -129,7 +136,7 @@ function MainDetail() {
                       <SelectItem key={child.id} value={child.id}>
                         {child.name}
                       </SelectItem>
-                    ))
+                    )),
                   )}
               </SelectContent>
             </Select>
@@ -143,7 +150,7 @@ function MainDetail() {
                   setReportsFilter({
                     key: "sent",
                     changes: { selectedPeriod: value },
-                  })
+                  }),
                 )
               }
             >
@@ -170,15 +177,15 @@ function MainDetail() {
               {t("reset")}
             </Button>
             <div className="flex justify-end">
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              exportReportsToExcel(reportsData, t, deadline_at)
-                            }
-                          >
-                            XLSX export
-                          </Button>
-                        </div>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  exportReportsToExcel(reportsData, t, deadline_at)
+                }
+              >
+                XLSX export
+              </Button>
+            </div>
           </div>
         </div>
         <TableReports data={reportsData} />

@@ -48,7 +48,7 @@ function TableReports({ data, deadline_at = false }: any) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data?.map((item: any) => (
+          {data?.results?.map((item: any) => (
             <TableRow
               key={item.id}
               className="h-[50px] cursor-pointer hover:bg-gray-100"
