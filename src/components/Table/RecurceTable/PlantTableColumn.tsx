@@ -596,7 +596,7 @@ import {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allReports?.map((item: any) => (
+                {allReports?.results?.map((item: any) => (
                   <TableRow
                     key={item.id}
                     className={`h-[50px] cursor-pointer hover:bg-gray-100 ${selectedRow?.id === item.id ? "bg-gray-200" : ""
