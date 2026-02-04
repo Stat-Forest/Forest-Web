@@ -5,6 +5,8 @@ import GolofitChart from "./GolofitChart";
 import TerrasaChart from "./TerassaChart";
 import { RootState } from "@/app/store";
 import { useGetDeadlinesReportQuery } from "@/services/reportsApi";
+import ZararkunandaChart from "./ZararkunandaChart";
+import YerOzlashtirishChart from "./YerOzlashtirishChart";
 
 function ReportChartItem({
   reportName,
@@ -47,6 +49,10 @@ function ReportChartItem({
     return <TerrasaChart lang={lang} deadlines={deadlines} />;
   } else if (reportName === "Golofit") {
     return <GolofitChart lang={lang} deadlines={deadlines} />;
+  } else if (reportName === "Yer o‘zlashtirish") {
+    return <YerOzlashtirishChart lang={lang} deadlines={deadlines} />;
+  } else if (reportName === "Zararkunanda va kasalliklarga qarshi kurashish") {
+    return <ZararkunandaChart lang={lang} deadlines={deadlines} />;
   } else {
     return <div></div>;
   }
