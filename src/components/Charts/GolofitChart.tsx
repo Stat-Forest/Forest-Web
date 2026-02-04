@@ -120,7 +120,7 @@ const GolofitChart = ({
         style={{ background: "white", borderRadius: "10px", filter: "none" }}
         className="shadow"
       >
-        <div className="flex items-center justify-end px-5 py-2">
+        <div className="flex items-center justify-between px-5 py-2">
           <div>
             <h2 className="text-lg font-semibold">{t("deadline")}</h2>
             <Select
