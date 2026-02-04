@@ -36,7 +36,7 @@ function Sidebar() {
     isLoading: userLoading,
     error: userError,
   } = useGetUsersReportQuery(
-    user_id ? { user_id, page: "", perPage: 10 } : skipToken
+    user_id ? { user_id, page: "", perPage: 10, search: "", organization: "", role: "" } : skipToken
   );
 
   if (sidebarLoading || userLoading) {

@@ -77,3 +77,13 @@ export const DocumentType = [
   { value: "tavsifnoma", label: "Tavsifnoma" },
   { value: "other", label: "Boshqa" },
 ];
+
+// constants/userRole.ts
+export const USER_ROLE = [
+  "super_admin",
+  "tashkilot_hodimi",
+  "rahbariyat",
+  "bolim_admin",
+  "tashkilot_rahbari",
+  "hududiy_boshqarma",
+]

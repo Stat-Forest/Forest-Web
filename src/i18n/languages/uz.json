@@ -271,5 +271,15 @@
   "error": "Xatolik",
   "noDataAvailable": "Ma'lumot mavjud emas",
   "fileNotFound": "Fayl manzili topilmadi!",
-  "downloadError": "Faylni yuklab bo'lmadi. Iltimos, brauzer konsolini tekshiring yoki administrator bilan bog'laning."
+  "downloadError": "Faylni yuklab bo'lmadi. Iltimos, brauzer konsolini tekshiring yoki administrator bilan bog'laning.",
+  "role": "Lavozim",
+  "roles": {
+    "super_admin": "Super admin",
+    "tashkilot_hodimi": "Tashkilot hodimi",
+    "rahbariyat": "Rahbariyat",
+    "bolim_admin": "Bo‘lim administratori",
+    "tashkilot_rahbari": "Tashkilot rahbari",
+    "hududiy_boshqarma": "Hududiy boshqarma"
+}
+
 }

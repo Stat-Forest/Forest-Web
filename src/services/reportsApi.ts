@@ -124,10 +124,10 @@ export const reportApi = createApi({
     }),
     getUsersReport: builder.query<
       any,
-      { user_id?: string; page: any; perPage: number }
+      { user_id?: string; page: any; perPage: number; search?: any; organization?: any; role?: string }
     >({
-      query: ({ user_id = "", page, perPage }) => ({
-        url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}`,
+      query: ({ user_id = "", page, perPage, search, organization, role }) => ({
+        url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}&first_name=${search}&organization=${organization}&role=${role}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
