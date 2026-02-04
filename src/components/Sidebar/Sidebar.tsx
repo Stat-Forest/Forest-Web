@@ -17,6 +17,7 @@ import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useSidebarMenu } from "@/services/sidebarMenu";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 function Sidebar() {
   const { t } = useTranslation();
@@ -36,7 +37,16 @@ function Sidebar() {
     isLoading: userLoading,
     error: userError,
   } = useGetUsersReportQuery(
-    user_id ? { user_id, page: "", perPage: 10, search: "", organization: "", role: "" } : skipToken
+    user_id
+      ? {
+          user_id,
+          page: "",
+          perPage: 10,
+          search: "",
+          organization: "",
+          role: "",
+        }
+      : skipToken,
   );
 
   if (sidebarLoading || userLoading) {
@@ -63,7 +73,11 @@ function Sidebar() {
             <div className="sidebar-menu-item cursor-pointer p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40">
               {item.icon && (
                 <img
-                  src={item.icon.startsWith("http://") ? item.icon.replace("http://", "https://") : item.icon}
+                  src={
+                    item.icon.startsWith("http://")
+                      ? item.icon.replace("http://", "https://")
+                      : item.icon
+                  }
                   alt=""
                   className="w-5 h-5 transition-transform duration-200 group-hover:scale-110"
                   onError={(e) => {
@@ -101,7 +115,9 @@ function Sidebar() {
                   }
                 >
                   <FileText size={20} />
-                  <h2 className="text-[14px] font-medium flex-1">{t(child.name)}</h2>
+                  <h2 className="text-[14px] font-medium flex-1">
+                    {t(child.name)}
+                  </h2>
                   <div className="indicator w-2 h-2 rounded-full bg-blue-400 transition-opacity"></div>
                 </NavLink>
               ))}
@@ -116,15 +132,19 @@ function Sidebar() {
         to={item.path}
         key={item.id}
         className={({ isActive }) =>
-        `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
-          isActive
-            ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
-            : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
-        }`
-      }
+          `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
+            isActive
+              ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
+              : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
+          }`
+        }
       >
         {item.default_icon && (
-          <img src={item.default_icon} alt="" className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+          <img
+            src={item.default_icon}
+            alt=""
+            className="w-5 h-5 transition-transform duration-200 group-hover:scale-110"
+          />
         )}
         <span className="font-medium flex-1">{t(item.name)}</span>
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -137,8 +157,16 @@ function Sidebar() {
       <div>
         {/* Header */}
         <div className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 backdrop-blur-sm shadow-lg border border-white/20">
-          <img width={40} height={40} src={logo} alt="logo" className="drop-shadow-lg" />
-          <h2 className="font-extrabold text-[20px] drop-shadow-md">STAT-URMON</h2>
+          <img
+            width={40}
+            height={40}
+            src={logo}
+            alt="logo"
+            className="drop-shadow-lg"
+          />
+          <h2 className="font-extrabold text-[20px] drop-shadow-md">
+            STAT-URMON
+          </h2>
         </div>
 
         {/* Foydalanuvchi kartochkasi */}
@@ -147,22 +175,21 @@ function Sidebar() {
             <div className="bg-white/30 backdrop-blur-md h-[50px] w-[50px] flex items-center justify-center rounded-3xl shadow-lg border border-white/40">
               <User2 className="text-white drop-shadow-md" size={24} />
             </div>
-             <h3 className="font-bold text-white text-lg drop-shadow-md">
+            <h3 className="font-bold text-white text-lg drop-shadow-md">
               {user?.results[0]?.first_name || ""} <br />
               {user?.results[0]?.last_name || ""}
             </h3>
           </div>
           <div className="flex flex-col gap-2">
-
             <div className="flex items-center gap-2 text-left">
               {/* <span className="text-[white] text-[16px] font-light">
                 {t("user_role")}: 
               </span> */}
               <h3 className="font-bold text-white text-[18px] drop-shadow-sm">
-                {user?.results[0]?.role || ""}
+                {user?.results[0]?.role_display || ""}
               </h3>
             </div>
-            <hr className="border-white/30" />
+            <hr className="border-white" />
             {/* <div className="flex items-center gap-2 text-left">
               <span className="text-[white] text-[16px] font-light">
                 {t("item_78")}:
@@ -180,6 +207,26 @@ function Sidebar() {
                   {user?.results[0]?.organization_name || ""}
                 </h3>
               </div>
+            )}
+             {user?.results[0]?.role === "hududiy_boshqarma" && (
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem className="text-white" value="organizations">
+                  <AccordionTrigger className="text-lg font-bold [&>svg]:text-white [&>svg]:text-3xl cursor-pointer">{user?.results[0]?.region_display}</AccordionTrigger>
+
+                  <AccordionContent>
+                    <ul className="space-y-2">
+                      {user?.results[0]?.region_user_orgs?.map((org:any) => (
+                        <li
+                          key={org}
+                          className="border rounded-md px-3 py-2 text-sm"
+                        >
+                         {org}
+                        </li>
+                      ))}
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             )}
           </div>
         </div>
