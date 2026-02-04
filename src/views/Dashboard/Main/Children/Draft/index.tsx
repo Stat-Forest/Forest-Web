@@ -13,19 +13,24 @@ import {
   useGetAllReportsQuery,
   useGetStatementsReportQuery,
 } from "@/services/reportsApi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { getSimpleCookie } from "@/utils/cookie";
 import { exportReportsToExcel } from "@/utils/exportToExcel";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function Draft() {
   const [selectedOrganization, setSelectedOrganization] = useState("");
-  const lang = getSimpleCookie("lang") || "uz";
   const [selectedStatement, setSelectedStatement] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
   const deadline_at = false;
+
   const {
     data: reportsData,
     isLoading: isReportsLoading,
@@ -36,7 +41,10 @@ function Draft() {
     organization__region: selectedOrganization,
     statement__period: selectedPeriod,
     search: searchTerm,
+    page: currentPage,
+    per_page: pageSize,
   });
+
   const {
     data: statement,
     isLoading: isStatementLoading,
@@ -44,10 +52,124 @@ function Draft() {
   } = useGetStatementsReportQuery({
     lang,
   });
+
+  // Har qanday filter o'zgarganida sahifani 1 ga qaytarish
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedOrganization, selectedStatement, selectedPeriod, searchTerm]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleReset = () => {
+    setSelectedOrganization("");
+    setSelectedPeriod("");
+    setSearchTerm("");
+    setSelectedStatement("");
+    setCurrentPage(1);
+  };
+
+  // Pagination component
+  const PaginationComponent = () => {
+    if (!reportsData || reportsData.count <= pageSize) return null;
+
+    const totalPages = Math.ceil(reportsData.count / pageSize);
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <div className="flex items-center justify-between mt-6 px-4">
+        <div className="text-sm text-gray-600">
+          {t("showing") || "Ko'rsatilmoqda"} {(currentPage - 1) * pageSize + 1}{" "}
+          - {Math.min(currentPage * pageSize, reportsData.count)}{" "}
+          {t("of") || "dan"} {reportsData.count} {t("results") || "natija"}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          {startPage > 1 && (
+            <>
+              <Button
+                variant={1 === currentPage ? "default" : "outline"}
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => handlePageChange(1)}
+              >
+                1
+              </Button>
+              {startPage > 2 && <span className="px-2">...</span>}
+            </>
+          )}
+
+          {pages.map((page) => (
+            <Button
+              key={page}
+              variant={page === currentPage ? "default" : "outline"}
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </Button>
+          ))}
+
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && <span className="px-2">...</span>}
+              <Button
+                variant={totalPages === currentPage ? "default" : "outline"}
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => handlePageChange(totalPages)}
+              >
+                {totalPages}
+              </Button>
+            </>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="px-5 w-full">
-      {isReportsLoading && <h1>Yuklanmoqda...</h1>}
+      {isReportsLoading && (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Yuklanmoqda...</div>
+        </div>
+      )}
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
+
       <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <div>
@@ -83,23 +205,20 @@ function Draft() {
               onValueChange={setSelectedStatement}
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder="Yo‘nalishni tanlang" />
+                <SelectValue placeholder="Yo'nalishni tanlang" />
               </SelectTrigger>
 
               <SelectContent>
-                {/* LOADING */}
                 {isStatementLoading && (
                   <div className="px-3 py-2 text-gray-500">Yuklanmoqda...</div>
                 )}
 
-                {/* ERROR */}
                 {statementError && (
                   <div className="px-3 py-2 text-red-500">
                     Xatolik yuz berdi! Ma'lumotlar olinmadi.
                   </div>
                 )}
 
-                {/* CHILDREN LIST */}
                 {!isStatementLoading &&
                   !statementError &&
                   statement?.results?.flatMap((parent: any) =>
@@ -133,12 +252,7 @@ function Draft() {
 
           <div className="flex items-center gap-5">
             <Button
-              onClick={() => {
-                setSelectedOrganization("");
-                setSelectedPeriod("");
-                setSearchTerm("");
-                setSelectedStatement("");
-              }}
+              onClick={handleReset}
               className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
             >
               {t("reset")}
@@ -155,7 +269,14 @@ function Draft() {
             </div>
           </div>
         </div>
-        <TableReports data={reportsData} />
+
+        <TableReports
+          data={reportsData?.results || []}
+          deadline_at={deadline_at}
+        />
+
+        {/* Pagination */}
+        {reportsData?.count > 0 && <PaginationComponent />}
       </div>
     </div>
   );
