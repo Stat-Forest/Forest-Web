@@ -120,7 +120,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
         page: deadlinePage,
         perPage,
         statement__period: "",
-        is_new_deadline: "",
+        is_new_deadline: "false",
       },
       { skip: !id },
     );
