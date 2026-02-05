@@ -63,7 +63,6 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
-
   // ✅ tableHeadersData ni birinchi bo'lib e'lon qilamiz
   const {
     data: tableHeadersData = [],
@@ -71,7 +70,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
     isError: isErrorHeaders,
   } = useGetStatementColumnsReportQuery(
     { statementId: id || "", lang, isUser: "" },
-    { skip: !id }
+    { skip: !id },
   );
 
   // AOS'ni lazy load qilamiz - blocking operatsiyalarni oldini olish uchun
@@ -121,9 +120,9 @@ function ResourceContainer({ reportName }: { reportName: string }) {
         page: deadlinePage,
         perPage,
         statement__period: "",
-        is_new_deadline:""
+        is_new_deadline: "",
       },
-      { skip: !id }
+      { skip: !id },
     );
 
   const {
@@ -133,16 +132,16 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   } = useGetAllReportsQuery(
     id
       ? {
-        statement: id,
-        status: `status=${selectedStatusReport}`,
-        organization__region: selectedOrganizationReport,
-        statement__period: selectedPeriodReport,
-        search: searchTermReport,
-        page: 1,
-        per_page: 2000,
-        // time_status: "",
-      }
-      : skipToken
+          statement: id,
+          status: `status=${selectedStatusReport}`,
+          organization__region: selectedOrganizationReport,
+          statement__period: selectedPeriodReport,
+          search: searchTermReport,
+          page: 1,
+          per_page: 2000,
+          // time_status: "",
+        }
+      : skipToken,
   );
 
   const [
@@ -179,7 +178,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       deadline: selectedRow?.deadline || "",
       organization: selectedRow?.organization || "",
     },
-    { skip: !id || !selectedRow?.deadline || !selectedRow?.organization }
+    { skip: !id || !selectedRow?.deadline || !selectedRow?.organization },
   );
 
   const isLoading =
@@ -250,7 +249,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
           // 🔹 barcha activeLeafIds bo'yicha bo'sh ustunlarni qo'shamiz
           const normalizedColumns = activeLeafIds.map((colId) => {
             const found = filteredColumns.find(
-              (c: any) => c.statement_column_id === colId
+              (c: any) => c.statement_column_id === colId,
             );
             return (
               found || { statement_column_id: colId, value: "-", inners: [] }
@@ -261,7 +260,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
             ...reportItem,
             statement_columns: normalizedColumns,
           };
-        }
+        },
       );
 
       return {
@@ -287,12 +286,11 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       report_items: (row.report_items || []).map((reportItem: any) => ({
         ...reportItem,
         statement_columns: (reportItem.statement_columns || []).filter(
-          (col: any) => activeLeafIds.includes(col.statement_column_id)
+          (col: any) => activeLeafIds.includes(col.statement_column_id),
         ),
       })),
     }));
   }, [individualReports, activeLeafIds]);
-
 
   // 🔹 Print HTML yaratish funksiyasi (PDF export uchun ham ishlatiladi)
   const getPrintHTML = (): string => {
@@ -459,14 +457,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                 <div class="print-title">${reportName}</div>
                 <div class="print-subtitle">${activeTab}</div>
                 <div class="print-date">${new Date().toLocaleDateString(
-          "uz-UZ",
-          {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            weekday: "long",
-          }
-        )}</div>
+                  "uz-UZ",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "long",
+                  },
+                )}</div>
               </div>
               
               <div class="print-section">
@@ -497,7 +495,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
   // 🔹 Yangi: To'g'ri print funksiyasi
   const handlePrint = () => {
     const printHTML = getPrintHTML();
-    
+
     if (!printHTML) {
       alert("Chop etish uchun ma'lumotlar topilmadi!");
       return;
@@ -509,11 +507,10 @@ function ResourceContainer({ reportName }: { reportName: string }) {
       printWindow.document.close();
     } else {
       alert(
-        "Pop-up bloklandi. Iltimas, brauzeringizda pop-up'larni ruxsat bering."
+        "Pop-up bloklandi. Iltimas, brauzeringizda pop-up'larni ruxsat bering.",
       );
     }
   };
-
 
   // Skeleton Loading Components
   const TabSkeleton = () => (
@@ -657,12 +654,14 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   {/* Filters */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
-                    {(user_role === "tashkilot_hodimi" ||
-                      user_role === "hududiy_boshqarma") && (reportName != "Ko'chat va Nihol Yetishtirish Jami") && (
+                    {user_role === "tashkilot_hodimi" &&
+                      reportName != "Ko'chat va Nihol Yetishtirish Jami" && (
                         <button
                           className="bg-[#3B82F6] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#2563EB] transition-colors duration-300"
                           onClick={() =>
-                            navigate(`/resource-management/create/${reportName}`)
+                            navigate(
+                              `/resource-management/create/${reportName}`,
+                            )
                           }
                         >
                           {t("createNewReport")}
@@ -722,7 +721,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                               const found = (
                                 reportItem.statement_columns || []
                               ).find(
-                                (c: any) => c.statement_column_id === colId
+                                (c: any) => c.statement_column_id === colId,
                               );
                               return (
                                 found || {
@@ -731,7 +730,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                                   inners: [],
                                 }
                               );
-                            }
+                            },
                           );
 
                           return {
