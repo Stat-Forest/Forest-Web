@@ -121,7 +121,7 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
         page: deadlinePage,
         perPage,
         statement__period: "",
-        is_new_deadline: "true",
+        is_new_deadline: "",
       },
       { skip: !id },
     );
