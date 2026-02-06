@@ -18,11 +18,11 @@ function Auth() {
         
         <Outlet />
         {/* <Login /> */}
-        <div>
+        <div className="bg-white py-1 px-2 rounded-2xl">
           <span className="text-[18px] text-blue-800">
             © 2025 "{t('compny_name')}" {t("auth_bottom")}
             <NavLink
-              className={"text-[#fff] px-2"}
+              className={"text-[#2f12ee] px-2"}
               to={"tel:+998 71 207 88 77 (1010)"}
             >
               +998 71 207 88 77 ({t('phone_extension')}: 1010)

@@ -20,6 +20,7 @@ import {
   Usb,
   Key,
   LogIn,
+  VideoIcon,
 } from "lucide-react";
 
 declare global {
@@ -261,7 +262,10 @@ function Login() {
         uiShowMessage("USB-token topilmadi. Iltimos, token ulang.", "error");
       } else if (errorMessage.includes("PIN") || errorMessage.includes("pin")) {
         uiShowMessage("PIN-kod noto'g'ri yoki token bloklangan.", "error");
-      } else if (errorMessage.includes("expired") || errorMessage.includes("muddati")) {
+      } else if (
+        errorMessage.includes("expired") ||
+        errorMessage.includes("muddati")
+      ) {
         uiShowMessage("Sertifikatning muddati tugagan.", "error");
       } else {
         uiShowMessage(errorMessage, "error");
@@ -470,7 +474,7 @@ function Login() {
           if (e) {
             wsError(e);
           }
-        }
+        },
       );
     } catch (err) {
       uiHideProgress();
@@ -583,10 +587,17 @@ function Login() {
     <div className="flex items-center justify-center bg-white rounded-2xl">
       <div className=" w-full max-w-xl rounded-2xl shadow-xl px-8 py-8 flex flex-col gap-5">
         {/* Header */}
-        <div className="text-center">
+        <div className="text-center flex justify-between items-center mb-1">
           <h2 className="text-3xl font-bold text-gray-800">
             {t("loginTitle")}
           </h2>
+          <Button
+            className="bg-[#3B82F6] h-[44px] font-bold w-[180px] hover:bg-[#2563EB]"
+            onClick={() => navigate("/auth/auth_video")}
+          >
+            <VideoIcon size={40} />
+            {t("item_65")}
+          </Button>
         </div>
 
         {/* Login method selection */}
@@ -938,8 +949,6 @@ function Login() {
                 {t("enter")}
               </Button>
             </form>
-
-            
           </TabsContent>
         </Tabs>
 
