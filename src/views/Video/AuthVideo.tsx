@@ -1,15 +1,11 @@
+import login_video from "@/assets/video/auth_login.mp4";
+
 function AuthVideo() {
   const videos = [
     {
       id: 1,
       title: "Tizimga kirish bo'yicha video qo'llanma",
-      link: "https://drive.google.com/file/d/1QEOocGmnE2Dultee6QZkp2JQ_838ZTQr/preview",
-    },
-    {
-      id: 2,
-      title:
-        "Tizimga kirishda elektron imzodan foydalanish bo'yicha video qo'llanma",
-      link: "https://drive.google.com/file/d/1oZWfiTpEBAMAYWI0ZZaAl7azwLFkSlNK/preview",
+      link: login_video,
     },
   ];
 
@@ -18,12 +14,13 @@ function AuthVideo() {
       {videos.map((video) => (
         <div key={video.id} className="rounded-xl border shadow p-4 bg-white">
           <h3 className="text-lg font-semibold mb-3">{video.title}</h3>
+
           <div className="aspect-video">
-            <iframe
+            <video
               src={video.link}
               className="w-full h-full rounded-lg"
-              allow="autoplay"
-              allowFullScreen
+              controls
+              preload="metadata"
             />
           </div>
         </div>
