@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { Button } from "../ui/button";
 import { useTranslation } from "react-i18next";
+import { VideoIcon } from "lucide-react";
 
 function AuthHeader() {
   const dispatch = useDispatch();
@@ -49,6 +50,15 @@ function AuthHeader() {
             className="text-white font-semibold text-[15px] bg-[#3B82F6] rounded-[10px] py-[21px] px-[20px] hover:bg-[#2563EB] cursor-pointer"
           >
             Kirish
+          </Button>
+        )}
+        {location.pathname == "/auth" && (
+          <Button
+            className="bg-[#3B82F6] h-[44px] font-bold w-[180px] hover:bg-[#2563EB]"
+            onClick={() => navigate("/auth/auth_video")}
+          >
+            <VideoIcon size={40} />
+            {t("item_65")}
           </Button>
         )}
         {location.pathname == "/auth" && (
