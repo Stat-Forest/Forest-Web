@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { base_url } from "./baseUrl";
 import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { decryptData } from "@/utils/crypto";
+import { DeadlineMonthResponse } from "@/types/reportInterface";
 
 export const reportApi = createApi({
   reducerPath: "reportApi",
@@ -104,6 +105,13 @@ export const reportApi = createApi({
       },
       providesTags: ["Reports"],
     }),
+    getLoginStatDeadline: builder.query<DeadlineMonthResponse, any>({
+      query: ({ page = 1, per_page = 2000, period_type }) => ({
+        url: `/login-stat-deadlines/?page=${page}&per_page=${per_page}&period_type=${period_type}`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
     getReportItemsReport: builder.query<any, void>({
       query: () => ({ url: `/report-items/`, method: "GET" }),
       providesTags: ["Reports"],
@@ -128,7 +136,14 @@ export const reportApi = createApi({
     }),
     getUsersReport: builder.query<
       any,
-      { user_id?: string; page: any; perPage: number; search?: any; organization?: any; role?: string }
+      {
+        user_id?: string;
+        page: any;
+        perPage: number;
+        search?: any;
+        organization?: any;
+        role?: string;
+      }
     >({
       query: ({ user_id = "", page, perPage, search, organization, role }) => ({
         url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}&first_name=${search}&organization=${organization}&role=${role}`,
@@ -176,8 +191,8 @@ export const reportApi = createApi({
       any,
       { statement: string; region: string; deadline: string }
     >({
-      query: ({ statement, region, deadline }) => ({
-        url: `/regional/?statement=${statement}&region=${region}&deadline=${deadline}`,
+      query: ({ statement, region = "", deadline }) => ({
+        url: `/filtered-general/?statement=${statement}&region=${region}&deadline=${deadline}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -427,7 +442,7 @@ export const reportApi = createApi({
       }),
       invalidatesTags: ["Reports"],
     }),
-    
+
     // ==== 🟥 DELETE endpoint ====
     deleteReport: builder.mutation({
       query: (id: string | number) => ({
@@ -495,6 +510,7 @@ export const {
   useLazyGetReganalReportQuery,
   useGetReportPlantQuery,
   useGetReportPlantByIdQuery,
+  useGetLoginStatDeadlineQuery,
 
   // POST
   useCreateReportMutation,
@@ -514,7 +530,7 @@ export const {
   useUpdatePlanMutation,
 
   // PATCH
-    usePatchPlantReportMutation,
+  usePatchPlantReportMutation,
 
   // DELETE
   useDeleteReportMutation,

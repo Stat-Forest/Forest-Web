@@ -28,3 +28,13 @@ export interface ReportRow {
   deadline: string;
   organization: string;
 }
+
+export interface DeadlineItem {
+  submit_at: string;
+  // agar boshqa fieldlar bo‘lsa shu yerga qo‘shing
+}
+
+export interface DeadlineMonthResponse {
+  period_type: any;
+  results: DeadlineItem[];
+}

@@ -32,7 +32,10 @@ export const generalApi = createApi({
       query: () => `/handbooks/`,
       providesTags: ["Reports"],
     }),
-
+    getLandStatistics: builder.query<any, { lang: string }>({
+      query: ({ lang }) => `/lands/?lang=${lang}`,
+      providesTags: ["Reports"],
+    }),
     landDocumentCreate: builder.mutation({
       query: (payload) => ({
         url: `/land-documents/`,
@@ -51,5 +54,6 @@ export const {
   useGetNotificationReportsQuery,
   useGetLandDocumentsReportsQuery,
   useGetHandbooksQuery,
-  useLandDocumentCreateMutation
+  useLandDocumentCreateMutation,
+  useGetLandStatisticsQuery,
 } = generalApi;
