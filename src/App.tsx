@@ -10,6 +10,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { setCookie } from "./utils/cookie";
 import AuthVideo from "./views/Video/AuthVideo";
+import Landing from "./views/Landing";
 
 // Lazy loading - code splitting uchun
 const Auth = lazy(() => import("./views/Auth/Auth"));
@@ -97,7 +98,7 @@ function App() {
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="auth_video" element={<AuthVideo />} />
           </Route>
-          {/* <Route path="/" element={<Landing />} /> */}
+          <Route path="/" element={<Landing />} />
           <Route
             path="/*"
             element={

@@ -32,7 +32,7 @@ function AuthHeader() {
     navigate(currentPath.join("/"));
   };
   return (
-    <div className="fixed top-0 w-full flex justify-between items-center">
+    <div className="w-full flex justify-between items-center z-99">
       <div className="h-[82px] max-w-[320px] w-full flex items-center justify-center text-black gap-3">
         <img width={80} height={80} src={logo} alt="logo" />
         <h2
