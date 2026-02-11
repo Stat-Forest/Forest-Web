@@ -434,7 +434,7 @@ function CreateReport() {
                   {t("error_occurred")}
                 </div>
               )}
-              {statment?.results.flatMap((item: any) =>
+              {statment?.flatMap((item: any) =>
                 item.children.map((child: any) => (
                   <SelectItem key={child.id} value={String(child.id)}>
                     {child.name}
