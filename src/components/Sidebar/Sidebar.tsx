@@ -233,7 +233,7 @@ function Sidebar() {
 
         {/* Sidebar menyulari */}
         <nav className="mt-4 flex flex-col gap-2">
-          {[...sidebar_menu, ...(sidebarData.results || []), ...sidebar_3]
+          {[...sidebar_menu, ...(sidebarData || []), ...sidebar_3]
             .flat()
             .map(renderNavItem)}
         </nav>
