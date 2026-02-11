@@ -1,3 +1,5 @@
+"use client";
+
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useGetLoginStatsQuery } from "@/services/statistikApi";
 import {
@@ -25,7 +27,17 @@ import {
 import { useGetLoginStatDeadlineQuery } from "@/services/reportsApi";
 import { useTranslation } from "react-i18next";
 
-/* ---------------- ICON CONFIG ---------------- */
+/* ---------------- TYPES ---------------- */
+type StatItem = {
+  column_name: string;
+  unit: string;
+  plan: number;
+  actual: number;
+  percentage: number;
+  status?: string;
+};
+
+/* ---------------- ICON CONFIG (CANONICAL UZ KEYS) ---------------- */
 const CARD_META: Record<string, { icon: any; iconBg: string }> = {
   "O'rmon bilan qoplangan yer maydonlari": {
     icon: Trees,
@@ -63,15 +75,26 @@ const CARD_META: Record<string, { icon: any; iconBg: string }> = {
   },
 };
 
-/* ---------------- TYPES ---------------- */
-type StatItem = {
-  column_name: string;
-  unit: string;
-  plan: number;
-  actual: number;
-  percentage: number;
-  status?: string;
+/* ---------------- RU → UZ NORMALIZER ---------------- */
+const NAME_MAP: Record<string, string> = {
+  "Земли, покрытые лесом": "O'rmon bilan qoplangan yer maydonlari",
+  "Освоение лесных земель":
+    "O'rmon yerlarini o'zlashtirib, foydalanishga kiritish",
+  "Создание плантаций лекарственных растений":
+    "Dorivor o'simliklar plantatsiyalarini barpo etish",
+  "Подготовка сырья лекарственных растений":
+    "Dorivor o'simliklar xomashyosini tayyorlash",
+  "Создание защитных лесопосадок в пустынных и горных районах":
+    "Cho'l, tog'li va tog'oldi hududlarida himoya o'rmonzorlari (ihota) barpo etish",
+  "Создание питомников и рассадников":
+    "Niholxona va ko'chatchonalar tashkil etish",
+  "Создание зелёного покрытия в Приаральском и других пустынных районах":
+    "Orolbo'yi mintaqasi va boshqa cho'l hududlarida yashil qoplama barpo etish",
+  "В том числе выращивание шелковичных саженцев":
+    "Jumladan, tut ko'chatlari yetishtirish",
 };
+
+const normalizeName = (name: string) => NAME_MAP[name] ?? name;
 
 /* ---------------- PAGE ---------------- */
 export default function Landing() {
@@ -97,97 +120,92 @@ export default function Landing() {
   const { data: deadlineMonth } = useGetLoginStatDeadlineQuery({
     period_type: "monthly",
   });
+
   const { data: deadlineYear } = useGetLoginStatDeadlineQuery({
     period_type: "yearly",
   });
 
   return (
     <div className="min-h-screen bg-[#F4FAF3]">
-      {/* HEADER */}
-      <AuthHeader position={true} />
+      <AuthHeader position />
 
       <div className="max-w-[1800px] mx-auto px-6 py-10">
-        {/* TOP SECTION */}
-        <div className="flex flex-col lg:flex-row items-center gap-3 mb-10">
-          <div className="flex items-center gap-10">
-            <img src={langin_icon} alt="" />
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-snug">
+        {/* TOP */}
+        <div className="flex flex-col lg:flex-row items-center gap-6 mb-10">
+          <div className="flex items-center gap-6">
+            <img src={langin_icon} alt="icon" />
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
               {t("landing_1")}
             </h1>
           </div>
 
-          <div className="lg:w-[60%] bg-white border border-gray-300 rounded-2xl p-6">
-            <h2 className="text-xl font-bold">Barcha O'rmon yer maydonlari</h2>
+          <div className="lg:w-[60%] w-full bg-white border rounded-2xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">{t("landing_4")}</h2>
             <PieChartLanding />
           </div>
         </div>
 
-        {/* YEARLY CARDS */}
-        <div className="flex items-center gap-10 py-6">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Yillik ko‘rsatkichlar
-          </h2>
-          <Select onValueChange={setYearly} value={yearly}>
-            <SelectTrigger>
-              <SelectValue placeholder="Yilni tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {deadlineYear?.results?.map((item: any, idx: number) => (
-                <SelectItem key={idx} value={item.submit_at}>
-                  {item.submit_at}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {year.length > 0 ? (
-            year.map((item: StatItem, idx: number) => (
-              <StatCard key={idx} item={item} />
-            ))
-          ) : (
-            <p className="text-gray-500 col-span-full">Ma'lumot mavjud emas</p>
-          )}
-        </div>
-        <br />
-        {/* MONTHLY CARDS */}
-        <div className="flex items-center gap-10 py-6">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Oylik ko‘rsatkichlar
-          </h2>
-          <Select onValueChange={setMonthly} value={monthly}>
-            <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Oylikni tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {deadlineMonth?.results?.map((item: any, idx: number) => (
-                <SelectItem key={idx} value={item.submit_at}>
-                  {item.submit_at}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {month.length > 0 ? (
-            month.map((item: StatItem, idx: number) => (
-              <StatCard key={idx} item={item} />
-            ))
-          ) : (
-            <p className="text-gray-500 col-span-full">Ma'lumot mavjud emas</p>
-          )}
-        </div>
+        {/* YEARLY */}
+        <Section
+          title={t("landing_2")}
+          value={yearly}
+          onChange={setYearly}
+          options={deadlineYear?.results}
+          data={year}
+        />
+
+        {/* MONTHLY */}
+        <Section
+          title={t("landing_3")}
+          value={monthly}
+          onChange={setMonthly}
+          options={deadlineMonth?.results}
+          data={month}
+        />
       </div>
     </div>
   );
 }
 
-/* ---------------- CARD COMPONENT ---------------- */
+/* ---------------- REUSABLE SECTION ---------------- */
+function Section({ title, value, onChange, options, data }: any) {
+  return (
+    <>
+      <div className="flex items-center gap-6 py-6">
+        <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+
+        <Select onValueChange={onChange} value={value}>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            {options?.map((item: any, idx: number) => (
+              <SelectItem key={idx} value={item.submit_at}>
+                {item.submit_at}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {data?.length > 0 ? (
+          data.map((item: StatItem, idx: number) => (
+            <StatCard key={idx} item={item} />
+          ))
+        ) : (
+          <p className="text-gray-500 col-span-full">Ma'lumot mavjud emas</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ---------------- CARD ---------------- */
 function StatCard({ item }: { item: StatItem }) {
   const percent =
     item.plan > 0 ? Math.min(Math.round(item.percentage), 100) : 0;
 
-  // Color for text and progress bar
   const statusColor =
     percent >= 100
       ? "text-green-700"
@@ -206,34 +224,30 @@ function StatCard({ item }: { item: StatItem }) {
           ? "bg-yellow-500"
           : "bg-red-500";
 
-  const meta = CARD_META[item.column_name];
-  const Icon = meta?.icon ?? Leaf; // fallback icon
+  const normalizedName = normalizeName(item.column_name);
+  const meta = CARD_META[normalizedName];
+
+  const Icon = meta?.icon ?? Leaf;
   const iconBg = meta?.iconBg ?? "bg-gray-100 text-gray-600";
 
   return (
     <div className="bg-[#F1F7E8] border border-green-200 rounded-2xl p-5 flex flex-col gap-4 hover:shadow-md transition">
-      {/* ICON */}
       <div
         className={`w-14 h-14 rounded-xl flex items-center justify-center ${iconBg}`}
       >
-        <Icon size={25} strokeWidth={2} />
+        <Icon size={24} />
       </div>
 
-      {/* TITLE */}
-      <p className="text-sm font-semibold text-gray-900 leading-snug">
-        {item.column_name}
-      </p>
+      <p className="text-sm font-semibold text-gray-900">{item.column_name}</p>
 
-      {/* VALUE */}
-      <p className="text-3xl font-extrabold text-red-600 leading-none">
+      <p className="text-3xl font-extrabold text-red-600">
         {item.actual.toLocaleString()}
         <span className="text-base font-bold text-blue-600 ml-2">
           {item.unit}
         </span>
       </p>
 
-      {/* PROGRESS */}
-      <div className="flex justify-between items-center text-sm">
+      <div className="flex justify-between text-sm">
         <span className="text-gray-600">
           Reja: {item.plan.toLocaleString()} {item.unit}
         </span>
@@ -242,7 +256,7 @@ function StatCard({ item }: { item: StatItem }) {
 
       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className={`h-2 rounded-full transition-all duration-500 ${progressBarColor}`}
+          className={`h-2 rounded-full transition-all duration-700 ${progressBarColor}`}
           style={{ width: `${percent}%` }}
         />
       </div>

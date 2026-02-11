@@ -1,10 +1,13 @@
 "use client";
 
+import { RootState } from "@/app/store";
 import { useGetLandStatisticsQuery } from "@/services/generalApi";
+import { useSelector } from "react-redux";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function PieChartLanding() {
-  const { data, isLoading } = useGetLandStatisticsQuery({ lang: "uz" });
+  const lang = useSelector((state: RootState) => state.language.lang);
+  const { data, isLoading } = useGetLandStatisticsQuery({ lang });
 
   const COLORS = [
     "#2563EB",
