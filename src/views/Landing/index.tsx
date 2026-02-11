@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { useState } from "react";
 import PieChartLanding from "@/components/Charts/PieChart";
+import langin_icon from "@/assets/Group 1321321334.png";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetLoginStatDeadlineQuery } from "@/services/reportsApi";
+import { useTranslation } from "react-i18next";
 
 /* ---------------- ICON CONFIG ---------------- */
 const CARD_META: Record<string, { icon: any; iconBg: string }> = {
@@ -76,8 +78,9 @@ export default function Landing() {
   const lang = useSelector((state: RootState) => state.language.lang);
   const [monthly, setMonthly] = useState("");
   const [yearly, setYearly] = useState("");
+  const { t } = useTranslation();
 
-  const { data: month = [], } = useGetLoginStatsQuery({
+  const { data: month = [] } = useGetLoginStatsQuery({
     lang,
     monthly,
     statement_status: "month",
@@ -101,16 +104,20 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-[#F4FAF3]">
       {/* HEADER */}
-      <AuthHeader />
+      <AuthHeader position={true} />
 
-      <div className="max-w-[1400px] mx-auto px-6 py-10">
+      <div className="max-w-[1800px] mx-auto px-6 py-10">
         {/* TOP SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 items-center gap-8 mb-10">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-snug">
-            Ўрмон агентлиги томонидан амалга оширилган тадбир кўрсаткичлари
-          </h1>
+        <div className="flex flex-col lg:flex-row items-center gap-3 mb-10">
+          <div className="flex items-center gap-10">
+            <img src={langin_icon} alt="" />
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-snug">
+              {t("landing_1")}
+            </h1>
+          </div>
 
-          <div className="lg:col-span-2 bg-white border border-gray-300 rounded-2xl p-6">
+          <div className="lg:w-[60%] bg-white border border-gray-300 rounded-2xl p-6">
+            <h2 className="text-xl font-bold">Barcha O'rmon yer maydonlari</h2>
             <PieChartLanding />
           </div>
         </div>
@@ -207,9 +214,9 @@ function StatCard({ item }: { item: StatItem }) {
     <div className="bg-[#F1F7E8] border border-green-200 rounded-2xl p-5 flex flex-col gap-4 hover:shadow-md transition">
       {/* ICON */}
       <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center ${iconBg}`}
+        className={`w-14 h-14 rounded-xl flex items-center justify-center ${iconBg}`}
       >
-        <Icon size={22} strokeWidth={2} />
+        <Icon size={25} strokeWidth={2} />
       </div>
 
       {/* TITLE */}

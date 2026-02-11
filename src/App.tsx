@@ -91,6 +91,8 @@ function App() {
       />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
+          <Route path="/" element={<Landing />} />
+
           <Route path="/auth" element={<Auth />}>
             <Route index element={<Login />} />
             <Route path="forget-password" element={<ForgetPassword />} />
@@ -98,7 +100,7 @@ function App() {
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="auth_video" element={<AuthVideo />} />
           </Route>
-          <Route path="/" element={<Landing />} />
+
           <Route
             path="/*"
             element={
@@ -107,7 +109,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/unauthorized" element={<Navigate to="/auth" replace />} />
+
+          <Route path="/unauthorized" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </AppWrapper>
