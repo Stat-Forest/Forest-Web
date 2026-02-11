@@ -446,7 +446,21 @@ function AllCreateReportItem() {
 
             <Select
               value={selectedDeadlineId}
-              onValueChange={(val) => setSelectedDeadlineId(val)}
+              onValueChange={(val) => {
+                setSelectedDeadlineId(val);
+
+                // Find the selected item in the data
+                const selectedItem = deadlineData?.results?.find(
+                  (item: any) => item.id.toString() === val,
+                );
+
+                // Update yearPlan (or whatever display value you need)
+                setYearPlan(
+                  selectedItem
+                    ? formatDeadlineText(selectedItem.year)
+                    : "",
+                );
+              }}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue
@@ -485,7 +499,7 @@ function AllCreateReportItem() {
                     </SelectItem>
                   ))}
 
-                {/* AGAR BO‘SH BO‘LSA */}
+                {/* EMPTY */}
                 {!deadlineLoading &&
                   !deadlineError &&
                   deadlineData?.results?.length === 0 && (
@@ -539,20 +553,6 @@ function AllCreateReportItem() {
                   )}
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="year">{t("year")}</label>
-            <div className="flex flex-col gap-1">
-              <input
-              value={yearPlan}
-                onChange={(e) => setYearPlan(e.target.value)}
-                type="number"
-                className="no-spinner border border-gray-950 shadow py-1 rounded-md p-3"
-              />
-              <span className="text-sm">
-                Faqatkina "reja" mavjud bo'lgan hisobodlar uchun
-              </span>
-            </div>
           </div>
           {(reportIds == "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
             reportIds == "671577ba-6a86-4619-b31c-86fff20ad305") && (
