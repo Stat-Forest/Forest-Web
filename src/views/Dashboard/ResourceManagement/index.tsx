@@ -20,7 +20,7 @@ function ResourceManagement() {
     isError,
   } = useGetStatementsReportQuery({ lang });
 
-  const currentItem = statementData?.results?.find((parent: any) =>
+  const currentItem = statementData?.find((parent: any) =>
     parent.children?.some((child: any) => child.id === id)
   );
 
