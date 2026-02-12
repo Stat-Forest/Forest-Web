@@ -32,13 +32,21 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
 
-function findEmptyChildrenColumnIds(
-  children: any[],
-): { id: string; title: string; fullParentChain: string }[] {
-  const result: { id: string; title: string; fullParentChain: string }[] = [];
+interface ColumnItem {
+  id: string;
+  title: string;
+  fullParentChain: string;
+  is_organization?: boolean;
+  status_plan?: any;
+}
+
+function findEmptyChildrenColumnIds(children: any[]): ColumnItem[] {
+  const result: ColumnItem[] = [];
+
   const traverse = (cols: any[], parentChain: string[] = []) => {
     cols.forEach((col) => {
       const currentChain = [...parentChain, col.title];
+
       if (
         col.children &&
         Array.isArray(col.children) &&
@@ -50,10 +58,13 @@ function findEmptyChildrenColumnIds(
           id: col.id,
           title: col.title,
           fullParentChain: currentChain.join(" / "),
+          is_organization: col.is_organization ?? false,
+          status_plan: col.status_plan ?? null,
         });
       }
     });
   };
+
   traverse(children);
   return result;
 }
@@ -66,12 +77,16 @@ function AllCreateReportItem() {
   const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [footNote, setFootNote] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
-    { id: string; title: string; fullParentChain: string }[][]
+    ColumnItem[][]
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [planItems, setPlanItems] = useState<
-    { columnId: string; plan_value: string; fullParentChain: string }[]
+    {
+      columnId: string;
+      plan_value: string;
+      fullParentChain: string;
+    }[]
   >([]);
   const [yearPlan, setYearPlan] = useState<string>("");
 
@@ -96,7 +111,6 @@ function AllCreateReportItem() {
     { skip: !reportIds },
   );
 
-  // 🔹 Deadline state
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
@@ -129,15 +143,15 @@ function AllCreateReportItem() {
   }, [tableHeadersDataMemo]);
 
   useEffect(() => {
-    // Faqat o'zgarganda yangilash - JSON.stringify bilan solishtirish
     const currentString = JSON.stringify(allEmptyColumnsByStep);
     const newString = JSON.stringify(allEmptyColumnsByStepMemo);
 
     if (currentString !== newString) {
       setAllEmptyColumnsByStep(allEmptyColumnsByStepMemo);
       setCurrentStep(0);
+      // Tanlangan tashkilotni tozalash
+      setSelectedOrganizationId("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allEmptyColumnsByStepMemo]);
 
   // Boshlang'ich qiymatlar
@@ -146,18 +160,14 @@ function AllCreateReportItem() {
 
     const initialValues: Record<string, string> = {};
     allEmptyColumnsByStep[currentStep].forEach((col) => {
-      if (
-        !col.title.toLowerCase().includes("tashkilot nomi") &&
-        !col.title.toLowerCase().includes("Названия регионов") &&
-        !col.title.toLowerCase().includes("reja")
-      ) {
+      // Faqat oddiy input ustunlar uchun (tashkilot va reja emas)
+      if (!col.is_organization && col.status_plan == null) {
         if (!formValues[col.id]) {
           initialValues[col.id] = "";
         }
       }
     });
 
-    // Faqat yangi qiymatlar bo'lsa yangilash
     if (Object.keys(initialValues).length > 0) {
       setFormValues((prev) => {
         const hasNewValues = Object.keys(initialValues).some(
@@ -166,28 +176,27 @@ function AllCreateReportItem() {
         return hasNewValues ? { ...prev, ...initialValues } : prev;
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, allEmptyColumnsByStep]);
 
-  // 🔹 REJA MA'LUMOTLARI
+  // Reja ma'lumotlarini olish
   useEffect(() => {
     let isMounted = true;
 
     const fetchPlanDataForColumns = async () => {
       const rejaColumns = allEmptyColumnsByStep
         .flat()
-        .filter((col) => col.title.toLowerCase().includes("reja"));
+        .filter((col) => col.status_plan != null);
 
-      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
+      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId) {
+        setPlanItems([]);
         return;
+      }
 
-      // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin reja olinadi
       const hasSeasonSelect =
         reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
         reportIds === "671577ba-6a86-4619-b31c-86fff20ad305";
 
       if (hasSeasonSelect && !selectedSeason) {
-        // Season tanlanmagan bo'lsa, reja ma'lumotlarini tozalash
         setPlanItems([]);
         return;
       }
@@ -221,7 +230,7 @@ function AllCreateReportItem() {
       } catch (error) {
         if (isMounted) {
           console.error("Reja olishda xatolik:", error);
-          setFormErrors((prev) => [...prev, t("plan_fetch_error")]);
+          toast.error(t("plan_fetch_error"));
         }
       }
     };
@@ -235,7 +244,9 @@ function AllCreateReportItem() {
     selectedOrganizationId,
     reportIds,
     selectedSeason,
+    yearPlan,
     dispatch,
+    t,
   ]);
 
   const [
@@ -243,11 +254,10 @@ function AllCreateReportItem() {
     { isLoading: isSubmitting, error: createReportError },
   ] = useCreateReportMutation();
 
-  // 🔹 ERROR LARNI BOSHQARISH
+  // Error larni boshqarish
   useEffect(() => {
     const errors: string[] = [];
 
-    // Backend xatoliklarini qo'shish
     if (createReportError) {
       const errorData = (createReportError as any)?.data;
 
@@ -261,7 +271,6 @@ function AllCreateReportItem() {
       ) {
         errors.push(...errorData.non_field_errors);
       } else if (errorData && typeof errorData === "object") {
-        // Field xatoliklarini formatlash
         Object.keys(errorData).forEach((field) => {
           if (Array.isArray(errorData[field])) {
             errorData[field].forEach((errMsg: string) => {
@@ -276,7 +285,6 @@ function AllCreateReportItem() {
       }
     }
 
-    // Boshqa API xatoliklari
     if (headersError) {
       errors.push(t("columns_load_error"));
     }
@@ -292,11 +300,10 @@ function AllCreateReportItem() {
     if (errors.length > 0) {
       setFormErrors(errors);
     }
-  }, [createReportError, headersError, orgError, deadlineError]);
+  }, [createReportError, headersError, orgError, deadlineError, t]);
 
   const handleInputChange = (id: string, value: string) => {
     setFormValues((prev) => ({ ...prev, [id]: value }));
-    // Agar xatoliklar bo'lsa va foydalanuvchi qiymat o'zgartirsa, xatoliklarni tozalash
     if (formErrors.length > 0) {
       setFormErrors([]);
     }
@@ -309,51 +316,46 @@ function AllCreateReportItem() {
     const errors: string[] = [];
 
     if (!selectedDeadlineId) {
-      errors.push("Iltimos, deadline tanlang");
-    }
-    if (
-      allEmptyColumnsByStep[currentStep]?.some(
-        (col) =>
-          col.title.toLowerCase().includes("tashkilot nomi") ||
-          col.title.toLowerCase().includes("Названия регионов"),
-      ) &&
-      !selectedOrganizationId
-    ) {
-      errors.push("Iltimos, tashkilot tanlang");
+      errors.push(t("select_deadline_required"));
     }
 
+    // Tashkilot ustuni mavjudligini tekshirish
+    const hasOrganizationColumn = allEmptyColumnsByStep
+      .flat()
+      .some((col) => col.is_organization === true);
+
+    if (hasOrganizationColumn && !selectedOrganizationId) {
+      errors.push(t("select_organization_required"));
+    }
+
+    // Majburiy maydonlarni tekshirish (oddiy inputlar)
     allEmptyColumnsByStep[currentStep]?.forEach((col) => {
-      if (
-        !col.title.toLowerCase().includes("reja") &&
-        !col.title.toLowerCase().includes("tashkilot nomi") &&
-        !col.title.toLowerCase().includes("Названия регионов") &&
-        (!formValues[col.id] || formValues[col.id].toString().trim() === "")
-      ) {
-        errors.push(`"${col.fullParentChain}" uchun qiymat kiritish shart`);
+      if (!col.is_organization && col.status_plan == null) {
+        if (
+          !formValues[col.id] ||
+          formValues[col.id].toString().trim() === ""
+        ) {
+          errors.push(`"${col.fullParentChain}" ${t("field_required")}`);
+        }
       }
     });
 
     if (errors.length > 0) {
       setFormErrors(errors);
-      errors.forEach((err) => toast.error(err)); // 🔹 toast error ko‘rsatish
+      errors.forEach((err) => toast.error(err));
       return;
     }
 
     const allColumns = allEmptyColumnsByStep.flat();
 
     const report_items = allColumns.map((col) => {
-      const isOrganizationColumn =
-        col.title.toLowerCase().includes("tashkilot nomi") ||
-        col.title.toLowerCase().includes("Названия регионов");
-      const isRejaColumn = col.title.toLowerCase().includes("reja");
-
       let rawValue: string = "";
 
-      if (isOrganizationColumn) {
+      if (col.is_organization === true) {
         rawValue = selectedOrganizationId || "";
-      } else if (isRejaColumn) {
+      } else if (col.status_plan != null) {
         const planItem = planItems.find((item) => item.columnId === col.id);
-        rawValue = planItem ? planItem.plan_value : "";
+        rawValue = planItem?.plan_value || "";
       } else {
         rawValue = formValues[col.id] || "";
       }
@@ -374,31 +376,30 @@ function AllCreateReportItem() {
     try {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
+      toast.success(t("report_created_successfully"));
       navigate(-1);
       setFormValues({});
       setCurrentStep(0);
       setFormErrors([]);
-      toast.success(t("report_created_successfully")); // 🔹 success toast
     } catch (err: any) {
       console.error("Yuborishda xatolik:", err);
-      toast.error(err.message); // 🔹 umumiy error toast
+      toast.error(err?.data?.message || err?.message || t("submit_error"));
     }
   };
 
-  if (isHeaderLoading || isOrgLoading || deadlineLoading)
+  if (isHeaderLoading || isOrgLoading || deadlineLoading) {
     return <p className="p-4 text-lg">{t("loading")}</p>;
+  }
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
   const totalSteps = allEmptyColumnsByStep.length;
   const currentStepTitle =
-    tableHeadersData?.[currentStep]?.title ?? `Qadam ${currentStep + 1}`;
+    tableHeadersData?.[currentStep]?.title ?? `${t("step")} ${currentStep + 1}`;
 
-  // 🔹 Deadline matnini formatlash funksiyasi
   const formatDeadlineText = (submitAt: string) => {
     if (!submitAt) return t("unknown");
 
     if (submitAt.includes("CHORAK")) {
-      // "2025-CHORAK_1" -> "2025 yil 1-chorak"
       return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
     }
 
@@ -422,10 +423,10 @@ function AllCreateReportItem() {
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
-        {/* ✅ BARCHA XATOLIKLARNI KO'RSATISH */}
+        {/* Xatoliklar */}
         {formErrors.length > 0 && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <h3 className="font-bold text-lg mb-2">Xatoliklar:</h3>
+            <h3 className="font-bold text-lg mb-2">{t("errors")}:</h3>
             <ul className="list-disc list-inside space-y-1">
               {formErrors.map((error, idx) => (
                 <li key={idx} className="text-sm">
@@ -436,145 +437,123 @@ function AllCreateReportItem() {
           </div>
         )}
 
-        {/* ✅ TO'G'RILANGAN DEADLINE SELECT */}
-        {/* DEADLINE SELECT */}
+        {/* Deadline va Season */}
         <div className="flex flex-col gap-4 sm:flex-row">
           <div>
             <label className="block mb-1 text-lg font-medium">
               {t("deadline")}:
             </label>
-
             <Select
               value={selectedDeadlineId}
               onValueChange={(val) => {
                 setSelectedDeadlineId(val);
-
-                // Find the selected item in the data
                 const selectedItem = deadlineData?.results?.find(
                   (item: any) => item.id.toString() === val,
                 );
-
-                // Update yearPlan (or whatever display value you need)
                 setYearPlan(
                   selectedItem
-                    ? formatDeadlineText(selectedItem.year)
+                    ? formatDeadlineText(selectedItem.submit_at)
                     : "",
                 );
               }}
             >
               <SelectTrigger className="w-[300px]">
-                <SelectValue
-                  placeholder={
-                    deadlineLoading
-                      ? t("loading")
-                      : deadlineError
-                        ? t("loading_error")
-                        : t("selectDeadline")
-                  }
-                />
+                <SelectValue placeholder={t("selectDeadline")} />
               </SelectTrigger>
-
               <SelectContent>
-                {/* LOADING */}
                 {deadlineLoading && (
                   <div className="p-2 text-center text-muted-foreground text-sm">
                     {t("loading")}
                   </div>
                 )}
-
-                {/* ERROR */}
                 {deadlineError && (
                   <div className="p-2 text-center text-red-500 text-sm">
-                    Ma'lumotlarni yuklashda xatolik
+                    {t("loading_error")}
                   </div>
                 )}
-
-                {/* DATA */}
                 {!deadlineLoading &&
                   !deadlineError &&
-                  deadlineData?.results?.length > 0 &&
-                  deadlineData.results.map((item: any) => (
-                    <SelectItem key={item.id} value={item.id.toString()}>
-                      {formatDeadlineText(item.submit_at)}
-                    </SelectItem>
-                  ))}
-
-                {/* EMPTY */}
+                  deadlineData?.results?.length > 0 && (
+                    <>
+                      {deadlineData.results.map((item: any) => (
+                        <SelectItem key={item.id} value={item.id.toString()}>
+                          {formatDeadlineText(item.submit_at)}
+                        </SelectItem>
+                      ))}
+                      {deadlineData?.count > perPage && (
+                        <div className="flex items-center justify-between px-2 py-1 border-t">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={deadlinePage === 1}
+                            onClick={() =>
+                              setDeadlinePage((p) => Math.max(p - 1, 1))
+                            }
+                          >
+                            {t("before")}
+                          </Button>
+                          <span className="text-xs text-gray-500">
+                            {deadlinePage} /{" "}
+                            {Math.ceil(deadlineData.count / perPage)}
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={
+                              deadlinePage >=
+                              Math.ceil(deadlineData.count / perPage)
+                            }
+                            onClick={() =>
+                              setDeadlinePage((p) =>
+                                Math.min(
+                                  p + 1,
+                                  Math.ceil(deadlineData.count / perPage),
+                                ),
+                              )
+                            }
+                          >
+                            {t("next")}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 {!deadlineLoading &&
                   !deadlineError &&
                   deadlineData?.results?.length === 0 && (
                     <div className="p-2 text-center text-muted-foreground text-sm">
-                      Deadline mavjud emas
-                    </div>
-                  )}
-
-                {/* PAGINATION */}
-                {!deadlineLoading &&
-                  !deadlineError &&
-                  deadlineData?.count > perPage && (
-                    <div className="flex items-center justify-between px-2 py-1 border-t">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={deadlinePage === 1}
-                        onClick={() =>
-                          setDeadlinePage((p) => Math.max(p - 1, 1))
-                        }
-                      >
-                        {t("before")}
-                      </Button>
-
-                      <span className="text-xs text-gray-500">
-                        {deadlinePage} /{" "}
-                        {Math.ceil(deadlineData.count / perPage)}
-                      </span>
-
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={
-                          deadlinePage >=
-                          Math.ceil(deadlineData.count / perPage)
-                        }
-                        onClick={() =>
-                          setDeadlinePage((p) =>
-                            Math.min(
-                              p + 1,
-                              Math.ceil(deadlineData.count / perPage),
-                            ),
-                          )
-                        }
-                      >
-                        {t("next")}
-                      </Button>
+                      {t("no_deadlines")}
                     </div>
                   )}
               </SelectContent>
             </Select>
           </div>
-          {(reportIds == "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
-            reportIds == "671577ba-6a86-4619-b31c-86fff20ad305") && (
+
+          {(reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
+            reportIds === "671577ba-6a86-4619-b31c-86fff20ad305") && (
             <div>
-              <label className="block mb-1 text-lg font-medium">Season:</label>
+              <label className="block mb-1 text-lg font-medium">
+                {t("season")}:
+              </label>
               <Select
                 value={selectedSeason}
                 onValueChange={(val) => setSelectedSeason(val)}
               >
                 <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder="Tanlang" />
+                  <SelectValue placeholder={t("select_season")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="spring">Bahor</SelectItem>
-                  <SelectItem value="autumn">Kuz</SelectItem>
+                  <SelectItem value="spring">{t("spring")}</SelectItem>
+                  <SelectItem value="autumn">{t("autumn")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           )}
         </div>
 
-        {/* ✅ QOLGAN KOD — TABLE STEP */}
+        {/* Table */}
         {currentEmptyColumns.length > 0 ? (
           <div className="overflow-x-auto">
             <div className="mb-4 flex justify-between">
@@ -592,13 +571,11 @@ function AllCreateReportItem() {
               </TableHeader>
               <TableBody>
                 {currentEmptyColumns.map((col) => {
-                  const lowerTitle = col.title.toLowerCase();
-
-                  if (lowerTitle.includes("reja")) {
+                  // Plan ustuni (status_plan != null)
+                  if (col.status_plan != null) {
                     const planItem = planItems.find(
                       (item) => item.columnId === col.id,
                     );
-                    const planValue = planItem ? planItem.plan_value : "";
                     return (
                       <TableRow key={col.id}>
                         <TableCell className="whitespace-normal break-words">
@@ -607,7 +584,7 @@ function AllCreateReportItem() {
                         <TableCell>
                           <Input
                             type="text"
-                            value={planValue}
+                            value={planItem?.plan_value || ""}
                             disabled
                             className="bg-gray-100 cursor-not-allowed"
                           />
@@ -616,10 +593,8 @@ function AllCreateReportItem() {
                     );
                   }
 
-                  if (
-                    lowerTitle.includes("tashkilot nomi") ||
-                    lowerTitle.includes("Названия регионов")
-                  ) {
+                  // Tashkilot ustuni (is_organization = true)
+                  if (col.is_organization === true) {
                     return (
                       <TableRow key={col.id}>
                         <TableCell className="whitespace-normal break-words">
@@ -635,7 +610,7 @@ function AllCreateReportItem() {
                             className="w-full border rounded px-2 py-1"
                             required
                           >
-                            <option value="">Tanlang</option>
+                            <option value="">{t("selectOrganization")}</option>
                             {organizationsData?.map((item: any) => (
                               <option key={item.id} value={item.id}>
                                 {item.name}
@@ -647,6 +622,7 @@ function AllCreateReportItem() {
                     );
                   }
 
+                  // Oddiy input ustun
                   return (
                     <TableRow key={col.id}>
                       <TableCell className="whitespace-normal break-words">
@@ -676,10 +652,10 @@ function AllCreateReportItem() {
             </Table>
           </div>
         ) : (
-          <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+          <p>{t("no_columns_in_step")}</p>
         )}
 
-        {/* ✅ FOOT NOTE TEXTAREA - Faqat oxirgi qadamda */}
+        {/* Foot note - faqat oxirgi qadamda */}
         {currentStep === totalSteps - 1 && (
           <div className="mt-6">
             <label className="block mb-2 text-lg font-medium">
@@ -695,7 +671,7 @@ function AllCreateReportItem() {
           </div>
         )}
 
-        {/* ✅ STEP BOSHQARISH */}
+        {/* Step boshqarish */}
         <div className="flex justify-between items-center pt-4">
           <div className="space-x-2">
             <Button
