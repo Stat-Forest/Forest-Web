@@ -249,7 +249,7 @@ function ReturnedReport() {
 
                   {!isStatementLoading &&
                     !statementError &&
-                    statement?.results?.flatMap((parent: any) =>
+                    statement?.flatMap((parent: any) =>
                       parent.children?.map((child: any) => (
                         <SelectItem key={child.id} value={child.id}>
                           {child.name}
