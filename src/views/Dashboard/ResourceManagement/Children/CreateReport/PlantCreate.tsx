@@ -65,6 +65,8 @@ interface TableHeaderData {
   id: string;
   title: string;
   children?: any[];
+  is_organization?: boolean;
+  status_plan?: any;
 }
 
 const EMPTY_TABLE_HEADERS: TableHeaderData[] = [];
@@ -75,7 +77,7 @@ function PlantCreate() {
     plantCreateInitialState,
   );
 
-  // 🔹 Cache o'simlik label'larini pagination bo'ylab saqlash (Radix Select tanlangan value item ro'yxatida bo'lmasa label ko'rsatmaydi)
+  // Cache o'simlik label'larini pagination bo'ylab saqlash
   const [plantMetaById, setPlantMetaById] = useState<
     Record<string, { name: string; categoryName?: string }>
   >({});
@@ -103,7 +105,7 @@ function PlantCreate() {
     { skip: !reportIds },
   );
 
-  // 🔹 Plants state with pagination
+  // Plants state with pagination
   const plantsPerPage = 5;
 
   const {
@@ -121,7 +123,7 @@ function PlantCreate() {
     { skip: !reportIds },
   );
 
-  // 🔹 PlantsData kelgan sayin o'simlik nomlarini cache'ga qo'shib boramiz (pagination almashganda ham tanlanganlar ko'rinib turadi)
+  // PlantsData kelgan sayin o'simlik nomlarini cache'ga qo'shib boramiz
   useEffect(() => {
     const results = (plantsData as any)?.results;
     if (!Array.isArray(results) || results.length === 0) return;
@@ -150,7 +152,7 @@ function PlantCreate() {
     });
   }, [plantsData]);
 
-  // 🔹 Deadline state
+  // Deadline state
   const deadlinePerPage = 5;
 
   const {
@@ -173,7 +175,7 @@ function PlantCreate() {
     [tableHeadersData],
   );
 
-  // 🔹 Maxsus: "Ko‘chat va Nihol" ilovalari uchun (Ko‘chat-va-Nihol-ilova) o'simlik tanlash kerak emas
+  // Maxsus: "Ko‘chat va Nihol" ilovalari uchun o'simlik tanlash kerak emas
   const isKoChatVaNiholIlova1Step = (stepIndex: number): boolean => {
     const title =
       (tableHeadersData as TableHeaderData[])?.[stepIndex]?.title ?? "";
@@ -200,21 +202,25 @@ function PlantCreate() {
   }, [tableHeadersDataMemo]);
 
   useEffect(() => {
-    dispatch({ type: "SET_EMPTY_COLUMNS", payload: allEmptyColumnsByStepMemo });
+    // Type assertion - allEmptyColumnsByStepMemo EmptyColumn[][] ekanligiga ishonch hosil qilamiz
+    dispatch({
+      type: "SET_EMPTY_COLUMNS",
+      payload: allEmptyColumnsByStepMemo as EmptyColumn[][],
+    });
 
-    // 🔹 Har bir step uchun boshlang'ich formula guruhini yaratish
+    // Har bir step uchun boshlang'ich formula guruhini yaratish
     if (allEmptyColumnsByStepMemo.length > 0) {
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
           step: stepIndex,
-          forms: [{ values: {}, plantId: "" }], // Har bir stepda boshlang'ich 1 formula
+          forms: [{ values: {}, plantId: "" }],
         }),
       );
       dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
     }
   }, [allEmptyColumnsByStepMemo]);
 
-  // 🔹 REJA MA'LUMOTLARI (per-plant per-column)
+  // Reja ma'lumotlari (per-plant per-column)
   const [planByColumnAndPlant, setPlanByColumnAndPlant] = useState<
     Record<string, Record<string, string>>
   >({});
@@ -224,7 +230,7 @@ function PlantCreate() {
 
     const rejaColumns = state.allEmptyColumnsByStep
       .flat()
-      .filter((col) => col.title.toLowerCase().includes("reja"));
+      .filter((col) => col.status_plan != null);
 
     if (
       rejaColumns.length === 0 ||
@@ -238,7 +244,9 @@ function PlantCreate() {
 
     const allPlantIds = Array.from(
       new Set(
-        state.formGroups.flatMap((g) => g.forms.map((f) => f.plantId)).filter(Boolean),
+        state.formGroups
+          .flatMap((g) => g.forms.map((f) => f.plantId))
+          .filter(Boolean),
       ),
     );
 
@@ -251,7 +259,6 @@ function PlantCreate() {
 
     rejaColumns.forEach((col) => {
       allPlantIds.forEach((pId) => {
-        // skip if already fetched
         if (planByColumnAndPlant[col.id]?.[pId] !== undefined) return;
 
         const task = (async () => {
@@ -308,10 +315,62 @@ function PlantCreate() {
     reduxDispatch,
   ]);
 
-  const [createReportItem, { isLoading: isSubmitting }] =
+  const [createReportItem, { isLoading: isSubmitting, error: createError }] =
     usePlantCreateMutation();
 
-  // 🔹 Input o'zgartirish funksiyasi
+  // Error larni boshqarish
+  useEffect(() => {
+    const errors: string[] = [];
+
+    if (createError) {
+      const errorData = (createError as any)?.data;
+
+      if (typeof errorData === "string") {
+        errors.push(errorData);
+      } else if (errorData?.message) {
+        errors.push(errorData.message);
+      } else if (
+        errorData?.non_field_errors &&
+        Array.isArray(errorData.non_field_errors)
+      ) {
+        errors.push(...errorData.non_field_errors);
+      } else if (errorData && typeof errorData === "object") {
+        Object.keys(errorData).forEach((field) => {
+          if (Array.isArray(errorData[field])) {
+            errorData[field].forEach((errMsg: string) => {
+              errors.push(`${field}: ${errMsg}`);
+            });
+          } else if (typeof errorData[field] === "string") {
+            errors.push(`${field}: ${errorData[field]}`);
+          }
+        });
+      } else {
+        errors.push(t("submit_error_unknown"));
+      }
+    }
+
+    if (headersError) {
+      errors.push(t("columns_load_error"));
+    }
+
+    if (orgError) {
+      errors.push(t("organizations_load_error"));
+    }
+
+    if (deadlineError) {
+      errors.push(t("deadline_load_error"));
+    }
+
+    if (plantsError) {
+      errors.push(t("plants_load_error"));
+    }
+
+    if (errors.length > 0) {
+      dispatch({ type: "SET_FORM_ERRORS", payload: errors });
+    }
+  }, [createError, headersError, orgError, deadlineError, plantsError, t]);
+
+  // Input o'zgartirish funksiyasi
   const handleInputChange = (
     stepIndex: number,
     formIndex: number,
@@ -322,15 +381,17 @@ function PlantCreate() {
       type: "UPDATE_FORM_VALUE",
       payload: { stepIndex, formIndex, id, value },
     });
+    if (state.formErrors.length > 0) {
+      dispatch({ type: "SET_FORM_ERRORS", payload: [] });
+    }
   };
 
-  // 🔹 O'simlik o'zgartirish funksiyasi
+  // O'simlik o'zgartirish funksiyasi
   const handlePlantChange = (
     stepIndex: number,
     formIndex: number,
     plantId: string,
   ) => {
-    // Yangi o'simlik ID ni qo'shamiz
     if (plantId) {
       dispatch({ type: "ADD_USED_PLANT_ID", payload: plantId });
     }
@@ -351,17 +412,17 @@ function PlantCreate() {
     return plantMetaById[plantId]?.categoryName || "";
   };
 
-  // 🔹 Formula qo'shish funksiyasi (faqat joriy step uchun)
+  // Formula qo'shish funksiyasi
   const handleAddForm = (stepIndex: number) => {
     dispatch({ type: "ADD_FORM", payload: stepIndex });
   };
 
-  // 🔹 Formula o'chirish funksiyasi (faqat joriy step uchun)
+  // Formula o'chirish funksiyasi
   const handleRemoveForm = (stepIndex: number, formIndex: number) => {
     dispatch({ type: "REMOVE_FORM", payload: { stepIndex, formIndex } });
   };
 
-  // 🔹 Tanlangan barcha o'simlik ID larni hisoblash
+  // Tanlangan barcha o'simlik ID larni hisoblash
   const getAllUsedPlantIds = useMemo(() => {
     const usedIds = new Set<string>();
     state.formGroups.forEach((group) => {
@@ -382,22 +443,19 @@ function PlantCreate() {
 
     // Deadline tekshiruvi
     if (!state.selectedDeadlineId) {
-      errors.push(t("please_select_deadline"));
+      errors.push(t("select_deadline_required"));
     }
 
-    // Tashkilot nomi tekshiruvi
-    if (
-      state.allEmptyColumnsByStep[state.currentStep]?.some(
-        (col) =>
-          col.title.toLowerCase().includes("tashkilot nomi") ||
-          col.title.toLowerCase().includes("Названия регионов"),
-      ) &&
-      !state.selectedOrganizationId
-    ) {
-      errors.push(t("please_select_organization"));
+    // Tashkilot ustuni mavjudligini tekshirish
+    const hasOrganizationColumn = state.allEmptyColumnsByStep
+      .flat()
+      .some((col) => col.is_organization === true);
+
+    if (hasOrganizationColumn && !state.selectedOrganizationId) {
+      errors.push(t("select_organization_required"));
     }
 
-    // 🔹 O'simlik duplikatsiyasi va majburiyligini faqat o'simlik tanlash bor bo'lgan step'lar uchun tekshiramiz
+    // O'simlik duplikatsiyasi va majburiyligini tekshiramiz
     const plantIds: string[] = [];
     state.formGroups.forEach((group) => {
       const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
@@ -415,7 +473,7 @@ function PlantCreate() {
       });
     });
 
-    // 🔹 Har bir step va har bir formula uchun o'simlik tanlanganligini tekshiramiz
+    // Har bir formula uchun o'simlik tanlanganligini tekshiramiz
     state.formGroups.forEach((group) => {
       const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
       if (skipPlantForStep) {
@@ -434,21 +492,22 @@ function PlantCreate() {
       });
     });
 
-    // 🔹 Har bir formula uchun majburiy maydonlarni tekshiramiz
+    // Har bir formula uchun majburiy maydonlarni tekshiramiz
     state.formGroups.forEach((group) => {
       group.forms.forEach((form, formIndex) => {
         state.allEmptyColumnsByStep[group.step]?.forEach((col) => {
+          // Tashkilot va reja ustunlarini tekshirishdan o'tkazib yuboramiz
+          if (col.is_organization === true) return;
+          if (col.status_plan != null) return;
+
           if (
-            !col.title.toLowerCase().includes("reja") &&
-            !col.title.toLowerCase().includes("tashkilot nomi") &&
-            !col.title.toLowerCase().includes("Названия регионов") &&
-            (!form.values[col.id] ||
-              form.values[col.id].toString().trim() === "")
+            !form.values[col.id] ||
+            form.values[col.id].toString().trim() === ""
           ) {
             errors.push(
               `${group.step + 1}-qadam ${formIndex + 1}-formula uchun "${
                 col.fullParentChain
-              }" qiymati kiritish shart`,
+              }" ${t("field_required")}`,
             );
           }
         });
@@ -457,10 +516,11 @@ function PlantCreate() {
 
     if (errors.length > 0) {
       dispatch({ type: "SET_FORM_ERRORS", payload: errors });
+      errors.forEach((err) => toast.error(err));
       return;
     }
 
-    // 🔹 Backend strukturasiga mos report_items yaratish - HAR BIR FORMULA UCHUN ALOHIDA
+    // Backend strukturasiga mos report_items yaratish
     const report_items = state.allEmptyColumnsByStep.flatMap(
       (stepColumns, stepIndex) => {
         const currentFormGroup = state.formGroups.find(
@@ -470,22 +530,22 @@ function PlantCreate() {
         if (!currentFormGroup) return [];
 
         return stepColumns.map((col) => {
-          const isOrganizationColumn =
-            col.title.toLowerCase().includes("tashkilot nomi") ||
-            col.title.toLowerCase().includes("Названия регионов");
-          const isRejaColumn = col.title.toLowerCase().includes("reja");
-
-          if (isOrganizationColumn) {
-            // Tashkilot nomi - faqat bir marta
+          if (col.is_organization === true) {
+            // Tashkilot ustuni - faqat bir marta
             return {
               statement_column: col.id,
               inners: [{ value: state.selectedOrganizationId || "" }],
             };
-          } else if (isRejaColumn) {
-            // 🔹 Reja - HAR BIR FORMULA UCHUN ALOHIDA (har bir inner uchun plant ham yuboriladi)
+          } else if (col.status_plan != null) {
+            // Reja ustuni - har bir formula uchun alohida
             const inners = currentFormGroup.forms.map((form) => {
-              const value = planByColumnAndPlant?.[col.id]?.[form.plantId] || form.values[col.id] || "";
-              const plant = isKoChatVaNiholIlova1Step(stepIndex) ? null : form.plantId || null;
+              const value =
+                planByColumnAndPlant?.[col.id]?.[form.plantId] ||
+                form.values[col.id] ||
+                "";
+              const plant = isKoChatVaNiholIlova1Step(stepIndex)
+                ? null
+                : form.plantId || null;
 
               return {
                 plant,
@@ -498,18 +558,15 @@ function PlantCreate() {
               inners,
             };
           } else {
-            // 🔹 Boshqa maydonlar - HAR BIR FORMULA UCHUN ALOHIDA
-            // 🔹 Maxsus: "Ko'chat va Nihol" ilovalari uchun (Ko'chat-va-Nihol-ilova) o'simlik o'rniga null yuboriladi
+            // Boshqa maydonlar - har bir formula uchun alohida
             const isKoChatVaNiholStep = isKoChatVaNiholIlova1Step(stepIndex);
             const inners = currentFormGroup.forms.map((form) => {
               if (isKoChatVaNiholStep) {
-                // "Ko'chat va Nihol" ilovasi uchun o'simlik o'rniga null yuborish
                 return {
                   plant: null,
                   value: form.values[col.id] || "",
                 };
               } else {
-                // Boshqa ilovalar uchun o'simlik ID yuborish (agar mavjud bo'lsa)
                 return {
                   ...(form.plantId && { plant: form.plantId }),
                   value: form.values[col.id] || "",
@@ -535,9 +592,10 @@ function PlantCreate() {
     try {
       await createReportItem(payload).unwrap();
       removeCookie("reportId");
-      navigate(-1);
       toast.success(t("report_created_successfully"));
-      // Reset formula guruhlari
+      navigate(-1);
+
+      // Reset
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
           step: stepIndex,
@@ -549,16 +607,18 @@ function PlantCreate() {
       dispatch({ type: "SET_FORM_ERRORS", payload: [] });
       dispatch({ type: "RESET_FORM" });
     } catch (err: any) {
-      const errorMessage =
-        err?.data?.message || err?.message || t("submit_error");
-      dispatch({ type: "ADD_FORM_ERROR", payload: errorMessage });
       console.error("Yuborishda xatolik:", err);
-      toast.error(errorMessage);
+      toast.error(err?.data?.message || err?.message || t("submit_error"));
+      dispatch({
+        type: "ADD_FORM_ERROR",
+        payload: err?.data?.message || err?.message || t("submit_error"),
+      });
     }
   };
 
   if (isHeaderLoading || isOrgLoading || deadlineLoading || plantsLoading)
     return <p className="p-4 text-lg">{t("loading")}</p>;
+
   if (headersError || orgError || deadlineError || plantsError)
     return (
       <div className="text-red-500 p-4">
@@ -574,12 +634,12 @@ function PlantCreate() {
   const totalSteps = state.allEmptyColumnsByStep.length;
   const currentStepTitle =
     (tableHeadersData as TableHeaderData[])?.[state.currentStep]?.title ??
-    `Qadam ${state.currentStep + 1}`;
+    `${t("step")} ${state.currentStep + 1}`;
   const currentFormGroup = state.formGroups.find(
     (group) => group.step === state.currentStep,
   );
 
-  // 🔹 Deadline matnini formatlash funksiyasi
+  // Deadline matnini formatlash funksiyasi
   const formatDeadlineText = (submitAt: string) => {
     if (!submitAt) return t("unknown");
 
@@ -607,35 +667,49 @@ function PlantCreate() {
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
+        {/* Xatoliklar */}
         {state.formErrors.length > 0 && (
-          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-            <ul>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <h3 className="font-bold text-lg mb-2">{t("errors")}:</h3>
+            <ul className="list-disc list-inside space-y-1">
               {state.formErrors.map((error: string, idx: number) => (
-                <li key={idx}>{error}</li>
+                <li key={idx} className="text-sm">
+                  {error}
+                </li>
               ))}
             </ul>
           </div>
         )}
 
         <div className="flex gap-6 items-end">
-          {/* ✅ DEADLINE SELECT */}
+          {/* Deadline Select */}
           <div>
             <label className="block mb-1 text-lg font-medium">
               {t("deadline")}:
             </label>
             <Select
               value={state.selectedDeadlineId}
-              onValueChange={(val) =>
-                dispatch({ type: "SET_DEADLINE", payload: val })
-              }
+              onValueChange={(val) => {
+                const selectedItem = (deadlineData as any)?.results?.find(
+                  (item: Deadline) => item.id.toString() === val,
+                );
+
+                dispatch({ type: "SET_DEADLINE", payload: val });
+
+                setYearPlan(
+                  selectedItem
+                    ? formatDeadlineText(selectedItem.year)
+                    : "",
+                );
+              }}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue
                   placeholder={
                     deadlineLoading
-                      ? "Yuklanmoqda..."
+                      ? t("loading")
                       : deadlineError
-                        ? "Xatolik yuz berdi"
+                        ? t("loading_error")
                         : t("selectDeadline")
                   }
                 />
@@ -657,7 +731,7 @@ function PlantCreate() {
                       </SelectItem>
                     ))}
 
-                    {/* ✅ Deadline Pagination Controls */}
+                    {/* Deadline Pagination Controls */}
                     {(deadlineData as any).count > deadlinePerPage && (
                       <div className="flex items-center justify-between px-2 py-1 border-t">
                         <Button
@@ -709,29 +783,15 @@ function PlantCreate() {
                   </>
                 ) : (
                   <div className="p-2 text-center text-muted-foreground text-sm">
-                    Deadline mavjud emas
+                    {t("no_deadlines")}
                   </div>
                 )}
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="year">{t("year")}</label>
-            <div className="flex flex-col gap-1">
-              <input
-                value={yearPlan}
-                onChange={(e) => setYearPlan(e.target.value)}
-                type="number"
-                className="no-spinner border border-gray-950 shadow py-1 rounded-md p-3"
-              />
-              <span className="text-sm">
-                Faqatkina "reja" mavjud bo'lgan hisobodlar uchun
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* ✅ JORIY QADAM FORMULA GURUHLARI */}
+        {/* Joriy qadam formula guruhlari */}
         {currentFormGroup && (
           <div className="space-y-6">
             {currentFormGroup.forms.map((form, formIndex) => (
@@ -741,7 +801,7 @@ function PlantCreate() {
               >
                 <div className="mb-4 flex justify-between items-center">
                   <h2 className="text-lg font-semibold">
-                    {currentStepTitle} – {formIndex + 1}-formula
+                    {currentStepTitle} – {formIndex + 1}-{t("formula")}
                   </h2>
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500">
@@ -762,7 +822,7 @@ function PlantCreate() {
                   </div>
                 </div>
 
-                {/* ✅ FORMULA BO'YICHA O'SIMLIK TANLASH (maxsus ilova uchun yashiriladi) */}
+                {/* Formula bo'yicha o'simlik tanlash */}
                 {!isKoChatVaNiholIlova1Step(state.currentStep) && (
                   <div className="mb-4">
                     <label className="block mb-1 text-lg font-medium">
@@ -775,8 +835,6 @@ function PlantCreate() {
                       }
                     >
                       <SelectTrigger className="w-[300px]">
-                        {/* SelectValue tanlangan item joriy page'da bo'lmasa label ko'rsatmaydi.
-                            Shuning uchun label'ni o'zimiz cache'dan chiqaramiz. */}
                         <SelectValue asChild>
                           <span
                             className={
@@ -838,7 +896,7 @@ function PlantCreate() {
                               ],
                             )}
 
-                            {/* ✅ Plants Pagination Controls */}
+                            {/* Plants Pagination Controls */}
                             {(plantsData as any).count > plantsPerPage && (
                               <div className="flex items-center justify-between px-2 py-1 border-t">
                                 <Button
@@ -902,7 +960,7 @@ function PlantCreate() {
                   </div>
                 )}
 
-                {/* ✅ TABLE */}
+                {/* Table */}
                 {currentEmptyColumns.length > 0 ? (
                   <Table>
                     <TableHeader>
@@ -915,27 +973,24 @@ function PlantCreate() {
                     </TableHeader>
                     <TableBody>
                       {currentEmptyColumns.map((col: EmptyColumn) => {
-                        const lowerTitle = col.title.toLowerCase();
-
-                        if (lowerTitle.includes("reja")) {
+                        // Plan ustuni (status_plan != null)
+                        if (col.status_plan != null) {
                           const planValue = form.plantId
-                            ? planByColumnAndPlant?.[col.id]?.[form.plantId] || form.values[col.id] || ""
+                            ? planByColumnAndPlant?.[col.id]?.[form.plantId] ||
+                              form.values[col.id] ||
+                              ""
                             : form.values[col.id] || "";
 
                           return (
                             <TableRow key={col.id}>
                               <TableCell className="whitespace-normal break-words">
                                 {col.fullParentChain}
-                                {form.plantId && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    {t("for_plant")}: {getPlantLabel(form.plantId)}
-                                  </div>
-                                )}
                               </TableCell>
                               <TableCell>
                                 <Input
                                   type="text"
                                   value={planValue}
+                                  disabled
                                   onChange={(e) =>
                                     handleInputChange(
                                       state.currentStep,
@@ -945,11 +1000,11 @@ function PlantCreate() {
                                     )
                                   }
                                   className={planValue ? "bg-green-50" : ""}
-                                  disabled={!!planByColumnAndPlant?.[col.id]?.[form.plantId]}
                                 />
-                                {planByColumnAndPlant?.[col.id]?.[form.plantId] && (
+                                {planByColumnAndPlant?.[col.id]?.[
+                                  form.plantId
+                                ] && (
                                   <div className="text-xs text-green-600 mt-1">
-                                    {t("auto_filled_from_plan")}
                                   </div>
                                 )}
                               </TableCell>
@@ -957,12 +1012,11 @@ function PlantCreate() {
                           );
                         }
 
-                        if (
-                          lowerTitle.includes("tashkilot nomi") ||
-                          lowerTitle.includes("Названия регионов")
-                        ) {
-                          // ❗ faqat birinchi formulada ko'rinadi
+                        // Tashkilot ustuni (is_organization = true)
+                        if (col.is_organization === true) {
+                          // Faqat birinchi formulada ko'rinadi
                           if (formIndex !== 0) return null;
+
                           return (
                             <TableRow key={col.id}>
                               <TableCell className="whitespace-normal break-words">
@@ -1000,6 +1054,7 @@ function PlantCreate() {
                           );
                         }
 
+                        // Oddiy input ustun
                         return (
                           <TableRow key={col.id}>
                             <TableCell className="whitespace-normal break-words">
@@ -1018,6 +1073,13 @@ function PlantCreate() {
                                   )
                                 }
                                 required
+                                className={
+                                  state.formErrors.some((err) =>
+                                    err.includes(col.fullParentChain),
+                                  )
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
                             </TableCell>
                           </TableRow>
@@ -1026,12 +1088,12 @@ function PlantCreate() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <p>Ushbu qadamda to'ldirish uchun ustunlar yo'q.</p>
+                  <p>{t("no_columns_in_step")}</p>
                 )}
               </div>
             ))}
 
-            {/* ✅ FORMULA QO'SHISH TUGMASI (faqat joriy step uchun) */}
+            {/* Formula qo'shish tugmasi */}
             <div className="flex justify-center">
               <Button
                 type="button"
@@ -1044,7 +1106,7 @@ function PlantCreate() {
           </div>
         )}
 
-        {/* ✅ STEP BOSHQARISH */}
+        {/* Step boshqarish */}
         <div className="flex justify-between items-center pt-4">
           <div className="space-x-2">
             <Button
@@ -1083,7 +1145,7 @@ function PlantCreate() {
           )}
         </div>
 
-        {/* ✅ FOOT NOTE TEXTAREA - Faqat oxirgi qadamda */}
+        {/* Foot note - faqat oxirgi qadamda */}
         {state.currentStep === totalSteps - 1 && (
           <div className="mt-6">
             <label className="block mb-2 text-lg font-medium">
@@ -1099,7 +1161,7 @@ function PlantCreate() {
           </div>
         )}
 
-        {/* ✅ TANLANGAN O'SIMLIKLARNI KO'RSATISH */}
+        {/* Tanlangan o'simliklarni ko'rsatish */}
         <div className="mt-4 p-4 bg-gray-50 rounded">
           <h3 className="font-semibold mb-2">{t("selected_plants")}</h3>
           {state.formGroups.map((group: FormGroup) =>
