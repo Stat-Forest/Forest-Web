@@ -12,8 +12,8 @@ export function findEmptyChildrenColumnIds(
     id: string;
     title: string;
     fullParentChain: string;
-    is_organization?: boolean;
-    status_plan?: any;
+    is_organization: boolean;
+    status_plan: string | null;
   }[] = [];
 
   const traverse = (cols: any[], parentChain: string[] = []) => {
