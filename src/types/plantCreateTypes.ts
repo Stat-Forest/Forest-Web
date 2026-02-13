@@ -4,6 +4,8 @@ export interface EmptyColumn {
   id: string;
   title: string;
   fullParentChain: string;
+  is_organization: boolean;
+  status_plan: string | null;
 }
 
 export interface FormGroup {

@@ -7,7 +7,6 @@ import {
   useGetAllReportsQuery,
   useGetIndividualQuery,
   useGetDeadlinesReportQuery,
-  useGetRepoblicReportQuery,
   useGetStatementColumnsReportQuery,
   useLazyGetReganalReportQuery,
   useGetReportPlantByIdQuery,
@@ -164,12 +163,6 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
   };
 
   const {
-    data: rupblic,
-    isLoading: isRepublicLoading,
-    isError: isRepublicError,
-  } = useGetRepoblicReportQuery();
-
-  const {
     data: individualReports,
     isLoading: isIndividualLoading,
     isError: isIndividualError,
@@ -195,7 +188,6 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
   const isLoading =
     isHeadersLoading ||
     isRowsLoading ||
-    isRepublicLoading ||
     isAllReportLoading ||
     isIndividualLoading ||
     deadlineLoading ||
@@ -204,7 +196,6 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
   const isError =
     isErrorHeaders ||
     isErrorRows ||
-    isRepublicError ||
     isAllReportError ||
     isIndividualError ||
     isPlantByIdError;
@@ -285,11 +276,11 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
 
     let rows: any[] = [];
     if (tableRowsData?.results?.length > 0) {
-      rows = [...(tableRowsData?.results || []), ...(rupblic?.results || [])];
+      rows = [...(tableRowsData?.results || [])];
     }
 
     return rows.map(filterRow);
-  }, [tableRowsData, rupblic, activeLeafIds]);
+  }, [tableRowsData, activeLeafIds]);
 
   // 🔹 Individual alohida
   const filteredIndividualRows = useMemo(() => {
