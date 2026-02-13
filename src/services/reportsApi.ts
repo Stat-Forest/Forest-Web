@@ -247,7 +247,7 @@ export const reportApi = createApi({
       }) => {
         let url = `/plan-items/?organization=${organization_id}&column=${column}&statement=${statement_id}&year=${year}`;
         if (season) {
-          url += `&plan__season=${season}`;
+          url += `&season=${season}`;
         }
         if (plant_id) {
           url += `&plant=${plant_id}`;
