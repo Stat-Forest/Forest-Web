@@ -148,7 +148,7 @@ function CreatedPlans() {
             />
           </SelectTrigger>
           <SelectContent>
-            {statementsData?.results?.map((parent: any) =>
+            {statementsData?.map((parent: any) =>
               parent.children?.map((child: any) => (
                 <SelectItem key={child.id} value={child.id.toString()}>
                   {child.name}

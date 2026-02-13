@@ -110,7 +110,7 @@ function ExpiredDeadlines() {
               {statementLoading && <p className="px-3">Yuklanmoqda...</p>}
               {!statementLoading &&
                 !statementError &&
-                statements?.results?.flatMap((p: any) =>
+                statements?.flatMap((p: any) =>
                   p.children?.map((c: any) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.name}

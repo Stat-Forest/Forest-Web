@@ -123,7 +123,7 @@ function Newsletters() {
             />
           </SelectTrigger>
           <SelectContent>
-            {statementsData?.results?.flatMap((parent: any) =>
+            {statementsData?.flatMap((parent: any) =>
               parent.children?.map((child: any) => (
                 <SelectItem key={child.id} value={child.id.toString()}>
                   {child.name}

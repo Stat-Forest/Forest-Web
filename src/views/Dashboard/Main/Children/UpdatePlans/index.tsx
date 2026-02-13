@@ -133,8 +133,8 @@ function UpdatePlans() {
     // Third priority: Look up statement ID from statements API if statement is a name (e.g., "Daromad 1")
     if (existingPlan?.statement && typeof existingPlan.statement === "string" && !isUUID(existingPlan.statement)) {
       // Search in statements API for matching name
-      if (statementsData?.results) {
-        for (const parent of statementsData.results) {
+      if (statementsData) {
+        for (const parent of statementsData) {
           if (parent.children && Array.isArray(parent.children)) {
             const found = parent.children.find(
               (child: any) => child.name === existingPlan.statement
