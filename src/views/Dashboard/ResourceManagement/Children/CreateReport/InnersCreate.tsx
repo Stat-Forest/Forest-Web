@@ -347,7 +347,15 @@ function InnersCreateReportItem() {
           </label>
           <Select
             value={selectedDeadlineId}
-            onValueChange={(val) => setSelectedDeadlineId(val)}
+            onValueChange={(val) => {
+              setSelectedDeadlineId(val);
+              const selectedItem = deadlineData?.results?.find(
+                (item: any) => item.id.toString() === val,
+              );
+              setYearPlan(
+                selectedItem ? formatDeadlineText(selectedItem.year) : "",
+              );
+            }}
           >
             <SelectTrigger className="w-[300px]">
               <SelectValue
@@ -437,7 +445,7 @@ function InnersCreateReportItem() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <label htmlFor="year">{t("year")}</label>
           <div className="flex flex-col gap-1">
             <input
@@ -450,7 +458,7 @@ function InnersCreateReportItem() {
               Faqatkina "reja" mavjud bo'lgan hisobodlar uchun
             </span>
           </div>
-        </div>
+        </div> */}
         {(reportIds === "1186b75c-d84c-44e6-999e-d6be3c5118ff" ||
           reportIds === "671577ba-6a86-4619-b31c-86fff20ad305") && (
           <div>
