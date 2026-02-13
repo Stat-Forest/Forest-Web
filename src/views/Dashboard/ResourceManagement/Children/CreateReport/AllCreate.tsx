@@ -452,7 +452,7 @@ function AllCreateReportItem() {
                 );
                 setYearPlan(
                   selectedItem
-                    ? formatDeadlineText(selectedItem.submit_at)
+                    ? formatDeadlineText(selectedItem.year)
                     : "",
                 );
               }}
