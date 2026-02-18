@@ -27,11 +27,10 @@
       return cc < 0x80
         ? c
         : cc < 0x800
-        ? fromCharCode(0xc0 | (cc >>> 6)) +
-          fromCharCode(0x80 | (cc & 0x3f))
-        : fromCharCode(0xe0 | ((cc >>> 12) & 0x0f)) +
-          fromCharCode(0x80 | ((cc >>> 6) & 0x3f)) +
-          fromCharCode(0x80 | (cc & 0x3f));
+          ? fromCharCode(0xc0 | (cc >>> 6)) + fromCharCode(0x80 | (cc & 0x3f))
+          : fromCharCode(0xe0 | ((cc >>> 12) & 0x0f)) +
+            fromCharCode(0x80 | ((cc >>> 6) & 0x3f)) +
+            fromCharCode(0x80 | (cc & 0x3f));
     } else {
       var cc =
         0x10000 +
@@ -92,10 +91,12 @@
   };
   // decoder stuff
   var re_btou = new RegExp(
-    ["[\xC0-\xDF][\x80-\xBF]", "[\xE0-\xEF][\x80-\xBF]{2}", "[\xF0-\xF7][\x80-\xBF]{3}"].join(
-      "|"
-    ),
-    "g"
+    [
+      "[\xC0-\xDF][\x80-\xBF]",
+      "[\xE0-\xEF][\x80-\xBF]{2}",
+      "[\xF0-\xF7][\x80-\xBF]{3}",
+    ].join("|"),
+    "g",
   );
   var cb_btou = function (cccc) {
     switch (cccc.length) {
@@ -114,11 +115,11 @@
         return fromCharCode(
           ((0x0f & cccc.charCodeAt(0)) << 12) |
             ((0x3f & cccc.charCodeAt(1)) << 6) |
-            (0x3f & cccc.charCodeAt(2))
+            (0x3f & cccc.charCodeAt(2)),
         );
       default:
         return fromCharCode(
-          ((0x1f & cccc.charCodeAt(0)) << 6) | (0x3f & cccc.charCodeAt(1))
+          ((0x1f & cccc.charCodeAt(0)) << 6) | (0x3f & cccc.charCodeAt(1)),
         );
     }
   };
@@ -162,7 +163,7 @@
         .replace(/[-_]/g, function (m0) {
           return m0 == "-" ? "+" : "/";
         })
-        .replace(/[^A-Za-z0-9+\/]/g, "")
+        .replace(/[^A-Za-z0-9+\/]/g, ""),
     );
   };
   var noConflict = function () {
@@ -187,7 +188,12 @@
   // if ES5 is available, make Base64.extendString() available
   if (typeof Object.defineProperty === "function") {
     var noEnum = function (v) {
-      return { value: v, enumerable: false, writable: true, configurable: true };
+      return {
+        value: v,
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      };
     };
     global.Base64.extendString = function () {
       Object.defineProperty(
@@ -195,21 +201,21 @@
         "fromBase64",
         noEnum(function () {
           return decode(this);
-        })
+        }),
       );
       Object.defineProperty(
         String.prototype,
         "toBase64",
         noEnum(function (urisafe) {
           return encode(this, urisafe);
-        })
+        }),
       );
       Object.defineProperty(
         String.prototype,
         "toBase64URI",
         noEnum(function () {
           return encode(this, true);
-        })
+        }),
       );
     };
   }
@@ -472,9 +478,7 @@ var AppLoad = function () {
     "test.e-imzo.local",
     "D56ABC7F43A23466D9ADB1A2335E7430FCE0F46B0EC99B578D554333245FC071357AE9E7E2F75F96B73AEEE7E0D61AE84E414F5CD795D8B6484E5645CAF958FC",
     "stat-urmon.uz",
-    "HEX_API_KEY_FOR_stat-urmon.uz",
-    "ruxsatnoma-urmon.uz",
-    "57081C44AC4FD8FA104A4A4E359524F6632FB589618B4C9A380D176CEC4789407135BE5C4417898FA172596031A95562B4B021C67BFE53D4FB1B53B811E6DF17"
+    "52FB67CF97CB3CA3E61AB8DA1D9AB57D1C05DDE5BD605F49357846ADBD35AC426F241AF0AFE14AE03568754653B98B52BC12DC86B14E3BB5D0F6A93D34FDDBE5",
   ];
 
   if (typeof uiLoading === "function") {
@@ -498,7 +502,7 @@ var AppLoad = function () {
             } else {
               if (typeof wsError === "function") wsError(e);
             }
-          }
+          },
         );
       }
     },
@@ -508,7 +512,7 @@ var AppLoad = function () {
       } else {
         if (typeof uiNotLoaded === "function") uiNotLoaded(e);
       }
-    }
+    },
   );
 };
 
@@ -620,21 +624,23 @@ Date.prototype.ddmmyyyy = function () {
   var yyyy = this.getFullYear().toString();
   var mm = (this.getMonth() + 1).toString(); // getMonth() is zero-based
   var dd = this.getDate().toString();
-  return (dd[1] ? dd : "0" + dd[0]) + "." + (mm[1] ? mm : "0" + mm[0]) + "." + yyyy; // padding
+  return (
+    (dd[1] ? dd : "0" + dd[0]) + "." + (mm[1] ? mm : "0" + mm[0]) + "." + yyyy
+  ); // padding
 };
 var dates = {
   convert: function (d) {
     return d.constructor === Date
       ? d
       : d.constructor === Array
-      ? new Date(d[0], d[1], d[2])
-      : d.constructor === Number
-      ? new Date(d)
-      : d.constructor === String
-      ? new Date(d)
-      : typeof d === "object"
-      ? new Date(d.year, d.month, d.date)
-      : NaN;
+        ? new Date(d[0], d[1], d[2])
+        : d.constructor === Number
+          ? new Date(d)
+          : d.constructor === String
+            ? new Date(d)
+            : typeof d === "object"
+              ? new Date(d.year, d.month, d.date)
+              : NaN;
   },
   compare: function (a, b) {
     return isFinite((a = this.convert(a).valueOf())) &&
@@ -721,7 +727,7 @@ var EIMZOClient = {
       },
       function (e) {
         fail(e, null);
-      }
+      },
     );
   },
   installApiKeys: function (success, fail) {
@@ -736,7 +742,7 @@ var EIMZOClient = {
       },
       function (e) {
         fail(e, null);
-      }
+      },
     );
   },
   listAllUserKeys: function (itemIdGen, itemUiGen, success, fail) {
@@ -746,47 +752,55 @@ var EIMZOClient = {
       fail(null, "Please install new version of E-IMZO");
     } else {
       if (EIMZOClient.NEW_API2) {
-        EIMZOClient._findPfxs2(itemIdGen, itemUiGen, items, errors, function (
-          firstItmId2
-        ) {
-          if (items.length === 0 && errors.length > 0) {
-            fail(errors[0].e, errors[0].r);
-          } else {
-            var firstId = null;
-            if (items.length === 1) {
-              if (firstItmId2) {
-                firstId = firstItmId2;
-              }
-            }
-            success(items, firstId);
-          }
-        });
-      } else {
-        EIMZOClient._findPfxs2(itemIdGen, itemUiGen, items, errors, function (
-          firstItmId2
-        ) {
-          EIMZOClient._findTokens2(
-            itemIdGen,
-            itemUiGen,
-            items,
-            errors,
-            function (firstItmId3) {
-              if (items.length === 0 && errors.length > 0) {
-                fail(errors[0].e, errors[0].r);
-              } else {
-                var firstId = null;
-                if (items.length === 1) {
-                  if (firstItmId2) {
-                    firstId = firstItmId2;
-                  } else if (firstItmId3) {
-                    firstId = firstItmId3;
-                  }
+        EIMZOClient._findPfxs2(
+          itemIdGen,
+          itemUiGen,
+          items,
+          errors,
+          function (firstItmId2) {
+            if (items.length === 0 && errors.length > 0) {
+              fail(errors[0].e, errors[0].r);
+            } else {
+              var firstId = null;
+              if (items.length === 1) {
+                if (firstItmId2) {
+                  firstId = firstItmId2;
                 }
-                success(items, firstId);
               }
+              success(items, firstId);
             }
-          );
-        });
+          },
+        );
+      } else {
+        EIMZOClient._findPfxs2(
+          itemIdGen,
+          itemUiGen,
+          items,
+          errors,
+          function (firstItmId2) {
+            EIMZOClient._findTokens2(
+              itemIdGen,
+              itemUiGen,
+              items,
+              errors,
+              function (firstItmId3) {
+                if (items.length === 0 && errors.length > 0) {
+                  fail(errors[0].e, errors[0].r);
+                } else {
+                  var firstId = null;
+                  if (items.length === 1) {
+                    if (firstItmId2) {
+                      firstId = firstItmId2;
+                    } else if (firstItmId3) {
+                      firstId = firstItmId3;
+                    }
+                  }
+                  success(items, firstId);
+                }
+              },
+            );
+          },
+        );
       }
     }
   },
@@ -815,7 +829,7 @@ var EIMZOClient = {
                   },
                   function (e) {
                     fail(e, null);
-                  }
+                  },
                 );
               } else {
                 success(id);
@@ -826,7 +840,7 @@ var EIMZOClient = {
           },
           function (e) {
             fail(e, null);
-          }
+          },
         );
       } else if (vo.type === "ftjc") {
         CAPIWS.callFunction(
@@ -850,7 +864,7 @@ var EIMZOClient = {
                   },
                   function (e) {
                     fail(e, null);
-                  }
+                  },
                 );
               } else {
                 success(id);
@@ -861,7 +875,7 @@ var EIMZOClient = {
           },
           function (e) {
             fail(e, null);
-          }
+          },
         );
       }
     }
@@ -873,7 +887,7 @@ var EIMZOClient = {
     success,
     fail,
     detached,
-    isDataBase64Encoded
+    isDataBase64Encoded,
   ) {
     var data64;
     if (isDataBase64Encoded === true) {
@@ -902,7 +916,7 @@ var EIMZOClient = {
       },
       function (e) {
         fail(e, null);
-      }
+      },
     );
   },
   _getX500Val: function (s, f) {
@@ -931,16 +945,19 @@ var EIMZOClient = {
               path: el.path,
               name: el.name,
               alias: el.alias,
-              serialNumber: EIMZOClient._getX500Val(x500name_ex, "SERIALNUMBER"),
+              serialNumber: EIMZOClient._getX500Val(
+                x500name_ex,
+                "SERIALNUMBER",
+              ),
               validFrom: new Date(
                 EIMZOClient._getX500Val(x500name_ex, "VALIDFROM")
                   .replace(/\./g, "-")
-                  .replace(" ", "T")
+                  .replace(" ", "T"),
               ),
               validTo: new Date(
                 EIMZOClient._getX500Val(x500name_ex, "VALIDTO")
                   .replace(/\./g, "-")
-                  .replace(" ", "T")
+                  .replace(" ", "T"),
               ),
               CN: EIMZOClient._getX500Val(x500name_ex, "CN"),
               TIN: EIMZOClient._getX500Val(x500name_ex, "INN")
@@ -968,7 +985,7 @@ var EIMZOClient = {
       function (e) {
         errors.push({ e: e });
         callback(itmkey0);
-      }
+      },
     );
   },
   _findTokens2: function (itemIdGen, itemUiGen, items, errors, callback) {
@@ -987,12 +1004,15 @@ var EIMZOClient = {
               statusInfo: el.statusInfo,
               ownerName: el.ownerName,
               info: el.info,
-              serialNumber: EIMZOClient._getX500Val(x500name_ex, "SERIALNUMBER"),
+              serialNumber: EIMZOClient._getX500Val(
+                x500name_ex,
+                "SERIALNUMBER",
+              ),
               validFrom: new Date(
-                EIMZOClient._getX500Val(x500name_ex, "VALIDFROM")
+                EIMZOClient._getX500Val(x500name_ex, "VALIDFROM"),
               ),
               validTo: new Date(
-                EIMZOClient._getX500Val(x500name_ex, "VALIDTO")
+                EIMZOClient._getX500Val(x500name_ex, "VALIDTO"),
               ),
               CN: EIMZOClient._getX500Val(x500name_ex, "CN"),
               TIN: EIMZOClient._getX500Val(x500name_ex, "INN")
@@ -1020,7 +1040,7 @@ var EIMZOClient = {
       function (e) {
         errors.push({ e: e });
         callback(itmkey0);
-      }
+      },
     );
   },
 };
@@ -1059,11 +1079,10 @@ if (typeof window !== "undefined" && typeof window.onload === "undefined") {
       return cc < 0x80
         ? c
         : cc < 0x800
-        ? fromCharCode(0xc0 | (cc >>> 6)) +
-          fromCharCode(0x80 | (cc & 0x3f))
-        : fromCharCode(0xe0 | ((cc >>> 12) & 0x0f)) +
-          fromCharCode(0x80 | ((cc >>> 6) & 0x3f)) +
-          fromCharCode(0x80 | (cc & 0x3f));
+          ? fromCharCode(0xc0 | (cc >>> 6)) + fromCharCode(0x80 | (cc & 0x3f))
+          : fromCharCode(0xe0 | ((cc >>> 12) & 0x0f)) +
+            fromCharCode(0x80 | ((cc >>> 6) & 0x3f)) +
+            fromCharCode(0x80 | (cc & 0x3f));
     } else {
       var cc =
         0x10000 +
@@ -1124,10 +1143,12 @@ if (typeof window !== "undefined" && typeof window.onload === "undefined") {
   };
   // decoder stuff
   var re_btou = new RegExp(
-    ["[\xC0-\xDF][\x80-\xBF]", "[\xE0-\xEF][\x80-\xBF]{2}", "[\xF0-\xF7][\x80-\xBF]{3}"].join(
-      "|"
-    ),
-    "g"
+    [
+      "[\xC0-\xDF][\x80-\xBF]",
+      "[\xE0-\xEF][\x80-\xBF]{2}",
+      "[\xF0-\xF7][\x80-\xBF]{3}",
+    ].join("|"),
+    "g",
   );
   var cb_btou = function (cccc) {
     switch (cccc.length) {
@@ -1146,11 +1167,11 @@ if (typeof window !== "undefined" && typeof window.onload === "undefined") {
         return fromCharCode(
           ((0x0f & cccc.charCodeAt(0)) << 12) |
             ((0x3f & cccc.charCodeAt(1)) << 6) |
-            (0x3f & cccc.charCodeAt(2))
+            (0x3f & cccc.charCodeAt(2)),
         );
       default:
         return fromCharCode(
-          ((0x1f & cccc.charCodeAt(0)) << 6) | (0x3f & cccc.charCodeAt(1))
+          ((0x1f & cccc.charCodeAt(0)) << 6) | (0x3f & cccc.charCodeAt(1)),
         );
     }
   };
@@ -1194,7 +1215,7 @@ if (typeof window !== "undefined" && typeof window.onload === "undefined") {
         .replace(/[-_]/g, function (m0) {
           return m0 == "-" ? "+" : "/";
         })
-        .replace(/[^A-Za-z0-9+/]/g, "")
+        .replace(/[^A-Za-z0-9+/]/g, ""),
     );
   };
   var noConflict = function () {
@@ -1219,7 +1240,12 @@ if (typeof window !== "undefined" && typeof window.onload === "undefined") {
   // if ES5 is available, make Base64.extendString() available
   if (typeof Object.defineProperty === "function") {
     var noEnum = function (v) {
-      return { value: v, enumerable: false, writable: true, configurable: true };
+      return {
+        value: v,
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      };
     };
     global.Base64.extendString = function () {
       Object.defineProperty(
@@ -1227,21 +1253,21 @@ if (typeof window !== "undefined" && typeof window.onload === "undefined") {
         "fromBase64",
         noEnum(function () {
           return decode(this);
-        })
+        }),
       );
       Object.defineProperty(
         String.prototype,
         "toBase64",
         noEnum(function (urisafe) {
           return encode(this, urisafe);
-        })
+        }),
       );
       Object.defineProperty(
         String.prototype,
         "toBase64URI",
         noEnum(function () {
           return encode(this, true);
-        })
+        }),
       );
     };
   }
@@ -1528,7 +1554,7 @@ var AppLoad = function () {
             } else {
               if (typeof wsError === "function") wsError(e);
             }
-          }
+          },
         );
       }
     },
@@ -1538,7 +1564,7 @@ var AppLoad = function () {
       } else {
         if (typeof uiNotLoaded === "function") uiNotLoaded(e);
       }
-    }
+    },
   );
 };
 
@@ -1650,21 +1676,23 @@ Date.prototype.ddmmyyyy = function () {
   var yyyy = this.getFullYear().toString();
   var mm = (this.getMonth() + 1).toString(); // getMonth() is zero-based
   var dd = this.getDate().toString();
-  return (dd[1] ? dd : "0" + dd[0]) + "." + (mm[1] ? mm : "0" + mm[0]) + "." + yyyy; // padding
+  return (
+    (dd[1] ? dd : "0" + dd[0]) + "." + (mm[1] ? mm : "0" + mm[0]) + "." + yyyy
+  ); // padding
 };
 var dates = {
   convert: function (d) {
     return d.constructor === Date
       ? d
       : d.constructor === Array
-      ? new Date(d[0], d[1], d[2])
-      : d.constructor === Number
-      ? new Date(d)
-      : d.constructor === String
-      ? new Date(d)
-      : typeof d === "object"
-      ? new Date(d.year, d.month, d.date)
-      : NaN;
+        ? new Date(d[0], d[1], d[2])
+        : d.constructor === Number
+          ? new Date(d)
+          : d.constructor === String
+            ? new Date(d)
+            : typeof d === "object"
+              ? new Date(d.year, d.month, d.date)
+              : NaN;
   },
   compare: function (a, b) {
     return isFinite((a = this.convert(a).valueOf())) &&
@@ -1751,7 +1779,7 @@ var EIMZOClient = {
       },
       function (e) {
         fail(e, null);
-      }
+      },
     );
   },
   installApiKeys: function (success, fail) {
@@ -1766,7 +1794,7 @@ var EIMZOClient = {
       },
       function (e) {
         fail(e, null);
-      }
+      },
     );
   },
   listAllUserKeys: function (itemIdGen, itemUiGen, success, fail) {
@@ -1776,47 +1804,55 @@ var EIMZOClient = {
       fail(null, "Please install new version of E-IMZO");
     } else {
       if (EIMZOClient.NEW_API2) {
-        EIMZOClient._findPfxs2(itemIdGen, itemUiGen, items, errors, function (
-          firstItmId2
-        ) {
-          if (items.length === 0 && errors.length > 0) {
-            fail(errors[0].e, errors[0].r);
-          } else {
-            var firstId = null;
-            if (items.length === 1) {
-              if (firstItmId2) {
-                firstId = firstItmId2;
-              }
-            }
-            success(items, firstId);
-          }
-        });
-      } else {
-        EIMZOClient._findPfxs2(itemIdGen, itemUiGen, items, errors, function (
-          firstItmId2
-        ) {
-          EIMZOClient._findTokens2(
-            itemIdGen,
-            itemUiGen,
-            items,
-            errors,
-            function (firstItmId3) {
-              if (items.length === 0 && errors.length > 0) {
-                fail(errors[0].e, errors[0].r);
-              } else {
-                var firstId = null;
-                if (items.length === 1) {
-                  if (firstItmId2) {
-                    firstId = firstItmId2;
-                  } else if (firstItmId3) {
-                    firstId = firstItmId3;
-                  }
+        EIMZOClient._findPfxs2(
+          itemIdGen,
+          itemUiGen,
+          items,
+          errors,
+          function (firstItmId2) {
+            if (items.length === 0 && errors.length > 0) {
+              fail(errors[0].e, errors[0].r);
+            } else {
+              var firstId = null;
+              if (items.length === 1) {
+                if (firstItmId2) {
+                  firstId = firstItmId2;
                 }
-                success(items, firstId);
               }
+              success(items, firstId);
             }
-          );
-        });
+          },
+        );
+      } else {
+        EIMZOClient._findPfxs2(
+          itemIdGen,
+          itemUiGen,
+          items,
+          errors,
+          function (firstItmId2) {
+            EIMZOClient._findTokens2(
+              itemIdGen,
+              itemUiGen,
+              items,
+              errors,
+              function (firstItmId3) {
+                if (items.length === 0 && errors.length > 0) {
+                  fail(errors[0].e, errors[0].r);
+                } else {
+                  var firstId = null;
+                  if (items.length === 1) {
+                    if (firstItmId2) {
+                      firstId = firstItmId2;
+                    } else if (firstItmId3) {
+                      firstId = firstItmId3;
+                    }
+                  }
+                  success(items, firstId);
+                }
+              },
+            );
+          },
+        );
       }
     }
   },
@@ -1845,7 +1881,7 @@ var EIMZOClient = {
                   },
                   function (e) {
                     fail(e, null);
-                  }
+                  },
                 );
               } else {
                 success(id);
@@ -1856,7 +1892,7 @@ var EIMZOClient = {
           },
           function (e) {
             fail(e, null);
-          }
+          },
         );
       } else if (vo.type === "ftjc") {
         CAPIWS.callFunction(
@@ -1880,7 +1916,7 @@ var EIMZOClient = {
                   },
                   function (e) {
                     fail(e, null);
-                  }
+                  },
                 );
               } else {
                 success(id);
@@ -1891,7 +1927,7 @@ var EIMZOClient = {
           },
           function (e) {
             fail(e, null);
-          }
+          },
         );
       }
     }
@@ -1903,7 +1939,7 @@ var EIMZOClient = {
     success,
     fail,
     detached,
-    isDataBase64Encoded
+    isDataBase64Encoded,
   ) {
     var data64;
     if (isDataBase64Encoded === true) {
@@ -1932,7 +1968,7 @@ var EIMZOClient = {
       },
       function (e) {
         fail(e, null);
-      }
+      },
     );
   },
   _getX500Val: function (s, f) {
@@ -1961,16 +1997,19 @@ var EIMZOClient = {
               path: el.path,
               name: el.name,
               alias: el.alias,
-              serialNumber: EIMZOClient._getX500Val(x500name_ex, "SERIALNUMBER"),
+              serialNumber: EIMZOClient._getX500Val(
+                x500name_ex,
+                "SERIALNUMBER",
+              ),
               validFrom: new Date(
                 EIMZOClient._getX500Val(x500name_ex, "VALIDFROM")
                   .replace(/\./g, "-")
-                  .replace(" ", "T")
+                  .replace(" ", "T"),
               ),
               validTo: new Date(
                 EIMZOClient._getX500Val(x500name_ex, "VALIDTO")
                   .replace(/\./g, "-")
-                  .replace(" ", "T")
+                  .replace(" ", "T"),
               ),
               CN: EIMZOClient._getX500Val(x500name_ex, "CN"),
               TIN: EIMZOClient._getX500Val(x500name_ex, "INN")
@@ -1998,7 +2037,7 @@ var EIMZOClient = {
       function (e) {
         errors.push({ e: e });
         callback(itmkey0);
-      }
+      },
     );
   },
   _findTokens2: function (itemIdGen, itemUiGen, items, errors, callback) {
@@ -2017,12 +2056,15 @@ var EIMZOClient = {
               statusInfo: el.statusInfo,
               ownerName: el.ownerName,
               info: el.info,
-              serialNumber: EIMZOClient._getX500Val(x500name_ex, "SERIALNUMBER"),
+              serialNumber: EIMZOClient._getX500Val(
+                x500name_ex,
+                "SERIALNUMBER",
+              ),
               validFrom: new Date(
-                EIMZOClient._getX500Val(x500name_ex, "VALIDFROM")
+                EIMZOClient._getX500Val(x500name_ex, "VALIDFROM"),
               ),
               validTo: new Date(
-                EIMZOClient._getX500Val(x500name_ex, "VALIDTO")
+                EIMZOClient._getX500Val(x500name_ex, "VALIDTO"),
               ),
               CN: EIMZOClient._getX500Val(x500name_ex, "CN"),
               TIN: EIMZOClient._getX500Val(x500name_ex, "INN")
@@ -2050,7 +2092,7 @@ var EIMZOClient = {
       function (e) {
         errors.push({ e: e });
         callback(itmkey0);
-      }
+      },
     );
   },
 };
@@ -2059,4 +2101,3 @@ var EIMZOClient = {
 if (typeof window !== "undefined" && typeof window.onload === "undefined") {
   window.onload = AppLoad;
 }
-
