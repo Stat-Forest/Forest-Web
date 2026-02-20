@@ -22,6 +22,7 @@ import {
   LogIn,
   VideoIcon,
 } from "lucide-react";
+import { useEimzoLoginMutation } from "@/services/eimzoApi";
 
 declare global {
   interface Window {
@@ -50,6 +51,8 @@ function Login() {
   const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
   const [usbTokenLoading, setUsbTokenLoading] = useState(false);
   const [isEimzoInitialized, setIsEimzoInitialized] = useState(false);
+
+  const [eimzoHandler] = useEimzoLoginMutation();
 
   // -------- TOAST NOTIFICATION HELPERS ---------------
   const showToast = (
@@ -347,8 +350,6 @@ function Login() {
   const detectUsbTokens = async () => {
     if (!isEimzoInitialized) return;
 
-    // Start spinner and refresh keys via the standard E-IMZO flow.
-    // IMPORTANT: do NOT fabricate or construct `vo` objects for USB tokens here.
     setUsbTokenLoading(true);
     try {
       refreshAllKeys();
@@ -381,13 +382,9 @@ function Login() {
     callback(challenge);
   };
 
-  const handleEimzoLogin = (pkcs7: string, vo?: any) => {
-    // For USB tokens (type === 'ftjc') send only `{ pkcs7 }` to backend.
-    // For PFX certificates send `{ pkcs7, vo }`.
-    const isUsbToken = vo && vo.type === "ftjc";
-    const loginData = isUsbToken ? { pkcs7 } : { pkcs7, vo };
-
-    dispatch(authApi.endpoints.eimzoLogin.initiate(loginData))
+  const handleEimzoLogin = (pkcs7: string) => {
+    // Send only pkcs7 to backend, no vo needed
+    dispatch(eimzoHandler({ pkcs7 }))
       .unwrap()
       .then((response: any) => {
         uiHideProgress();
@@ -408,7 +405,7 @@ function Login() {
       });
   };
 
-  const auth = (keyId: string, challenge: string, vo: any) => {
+  const auth = (keyId: string, challenge: string) => {
     // Himoya: E-IMZO mavjudmi
     if (!window.EIMZOClient) {
       uiShowMessage("E-IMZO klienti yuklanmagan", "error");
@@ -437,7 +434,8 @@ function Login() {
             return;
           }
 
-          handleEimzoLogin(pkcs7, vo);
+          // Send only pkcs7, no vo needed
+          handleEimzoLogin(pkcs7);
         },
 
         // ❌ ERROR
@@ -505,7 +503,7 @@ function Login() {
       window.EIMZOClient.loadKey(
         selectedItem.vo,
         (keyId: string) => {
-          auth(keyId, challenge, selectedItem.vo);
+          auth(keyId, challenge);
         },
         uiHandleError,
       );
@@ -536,7 +534,7 @@ function Login() {
       window.EIMZOClient.loadKey(
         selectedItem.vo,
         (keyId: string) => {
-          auth(keyId, challenge, selectedItem.vo);
+          auth(keyId, challenge);
         },
         uiHandleError,
       );

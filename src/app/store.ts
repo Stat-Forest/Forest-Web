@@ -14,6 +14,7 @@ import uiReducer from "@/features/uiSlice";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // localStorage ishlatish uchun
 import { combineReducers } from "redux";
+import { eimzoApi } from "@/services/eimzoApi";
 
 // Redux Persist optimizatsiyasi
 const persistConfig = {
@@ -26,6 +27,7 @@ const persistConfig = {
     generalApi.reducerPath,
     statistikApi.reducerPath,
     sumApi.reducerPath,
+    eimzoApi.reducerPath,
     "report",
     "sidebar",
     "ui",
@@ -38,6 +40,7 @@ const rootReducer = combineReducers({
   [generalApi.reducerPath]: generalApi.reducer,
   [statistikApi.reducerPath]: statistikApi.reducer,
   [sumApi.reducerPath]: sumApi.reducer,
+  [eimzoApi.reducerPath]: eimzoApi.reducer,
 
   auth: authReducer,
   report: reportReducer,
@@ -60,7 +63,7 @@ export const store = configureStore({
       authApi.middleware,
       generalApi.middleware,
       statistikApi.middleware,
-      sumApi.middleware
+      sumApi.middleware,
     ),
 });
 
