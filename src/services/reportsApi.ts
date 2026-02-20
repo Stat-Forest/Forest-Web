@@ -390,6 +390,7 @@ export const reportApi = createApi({
       }),
       invalidatesTags: ["Reports"],
     }),
+
     // ==== 🟦 PUT endpoints ====
     updateReport: builder.mutation({
       query: ({ id, ...rest }) => ({
@@ -416,11 +417,11 @@ export const reportApi = createApi({
       }),
       invalidatesTags: ["Reports"],
     }),
-    updateReportSummary: builder.mutation({
-      query: ({ id, summary }) => ({
-        url: `/${id}/summary/`,
+    updateReportPlant: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/report-plant/${id}/update`,
         method: "PUT",
-        body: { summary },
+        body: data, // { rest } emas, to'g'ridan-to'g'ri data
       }),
       invalidatesTags: ["Reports"],
     }),
@@ -525,7 +526,7 @@ export const {
   // PUT
   useUpdateReportMutation,
   useUpdateReportStatusMutation,
-  useUpdateReportSummaryMutation,
+  useUpdateReportPlantMutation,
   useUpdateReportOwnerMutation,
   useUpdatePlanMutation,
 

@@ -23,7 +23,7 @@ function AuthHeader({position=false}: {position?: boolean}) {
   const { t } = useTranslation();
 
   const isAuthPage = location.pathname.includes("/auth");
-  const isLanding = location.pathname === "/";
+  const isLanding = location.pathname === "/landing";
 
   const handleChangeLang = (lang: string) => {
     i18n.changeLanguage(lang);
@@ -72,7 +72,7 @@ function AuthHeader({position=false}: {position?: boolean}) {
             </Button>
 
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/landing")}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-5"
             >
               {t("auth_statistics")}
