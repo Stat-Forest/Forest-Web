@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { authApi, User } from "@/services/authApi";
+import { eimzoApi } from "@/services/eimzoApi";
 import { encryptData, decryptData, removeEncryptedData } from "@/utils/crypto";
 
 interface AuthState {
@@ -46,14 +47,25 @@ const authSlice = createSlice({
       }
     );
 
-    // EIMZO login
+    // EIMZO login (authApi - /authentications/login/eimzo/)
     builder.addMatcher(
       authApi.endpoints.eimzoLogin.matchFulfilled,
       (state, action: PayloadAction<User>) => {
         const payload = action.payload;
         state.token = payload.access;
         state.user = payload;
-        // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
+        encryptData("token", payload.access, "token", 30);
+        encryptData("user", payload, "user", 30);
+      }
+    );
+
+    // EIMZO login (eimzoApi - /e_imzo/login/) — Login.tsx shuni ishlatadi
+    builder.addMatcher(
+      eimzoApi.endpoints.eimzoLogin.matchFulfilled,
+      (state, action: PayloadAction<User>) => {
+        const payload = action.payload;
+        state.token = payload.access;
+        state.user = payload;
         encryptData("token", payload.access, "token", 30);
         encryptData("user", payload, "user", 30);
       }

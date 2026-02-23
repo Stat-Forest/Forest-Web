@@ -58,12 +58,13 @@ export const store = configureStore({
       // Disable both checks to resolve warnings
       serializableCheck: false,
       immutableCheck: false,
-    }).concat(
+    }    ).concat(
       reportApi.middleware,
       authApi.middleware,
       generalApi.middleware,
       statistikApi.middleware,
       sumApi.middleware,
+      eimzoApi.middleware,
     ),
 });
 
