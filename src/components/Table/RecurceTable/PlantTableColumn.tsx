@@ -122,11 +122,11 @@ import {
   
             // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
             if (downloadUrl.startsWith("/")) {
-              const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
+              const baseUrl = import.meta.env.VITE_API_URL;
               downloadUrl = `${baseUrl}${downloadUrl}`;
             } else if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://")) {
               // Agar protocol bo'lmasa, base_url qo'shish
-              const baseUrl = import.meta.env.VITE_API_URL || "https://forest.yutori.uz/api/v1";
+              const baseUrl = import.meta.env.VITE_API_URL;
               downloadUrl = `${baseUrl}/${downloadUrl}`;
             }
   
