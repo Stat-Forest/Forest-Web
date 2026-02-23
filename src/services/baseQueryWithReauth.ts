@@ -114,12 +114,16 @@ export function createBaseQueryWithReauth(
           }
         }
       } else {
-        // No refresh token, logout user va /login ga redirect
-        console.warn("Token refresh failed: No refresh token available");
-        api.dispatch(logout());
-        // Redirect to login page
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth";
+        // No refresh token — public sahifalarda (/ , /landing) redirect qilmaslik
+        const isPublicPage =
+          typeof window !== "undefined" &&
+          (window.location.pathname === "/" || window.location.pathname === "/landing");
+        if (!isPublicPage) {
+          console.warn("Token refresh failed: No refresh token available");
+          api.dispatch(logout());
+          if (typeof window !== "undefined") {
+            window.location.href = "/auth";
+          }
         }
       }
     }

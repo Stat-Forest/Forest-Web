@@ -7,7 +7,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function PieChartLanding() {
   const lang = useSelector((state: RootState) => state.language.lang);
-  const { data, isLoading } = useGetLandStatisticsQuery({ lang });
+  const { data, isLoading, isError } = useGetLandStatisticsQuery({ lang });
 
   const COLORS = [
     "#2563EB",
@@ -22,17 +22,41 @@ export default function PieChartLanding() {
     return <div className="text-center py-10">Yuklanmoqda...</div>;
   }
 
-  const items = data?.items || [];
+  if (isError) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        Statistika yuklanmadi. Tizimga kiring.
+      </div>
+    );
+  }
 
-  // ❗ 0 qiymatlarni olib tashlaymiz
-  const filteredItems = items.filter((item: any) => item.area > 0);
+  // API `items` yoki `results` qaytarishi mumkin
+  const rawItems = data?.items ?? data?.results ?? [];
+  const items = Array.isArray(rawItems) ? rawItems : [];
 
-  const total = filteredItems.reduce((sum: number, i: any) => sum + i.area, 0);
+  // area, land_area, value va hokazolarni qo'llab-quvvatlash
+  const getArea = (item: any) =>
+    Number(item?.area ?? item?.land_area ?? item?.value ?? 0);
+
+  const filteredItems = items.filter((item: any) => getArea(item) > 0);
+
+  const total = filteredItems.reduce(
+    (sum: number, i: any) => sum + getArea(i),
+    0
+  );
 
   const chartData = filteredItems.map((item: any) => ({
-    name: item.name,
-    value: item.area,
+    name: item.name ?? item.title ?? item.column_name ?? "",
+    value: getArea(item),
   }));
+
+  if (chartData.length === 0) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        Ma'lumot mavjud emas
+      </div>
+    );
+  }
 
   /* ============================
      Slice label (%)
@@ -62,7 +86,7 @@ export default function PieChartLanding() {
           <PieChart>
             <Tooltip
               formatter={(value: number) =>
-                `${value.toFixed(2).replace(".", ",")} mln ga`
+                `${(Number(value) || 0).toFixed(2).replace(".", ",")} mln ga`
               }
             />
 
@@ -89,7 +113,7 @@ export default function PieChartLanding() {
           </span>
 
           <span className="text-5xl font-extrabold text-red-600 leading-none">
-            {total.toFixed(3).replace(".", ",")}
+            {(Number(total) || 0).toFixed(3).replace(".", ",")}
           </span>
 
           <span className="text-xl font-bold text-blue-600">mln ga</span>
