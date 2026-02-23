@@ -383,8 +383,8 @@ function Login() {
   };
 
   const handleEimzoLogin = (pkcs7: string) => {
-    // Send only pkcs7 to backend, no vo needed
-    dispatch(eimzoHandler({ pkcs7 }))
+    // Send only pkcs7 to backend, no vo needed. Mutation trigger o'zi dispatch qiladi — dispatch() kerak emas.
+    eimzoHandler({ pkcs7 })
       .unwrap()
       .then((response: any) => {
         uiHideProgress();
