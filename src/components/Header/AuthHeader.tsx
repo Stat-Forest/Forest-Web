@@ -23,7 +23,7 @@ function AuthHeader({position=false}: {position?: boolean}) {
   const { t } = useTranslation();
 
   const isAuthPage = location.pathname.includes("/auth");
-  const isLanding = location.pathname === "/landing";
+  const isLanding = location.pathname === "/" || location.pathname === "/landing";
 
   const handleChangeLang = (lang: string) => {
     i18n.changeLanguage(lang);
