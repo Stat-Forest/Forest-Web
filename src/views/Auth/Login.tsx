@@ -38,7 +38,6 @@ function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [eimzoKeys, setEimzoKeys] = useState<EimzoKey[]>([]);
-  const [selectedKey, setSelectedKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const { t } = useTranslation();
@@ -47,9 +46,7 @@ function Login() {
     "login",
   );
   const [eimzoKeysOnly, setEimzoKeysOnly] = useState<EimzoKey[]>([]);
-  const [usbTokensOnly, setUsbTokensOnly] = useState<EimzoKey[]>([]);
   const [selectedEimzoKey, setSelectedEimzoKey] = useState<string>("");
-  const [usbTokenLoading, setUsbTokenLoading] = useState(false);
   const [isEimzoInitialized, setIsEimzoInitialized] = useState(false);
 
   const [eimzoHandler] = useEimzoLoginMutation();
@@ -126,7 +123,6 @@ function Login() {
 
   const uiComboSelect = (itm: string | null) => {
     if (itm) {
-      setSelectedKey(itm);
       const item = eimzoKeys.find((k) => k.id === itm);
       if (item?.vo?.type === "pfx") {
         setSelectedEimzoKey(itm);
@@ -137,14 +133,11 @@ function Login() {
   const uiClearCombo = () => {
     setEimzoKeys([]);
     setEimzoKeysOnly([]);
-    setUsbTokensOnly([]);
-    setSelectedKey("");
     setSelectedEimzoKey("");
   };
 
   const uiFillCombo = (items: any[]) => {
     const processedItems: EimzoKey[] = [];
-    const usbTokens: EimzoKey[] = [];
     const eimzoKeysList: EimzoKey[] = [];
 
     items.forEach((item: any) => {
@@ -167,9 +160,7 @@ function Login() {
 
         processedItems.push(processed);
 
-        if (vo.type === "ftjc") {
-          usbTokens.push(processed);
-        } else if (vo.type === "pfx") {
+        if (vo.type === "pfx") {
           eimzoKeysList.push(processed);
         }
       } catch (error) {
@@ -182,13 +173,8 @@ function Login() {
 
     setEimzoKeys(processedItems);
     setEimzoKeysOnly(eimzoKeysList);
-    setUsbTokensOnly(usbTokens);
 
     if (processedItems.length > 0) {
-      const firstKey =
-        processedItems.find((k) => !k.disabled)?.id || processedItems[0].id;
-      setSelectedKey(firstKey);
-
       const firstEimzoKey =
         eimzoKeysList.find((k) => !k.disabled)?.id || eimzoKeysList[0]?.id;
       if (firstEimzoKey) setSelectedEimzoKey(firstEimzoKey);
@@ -198,7 +184,6 @@ function Login() {
   const uiLoaded = () => {
     setError("");
     setIsLoading(false);
-    setUsbTokenLoading(false);
   };
 
   const uiCreateItem = (itmkey: string, vo: any): any => {
@@ -350,7 +335,6 @@ function Login() {
   const detectUsbTokens = async () => {
     if (!isEimzoInitialized) return;
 
-    setUsbTokenLoading(true);
     try {
       refreshAllKeys();
     } catch (error) {
@@ -421,6 +405,8 @@ function Login() {
     }
 
     try {
+      // createPkcs7(keyId, challenge, timestamper, successCb, errorCb, detach?)
+      // USB-token uchun keyId "ckc" — ulanadigan tokenni avtomatik tanlaydi
       window.EIMZOClient.createPkcs7(
         keyId,
         challenge,
@@ -473,6 +459,7 @@ function Login() {
             wsError(e);
           }
         },
+        false // detach — misoldagi kabi
       );
     } catch (err) {
       uiHideProgress();
@@ -511,33 +498,16 @@ function Login() {
   };
 
   const signinToken = () => {
-    if (usbTokensOnly.length === 0) {
-      uiShowMessage(
-        "USB-token topilmadi. Tokenni ulang va 'Yangilash' tugmasini bosing.",
-        "error",
-      );
+    if (!window.EIMZOClient) {
+      uiShowMessage("E-IMZO klienti yuklanmagan. Sahifani yangilang.", "error");
       return;
     }
 
     uiShowProgress();
 
-    const itm = selectedKey || usbTokensOnly[0].id;
-    const selectedItem = usbTokensOnly.find((item) => item.id === itm);
-
-    if (!selectedItem) {
-      uiHideProgress();
-      uiShowMessage("USB-token sertifikati topilmadi", "error");
-      return;
-    }
-
+    // Misoldagi kabi: USB-token uchun keyId "ckc" — loadKey kerak emas
     getChallenge((challenge: string) => {
-      window.EIMZOClient.loadKey(
-        selectedItem.vo,
-        (keyId: string) => {
-          auth(keyId, challenge);
-        },
-        uiHandleError,
-      );
+      auth("ckc", challenge);
     });
   };
 
@@ -673,10 +643,7 @@ function Login() {
                   <select
                     id="eimzo-select"
                     value={selectedEimzoKey}
-                    onChange={(e) => {
-                      setSelectedEimzoKey(e.target.value);
-                      setSelectedKey(e.target.value);
-                    }}
+                    onChange={(e) => setSelectedEimzoKey(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     disabled={isLoading}
                   >
@@ -756,123 +723,45 @@ function Login() {
             )}
           </TabsContent>
 
-          {/* ------------ USB-TOKEN LOGIN ------------- */}
+          {/* ------------ USB-TOKEN LOGIN (misoldagi kabi: keyId "ckc") ------------- */}
           <TabsContent value="usb-token" className="space-y-4">
             <div className="bg-green-50 border border-green-100 rounded-lg p-4">
               <p className="text-sm text-green-700 font-medium">
                 USB-token (ID-card, BAIK-token) orqali kirish
               </p>
               <p className="text-xs text-green-600 mt-1">
-                Fizik USB token ulanib turgan bo'lishi kerak
+                Fizik USB token ulanib turgan bo'lishi kerak. Tugmani bosganda PIN so'raladi.
               </p>
             </div>
 
-            {usbTokenLoading ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
-                <p className="mt-2 text-gray-600">
-                  USB-tokenlar qidirilmoqda...
-                </p>
-              </div>
-            ) : usbTokensOnly.length > 0 ? (
-              <>
-                <div>
-                  <Label htmlFor="usb-select" className="mb-2 block">
-                    USB-token tanlang:
-                  </Label>
-                  <select
-                    id="usb-select"
-                    value={selectedKey}
-                    onChange={(e) => setSelectedKey(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    disabled={isLoading}
-                  >
-                    <option value="" disabled>
-                      USB-token tanlang
-                    </option>
-                    {usbTokensOnly.map((token) => (
-                      <option
-                        key={token.id}
-                        value={token.id}
-                        className="text-gray-800"
-                      >
-                        {token.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    <span className="text-green-700 font-medium">
-                      {usbTokensOnly.length} ta USB-token topildi
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={signinToken}
-                    className="flex-1 h-12 bg-green-600 hover:bg-green-700"
-                    disabled={isLoading || showProgress}
-                  >
-                    {showProgress ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Imzolanmoqda...
-                      </>
-                    ) : (
-                      <>
-                        <Usb className="w-4 h-4 mr-2" />
-                        {t("enter")}
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRefreshKeys}
-                    disabled={isLoading || showProgress}
-                    className="h-12 px-4"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
-                <Usb className="w-16 h-16 mx-auto text-gray-400" />
-                <p className="mt-3 text-gray-700 font-medium">
-                  USB-token ulanmagan
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Iltimos, USB-tokeningizni ulang
-                </p>
-                <div className="mt-4 space-y-2">
-                  <Button
-                    type="button"
-                    onClick={handleRefreshKeys}
-                    disabled={isLoading}
-                    className="w-full h-12"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    USB-tokenni qidirish
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      window.open("https://e-imzo.uz/help", "_blank")
-                    }
-                    className="w-full h-12"
-                  >
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Yordam
-                  </Button>
-                </div>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <Button
+                onClick={signinToken}
+                className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+                disabled={isLoading || showProgress}
+              >
+                {showProgress ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Imzolanmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Usb className="w-4 h-4 mr-2" />
+                    {t("enter")}
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.open("https://e-imzo.uz/help", "_blank")}
+                disabled={isLoading || showProgress}
+                className="h-12 px-4"
+              >
+                <AlertCircle className="w-4 h-4" />
+              </Button>
+            </div>
 
             {showProgress && (
               <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg">
