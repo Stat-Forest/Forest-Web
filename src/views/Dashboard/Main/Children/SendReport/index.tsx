@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { periods, regions2 } from "@/services/constants";
+import {regions2 } from "@/services/constants";
 import {
   useGetAllReportsQuery,
   useGetStatementsReportQuery,
