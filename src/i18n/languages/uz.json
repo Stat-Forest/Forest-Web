@@ -135,6 +135,8 @@
   "users": "Umumiy foydalanuvchilar soni: {{count}} ta",
   "shown": "Ko'rsatilyapti: {{count}}-{{count2}}",
   "region": "Region",
+  "chooseDirection": "Yo'nalishni tanlang",
+  "XLSXexport": "XLSX eksporti",
   "reportType": "Hisobot turi",
   "allReports": "Barcha hisobotlar",
   "year": "Yili",
@@ -286,5 +288,9 @@
   "landing_3":"Oylik ko‘rsatkichlar",
   "landing_4":"Barcha o‘rmon yerlari",
   "spring":"Bahor",
-  "autumn":"Kuz"
+  "autumn":"Kuz",
+  "showing": "Ko'rsatilmoqda",
+  "of": "dan",
+  "results": "natija"
 }
+

@@ -104,7 +104,7 @@ function ExpiredDeadlines() {
             }}
           >
             <SelectTrigger className="w-[260px] text-xl border-black">
-              <SelectValue placeholder="Yo'nalishni tanlang" />
+              <SelectValue placeholder={`${t("chooseDirection")}`}/>
             </SelectTrigger>
             <SelectContent>
               {statementLoading && <p className="px-3">Yuklanmoqda...</p>}
