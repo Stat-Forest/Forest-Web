@@ -114,9 +114,9 @@ function LandDocumentCreate() {
           variant="ghost"
           size="icon"
           onClick={() => navigate(-1)}
-          className="h-10 w-10"
+          className="h-14 w-14 "
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="min-h-7 min-w-7"/>
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -147,7 +147,7 @@ function LandDocumentCreate() {
                 id="name"
                 name="name"
                 placeholder={t("enterDocumentName")}
-                className="h-11"
+                className="h-11 border-2"
                 required
               />
             </div>
@@ -158,7 +158,7 @@ function LandDocumentCreate() {
                 <Label htmlFor="date" className="text-sm font-medium">
                   {t("date")} *
                 </Label>
-                <Popover>
+                <Popover >
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -177,7 +177,7 @@ function LandDocumentCreate() {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 shadow-lg border border-gray-200 rounded-lg">
+                  <PopoverContent className="w-auto p-0 shadow-lg border-gray-200 rounded-lg">
                     <Calendar
                       mode="single"
                       selected={date}
@@ -236,7 +236,7 @@ function LandDocumentCreate() {
                   {t("documentType")} *
                 </Label>
                 <Select name="document_type" required>
-                  <SelectTrigger className="h-11 bg-ice border-gray-300">
+                  <SelectTrigger className="h-11 min-w-full min-h-11 bg-ice  border-gray-300">
                     <SelectValue placeholder={t("selectDocumentType")} />
                   </SelectTrigger>
                   <SelectContent className="bg-ice border-gray-200 shadow-lg">
@@ -317,7 +317,7 @@ function LandDocumentCreate() {
 
               {selectedFile ? (
                 // Selected File Preview
-                <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 transition-colors">
+                <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-4 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <FileText className="h-8 w-8 text-blue-600" />
