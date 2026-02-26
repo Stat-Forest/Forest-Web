@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { regions2 } from "@/services/constants";
+import { periods, regions2 } from "@/services/constants";
 import {
   useGetAllReportsQuery,
   useGetStatementsReportQuery,
@@ -231,7 +231,7 @@ function MainDetail() {
                 }
               >
                 <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                  <SelectValue placeholder="Yo'nalishni tanlang" />
+                  <SelectValue placeholder={`${t("chooseDirection")}`} />
                 </SelectTrigger>
 
                 <SelectContent>
@@ -282,6 +282,13 @@ function MainDetail() {
                   <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
                   <SelectItem value="yearly">{t("yearly")}</SelectItem>
                 </SelectContent>
+                {/* <SelectContent>
+                  {periods.map((reportType) => (
+                    <SelectItem key={reportType.value} value={reportType.value}>
+                      {i18n.language === "uz" ? reportType.label_uz : reportType.label_ru}
+                    </SelectItem>
+                  ))}
+                </SelectContent> */}
               </Select>
             </div>
 
@@ -378,7 +385,7 @@ function MainDetail() {
               }
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder="Yo'nalishni tanlang" />
+                <SelectValue placeholder={`${t("chooseDirection")}`} />
               </SelectTrigger>
 
               <SelectContent>
@@ -444,7 +451,7 @@ function MainDetail() {
                   exportReportsToExcel(reportsData, t, deadline_at)
                 }
               >
-                XLSX export
+                {t("XLSXexport")}
               </Button>
             </div>
           </div>

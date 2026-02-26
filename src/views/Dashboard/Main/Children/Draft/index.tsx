@@ -205,7 +205,7 @@ function Draft() {
               onValueChange={setSelectedStatement}
             >
               <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
-                <SelectValue placeholder="Yo'nalishni tanlang" />
+                <SelectValue placeholder={`${t("chooseDirection")}`} />
               </SelectTrigger>
 
               <SelectContent>
@@ -264,7 +264,7 @@ function Draft() {
                   exportReportsToExcel(reportsData, t, deadline_at)
                 }
               >
-                XLSX export
+                {t("XLSXexport")}
               </Button>
             </div>
           </div>
