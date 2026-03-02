@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { setReportName } from "@/features/reportSlice";
 import LandDocumentsContainers from "@/containers/ResourceContainer/LandDocumentsContainers";
 import ResourcePlantContainer from "@/containers/ResourceContainer/ResourcePlantContainer";
+import ForestAnalysisContainer from "@/containers/ResourceContainer/ForestAnalysisContainer";
 
 function ResourceManagement() {
   const { id, reportName } = useParams<{ id: string; reportName: string }>();
@@ -71,6 +72,8 @@ function ResourceManagement() {
         childTitle == "Форма 11-Ох" ||
         childTitle == "Daromad" ? (
         <ResourcePlantContainer reportName={childTitle} />
+      ) : childTitle == "O'rmonlar kesimida" ? (
+        <ForestAnalysisContainer reportName={childTitle} />
       ) : (
         <ResourceContainer reportName={childTitle} />
       )}
