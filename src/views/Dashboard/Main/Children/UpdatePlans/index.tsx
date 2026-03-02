@@ -608,7 +608,7 @@ function UpdatePlans() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!state.selectedOrg || !state.statement || !state.year) {
+    if (!state.selectedOrg || !state.year) {
       alert("Iltimos, barcha maydonlarni to'ldiring!");
       return;
     }
