@@ -645,8 +645,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   {/* Filters */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
-                    {user_role === "tashkilot_hodimi" &&
-                      reportName != "Ko'chat va Nihol Yetishtirish Jami" && (
+                    {user_role === "tashkilot_hodimi" && (
                         <button
                           className="bg-[#3B82F6] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#2563EB] transition-colors duration-300"
                           onClick={() =>

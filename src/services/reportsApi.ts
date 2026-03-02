@@ -296,6 +296,13 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
+    getReportSourceReports: builder.query<any, void>({
+      query: () => ({
+        url: `/source-reports/kochat-nihol/`,
+        method: "GET",
+      }),
+      providesTags: ["Reports"],
+    }),
 
     // ==== 🟩 POST endpoints ====
     createReport: builder.mutation({
@@ -512,6 +519,7 @@ export const {
   useGetReportPlantQuery,
   useGetReportPlantByIdQuery,
   useGetLoginStatDeadlineQuery,
+  useGetReportSourceReportsQuery,
 
   // POST
   useCreateReportMutation,

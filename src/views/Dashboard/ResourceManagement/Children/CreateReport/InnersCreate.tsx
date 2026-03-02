@@ -353,7 +353,7 @@ function InnersCreateReportItem() {
                 (item: any) => item.id.toString() === val,
               );
               setYearPlan(
-                selectedItem ? formatDeadlineText(selectedItem.year) : "",
+                selectedItem ? formatDeadlineText(selectedItem.submit_at) : "",
               );
             }}
           >

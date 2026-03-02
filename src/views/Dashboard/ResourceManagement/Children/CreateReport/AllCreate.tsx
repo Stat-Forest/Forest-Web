@@ -17,10 +17,11 @@ import {
   useGetStatementColumnsReportQuery,
   reportApi,
   useGetDeadlinesReportQuery,
+  useGetReportSourceReportsQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Select,
@@ -70,11 +71,13 @@ function findEmptyChildrenColumnIds(children: any[]): ColumnItem[] {
 }
 
 function AllCreateReportItem() {
+  const { reportName } = useParams();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
   const [selectedSeason, setSelectedSeason] = useState<string>("");
+  const [selectedReportType, setSelectedReportType] = useState<string>("");
   const [footNote, setFootNote] = useState<string>("");
   const [allEmptyColumnsByStep, setAllEmptyColumnsByStep] = useState<
     ColumnItem[][]
@@ -88,6 +91,7 @@ function AllCreateReportItem() {
       fullParentChain: string;
     }[]
   >([]);
+
   const [yearPlan, setYearPlan] = useState<string>("");
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
@@ -128,6 +132,8 @@ function AllCreateReportItem() {
     },
     { skip: !reportIds },
   );
+
+  const { data: sourceReports } = useGetReportSourceReportsQuery();
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
@@ -366,10 +372,19 @@ function AllCreateReportItem() {
       };
     });
 
+    const seasonValue =
+      reportName == "Ko'chat va Nihol Yetishtirish Jami"
+        ? ""
+        : selectedSeason || null;
+
     const payload = {
       deadline: selectedDeadlineId,
       report_items,
-      season: selectedSeason || null,
+      season: seasonValue,
+      ...(reportName == "Ko'chat va Nihol Yetishtirish Jami" &&
+        selectedReportType && {
+          source_report: selectedReportType,
+        }),
       foot_note: footNote || "",
     };
 
@@ -451,9 +466,7 @@ function AllCreateReportItem() {
                   (item: any) => item.id.toString() === val,
                 );
                 setYearPlan(
-                  selectedItem
-                    ? formatDeadlineText(selectedItem.year)
-                    : "",
+                  selectedItem ? formatDeadlineText(selectedItem.year) : "",
                 );
               }}
             >
@@ -551,9 +564,41 @@ function AllCreateReportItem() {
               </Select>
             </div>
           )}
+          {reportName == "Ko'chat va Nihol Yetishtirish Jami" && (
+            <div>
+              <label className="block mb-1 text-lg font-medium">
+                {t("report_type")}:
+              </label>
+              <Select
+                value={selectedReportType}
+                onValueChange={(val) => setSelectedReportType(val)}
+              >
+                <SelectTrigger className="w-[300px]">
+                  <SelectValue placeholder={t("select_report_type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {!sourceReports && (
+                    <div className="p-2 text-center text-sm text-muted-foreground">
+                      {t("loading")}
+                    </div>
+                  )}
+                  {sourceReports?.results?.map((item: any) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.statement_name} {item?.submit_at}
+                    </SelectItem>
+                  ))}
+                  {sourceReports && sourceReports.results?.length === 0 && (
+                    <div className="p-2 text-center text-sm text-muted-foreground">
+                      {t("noData")}
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
-        {/* Table */}
+        {/* Table */} 
         {currentEmptyColumns.length > 0 ? (
           <div className="overflow-x-auto">
             <div className="mb-4 flex justify-between">
