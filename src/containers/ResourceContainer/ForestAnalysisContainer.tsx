@@ -192,19 +192,24 @@ function ForestAnalysisContainer({ reportName: _reportName }: { reportName: stri
   );
 
   const tableRows = useMemo(() => {
-    let root: AnalyticalNode | null = null;
+    const flatRows: FlatRow[] = [];
 
     if (analyticalData && typeof analyticalData === "object") {
       const anyData = analyticalData as any;
 
       if (Array.isArray(anyData.results) && anyData.results.length > 0) {
-        root = anyData.results[0] as AnalyticalNode;
-      } else if (!Array.isArray(analyticalData)) {
-        root = analyticalData as AnalyticalNode;
+        (anyData.results as AnalyticalNode[]).forEach((node) => {
+          flattenTree(node, flatRows);
+        });
+      } else if (Array.isArray(analyticalData)) {
+        (analyticalData as AnalyticalNode[]).forEach((node) => {
+          flattenTree(node, flatRows);
+        });
+      } else {
+        flattenTree(analyticalData as AnalyticalNode, flatRows);
       }
     }
 
-    const flatRows = flattenTree(root);
     return flatRows.map((row, index) => {
       const cells = leafTitles.map((colTitle) => {
         const val = findValueByKeyRecursive(row.result, colTitle);
