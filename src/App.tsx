@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "./app/store";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import "./i18n";
-import { TestModeCarousel } from "./components/TestModeCarousel";
 import AppWrapper from "./components/AppWrapper";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -76,7 +75,6 @@ function App() {
 
   return (
     <AppWrapper>
-      <TestModeCarousel />
       <ToastContainer
         position="top-right"
         autoClose={3500} // 3.5 sekund
