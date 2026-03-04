@@ -178,10 +178,10 @@
 
 body {
   /* Background image - lazy load qilingan, lekin fallback sifatida CSS'da ham qo'yamiz */
-  background: linear-gradient(rgba(222, 242, 250, 0.1), rgba(217, 245, 249, 0.3)), url(./assets/winter_bg.webp);
-  background-size: cover;
+  /* background: linear-gradient(rgba(222, 242, 250, 0.1), rgba(217, 245, 249, 0.3)), url(./assets/winter_bg.webp); */
+  /* background-size: cover;
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: center; */
   /* Image loading optimizatsiyasi */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
@@ -191,6 +191,8 @@ body {
   transition: background-image 0.3s ease-in-out;
   position: relative;
   overflow-x: hidden;
+  background: #2A7B9B;
+background: linear-gradient(90deg, rgba(42, 123, 155, 0.46) 0%, rgba(87, 199, 133, 0.4) 50%, rgba(237, 221, 83, 0.37) 100%);
 }
 
 /* Qor animatsiyasi - mayda qorlar asta sekin yogib turishi */
