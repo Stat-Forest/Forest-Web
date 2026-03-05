@@ -296,9 +296,9 @@ export const reportApi = createApi({
       }),
       providesTags: ["Reports"],
     }),
-    getReportSourceReports: builder.query<any, void>({
-      query: () => ({
-        url: `/source-reports/kochat-nihol/`,
+    getReportSourceReports: builder.query<any, { userById: any }>({
+      query: ({ userById }) => ({
+        url: `/source-reports/kochat-nihol/?organization=${userById}`,
         method: "GET",
       }),
       providesTags: ["Reports"],

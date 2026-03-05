@@ -18,6 +18,7 @@ import {
   reportApi,
   useGetDeadlinesReportQuery,
   useGetReportSourceReportsQuery,
+  useGetUsersReportQuery,
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
@@ -96,6 +97,7 @@ function AllCreateReportItem() {
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
+  const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
@@ -133,7 +135,22 @@ function AllCreateReportItem() {
     { skip: !reportIds },
   );
 
-  const { data: sourceReports } = useGetReportSourceReportsQuery();
+  const { data: userById } = useGetUsersReportQuery(
+    {
+      user_id: user_id || "",
+      page: 1,
+      perPage: 10,
+      search: "",
+      organization: "",
+      role: "",
+    },
+    { skip: !user_id },
+  );
+
+  const { data: sourceReports, isLoading: isSourceReportsLoading } = useGetReportSourceReportsQuery(
+    { userById: userById?.results[0]?.organization },
+    { skip: !userById?.results?.[0]?.organization }
+  );
 
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
@@ -577,7 +594,7 @@ function AllCreateReportItem() {
                   <SelectValue placeholder={t("select_report_type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {!sourceReports && (
+                  {isSourceReportsLoading && (
                     <div className="p-2 text-center text-sm text-muted-foreground">
                       {t("loading")}
                     </div>
@@ -598,7 +615,7 @@ function AllCreateReportItem() {
           )}
         </div>
 
-        {/* Table */} 
+        {/* Table */}
         {currentEmptyColumns.length > 0 ? (
           <div className="overflow-x-auto">
             <div className="mb-4 flex justify-between">
