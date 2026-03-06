@@ -4,18 +4,11 @@ import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const informationAnalyticalApi = createApi({
   reducerPath: "informationAnalyticalApi",
-  baseQuery: createBaseQueryWithReauth(`${base_url}/information-analytical`),
+  baseQuery: createBaseQueryWithReauth(`${base_url}/`),
   tagTypes: ["InformationAnalytical"],
   endpoints: (builder) => ({
-    getInformationAnalytical: builder.query<
-      { results?: any[]; [key: string]: any },
-      void | { statement?: string }
-    >({
-      query: (params) => {
-        const statement = params && typeof params === "object" ? params.statement : undefined;
-        const url = statement ? `/?statement=${statement}` : "/";
-        return { url, method: "GET" };
-      },
+   getInformationAnalytical: builder.query<any, { lang: string; region: string; organization: string; period: string }>({
+      query: ({ lang,region, organization, period }) => `/information-analytical/?region=${region}&lang=${lang}&organization=${organization}&period=${period}`,
       providesTags: ["InformationAnalytical"],
     }),
   }),

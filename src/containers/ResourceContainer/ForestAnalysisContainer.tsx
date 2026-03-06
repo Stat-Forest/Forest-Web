@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
@@ -7,6 +7,9 @@ import { useGetInformationAnalyticalQuery } from "@/services/informationAnalytic
 import { ReportColumn } from "@/types/reportInterface";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from "@/components/ui/select";
+import { regions_information } from "@/services/constants";
+import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 
 type AnalyticalNode = {
   level?: string;
@@ -24,15 +27,21 @@ type FlatRow = {
 };
 
 /** Daraxtni tekis qatorlar ro'yxatiga yoyadi (har bir node = bitta qator) */
-function flattenTree(node: AnalyticalNode | null, rows: FlatRow[] = [], depth = 0): FlatRow[] {
+function flattenTree(
+  node: AnalyticalNode | null,
+  rows: FlatRow[] = [],
+  depth = 0,
+): FlatRow[] {
   if (!node) return rows;
-  const children = Array.isArray(node.children) ? (node.children as AnalyticalNode[]) : [];
+  const children = Array.isArray(node.children)
+    ? (node.children as AnalyticalNode[])
+    : [];
   rows.push({
     level: node.level ?? "",
     hudud: node.hudud ?? "",
-    result: (node.result && typeof node.result === "object" ? node.result : null) as
-      | Record<string, unknown>
-      | null,
+    result: (node.result && typeof node.result === "object"
+      ? node.result
+      : null) as Record<string, unknown> | null,
     depth,
     hasChildren: children.length > 0,
   });
@@ -50,12 +59,7 @@ function formatCellValue(val: unknown): string {
   const amalda = o.Amalda;
   const pct = o["%"];
   const diff = o["(+,-)"];
-  if (
-    "Reja" in o ||
-    "Amalda" in o ||
-    "%" in o ||
-    "(+,-)" in o
-  ) {
+  if ("Reja" in o || "Amalda" in o || "%" in o || "(+,-)" in o) {
     const parts = [
       reja !== undefined && reja !== "" ? `Reja: ${reja}` : null,
       amalda !== undefined && amalda !== "" ? `Amalda: ${amalda}` : null,
@@ -145,9 +149,16 @@ function renderHeaderRows(data: ReportColumn[], maxDepth: number) {
   return rows;
 }
 
-function ForestAnalysisContainer({ reportName: _reportName }: { reportName: string }) {
+function ForestAnalysisContainer({
+  reportName: _reportName,
+}: {
+  reportName: string;
+}) {
   const { id } = useParams<{ id: string }>();
   const lang = useSelector((state: RootState) => state.language.lang);
+
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
+  const [selectedOrganization, setSelectedOrganization] = useState<string>("");
 
   const {
     data: tableHeadersData = [],
@@ -162,10 +173,14 @@ function ForestAnalysisContainer({ reportName: _reportName }: { reportName: stri
     data: analyticalData,
     isLoading: isBodyLoading,
     isError: isErrorBody,
-  } = useGetInformationAnalyticalQuery(
-    id ? { statement: id } : undefined,
-    { skip: !id },
-  );
+  } = useGetInformationAnalyticalQuery({
+    lang,
+    region: selectedRegion,
+    organization: selectedOrganization,
+    period: "",
+  });
+
+  const {data: organizationData} = useGetOrganizationReportsQuery({lang});
 
   const isLoading = isHeadersLoading || isBodyLoading;
   const isError = isErrorHeaders || isErrorBody;
@@ -241,7 +256,9 @@ function ForestAnalysisContainer({ reportName: _reportName }: { reportName: stri
       <div className="flex justify-center items-center min-h-[200px]">
         <Alert variant="destructive">
           <AlertTitle>Xatolik yuz berdi</AlertTitle>
-          <AlertDescription>Ma&apos;lumotlarni yuklashda xatolik. Qayta urinib ko&apos;ring.</AlertDescription>
+          <AlertDescription>
+            Ma&apos;lumotlarni yuklashda xatolik. Qayta urinib ko&apos;ring.
+          </AlertDescription>
         </Alert>
       </div>
     );
@@ -249,6 +266,33 @@ function ForestAnalysisContainer({ reportName: _reportName }: { reportName: stri
 
   return (
     <div className="py-3">
+      <div className=" m-1 rounded-2xl p-3 bg-white flex items-center gap-4 ">
+        <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+          <SelectTrigger className="w-full min-w-[300px] max-w-48">
+            <SelectValue placeholder="Hududni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+           {regions_information.map((region) => (
+              <SelectItem key={region.value} value={region.value}>
+                {region.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
+          <SelectTrigger className="w-full min-w-[300px] max-w-48">
+            <SelectValue placeholder="Tashkilotni tanlang" />
+          </SelectTrigger>
+          <SelectContent>
+            {organizationData?.map((org: any) => (
+              <SelectItem key={org.id} value={org.id}>
+                {org.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <button className="bg-blue-400 text-white py-2 px-3 text-sm rounded-lg" onClick={() => { setSelectedRegion(""); setSelectedOrganization(""); }}>Tozalash</button>
+      </div>
       <div className="overflow-x-auto bg-ice p-4 rounded-xl">
         <table className="w-full border-collapse">
           <thead className="w-full">
