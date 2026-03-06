@@ -87,3 +87,19 @@ export const USER_ROLE = [
   "tashkilot_rahbari",
   "hududiy_boshqarma",
 ]
+
+export const regions_information = [
+  { label: "Toshkent", value: "tashkent" },
+  { label: "Namangan", value: "namangan" },
+  { label: "Andijon", value: "andijon" },
+  { label: "Farg'ona", value: "fargona" },
+  { label: "Buxoro", value: "buxoro" },
+  { label: "Samarqand", value: "samarqand" },
+  { label: "Navoiy", value: "navoiy" },
+  { label: "Qashqadaryo", value: "qashqadaryo" },
+  { label: "Surxondaryo", value: "surxondaryo" },
+  { label: "Xorazm", value: "xorazm" },
+  { label: "Sirdaryo", value: "sirdaryo" },
+  { label: "Jizzax", value: "jizzax" },
+  { label: "Qoraqalpog'iston", value: "qoraqalpogiston" }
+];
