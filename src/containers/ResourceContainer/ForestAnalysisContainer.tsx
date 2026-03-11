@@ -80,36 +80,50 @@ function formatCellValue(val: unknown): string {
   return parts.join(" | ");
 }
 
-/** result obyektida berilgan kalit bo'yicha rekursiv qidiradi */
-function findValueByKeyRecursive(obj: unknown, key: string): unknown {
-  if (!obj || typeof obj !== "object") return undefined;
-  const record = obj as Record<string, unknown>;
-
-  if (Object.prototype.hasOwnProperty.call(record, key)) {
-    return record[key];
-  }
-
-  for (const k of Object.keys(record)) {
-    const v = record[k];
-    if (v && typeof v === "object" && !Array.isArray(v)) {
-      const found = findValueByKeyRecursive(v, key);
-      if (found !== undefined) return found;
-    }
-  }
-
-  return undefined;
+/**
+ * Statement-columns va analytical API kalitlarini solishtirish uchun normalizatsiya.
+ * Turli apostrof/unicode belgilari (masalan O'rmon) bir xil qilib qaytariladi.
+ */
+function normalizeKeyForMatch(s: string): string {
+  return s
+    .trim()
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2033]/g, "'") // Unicode apostrof/tirnoq -> ASCII
+    .replace(/\s+/g, " ");
 }
 
-function getLeafColumnTitles(nodes: ReportColumn[]): string[] {
-  const titles: string[] = [];
+
+/** Har bir leaf ustun uchun root dan leaf gacha bo‘lgan title yo‘lini qaytaradi (children bo‘yicha) */
+function getLeafColumnPaths(nodes: ReportColumn[], parentPath: string[] = []): string[][] {
+  const paths: string[][] = [];
   nodes.forEach((node) => {
+    const path = [...parentPath, node.title];
     if (!node.children || node.children.length === 0) {
-      titles.push(node.title);
+      paths.push(path);
     } else {
-      titles.push(...getLeafColumnTitles(node.children));
+      paths.push(...getLeafColumnPaths(node.children, path));
     }
   });
-  return titles;
+  return paths;
+}
+
+/** result obyektida berilgan yo‘l (parent → child → …) bo‘yicha qiymatni qaytaradi; kalitlar normalizatsiyalangan */
+function getValueByPath(obj: unknown, path: string[]): unknown {
+  if (path.length === 0) return obj;
+  if (!obj || typeof obj !== "object") return undefined;
+  const record = obj as Record<string, unknown>;
+  const keyNorm = normalizeKeyForMatch(path[0]);
+  let key: string | null = null;
+  if (Object.prototype.hasOwnProperty.call(record, path[0])) key = path[0];
+  else {
+    for (const k of Object.keys(record)) {
+      if (normalizeKeyForMatch(k) === keyNorm) {
+        key = k;
+        break;
+      }
+    }
+  }
+  if (key === null) return undefined;
+  return getValueByPath(record[key], path.slice(1));
 }
 
 function getMaxDepth(items: ReportColumn[]): number {
@@ -187,12 +201,15 @@ function ForestAnalysisContainer({
 
   const firstTabColumns = useMemo(() => {
     const first = tableHeadersData[0];
-    if (!first?.children?.length) return [];
-    return first.children;
+    if (first?.children?.length) return first.children;
+    // Agar birinchi elementda children bo‘lmasa, butun sarlavhalarni ustunlar deb ol (bitta daraja)
+    if (Array.isArray(tableHeadersData) && tableHeadersData.length > 0) return tableHeadersData;
+    return [];
   }, [tableHeadersData]);
 
-  const leafTitles = useMemo(
-    () => getLeafColumnTitles(firstTabColumns),
+  /** Har bir ustun uchun root→leaf yo‘li (children ierarxiyasi bo‘yicha) — qiymatni to‘g‘ri joyga qo‘yish uchun */
+  const leafPaths = useMemo(
+    () => getLeafColumnPaths(firstTabColumns),
     [firstTabColumns],
   );
 
@@ -225,9 +242,14 @@ function ForestAnalysisContainer({
       }
     }
 
+    const rootTitle = tableHeadersData[0]?.title;
+
     return flatRows.map((row, index) => {
-      const cells = leafTitles.map((colTitle) => {
-        const val = findValueByKeyRecursive(row.result, colTitle);
+      const cells = leafPaths.map((path) => {
+        let val = getValueByPath(row.result, path);
+        if (val === undefined && rootTitle) {
+          val = getValueByPath(row.result, [rootTitle, ...path]);
+        }
         return formatCellValue(val);
       });
       return {
@@ -238,7 +260,7 @@ function ForestAnalysisContainer({
         cells,
       };
     });
-  }, [analyticalData, leafTitles]);
+  }, [analyticalData, leafPaths, tableHeadersData]);
 
   if (isLoading) {
     return (
