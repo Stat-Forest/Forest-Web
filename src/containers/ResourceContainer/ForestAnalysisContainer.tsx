@@ -173,6 +173,7 @@ function ForestAnalysisContainer({
 
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedOrganization, setSelectedOrganization] = useState<string>("");
+  const [period, setPeriod] = useState<string>("");
 
   const {
     data: tableHeadersData = [],
@@ -191,7 +192,7 @@ function ForestAnalysisContainer({
     lang,
     region: selectedRegion,
     organization: selectedOrganization,
-    period: "",
+    period,
   });
 
   const {data: organizationData} = useGetOrganizationReportsQuery({lang});
@@ -288,7 +289,7 @@ function ForestAnalysisContainer({
 
   return (
     <div className="py-3">
-      <div className=" m-1 rounded-2xl p-3 bg-white flex items-center gap-4 ">
+      <div className=" m-1 rounded-2xl p-3 bg-white flex items-start gap-4 ">
         <Select value={selectedRegion} onValueChange={setSelectedRegion}>
           <SelectTrigger className="w-full min-w-[300px] max-w-48">
             <SelectValue placeholder="Hududni tanlang" />
@@ -313,7 +314,28 @@ function ForestAnalysisContainer({
             ))}
           </SelectContent>
         </Select>
-        <button className="bg-blue-400 text-white py-2 px-3 text-sm rounded-lg" onClick={() => { setSelectedRegion(""); setSelectedOrganization(""); }}>Tozalash</button>
+        <div className="flex flex-col gap-1">
+          <input
+            type="text"
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            placeholder="Hisobot davri (masalan: 2025, 2025-CHORAK_1, 2025-01)"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm min-w-[260px] max-w-64"
+          />
+          <span className="text-[12px] text-gray-500">
+            Formatlar: Yillik: 2025 | <br /> Choraklik: 2025-CHORAK_1 | <br /> Oylik: 2025-01
+          </span>
+        </div>
+        <button
+          className="bg-blue-400 text-white py-2 px-3 text-sm rounded-lg"
+          onClick={() => {
+            setSelectedRegion("");
+            setSelectedOrganization("");
+            setPeriod("");
+          }}
+        >
+          Tozalash
+        </button>
       </div>
       <div className="overflow-x-auto bg-ice p-4 rounded-xl">
         <table className="w-full border-collapse">
