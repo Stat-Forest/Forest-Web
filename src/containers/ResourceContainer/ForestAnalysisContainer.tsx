@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import { base_url } from "@/services/baseUrl";
 import { useGetStatementColumnsReportQuery } from "@/services/reportsApi";
 import { useGetInformationAnalyticalQuery } from "@/services/informationAnalyticalApi";
 import { ReportColumn } from "@/types/reportInterface";
@@ -10,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from "@/components/ui/select";
 import { regions_information } from "@/services/constants";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import { decryptData } from "@/utils/crypto";
 
 type AnalyticalNode = {
   level?: string;
@@ -200,6 +202,46 @@ function ForestAnalysisContainer({
   const isLoading = isHeadersLoading || isBodyLoading;
   const isError = isErrorHeaders || isErrorBody;
 
+  const handleDownloadReport = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (lang) params.append("lang", lang);
+      if (selectedRegion) params.append("region", selectedRegion);
+      if (selectedOrganization) params.append("organization", selectedOrganization);
+      if (period) params.append("period", period);
+
+      const token = decryptData("token", "token") as string | null;
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${base_url}/information-analytical/export-excel/${params.toString() ? `?${params.toString()}` : ""}`,
+        {
+          method: "GET",
+          headers,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download report");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "forest-monitoring.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download report:", error);
+    }
+  };
+
   const firstTabColumns = useMemo(() => {
     const first = tableHeadersData[0];
     if (first?.children?.length) return first.children;
@@ -289,7 +331,7 @@ function ForestAnalysisContainer({
 
   return (
     <div className="py-3">
-      <div className=" m-1 rounded-2xl p-3 bg-white flex items-start gap-4 ">
+      <div className=" m-1 rounded-2xl p-3 bg-white flex items-start flex-wrap gap-4 ">
         <Select value={selectedRegion} onValueChange={setSelectedRegion}>
           <SelectTrigger className="w-full min-w-[300px] max-w-48">
             <SelectValue placeholder="Hududni tanlang" />
@@ -326,16 +368,24 @@ function ForestAnalysisContainer({
             Formatlar: Yillik: 2025 | <br /> Choraklik: 2025-CHORAK_1 | <br /> Oylik: 2025-01
           </span>
         </div>
-        <button
-          className="bg-blue-400 text-white py-2 px-3 text-sm rounded-lg"
-          onClick={() => {
-            setSelectedRegion("");
-            setSelectedOrganization("");
-            setPeriod("");
-          }}
-        >
-          Tozalash
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="bg-blue-400 text-white py-2 px-3 text-sm rounded-lg"
+            onClick={() => {
+              setSelectedRegion("");
+              setSelectedOrganization("");
+              setPeriod("");
+            }}
+          >
+            Tozalash
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white py-2 px-3 text-sm rounded-lg"
+            onClick={handleDownloadReport}
+          >
+            Hisobotni yuklab olish
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto bg-ice p-4 rounded-xl">
         <table className="w-full border-collapse">
