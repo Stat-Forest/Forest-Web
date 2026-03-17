@@ -89,8 +89,8 @@ function ExpiredDeadlines() {
 
   return (
     <div className="px-5 w-full">
-      {isLoading && <p>Yuklanmoqda...</p>}
-      {error && <p className="text-red-500">Xatolik yuz berdi</p>}
+      {isLoading && <p className="text-left">Yuklanmoqda...</p>}
+      {error && <p className="text-red-500 text-left">Xatolik yuz berdi</p>}
 
       <div className="bg-ice border rounded-xl px-3 py-5">
         {/* FILTERS */}
@@ -187,23 +187,23 @@ function ExpiredDeadlines() {
 
         {/* TABLE */}
         {list.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">
+          <p className="text-left text-gray-500 py-8">
             {t("noData") || "Ma'lumot topilmadi"}
           </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-200">
-                <TableHead>{t("item_18")}</TableHead> {/* T/r: */}
-                <TableHead>{t("statments_name")}</TableHead> {/* Bo'lim */}
-                <TableHead>{t("item_14")}</TableHead> {/* Hisobot davri */}
-                <TableHead>{t("deadline")}</TableHead> {/* Muddati */}
-                <TableHead>{t("organization")}</TableHead> {/* Tashkilot */}
-                <TableHead className="text-right">
+                <TableHead className="text-left pl-1">{t("item_18")}</TableHead> {/* T/r: */}
+                <TableHead className="text-left pl-1">{t("statments_name")}</TableHead> {/* Bo'lim */}
+                <TableHead className="text-left pl-1">{t("item_14")}</TableHead> {/* Hisobot davri */}
+                <TableHead className="text-left pl-1">{t("deadline")}</TableHead> {/* Muddati */}
+                <TableHead className="text-left pl-1">{t("organization")}</TableHead> {/* Tashkilot */}
+                <TableHead className="text-left pl-1">
                   {t("item_17")}
                 </TableHead>{" "}
                 {/* Hisobot topshirish vaqti */}
-                <TableHead className="text-center">
+                <TableHead className="text-left pl-1">
                   {t("actions")}
                 </TableHead>{" "}
                 {/* Amallar */}
@@ -217,22 +217,26 @@ function ExpiredDeadlines() {
                     onClick={() => toggleRow(d.id)}
                     className="cursor-pointer hover:bg-gray-100"
                   >
-                    <TableCell>{(page - 1) * perPage + i + 1}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-left">
+                      {(page - 1) * perPage + i + 1}
+                    </TableCell>
+                    <TableCell className="text-left">
                       <b>{d.statement?.name}</b>
                       <p className="text-sm text-gray-500">
                         {d.statement?.parent_name}
                       </p>
                     </TableCell>
-                    <TableCell>{d.statement?.period}</TableCell>
-                    <TableCell className="text-red-600">
+                    <TableCell className="text-left">
+                      {d.statement?.period}
+                    </TableCell>
+                    <TableCell className="text-left text-red-600">
                       {d.deadline_at}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-left">
                       {d.organizations.length} {t("organization")}
                     </TableCell>
-                    <TableCell className="text-right">{d.submit_at}</TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-left">{d.submit_at}</TableCell>
+                    <TableCell className="text-left">
                       {openRow === d.id ? (
                         <ChevronUp size={16} />
                       ) : (
