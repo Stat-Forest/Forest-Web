@@ -58,6 +58,7 @@ import { persistor } from "@/app/store";
 import { NavLink } from "react-router-dom";
 import { toggleSidebar } from "@/features/sidebarSlice";
 import { setHeaderState } from "@/features/uiSlice";
+import AiModal from "../Modals/AiModal";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -69,6 +70,7 @@ function Header({ onLogout }: HeaderProps) {
   const location = useLocation();
   const { t } = useTranslation();
   const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
+  const [aiOpen, setAiOpen] = useState(false);
   const { changePasswordOpen, notificationOpen, unreadCount } = useSelector(
     (state: RootState) => state.ui.header,
   );
@@ -86,57 +88,56 @@ function Header({ onLogout }: HeaderProps) {
   };
 
   const backgroundPresets: BackgroundPreset[] = useMemo(
-    () =>
-      [
-        {
-          key: "default",
-          label: "Asl fon",
-          kind: "default",
-          preview:
+    () => [
+      {
+        key: "default",
+        label: "Asl fon",
+        kind: "default",
+        preview:
+          "linear-gradient(135deg, #1D4ED8 0%, #EFF6FF 50%, #1D4ED8 100%)",
+        apply: {
+          backgroundImage:
             "linear-gradient(135deg, #1D4ED8 0%, #EFF6FF 50%, #1D4ED8 100%)",
-          apply: {
-            backgroundImage:
-              "linear-gradient(135deg, #1D4ED8 0%, #EFF6FF 50%, #1D4ED8 100%)",
-            backgroundColor: "transparent",
-          },
+          backgroundColor: "transparent",
         },
-        {
-          key: "mesh",
-          label: "Mesh Gradient",
-          kind: "gradient",
-          preview:
+      },
+      {
+        key: "mesh",
+        label: "Mesh Gradient",
+        kind: "gradient",
+        preview:
+          "radial-gradient(at 20% 30%, rgba(59,130,246,0.35) 0px, transparent 55%), radial-gradient(at 80% 20%, rgba(16,185,129,0.28) 0px, transparent 55%), radial-gradient(at 30% 85%, rgba(168,85,247,0.22) 0px, transparent 55%), linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 60%, #ECFEFF 100%)",
+        apply: {
+          backgroundImage:
             "radial-gradient(at 20% 30%, rgba(59,130,246,0.35) 0px, transparent 55%), radial-gradient(at 80% 20%, rgba(16,185,129,0.28) 0px, transparent 55%), radial-gradient(at 30% 85%, rgba(168,85,247,0.22) 0px, transparent 55%), linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 60%, #ECFEFF 100%)",
-          apply: {
-            backgroundImage:
-              "radial-gradient(at 20% 30%, rgba(59,130,246,0.35) 0px, transparent 55%), radial-gradient(at 80% 20%, rgba(16,185,129,0.28) 0px, transparent 55%), radial-gradient(at 30% 85%, rgba(168,85,247,0.22) 0px, transparent 55%), linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 60%, #ECFEFF 100%)",
-            backgroundColor: "transparent",
-          },
+          backgroundColor: "transparent",
         },
-        {
-          key: "green_forest",
-          label: "Yashil o‘rmon",
-          kind: "image",
-          preview:
-            "url(https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=60)",
-          apply: {
-            backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.22)), url(https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2400&q=70)",
-            backgroundColor: "#0b1220",
-          },
+      },
+      {
+        key: "green_forest",
+        label: "Yashil o‘rmon",
+        kind: "image",
+        preview:
+          "url(https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=60)",
+        apply: {
+          backgroundImage:
+            "linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.22)), url(https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2400&q=70)",
+          backgroundColor: "#0b1220",
         },
-        {
-          key: "foggy_mountains",
-          label: "Tumanli tog‘lar",
-          kind: "image",
-          preview:
-            "url(https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=1200&q=60)",
-          apply: {
-            backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.26)), url(https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=2400&q=70)",
-            backgroundColor: "#0b1220",
-          },
+      },
+      {
+        key: "foggy_mountains",
+        label: "Tumanli tog‘lar",
+        kind: "image",
+        preview:
+          "url(https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=1200&q=60)",
+        apply: {
+          backgroundImage:
+            "linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.26)), url(https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=2400&q=70)",
+          backgroundColor: "#0b1220",
         },
-      ],
+      },
+    ],
     [],
   );
 
@@ -249,7 +250,7 @@ function Header({ onLogout }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <button>
+          {/* <button> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="h-[45px] w-[45px] bg-transparent text-[#3B82F6] hover:text-[white] hover:bg-[#3B82F6]">
@@ -304,13 +305,15 @@ function Header({ onLogout }: HeaderProps) {
                 </div>
 
                 <div className="my-4 h-px bg-slate-200" />
-               
               </DropdownMenuContent>
             </DropdownMenu>
-          </button>
-          <button className="bg-[#4f46e5] px-5 py-2 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-[#8379ee]">
+          {/* </button> */}
+          <button
+            className="bg-[#4f46e5] px-5 py-2 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-[#8379ee]"
+            onClick={() => setAiOpen(true)}
+          >
             <Sparkles size={18} color="#fff" />{" "}
-            <span className="text-white font-bold ">AI tahlil</span>
+            <span className="text-white font-bold ">AI yordamchi</span>
           </button>
           {/* Notification Button with Sheet */}
           <Sheet open={notificationOpen} onOpenChange={handleNotificationOpen}>
@@ -423,6 +426,7 @@ function Header({ onLogout }: HeaderProps) {
           dispatch(setHeaderState({ changePasswordOpen: value }))
         }
       />
+      <AiModal open={aiOpen} onOpenChange={setAiOpen} />
     </>
   );
 }
