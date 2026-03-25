@@ -16,6 +16,7 @@ import storage from "redux-persist/lib/storage"; // localStorage ishlatish uchun
 import { combineReducers } from "redux";
 import { eimzoApi } from "@/services/eimzoApi";
 import { informationAnalyticalApi } from "@/services/informationAnalyticalApi";
+import { uniqeApi } from "@/services/uniqeApi";
 
 // Redux Persist optimizatsiyasi
 const persistConfig = {
@@ -44,6 +45,7 @@ const rootReducer = combineReducers({
   [sumApi.reducerPath]: sumApi.reducer,
   [eimzoApi.reducerPath]: eimzoApi.reducer,
   [informationAnalyticalApi.reducerPath]: informationAnalyticalApi.reducer,
+  [uniqeApi.reducerPath]: uniqeApi.reducer,
 
   auth: authReducer,
   report: reportReducer,
@@ -69,6 +71,7 @@ export const store = configureStore({
       sumApi.middleware,
       eimzoApi.middleware,
       informationAnalyticalApi.middleware,
+      uniqeApi.middleware
     ),
 });
 
