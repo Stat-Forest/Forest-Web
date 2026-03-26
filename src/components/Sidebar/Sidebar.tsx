@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { FileText, User2 } from "lucide-react";
 import {
@@ -17,11 +17,17 @@ import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useSidebarMenu } from "@/services/sidebarMenu";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion";
 
 function Sidebar() {
   const { t } = useTranslation();
   const { sidebar_menu, sidebar_3 } = useSidebarMenu();
+  const location = useLocation();
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -66,11 +72,22 @@ function Sidebar() {
   }
 
   const renderNavItem = (item: any) => {
+    const isParentActive =
+      item.children?.some((child: any) =>
+        location.pathname.includes(`/resource-management/${child.id}/`),
+      ) || false;
+
     if (item.children?.length > 0) {
       return (
         <Sheet key={item.id}>
           <SheetTrigger asChild>
-            <div className="sidebar-menu-item cursor-pointer p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40">
+            <div
+              className={`sidebar-menu-item cursor-pointer p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
+                isParentActive
+                  ? "bg-blue-100/80 text-blue-800 border-blue-400/50 shadow-md font-semibold"
+                  : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
+              }`}
+            >
               {item.icon && (
                 <img
                   src={
@@ -88,10 +105,19 @@ function Sidebar() {
                   }}
                 />
               )}
+
               <span className="font-medium flex-1">{t(item.name)}</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+              <div
+                className={`w-1.5 h-1.5 rounded-full bg-blue-400 transition-opacity ${
+                  isParentActive
+                    ? "opacity-100"
+                    : "opacity-0 group-hover:opacity-100"
+                }`}
+              />
             </div>
           </SheetTrigger>
+
           <SheetContent
             side="left"
             className="ml-[320px] bg-ice backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-white/20 shadow-2xl z-[100]"
@@ -101,11 +127,14 @@ function Sidebar() {
                 {t(item.name)}
               </SheetTitle>
             </SheetHeader>
+
             <div className="flex flex-col w-full px-4 gap-2 overflow-y-auto max-h-[calc(100vh-120px)]">
               {item.children.map((child: any, index: number) => (
                 <NavLink
                   key={index}
-                  to={`/resource-management/${child.id}/${child.name}`}
+                  to={`/resource-management/${child.id}/${encodeURIComponent(
+                    child.name,
+                  )}`}
                   className={({ isActive }) =>
                     `group flex items-center gap-3 transition-all duration-200 p-3 rounded-lg border ${
                       isActive
@@ -155,7 +184,6 @@ function Sidebar() {
   return (
     <div className="w-[320px] h-screen overflow-y-auto p-4 bg-ice sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-white/20 shadow-2xl">
       <div>
-        {/* Header */}
         <div className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 backdrop-blur-sm shadow-lg border border-white/20">
           <img
             width={40}
@@ -169,7 +197,6 @@ function Sidebar() {
           </h2>
         </div>
 
-        {/* Foydalanuvchi kartochkasi */}
         <div className="bg-gradient-to-br from-blue-600/90 via-blue-500/85 to-blue-400/90 w-full rounded-2xl p-4 flex justify-center flex-col gap-0.5 shadow-xl border border-white/30 backdrop-blur-sm">
           <div className="mb-2 flex gap-2">
             <div className="bg-white/30 backdrop-blur-md h-[50px] w-[50px] flex items-center justify-center rounded-3xl shadow-lg border border-white/40">
@@ -180,47 +207,39 @@ function Sidebar() {
               {user?.results[0]?.last_name || ""}
             </h3>
           </div>
+
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-left">
-              {/* <span className="text-[white] text-[16px] font-light">
-                {t("user_role")}: 
-              </span> */}
               <h3 className="font-bold text-white text-[18px] drop-shadow-sm">
                 {user?.results[0]?.role_display || ""}
               </h3>
             </div>
+
             <hr className="border-white" />
-            {/* <div className="flex items-center gap-2 text-left">
-              <span className="text-[white] text-[16px] font-light">
-                {t("item_78")}:
-              </span>
-              <h3 className="font-bold text-white text-[18px]">
-                {user?.results[0]?.user_number || ""}
-              </h3>
-            </div> */}
+
             {user?.results[0]?.organization_name && (
               <div className="flex items-center gap-2">
-                {/* <span className="text-[white] text-[16px] font-light">
-                  {t("item_12")}:
-                </span> */}
                 <h3 className="font-bold text-white text-[16px] drop-shadow-sm">
                   {user?.results[0]?.organization_name || ""}
                 </h3>
               </div>
             )}
-             {user?.results[0]?.role === "hududiy_boshqarma" && (
+
+            {user?.results[0]?.role === "hududiy_boshqarma" && (
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem className="text-white" value="organizations">
-                  <AccordionTrigger className="text-lg font-bold [&>svg]:text-white [&>svg]:text-3xl cursor-pointer">{user?.results[0]?.region_display}</AccordionTrigger>
+                  <AccordionTrigger className="text-lg font-bold [&>svg]:text-white [&>svg]:text-3xl cursor-pointer">
+                    {user?.results[0]?.region_display}
+                  </AccordionTrigger>
 
                   <AccordionContent>
                     <ul className="space-y-2">
-                      {user?.results[0]?.region_user_orgs?.map((org:any) => (
+                      {user?.results[0]?.region_user_orgs?.map((org: any) => (
                         <li
                           key={org}
                           className="border rounded-md px-3 py-2 text-sm"
                         >
-                         {org}
+                          {org}
                         </li>
                       ))}
                     </ul>
@@ -231,7 +250,6 @@ function Sidebar() {
           </div>
         </div>
 
-        {/* Sidebar menyulari */}
         <nav className="mt-4 flex flex-col gap-2">
           {[...sidebar_menu, ...(sidebarData || []), ...sidebar_3]
             .flat()
