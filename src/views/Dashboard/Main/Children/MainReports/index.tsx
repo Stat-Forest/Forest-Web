@@ -4,8 +4,9 @@ import { LuChartColumn } from "react-icons/lu";
 import { RiSdCardMiniLine } from "react-icons/ri";
 import { FiArrowUpCircle } from "react-icons/fi";
 import { BiXCircle } from "react-icons/bi";
-import { useGetDashboardReportQuery,  useGetStatementStatsReportQuery,  useGetStatsExportReportMutation,   } from "@/services/reportsApi";
+import { useGetDashboardReportQuery,  useGetStatementStatsReportQuery   } from "@/services/reportsApi";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useExportStatsMutation } from "@/services/uniqeApi";
 
 
 
@@ -16,24 +17,27 @@ function Mainreports() {
   const [isOpen, setIsOpen] = useState(false);
   // format yuklash API
 
-  const [exportStats, { isLoading: exportLoading }] = useGetStatsExportReportMutation();
+  const [exportStats, { isLoading: exportLoading }] = useExportStatsMutation();
 
-const handleDownload = async (format: "csv" | "excel") => {
-  try {
-    const blob = await exportStats(format).unwrap();
+  const handleDownload = async (type:any) => {
+    try {
+      const res = await exportStats(type).unwrap();
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+      const blob = new Blob([res]);
+      const url = window.URL.createObjectURL(blob);
 
-    a.href = url;
-    a.download = `hisobot.${format === "csv" ? "csv" : "xlsx"}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  } catch (err) {
-    console.error("Download error:", err);
-  }
-};
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = type === "csv" ? "hisobot.csv" : "hisobot.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download error:", err);
+    }
+  };
 
   // to'plam Api
   const { data, isLoading } = useGetDashboardReportQuery();
