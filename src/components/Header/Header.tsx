@@ -293,16 +293,6 @@ function Header({ onLogout }: HeaderProps) {
                   })}
                 </div>
 
-                <div className="mt-5">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/ai-background")}
-                    className="w-full h-[48px] rounded-2xl bg-gradient-to-r from-[#4F46E5] to-[#9333EA] text-white font-extrabold tracking-wide flex items-center justify-center gap-2 hover:opacity-95"
-                  >
-                    <Sparkles size={18} color="#fff" />
-                    AI FON YARATISH
-                  </button>
-                </div>
 
                 <div className="my-4 h-px bg-slate-200" />
               </DropdownMenuContent>

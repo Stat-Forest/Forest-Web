@@ -57,6 +57,18 @@ export const reportApi = createApi({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
       providesTags: ["Reports"],
     }),
+    getStatementStatsReport: builder.query<any, void>({
+      query: () => ({ url: `/dashboard/statement-stats/`, method: "GET" }),
+      providesTags: ["Reports"],
+    }),
+getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
+  query: (format) => ({
+    url: `/dashboard/stats/export/?format=${format}`,
+    method: "GET",
+    responseHandler: (response) => response.blob(), // MUHIM
+  }),
+}),
+
     getDeadlinesReport: builder.query<
       any,
       {
@@ -520,6 +532,8 @@ export const {
   useGetReportPlantByIdQuery,
   useGetLoginStatDeadlineQuery,
   useGetReportSourceReportsQuery,
+  useGetStatementStatsReportQuery,
+  useGetStatsExportReportMutation,
 
   // POST
   useCreateReportMutation,

@@ -124,9 +124,6 @@ function AiModal({ open, onOpenChange }: Props) {
               <h2 className="text-[22px] font-bold leading-none">
                 STAT-URMON Aqlli Yordamchisi
               </h2>
-              <p className="mt-2 text-[15px] text-white/75">
-                Gemini AI texnologiyasi asosida ishlaydi
-              </p>
             </div>
           </div>
 
