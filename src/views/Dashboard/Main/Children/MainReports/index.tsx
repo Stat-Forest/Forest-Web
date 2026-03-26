@@ -7,6 +7,7 @@ import { BiXCircle } from "react-icons/bi";
 import { useGetDashboardReportQuery,  useGetStatementStatsReportQuery   } from "@/services/reportsApi";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useExportStatsMutation } from "@/services/uniqeApi";
+import { useNavigate } from "react-router";
 
 
 
@@ -15,6 +16,7 @@ function Mainreports() {
    // Jadval APi
   const { data: reportData, isLoading: loading } = useGetStatementStatsReportQuery();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
   // format yuklash API
 
   const [exportStats, { isLoading: exportLoading }] = useExportStatsMutation();
@@ -217,7 +219,7 @@ function Mainreports() {
 
             {/* CHILDREN */}
             {isOpen === item.id && item.children?.map((child: any) => (
-              <tr key={child.id} className="bg-gray-50 border-b">
+              <tr key={child.id} onClick={()=> navigate(`/resource-management/${child.id}/${encodeURIComponent(child.name)}`)} className="bg-gray-50 border-b cursor-pointer">
                 <td className="pl-12 py-5 font-medium text-gray-700">
                   ↳ {child.name}
                 </td>
