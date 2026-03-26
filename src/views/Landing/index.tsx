@@ -1,22 +1,24 @@
 "use client";
 
+import React, { ReactNode, useState } from "react";
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useGetLoginStatsQuery } from "@/services/statistikApi";
+import { useGetLoginStatDeadlineQuery } from "@/services/reportsApi";
+import PieChartLanding from "@/components/Charts/PieChart";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/app/store";
 import {
   Leaf,
   Trees,
   Sprout,
   Pill,
-  Shield,
-  Warehouse,
-  Droplets,
-  TreePine,
+  ArrowUpRight,
+  Target,
+  Calendar,
+  Layers,
+  Filter,
 } from "lucide-react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store";
-import { useState } from "react";
-import PieChartLanding from "@/components/Charts/PieChart";
-import langin_icon from "@/assets/Group 1321321334.png";
+
 import {
   Select,
   SelectContent,
@@ -24,241 +26,316 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetLoginStatDeadlineQuery } from "@/services/reportsApi";
-import { useTranslation } from "react-i18next";
 
-/* ---------------- TYPES ---------------- */
-type StatItem = {
-  column_name: string;
-  unit: string;
-  plan: number;
-  actual: number;
-  percentage: number;
-  status?: string;
+type StatCardItem = {
+  column_name?: string;
+  actual?: number;
+  percentage?: number;
+  unit?: string;
+  plan?: number;
 };
 
-/* ---------------- ICON CONFIG (CANONICAL UZ KEYS) ---------------- */
-const CARD_META: Record<string, { icon: any; iconBg: string }> = {
+type DeadlineOption = {
+  submit_at: string;
+};
+
+type DeadlineResponse = {
+  results?: DeadlineOption[];
+};
+
+const formatNumber = (val: number) =>
+  new Intl.NumberFormat("uz-UZ").format(val || 0);
+
+const CARD_CONFIG: Record<
+  string,
+  {
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    color: string;
+    gradient: string;
+  }
+> = {
   "O'rmon bilan qoplangan yer maydonlari": {
     icon: Trees,
-    iconBg: "bg-green-100 text-green-700",
+    color: "#10b981",
+    gradient: "from-emerald-500/20 to-emerald-500/5",
   },
   "O'rmon yerlarini o'zlashtirib, foydalanishga kiritish": {
     icon: Leaf,
-    iconBg: "bg-emerald-100 text-emerald-700",
+    color: "#22c55e",
+    gradient: "from-green-500/20 to-green-500/5",
   },
   "Dorivor o'simliklar plantatsiyalarini barpo etish": {
     icon: Sprout,
-    iconBg: "bg-lime-100 text-lime-700",
+    color: "#84cc16",
+    gradient: "from-lime-500/20 to-lime-500/5",
   },
   "Dorivor o'simliklar xomashyosini tayyorlash": {
     icon: Pill,
-    iconBg: "bg-yellow-100 text-yellow-700",
+    color: "#f59e0b",
+    gradient: "from-amber-500/20 to-amber-500/5",
   },
-  "Cho'l, tog'li va tog'oldi hududlarida himoya o'rmonzorlari (ihota) barpo etish":
-    {
-      icon: Shield,
-      iconBg: "bg-teal-100 text-teal-700",
-    },
-  "Niholxona va ko'chatchonalar tashkil etish": {
-    icon: Warehouse,
-    iconBg: "bg-sky-100 text-sky-700",
-  },
-  "Orolbo'yi mintaqasi va boshqa cho'l hududlarida yashil qoplama barpo etish":
-    {
-      icon: Droplets,
-      iconBg: "bg-cyan-100 text-cyan-700",
-    },
-  "Jumladan, tut ko'chatlari yetishtirish": {
-    icon: TreePine,
-    iconBg: "bg-green-100 text-green-800",
+  default: {
+    icon: Target,
+    color: "#64748b",
+    gradient: "from-slate-500/20 to-slate-500/5",
   },
 };
 
-/* ---------------- RU → UZ NORMALIZER ---------------- */
-const NAME_MAP: Record<string, string> = {
-  "Земли, покрытые лесом": "O'rmon bilan qoplangan yer maydonlari",
-  "Освоение лесных земель":
-    "O'rmon yerlarini o'zlashtirib, foydalanishga kiritish",
-  "Создание плантаций лекарственных растений":
-    "Dorivor o'simliklar plantatsiyalarini barpo etish",
-  "Подготовка сырья лекарственных растений":
-    "Dorivor o'simliklar xomashyosini tayyorlash",
-  "Создание защитных лесопосадок в пустынных и горных районах":
-    "Cho'l, tog'li va tog'oldi hududlarida himoya o'rmonzorlari (ihota) barpo etish",
-  "Создание питомников и рассадников":
-    "Niholxona va ko'chatchonalar tashkil etish",
-  "Создание зелёного покрытия в Приаральском и других пустынных районах":
-    "Orolbo'yi mintaqasi va boshqa cho'l hududlarida yashil qoplama barpo etish",
-  "В том числе выращивание шелковичных саженцев":
-    "Jumladan, tut ko'chatlari yetishtirish",
-};
-
-const normalizeName = (name: string) => NAME_MAP[name] ?? name;
-
-/* ---------------- PAGE ---------------- */
-export default function Landing() {
+export default function ModernLanding() {
   const lang = useSelector((state: RootState) => state.language.lang);
   const [monthly, setMonthly] = useState("");
   const [yearly, setYearly] = useState("");
-  const { t } = useTranslation();
 
-  const { data: month = [] } = useGetLoginStatsQuery({
+  const { data: monthData } = useGetLoginStatsQuery({
     lang,
     monthly,
     statement_status: "month",
     yearly: "",
   });
 
-  const { data: year = [] } = useGetLoginStatsQuery({
+  const { data: yearData } = useGetLoginStatsQuery({
     lang,
     monthly: "",
     statement_status: "year",
     yearly,
   });
 
-  const { data: deadlineMonth } = useGetLoginStatDeadlineQuery({
+  const { data: deadlineMonthData } = useGetLoginStatDeadlineQuery({
     period_type: "monthly",
   });
 
-  const { data: deadlineYear } = useGetLoginStatDeadlineQuery({
+  const { data: deadlineYearData } = useGetLoginStatDeadlineQuery({
     period_type: "yearly",
   });
 
+  const month: StatCardItem[] = Array.isArray(monthData)
+    ? (monthData as StatCardItem[])
+    : [];
+
+  const year: StatCardItem[] = Array.isArray(yearData)
+    ? (yearData as StatCardItem[])
+    : [];
+
+  const deadlineMonth = deadlineMonthData as DeadlineResponse | undefined;
+  const deadlineYear = deadlineYearData as DeadlineResponse | undefined;
+
   return (
-    <div className="min-h-screen bg-[#F4FAF3]">
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
       <AuthHeader position />
 
-      <div className="max-w-[1800px] mx-auto px-6 py-10">
-        {/* TOP */}
-        <div className="flex flex-col lg:flex-row items-center gap-6 mb-10">
-          <div className="flex items-center gap-6">
-            <img src={langin_icon} alt="icon" />
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-              {t("landing_1")}
-            </h1>
+      <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10 xl:px-12">
+        <div className="mb-10 grid grid-cols-1 gap-5 lg:grid-cols-12 xl:gap-6">
+          <div className="relative col-span-1 overflow-hidden rounded-[28px] border border-white bg-white p-6 shadow-sm sm:p-8 lg:col-span-7 lg:rounded-[40px] lg:p-10 flex flex-col justify-center">
+            <div className="absolute right-0 top-0 p-8 opacity-10 sm:p-10 lg:p-12">
+              <Trees size={180} className="text-emerald-600 sm:size-[220px]" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 sm:text-xs">
+                  Platforma tahlili
+                </span>
+              </div>
+
+              <h1 className="text-3xl font-black leading-[1.1] tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+                O‘rmon xo‘jaligi <br />
+                <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                  statistika portali
+                </span>
+              </h1>
+
+              <p className="mt-5 max-w-lg text-base font-medium leading-relaxed text-slate-500 sm:text-lg">
+                Ma&apos;lumotlar vizualizatsiyasi orqali reja va natijalarni
+                real vaqt rejimida boshqaring.
+              </p>
+            </div>
           </div>
 
-          <div className="lg:w-[60%] w-full bg-white border rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold mb-4">{t("landing_4")}</h2>
-            <PieChartLanding />
+          <div className="col-span-1 flex min-h-[320px] flex-col justify-between rounded-[28px] bg-emerald-600 p-4 text-white shadow-xl shadow-emerald-100 sm:min-h-[360px] sm:p-6 lg:col-span-5 lg:rounded-[40px] lg:p-8">
+            <div className="h-full w-full">
+              <PieChartLanding />
+            </div>
           </div>
         </div>
 
-        {/* YEARLY */}
-        <Section
-          title={t("landing_2")}
-          value={yearly}
-          onChange={setYearly}
-          options={deadlineYear?.results}
-          data={year}
-        />
+        <div className="space-y-12 sm:space-y-14 lg:space-y-16">
+          <SectionLayout
+            title="Strategik ko'rsatkichlar"
+            subtitle="Yillik rejalashtirilgan ishlar natijalari"
+            icon={<Layers className="text-emerald-600" />}
+            value={yearly}
+            onChange={setYearly}
+            options={deadlineYear?.results ?? []}
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-8">
+              {year.map((item, idx) => (
+                <ModernStatCard
+                  key={`${item.column_name ?? "year"}-${idx}`}
+                  item={item}
+                />
+              ))}
+            </div>
+          </SectionLayout>
 
-        {/* MONTHLY */}
-        <Section
-          title={t("landing_3")}
-          value={monthly}
-          onChange={setMonthly}
-          options={deadlineMonth?.results}
-          data={month}
-        />
-      </div>
+          <SectionLayout
+            title="Operatsion tahlil"
+            subtitle="Oylik dinamika va bajarilish darajasi"
+            icon={<Calendar className="text-blue-600" />}
+            value={monthly}
+            onChange={setMonthly}
+            options={deadlineMonth?.results ?? []}
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-8">
+              {month.map((item, idx) => (
+                <ModernStatCard
+                  key={`${item.column_name ?? "month"}-${idx}`}
+                  item={item}
+                />
+              ))}
+            </div>
+          </SectionLayout>
+        </div>
+      </main>
     </div>
   );
 }
 
-/* ---------------- REUSABLE SECTION ---------------- */
-function Section({ title, value, onChange, options, data }: any) {
+type SectionLayoutProps = {
+  title: string;
+  subtitle: string;
+  icon: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  options: DeadlineOption[];
+  children: ReactNode;
+};
+
+function SectionLayout({
+  title,
+  subtitle,
+  icon,
+  value,
+  onChange,
+  options,
+  children,
+}: SectionLayoutProps) {
   return (
-    <>
-      <div className="flex items-center gap-6 py-6">
-        <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end md:gap-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm sm:h-14 sm:w-14 sm:rounded-3xl">
+            {icon}
+          </div>
 
-        <Select onValueChange={onChange} value={value}>
-          <SelectTrigger className="min-w-[200px]">
-            <SelectValue placeholder="Tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            {options?.map((item: any, idx: number) => (
-              <SelectItem key={idx} value={item.submit_at}>
-                {item.submit_at}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <div>
+            <h2 className="text-xl font-black leading-none tracking-tight text-slate-800 sm:text-2xl">
+              {title}
+            </h2>
+            <p className="mt-2 text-sm font-medium text-slate-500 sm:text-base">
+              {subtitle}
+            </p>
+          </div>
+        </div>
+
+        <div className="group relative w-full md:w-auto">
+          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-100 to-blue-100 opacity-0 blur-lg transition group-hover:opacity-100" />
+          <Select onValueChange={onChange} value={value}>
+            <SelectTrigger className="relative h-12 w-full rounded-2xl border-none bg-white px-4 font-bold shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-500 sm:h-14 sm:px-6 md:w-[280px]">
+              <div className="flex items-center gap-2">
+                <Filter size={16} className="text-slate-400" />
+                <SelectValue placeholder="Davrni tanlang" />
+              </div>
+            </SelectTrigger>
+
+            <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+              {options.map((opt, i) => (
+                <SelectItem
+                  key={`${opt.submit_at}-${i}`}
+                  value={opt.submit_at}
+                  className="py-3 font-medium"
+                >
+                  {opt.submit_at}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {data?.length > 0 ? (
-          data.map((item: StatItem, idx: number) => (
-            <StatCard key={idx} item={item} />
-          ))
-        ) : (
-          <p className="text-gray-500 col-span-full">Ma'lumot mavjud emas</p>
-        )}
-      </div>
-    </>
+      {children}
+    </div>
   );
 }
 
-/* ---------------- CARD ---------------- */
-function StatCard({ item }: { item: StatItem }) {
-  const percent =
-    item.plan > 0 ? Math.min(Math.round(item.percentage), 100) : 0;
+type ModernStatCardProps = {
+  item: StatCardItem;
+};
 
-  const statusColor =
-    percent >= 100
-      ? "text-green-700"
-      : percent >= 80
-        ? "text-blue-700"
-        : percent >= 50
-          ? "text-yellow-700"
-          : "text-red-700";
-
-  const progressBarColor =
-    percent >= 100
-      ? "bg-green-600"
-      : percent >= 80
-        ? "bg-blue-600"
-        : percent >= 50
-          ? "bg-yellow-500"
-          : "bg-red-500";
-
-  const normalizedName = normalizeName(item.column_name);
-  const meta = CARD_META[normalizedName];
-
-  const Icon = meta?.icon ?? Leaf;
-  const iconBg = meta?.iconBg ?? "bg-gray-100 text-gray-600";
+function ModernStatCard({ item }: ModernStatCardProps) {
+  const config = CARD_CONFIG[item.column_name ?? ""] || CARD_CONFIG.default;
+  const Icon = config.icon;
+  const percent = item.percentage ? Math.round(item.percentage) : 0;
 
   return (
-    <div className="bg-[#F1F7E8] border border-green-200 rounded-2xl p-5 flex flex-col gap-4 hover:shadow-md transition">
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-[26px] border border-slate-100 bg-white p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-15px_rgba(15,23,42,0.1)] sm:rounded-[32px] sm:p-6 lg:p-8">
       <div
-        className={`w-14 h-14 rounded-xl flex items-center justify-center ${iconBg}`}
-      >
-        <Icon size={24} />
+        className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${config.gradient} blur-2xl transition-transform group-hover:scale-150`}
+      />
+
+      <div className="relative z-10">
+        <div className="mb-6 flex items-start justify-between sm:mb-8">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 transition-colors duration-300 group-hover:bg-slate-900 group-hover:text-white sm:h-12 sm:w-12">
+            <Icon size={22} />
+          </div>
+
+          <div className="flex flex-col items-end">
+            <span className="mb-1 text-[10px] italic font-black uppercase tracking-tighter text-slate-400 sm:text-xs">
+              Status
+            </span>
+            <span
+              className={`h-2 w-8 rounded-full ${percent >= 100 ? "bg-emerald-500" : "bg-amber-400"}`}
+            />
+          </div>
+        </div>
+
+        <h3 className="min-h-[52px] text-sm font-bold leading-[1.4] text-slate-800 line-clamp-3 sm:min-h-[60px]">
+          {item.column_name ?? "Noma'lum"}
+        </h3>
       </div>
 
-      <p className="text-sm font-semibold text-gray-900">{item.column_name}</p>
+      <div className="relative z-10 mt-6">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-2xl font-black leading-none tracking-tighter text-slate-900 sm:text-3xl">
+              {formatNumber(item.actual ?? 0)}
+            </p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Amalda ({item.unit ?? "-"})
+            </p>
+          </div>
 
-      <p className="text-3xl font-extrabold text-red-600">
-        {item.actual.toLocaleString()}
-        <span className="text-base font-bold text-blue-600 ml-2">
-          {item.unit}
-        </span>
-      </p>
+          <div className="shrink-0 text-right">
+            <span className="text-base font-bold text-emerald-600 sm:text-lg">
+              {percent}%
+            </span>
+          </div>
+        </div>
 
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">
-          Reja: {item.plan.toLocaleString()} {item.unit}
-        </span>
-        <span className={`font-bold ${statusColor}`}>{percent}%</span>
-      </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-slate-900 transition-all duration-1000 ease-out group-hover:bg-emerald-500"
+            style={{ width: `${item?.percentage}%` }}
+          />
+        </div>
 
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={`h-2 rounded-full transition-all duration-700 ${progressBarColor}`}
-          style={{ width: `${percent}%` }}
-        />
+        <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase text-slate-400 sm:text-[11px]">
+          <span>Reja: {formatNumber(item.plan ?? 0)}</span>
+          <ArrowUpRight
+            size={14}
+            className="text-emerald-500 opacity-0 transition-opacity group-hover:opacity-100"
+          />
+        </div>
       </div>
     </div>
   );
