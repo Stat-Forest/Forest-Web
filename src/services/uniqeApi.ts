@@ -15,9 +15,17 @@ export const uniqeApi = createApi({
       }),
       invalidatesTags: ["Reports"],
     }),
+      exportStats: builder.mutation({
+      query: (type) => ({
+        url: `/report_admin_stat/stats/export/`,
+        method: "GET",
+        params: { type }, // csv yoki excel
+        responseHandler: async (response) => await response.blob(),
+      }),
+    }),
   }),
 });
 
 export const {
-  useCreateAiChatMutation,
+  useCreateAiChatMutation,useExportStatsMutation
 } = uniqeApi;
