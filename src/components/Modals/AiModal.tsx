@@ -10,6 +10,7 @@ interface Props {
 type Message = {
   role: "user" | "ai";
   text: string;
+  isError?: boolean;
 };
 
 type AnyResponse = {
@@ -52,6 +53,63 @@ function extractAiText(res: AnyResponse): string {
     (typeof res?.message === "string" && res.message) ||
     "Javob kelmadi"
   );
+}
+
+function extractErrorText(err: unknown): string {
+  const fallback = "Xatolik yuz berdi";
+
+  if (!err || typeof err !== "object") return fallback;
+
+  const errorObj = err as {
+    data?: unknown;
+    error?: unknown;
+    message?: unknown;
+    status?: unknown;
+  };
+
+  if (typeof errorObj?.data === "string") {
+    return errorObj.data;
+  }
+
+  if (typeof errorObj?.data === "object" && errorObj.data !== null) {
+    const data = errorObj.data as Record<string, unknown>;
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+
+    if (typeof data?.detail === "string" && data.detail.trim()) {
+      return data.detail;
+    }
+
+    if (
+      Array.isArray(data?.errors) &&
+      data.errors.length > 0 &&
+      typeof data.errors[0] === "string"
+    ) {
+      return data.errors[0];
+    }
+
+    if (typeof data?.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+
+    try {
+      return JSON.stringify(data);
+    } catch {
+      return fallback;
+    }
+  }
+
+  if (typeof errorObj?.error === "string" && errorObj.error.trim()) {
+    return errorObj.error;
+  }
+
+  if (typeof errorObj?.message === "string" && errorObj.message.trim()) {
+    return errorObj.message;
+  }
+
+  return fallback;
 }
 
 function AiModal({ open, onOpenChange }: Props) {
@@ -99,11 +157,14 @@ function AiModal({ open, onOpenChange }: Props) {
     } catch (err) {
       console.error("AI chat error:", err);
 
+      const errorText = extractErrorText(err);
+
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: "Xatolik yuz berdi ❌",
+          text: errorText,
+          isError: true,
         },
       ]);
     }
@@ -149,7 +210,11 @@ function AiModal({ open, onOpenChange }: Props) {
                   }`}
                 >
                   {!isUser && (
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0F9D73]">
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
+                        msg.isError ? "bg-red-500" : "bg-[#0F9D73]"
+                      }`}
+                    >
                       <Sparkles className="h-5 w-5 text-[#FFD84D]" />
                     </div>
                   )}
@@ -158,7 +223,9 @@ function AiModal({ open, onOpenChange }: Props) {
                     className={`max-w-[78%] whitespace-pre-line break-words rounded-[26px] border px-6 py-7 text-[18px] leading-[1.7] shadow-sm ${
                       isUser
                         ? "rounded-tr-[10px] border-[#4F46E5] bg-[#4F46E5] text-white"
-                        : "rounded-tl-[10px] border-[#D8DEE8] bg-white text-[#1F2937]"
+                        : msg.isError
+                          ? "rounded-tl-[10px] border-red-200 bg-red-50 text-red-700"
+                          : "rounded-tl-[10px] border-[#D8DEE8] bg-white text-[#1F2937]"
                     }`}
                   >
                     {msg.text}
