@@ -341,7 +341,7 @@ function CreateReport() {
 
     try {
       await createReport(payload).unwrap();
-      toast.success(t("report_created_successfully"));
+      toast.success('Reja muvaffaqiyatli yaratildi!');
       navigate("/main");
       resetForm();
       setSelectedPlants([{ plantId: "", plantName: "", values: {} }]);
