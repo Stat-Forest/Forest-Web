@@ -62,13 +62,13 @@ function ResourceManagement() {
         childTitle == "Питомник и Саженец Всего" ||
         childTitle == "Движение семян" ||
         childTitle == "Ko'chatxona va Niholxona Jami" ||
-        childTitle == "Shakl 8-O'X" ||
+        childTitle == "Shakl 8-O‘X" ||
         childTitle == "Форма 8-Ох" ||
-        childTitle == "Shakl 9-O'X" ||
+        childTitle == "Shakl 9-O‘X" ||
         childTitle == "Форма 9-Ох" ||
-        childTitle == "Shakl 10-O'X" ||
+        childTitle == "Shakl 10-O‘X" ||
         childTitle == "Форма 10-Ох" ||
-        childTitle == "Shakl 11-O'X" ||
+        childTitle == "Shakl 11-O‘X" ||
         childTitle == "Форма 11-Ох" ||
         childTitle == "Daromad" ? (
         <ResourcePlantContainer reportName={childTitle} />
