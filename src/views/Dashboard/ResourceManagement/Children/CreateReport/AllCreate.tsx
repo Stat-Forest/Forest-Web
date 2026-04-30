@@ -137,7 +137,7 @@ function AllCreateReportItem() {
 
   const { data: userById } = useGetUsersReportQuery(
     {
-      user_id: user_id || "",
+      user_id: user_id ? String(user_id) : "",
       page: 1,
       perPage: 10,
       search: "",

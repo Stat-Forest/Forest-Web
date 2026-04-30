@@ -45,7 +45,7 @@ function Sidebar() {
   } = useGetUsersReportQuery(
     user_id
       ? {
-          user_id,
+          user_id: String(user_id),
           page: "",
           perPage: 10,
           search: "",
