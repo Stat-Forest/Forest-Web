@@ -5,7 +5,7 @@ import {
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query";
 import { base_url, prepareHeaders } from "./baseUrl";
-import { encryptData, decryptData } from "@/utils/crypto";
+import { encryptData } from "@/utils/crypto";
 import { logout } from "@/features/authSlice";
 
 interface RefreshResponse {
@@ -38,7 +38,9 @@ export function createBaseQueryWithReauth(
 
     // If we get a 401, try to refresh the token
     if (result.error && result.error.status === 401) {
-      const user = decryptData("user", "user") as User | null;
+      // Redux state dan o'qiymiz — cookie ga bog'liq emas
+      const state = api.getState() as any;
+      const user = state?.auth?.user as User | null;
       const refreshToken = user?.refresh;
 
       if (refreshToken) {
@@ -82,33 +84,23 @@ export function createBaseQueryWithReauth(
             // Retry the original request with new token
             result = await rawBaseQuery(args, api, extraOptions);
           } else if (refreshResult.error) {
-            // Refresh token ham 401 yoki boshqa error bersa, logout va /login ga redirect
             const refreshError = refreshResult.error as FetchBaseQueryError;
             if (refreshError.status === 401) {
-              console.warn("Refresh token expired or invalid, redirecting to login");
               api.dispatch(logout());
-              // Redirect to login page
               if (typeof window !== "undefined") {
                 window.location.href = "/auth";
               }
             } else {
-              console.warn("Token refresh failed:", refreshError);
               api.dispatch(logout());
             }
           } else {
-            // Refresh failed, logout user
-            console.warn("Token refresh failed: No data in response");
             api.dispatch(logout());
-            // Redirect to login page
             if (typeof window !== "undefined") {
               window.location.href = "/auth";
             }
           }
         } catch (error) {
-          // Refresh failed with error, logout user
-          console.error("Token refresh error:", error);
           api.dispatch(logout());
-          // Redirect to login page
           if (typeof window !== "undefined") {
             window.location.href = "/auth";
           }
@@ -117,9 +109,8 @@ export function createBaseQueryWithReauth(
         // No refresh token — public sahifalarda (/ , /landing) redirect qilmaslik
         const isPublicPage =
           typeof window !== "undefined" &&
-          (window.location.pathname === "/" || window.location.pathname === "/landing");
+          (window.location.pathname === "/" || window.location.pathname === "/landing" || window.location.pathname === "/auth");
         if (!isPublicPage) {
-          console.warn("Token refresh failed: No refresh token available");
           api.dispatch(logout());
           if (typeof window !== "undefined") {
             window.location.href = "/auth";
