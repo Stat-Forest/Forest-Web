@@ -5,6 +5,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "@/services/authApi";
+import { setToken } from "@/features/authSlice";
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -367,11 +368,16 @@ function Login() {
   };
 
   const handleEimzoLogin = (pkcs7: string) => {
-    // Send only pkcs7 to backend, no vo needed. Mutation trigger o'zi dispatch qiladi — dispatch() kerak emas.
     eimzoHandler({ pkcs7 })
       .unwrap()
-      .then(() => {
+      .then((response: any) => {
         uiHideProgress();
+        const access = response?.access;
+        if (!access) {
+          uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi", "error");
+          return;
+        }
+        dispatch(setToken({ token: access, user: response }));
         showToast("Muvaffaqiyatli kirish", "success");
         navigate("/main");
       })
