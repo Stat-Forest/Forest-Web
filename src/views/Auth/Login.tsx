@@ -370,14 +370,10 @@ function Login() {
     // Send only pkcs7 to backend, no vo needed. Mutation trigger o'zi dispatch qiladi — dispatch() kerak emas.
     eimzoHandler({ pkcs7 })
       .unwrap()
-      .then((response: any) => {
+      .then(() => {
         uiHideProgress();
-        if (response?.access) {
-          showToast("Muvaffaqiyatli kirish", "success");
-          navigate("/main");
-        } else {
-          uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi", "error");
-        }
+        showToast("Muvaffaqiyatli kirish", "success");
+        navigate("/main");
       })
       .catch((error: any) => {
         uiHideProgress();
