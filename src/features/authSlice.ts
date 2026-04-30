@@ -68,6 +68,9 @@ const authSlice = createSlice({
         state.user = payload;
         encryptData("token", payload.access, "token", 30);
         encryptData("user", payload, "user", 30);
+        if (payload.refresh) {
+          encryptData("refresh", payload.refresh, "refresh", 30);
+        }
       }
     );
   },

@@ -6,10 +6,13 @@ import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 
 export interface User {
   email: string;
-  user_id: string;
+  user_id: number | string;
   role: string;
   access: string;
   refresh: string;
+  full_name?: string;
+  organization?: string;
+  is_new_user?: boolean;
 }
 
 // ✅ Login response
