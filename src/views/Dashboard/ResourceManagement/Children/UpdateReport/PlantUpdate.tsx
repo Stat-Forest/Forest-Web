@@ -40,8 +40,32 @@ interface InnerPayload {
   plant?: string;
 }
 
+const QUARTER_LABELS: Record<string, string> = {
+  q1: "1-chorak",
+  q2: "2-chorak",
+  q3: "3-chorak",
+  q4: "4-chorak",
+};
+
+const Q1_PLANS = ["chorak_1", "yanvar", "fevral", "mart"];
+const Q2_PLANS = ["chorak_2", "aprel", "may", "iyun"];
+const Q3_PLANS = ["chorak_3", "iyul", "avgust", "sentabr"];
+const Q4_PLANS = ["chorak_4", "oktabr", "noyabr", "dekabr"];
+
+function getQuarterFromStatusPlan(statusPlan: string | null): string | null {
+  if (!statusPlan) return null;
+  if (Q1_PLANS.includes(statusPlan)) return "q1";
+  if (Q2_PLANS.includes(statusPlan)) return "q2";
+  if (Q3_PLANS.includes(statusPlan)) return "q3";
+  if (Q4_PLANS.includes(statusPlan)) return "q4";
+  return null;
+}
+
 function PlantUpdate() {
-  const { id } = useParams<{ id: string }>();
+  const { id, reportName: rawReportName } = useParams<{ id: string; reportName?: string }>();
+  const reportName = rawReportName ? decodeURIComponent(rawReportName) : "";
+  const isDaromadReport = reportName === "Daromad";
+
   const lang = useSelector((state: RootState) => state.language.lang);
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -51,6 +75,7 @@ function PlantUpdate() {
     useUpdateReportPlantMutation();
 
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
+  const [selectedQuarter, setSelectedQuarter] = useState("");
   const [footNote, setFootNote] = useState("");
   const [values, setValues] = useState<Record<string, InnerValue>>({});
   const [selectedOrganization, setSelectedOrganization] = useState<string>("");
@@ -62,6 +87,25 @@ function PlantUpdate() {
     );
 
   const { data: organizationsData } = useGetOrganizationReportsQuery({ lang });
+
+  // Har bir Amalda (status_plan: null) columniga qaysi quarter tegishli ekanini aniqlash
+  // Amalda doim o'zidan oldingi Reja columnining quarteriga tegishli
+  const columnQuarterMap = (() => {
+    const map: Record<string, string> = {};
+    if (!plantData?.report_items) return map;
+    plantData.report_items.forEach((reportItem: any) => {
+      let lastQuarter: string | null = null;
+      reportItem.statement_columns.forEach((column: any) => {
+        const q = getQuarterFromStatusPlan(column.status_plan);
+        if (q) {
+          lastQuarter = q;
+        } else if (column.status_plan === null && lastQuarter) {
+          map[column.statement_column_id] = lastQuarter;
+        }
+      });
+    });
+    return map;
+  })();
 
   const { data: deadlineData } = useGetDeadlinesReportQuery(
     {
@@ -100,6 +144,11 @@ function PlantUpdate() {
     setValues(initial);
     setSelectedDeadlineId(plantData.deadline || "");
     setFootNote(plantData.foot_note || "");
+
+    // current_quarter dan boshlang'ich quarter ni olish
+    if (plantData.current_quarter) {
+      setSelectedQuarter(plantData.current_quarter);
+    }
 
     // Agar mavjud organization bo'lsa, uni tanlaymiz
     if (firstOrgId) {
@@ -160,24 +209,24 @@ function PlantUpdate() {
 
         const columnInners: InnerPayload[] = [];
 
+        const editable = isEditableForSelectedQuarter(column);
+
         column.inners.forEach((inner: any) => {
           const innerState = values[inner.id];
           if (!innerState) return;
 
           let innerObj: InnerPayload = {};
 
-          if (innerState.value) {
-            innerObj.value = innerState.value;
-          }
+          // Tanlanmagan quarter ustunlarida mavjud qiymatni saqlaymiz
+          innerObj.value = editable
+            ? innerState.value || "0"
+            : (innerState.value ?? "0");
 
           if (inner.plant_id) {
             innerObj.plant = inner.plant_id;
           }
 
-          // Faqat value mavjud bo'lsa qo'shamiz
-          if (innerObj.value) {
-            columnInners.push(innerObj);
-          }
+          columnInners.push(innerObj);
         });
 
         // Faqat inners arrayi bo'sh bo'lmasa qo'shamiz
@@ -190,6 +239,7 @@ function PlantUpdate() {
     return {
       id,
       deadline: selectedDeadlineId,
+      ...(isDaromadReport ? { quarter: selectedQuarter } : {}),
       report_items: Array.from(reportItemsMap.entries()).map(
         ([statement_column, inners]) => ({
           statement_column,
@@ -198,6 +248,20 @@ function PlantUpdate() {
       ),
       foot_note: footNote || undefined,
     };
+  };
+
+  const isEditableForSelectedQuarter = (column: any): boolean => {
+    // Reja (plan) ustunlari hech qachon editlanmaydi
+    if (column.status_plan !== null) return false;
+
+    // Daromad bo'lmasa barcha Amalda ustunlari editlanadi
+    if (!isDaromadReport) return true;
+
+    // Daromad: faqat tanlangan chorak Amalda ustunlari editlanadi
+    const columnQuarter = columnQuarterMap[column.statement_column_id] || null;
+    if (!columnQuarter) return true; // quarter aniqlanmasa ruxsat beramiz
+    if (!selectedQuarter) return false;
+    return columnQuarter === selectedQuarter;
   };
 
   const validateForm = () => {
@@ -209,6 +273,10 @@ function PlantUpdate() {
 
     if (!selectedOrganization) {
       errors.push(t("select_organization_required"));
+    }
+
+    if (isDaromadReport && !selectedQuarter) {
+      errors.push("Chorakni tanlang");
     }
 
     return errors;
@@ -229,7 +297,7 @@ function PlantUpdate() {
       await updateReport(payload).unwrap();
       setCheckPayload(payload);
       toast.success(t("updated_successfully"));
-      // navigate(-1);
+      navigate(-1);
     } catch (error: any) {
       toast.error(t("update_error"));
       setCheckPayload(payload);
@@ -261,6 +329,21 @@ function PlantUpdate() {
             ))}
           </SelectContent>
         </Select>
+
+        {isDaromadReport && (
+          <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+            <SelectTrigger className="w-[300px]">
+              <SelectValue placeholder="Chorakni tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(QUARTER_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         <Select
           value={selectedOrganization}
@@ -308,6 +391,7 @@ function PlantUpdate() {
                       );
                     } else {
                       // Oddiy column - input
+                      const editable = isEditableForSelectedQuarter(column);
                       return (
                         <div className="flex items-center justify-between">
                           <div>
@@ -316,11 +400,18 @@ function PlantUpdate() {
                           <input
                             key={inner.id}
                             type="number"
-                            value={values[inner.id]?.value || ""}
+                            value={
+                              editable
+                                ? values[inner.id]?.value ?? ""
+                                : values[inner.id]?.value ?? "0"
+                            }
+                            disabled={!editable}
                             onChange={(e) =>
                               handleValueChange(inner.id, e.target.value)
                             }
-                            className="border px-2 py-1 rounded w-[200px]"
+                            className={`border px-2 py-1 rounded w-[200px] ${
+                              !editable ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""
+                            }`}
                           />
                         </div>
                       );

@@ -21,7 +21,7 @@ import {
 } from "@/services/reportsApi";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Select,
@@ -82,6 +82,8 @@ function PlantCreate() {
     Record<string, { name: string; categoryName?: string }>
   >({});
   const [footNote, setFootNote] = useState<string>("");
+  const { reportName } = useParams<{ reportName?: string }>();
+  const [selectedQuarter, setSelectedQuarter] = useState<string>("");
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -89,6 +91,40 @@ function PlantCreate() {
   const reduxDispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   const [yearPlan, setYearPlan] = useState<string>("");
+  const isDaromadReport = reportName === "Daromad";
+
+  const quarterLabelsByKey: Record<string, string> = {
+    q1: "1-chorak",
+    q2: "2-chorak",
+    q3: "3-chorak",
+    q4: "4-chorak",
+  };
+
+  const getQuarterFromColumn = (column: EmptyColumn): string | null => {
+    const chain = (column.fullParentChain || "").toLowerCase();
+
+    for (const [quarterKey, quarterLabel] of Object.entries(quarterLabelsByKey)) {
+      if (chain.includes(quarterLabel.toLowerCase())) {
+        return quarterKey;
+      }
+    }
+
+    return null;
+  };
+
+  const isEditableForSelectedQuarter = (column: EmptyColumn): boolean => {
+    if (!isDaromadReport) return true;
+
+    const columnQuarter = getQuarterFromColumn(column);
+    if (!columnQuarter) return true;
+    if (!selectedQuarter) return false;
+
+    return columnQuarter === selectedQuarter;
+  };
+
+  const shouldIncludeColumnInPayload = (_column: EmptyColumn): boolean => {
+    return true;
+  };
 
   const {
     data: organizationsData,
@@ -446,6 +482,10 @@ function PlantCreate() {
       errors.push(t("select_deadline_required"));
     }
 
+    if (isDaromadReport && !selectedQuarter) {
+      errors.push("Chorakni tanlang");
+    }
+
     // Tashkilot ustuni mavjudligini tekshirish
     const hasOrganizationColumn = state.allEmptyColumnsByStep
       .flat()
@@ -496,6 +536,8 @@ function PlantCreate() {
     state.formGroups.forEach((group) => {
       group.forms.forEach((form, formIndex) => {
         state.allEmptyColumnsByStep[group.step]?.forEach((col) => {
+          if (!isEditableForSelectedQuarter(col)) return;
+
           // Tashkilot va reja ustunlarini tekshirishdan o'tkazib yuboramiz
           if (col.is_organization === true) return;
           if (col.status_plan != null) return;
@@ -529,7 +571,11 @@ function PlantCreate() {
 
         if (!currentFormGroup) return [];
 
-        return stepColumns.map((col) => {
+        const filteredStepColumns = stepColumns.filter(
+          shouldIncludeColumnInPayload,
+        );
+
+        return filteredStepColumns.map((col) => {
           if (col.is_organization === true) {
             // Tashkilot ustuni - faqat bir marta
             return {
@@ -561,15 +607,19 @@ function PlantCreate() {
             // Boshqa maydonlar - har bir formula uchun alohida
             const isKoChatVaNiholStep = isKoChatVaNiholIlova1Step(stepIndex);
             const inners = currentFormGroup.forms.map((form) => {
+              const finalValue = isEditableForSelectedQuarter(col)
+                ? form.values[col.id] || ""
+                : "0";
+
               if (isKoChatVaNiholStep) {
                 return {
                   plant: null,
-                  value: form.values[col.id] || "",
+                  value: finalValue,
                 };
               } else {
                 return {
                   ...(form.plantId && { plant: form.plantId }),
-                  value: form.values[col.id] || "",
+                  value: finalValue,
                 };
               }
             });
@@ -585,6 +635,7 @@ function PlantCreate() {
 
     const payload = {
       deadline: state.selectedDeadlineId,
+      ...(isDaromadReport ? { quarter: selectedQuarter } : {}),
       report_items,
       foot_note: footNote || "",
     };
@@ -606,6 +657,7 @@ function PlantCreate() {
       dispatch({ type: "SET_CURRENT_STEP", payload: 0 });
       dispatch({ type: "SET_FORM_ERRORS", payload: [] });
       dispatch({ type: "RESET_FORM" });
+      setSelectedQuarter("");
     } catch (err: any) {
       console.error("Yuborishda xatolik:", err);
       toast.error(err?.data?.message || err?.message || t("submit_error"));
@@ -697,9 +749,7 @@ function PlantCreate() {
                 dispatch({ type: "SET_DEADLINE", payload: val });
 
                 setYearPlan(
-                  selectedItem
-                    ? formatDeadlineText(selectedItem.year)
-                    : "",
+                  selectedItem ? formatDeadlineText(selectedItem.year) : "",
                 );
               }}
             >
@@ -789,6 +839,28 @@ function PlantCreate() {
               </SelectContent>
             </Select>
           </div>
+         {isDaromadReport ? (
+           <div>
+            <label className="block mb-1 text-lg font-medium">
+              Chorakni tanlang
+            </label>
+
+            <Select
+              value={selectedQuarter}
+              onValueChange={(value) => setSelectedQuarter(value)}
+            >
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder="Chorakni tanlang" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="q1">1-chorak</SelectItem>
+                <SelectItem value="q2">2-chorak</SelectItem>
+                <SelectItem value="q3">3-chorak</SelectItem>
+                <SelectItem value="q4">4-chorak</SelectItem>
+              </SelectContent>
+            </Select>
+          </div> ) : null}
         </div>
 
         {/* Joriy qadam formula guruhlari */}
@@ -973,6 +1045,9 @@ function PlantCreate() {
                     </TableHeader>
                     <TableBody>
                       {currentEmptyColumns.map((col: EmptyColumn) => {
+                        const isQuarterEditable =
+                          isEditableForSelectedQuarter(col);
+
                         // Plan ustuni (status_plan != null)
                         if (col.status_plan != null) {
                           const planValue = form.plantId
@@ -1004,8 +1079,7 @@ function PlantCreate() {
                                 {planByColumnAndPlant?.[col.id]?.[
                                   form.plantId
                                 ] && (
-                                  <div className="text-xs text-green-600 mt-1">
-                                  </div>
+                                  <div className="text-xs text-green-600 mt-1"></div>
                                 )}
                               </TableCell>
                             </TableRow>
@@ -1025,6 +1099,7 @@ function PlantCreate() {
                               <TableCell>
                                 <select
                                   value={state.selectedOrganizationId}
+                                  disabled={!isQuarterEditable}
                                   onChange={(e) => {
                                     dispatch({
                                       type: "SET_ORGANIZATION",
@@ -1063,7 +1138,12 @@ function PlantCreate() {
                             <TableCell>
                               <Input
                                 type="text"
-                                value={form.values[col.id] || ""}
+                                  value={
+                                    isQuarterEditable
+                                      ? form.values[col.id] || ""
+                                      : "0"
+                                  }
+                                  disabled={!isQuarterEditable}
                                 onChange={(e) =>
                                   handleInputChange(
                                     state.currentStep,
@@ -1072,7 +1152,7 @@ function PlantCreate() {
                                     e.target.value,
                                   )
                                 }
-                                required
+                                  required={isQuarterEditable}
                                 className={
                                   state.formErrors.some((err) =>
                                     err.includes(col.fullParentChain),

@@ -930,7 +930,9 @@ import {
                                         {/* Amallar faqat birinchi qatorda chiqsin */}
                                         {rowIdx === 0 &&
                                           (selectedRow.status == "saved" ||
-                                            selectedRow.status == "cancelled") &&
+                                            selectedRow.status == "cancelled" ||
+                                            (selectedRow.status == "accepted" &&
+                                              reportName == "Daromad")) &&
                                           user_role == "tashkilot_hodimi" && (
                                             <td
                                               className="border border-black px-2 py-1 text-center"
