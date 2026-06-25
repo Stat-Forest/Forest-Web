@@ -97,6 +97,15 @@ export default defineConfig({
     hmr: {
       overlay: false, // Error overlay'ni o'chirish - performance uchun
     },
+    // Dev server proxy: local requests to /api will be forwarded to the remote API
+    proxy: {
+      "/api": {
+        target: "https://forest.yutori.uz",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
+      },
+    },
   },
   // Preview optimizatsiyasi
   preview: {
