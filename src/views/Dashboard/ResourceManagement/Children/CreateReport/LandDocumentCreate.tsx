@@ -36,12 +36,15 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { DocumentType } from "@/services/constants";
+import { filterBySearchPriority } from "@/utils/search";
+import { useDebounce } from "@/utils/useDebounce";
 
 function LandDocumentCreate() {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [date, setDate] = useState<Date>();
   const { t } = useTranslation();
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -53,8 +56,10 @@ function LandDocumentCreate() {
     error: organization_error,
   } = useGetOrganizationReportsQuery({ lang });
 
-  const filteredOrganizations = organization?.filter((item: any) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOrganizations = filterBySearchPriority(
+    organization,
+    debouncedSearchTerm,
+    (item: any) => item?.name
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
