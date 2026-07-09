@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -8,11 +8,14 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { useTranslation } from "react-i18next";
 import { OrganizationSelectProps } from "@/types/commonTypes";
+import { filterBySearchPriority } from "@/utils/search";
+import { useDebounce } from "@/utils/useDebounce";
 
 export function OrganizationSelect({
   value,
@@ -24,6 +27,8 @@ export function OrganizationSelect({
   required = false,
 }: OrganizationSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [open, setOpen] = useState(false);
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const lang = useSelector((state: RootState) => state.language.lang);
   const { t } = useTranslation();
 
@@ -34,11 +39,35 @@ export function OrganizationSelect({
   } = useGetOrganizationReportsQuery({ lang });
 
   const filteredOrganizations = useMemo(() => {
-    if (!organizations) return [];
-    return organizations.filter((item: any) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    return filterBySearchPriority(
+      organizations,
+      debouncedSearchTerm,
+      (item: any) => item?.name
     );
-  }, [organizations, searchTerm]);
+  }, [organizations, debouncedSearchTerm]);
+
+  useEffect(() => {
+    if (!open && searchTerm) {
+      setSearchTerm("");
+    }
+  }, [open, searchTerm]);
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const firstMatch = filteredOrganizations[0];
+      if (firstMatch?.id) {
+        onValueChange(String(firstMatch.id));
+        setOpen(false);
+      }
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setSearchTerm("");
+    }
+  };
 
   return (
     <div className={className}>
@@ -51,6 +80,8 @@ export function OrganizationSelect({
       <Select
         value={value ?? ""}
         onValueChange={onValueChange}
+        open={open}
+        onOpenChange={setOpen}
         disabled={disabled || isOrgLoading}
       >
         <SelectTrigger className="w-full min-h-[45px]">
@@ -58,13 +89,35 @@ export function OrganizationSelect({
         </SelectTrigger>
         <SelectContent>
           <div className="p-2">
-            <Input
-              placeholder="Izlash..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full mb-2"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="relative">
+              <Input
+                placeholder="Izlash..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="w-full mb-2 pr-10"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSearchTerm("");
+                  }}
+                  aria-label={t("clear") || "Clear"}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {searchTerm && (
+              <div className="pb-1 text-xs text-gray-500">
+                {filteredOrganizations.length} ta natija
+              </div>
+            )}
           </div>
 
           {isOrgLoading && (

@@ -253,22 +253,6 @@ const PlantTableColumn = forwardRef(
       return inner.value ?? "";
     };
 
-    const getQuarterStatusLabel = (status: string | null | undefined) => {
-      if (!status) return "-";
-      switch (status) {
-        case "accepted":
-          return t("received");
-        case "saved":
-          return t("draft");
-        case "cancelled":
-          return t("returned");
-        case "sent":
-          return t("sended");
-        default:
-          return status;
-      }
-    };
-
     const isOrganizationColumn = (col: any) => {
       const name = (
         col?.statement_column_name ??
