@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { base_url } from "@/services/baseUrl";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
@@ -125,15 +126,13 @@ const PlantTableColumn = forwardRef(
 
           // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
           if (downloadUrl.startsWith("/")) {
-            const baseUrl = import.meta.env.VITE_API_URL;
-            downloadUrl = `${baseUrl}${downloadUrl}`;
+            downloadUrl = `${base_url}${downloadUrl}`;
           } else if (
             !downloadUrl.startsWith("http://") &&
             !downloadUrl.startsWith("https://")
           ) {
             // Agar protocol bo'lmasa, base_url qo'shish
-            const baseUrl = import.meta.env.VITE_API_URL;
-            downloadUrl = `${baseUrl}/${downloadUrl}`;
+            downloadUrl = `${base_url}/${downloadUrl}`;
           }
 
           console.log("Download URL:", downloadUrl);
