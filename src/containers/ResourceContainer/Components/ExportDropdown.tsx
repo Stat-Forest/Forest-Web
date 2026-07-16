@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 import { useExportExcelMutation } from "@/services/reportsApi";
+import { base_url } from "@/services/baseUrl";
 import { decryptData } from "@/utils/crypto";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -112,12 +113,10 @@ export default function ExportDropdown({
 
         // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
         if (downloadUrl.startsWith("/")) {
-          const baseUrl = import.meta.env.VITE_API_URL;
-          downloadUrl = `${baseUrl}${downloadUrl}`;
+          downloadUrl = `${base_url}${downloadUrl}`;
         } else if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://")) {
           // Agar protocol bo'lmasa, base_url qo'shish
-          const baseUrl = import.meta.env.VITE_API_URL;
-          downloadUrl = `${baseUrl}/${downloadUrl}`;
+          downloadUrl = `${base_url}/${downloadUrl}`;
         }
 
         console.log("Download URL:", downloadUrl);

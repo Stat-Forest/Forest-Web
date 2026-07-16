@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import AnnouncementModal from "@/components/Modals/AnnouncementModal";
 import { setAnnouncementState } from "@/features/uiSlice";
 import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
+import SupportChatWidget from "@/components/SupportChatWidget";
 
 // Lazy loading - Dashboard route'larini alohida chunk'larga ajratish
 const Main = lazy(() => import("./Main"));
@@ -158,6 +159,7 @@ function Dashboard() {
               <Route path="*" element={<Navigate to="/main" replace />} />
             </Routes>
           </Suspense>
+          <SupportChatWidget />
         </div>
       </div>
     </>
