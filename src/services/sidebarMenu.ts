@@ -6,9 +6,30 @@ import reference_default from "@/assets/sidebar_icons/mingcute_certificate-fill_
 import support_default from "@/assets/sidebar_icons/carbon_help_defaultsvg.svg";
 import home_active from "@/assets/sidebar_icons/home_active.svg";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/app/store";
 
 export function useSidebarMenu() {
   const { t } = useTranslation();
+  const role = useSelector((state: RootState) => state.auth.user?.role);
+
+  if (role === "support_admin") {
+    return {
+      sidebar_menu: [
+        [
+          {
+            id: 100,
+            name: t("support_panel"),
+            path: "/support",
+            active_icon: "",
+            default_icon: support_default,
+            arrow_icon: "",
+          },
+        ],
+      ],
+      sidebar_3: [],
+    };
+  }
 
   const sidebar_menu = [
     [

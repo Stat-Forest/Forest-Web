@@ -97,6 +97,34 @@ export const uniqeApi = createApi({
         { type: "Messages", id: conversationId },
       ],
     }),
+    getSupportMyConversations: builder.query<ChatConversation[], void>({
+      query: () => ({
+        url: `/chats/support/my/`,
+        method: "GET",
+      }),
+      providesTags: ["Conversations"],
+    }),
+    getSupportNewConversations: builder.query<ChatConversation[], void>({
+      query: () => ({
+        url: `/chats/support/new/`,
+        method: "GET",
+      }),
+      providesTags: ["Conversations"],
+    }),
+    assignConversation: builder.mutation<ChatConversation, string>({
+      query: (conversationId) => ({
+        url: `/chats/conversations/${conversationId}/assign/`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Conversations"],
+    }),
+    closeConversation: builder.mutation<ChatConversation, string>({
+      query: (conversationId) => ({
+        url: `/chats/conversations/${conversationId}/close/`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Conversations"],
+    }),
   }),
 });
 
@@ -108,4 +136,8 @@ export const {
   useGetConversationDetailQuery,
   useGetConversationMessagesQuery,
   useMarkConversationReadMutation,
+  useGetSupportMyConversationsQuery,
+  useGetSupportNewConversationsQuery,
+  useAssignConversationMutation,
+  useCloseConversationMutation,
 } = uniqeApi;
