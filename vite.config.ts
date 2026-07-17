@@ -6,6 +6,7 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  envPrefix: ["VITE_", "USER_"],
   base: "/",
   build: {
     // Bundle size optimizatsiyasi
@@ -104,6 +105,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
+      },
+      "/ws": {
+        target: "wss://forest.yutori.uz",
+        ws: true,
+        changeOrigin: true,
+        secure: true,
       },
     },
   },

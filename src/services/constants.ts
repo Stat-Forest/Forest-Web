@@ -86,6 +86,7 @@ export const USER_ROLE = [
   "bolim_admin",
   "tashkilot_rahbari",
   "hududiy_boshqarma",
+  "support_admin",
 ]
 
 export const regions_information = [

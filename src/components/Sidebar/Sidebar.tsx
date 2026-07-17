@@ -28,34 +28,37 @@ function Sidebar() {
   const { t } = useTranslation();
   const { sidebar_menu, sidebar_3 } = useSidebarMenu();
   const location = useLocation();
+  const userRole = useSelector((state: RootState) => state.auth.user?.role);
+  const isSupportAdmin = userRole === "support_admin";
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
+  const authUser = useSelector((state: RootState) => state.auth.user);
   const lang = useSelector((state: RootState) => state.language.lang);
 
   const {
     data: sidebarData = [],
     isLoading: sidebarLoading,
     error: sidebarError,
-  } = useGetStatementsReportQuery({ lang });
+  } = useGetStatementsReportQuery(isSupportAdmin ? skipToken : { lang });
 
   const {
     data: user,
     isLoading: userLoading,
     error: userError,
   } = useGetUsersReportQuery(
-    user_id
-      ? {
+    isSupportAdmin || !user_id
+      ? skipToken
+      : {
           user_id: String(user_id),
           page: "",
           perPage: 10,
           search: "",
           organization: "",
           role: "",
-        }
-      : skipToken,
+        },
   );
 
-  if (sidebarLoading || userLoading) {
+  if (!isSupportAdmin && (sidebarLoading || userLoading)) {
     return (
       <div className="w-[320px] h-screen flex justify-center items-center">
         <h2 className="text-lg font-bold">{t("loading")}...</h2>
@@ -63,7 +66,7 @@ function Sidebar() {
     );
   }
 
-  if (sidebarError || userError) {
+  if (!isSupportAdmin && (sidebarError || userError)) {
     return (
       <div className="w-[320px] h-screen flex justify-center items-center">
         <h2 className="text-lg font-bold text-red-500">{t("error")}</h2>
@@ -203,21 +206,31 @@ function Sidebar() {
               <User2 className="text-white drop-shadow-md" size={24} />
             </div>
             <h3 className="font-bold text-white text-lg drop-shadow-md">
-              {user?.results[0]?.first_name || ""} <br />
-              {user?.results[0]?.last_name || ""}
+              {isSupportAdmin ? (
+                <>
+                  {authUser?.full_name || authUser?.email || ""}
+                </>
+              ) : (
+                <>
+                  {user?.results[0]?.first_name || ""} <br />
+                  {user?.results[0]?.last_name || ""}
+                </>
+              )}
             </h3>
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-left">
               <h3 className="font-bold text-white text-[18px] drop-shadow-sm">
-                {user?.results[0]?.role_display || ""}
+                {isSupportAdmin
+                  ? t("roles.support_admin")
+                  : user?.results[0]?.role_display || ""}
               </h3>
             </div>
 
             <hr className="border-white" />
 
-            {user?.results[0]?.organization_name && (
+            {!isSupportAdmin && user?.results[0]?.organization_name && (
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-white text-[16px] drop-shadow-sm">
                   {user?.results[0]?.organization_name || ""}

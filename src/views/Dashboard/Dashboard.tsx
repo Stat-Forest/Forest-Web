@@ -32,11 +32,13 @@ const LandDocumentCreate = lazy(() => import("./ResourceManagement/Children/Crea
 const OnTime = lazy(() => import("./Main/Children/OnTime"));
 const Lated = lazy(() => import("./Main/Children/Lated"));
 const ExpiredDeadlines = lazy(() => import("./Main/Children/ExpiredDeadlines"));
+const SupportAdmin = lazy(() => import("./SupportAdmin"));
 
 function Dashboard() {
   const dispatch = useDispatch();
   const lang = useSelector((state: RootState) => state.language.lang);
   const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
+  const userRole = useSelector((state: RootState) => state.auth.user?.role);
   const { open, currentIndex } = useSelector(
     (state: RootState) => state.ui.announcement
   );
@@ -45,6 +47,7 @@ function Dashboard() {
 
   // 🔹 Modalni boshqarish
   useEffect(() => {
+    if (userRole === "support_admin") return;
     if (announcements?.results?.length) {
       const dismissed = getSimpleCookie("announcementsSeenDate");
       const today = new Date().toISOString().split("T")[0];
@@ -58,7 +61,7 @@ function Dashboard() {
         );
       }
     }
-  }, [announcements, dispatch]);
+  }, [announcements, dispatch, userRole]);
 
   // 🔹 Modal yopilganda keyingisiga o'tish
   const handleClose = () => {
@@ -150,16 +153,20 @@ function Dashboard() {
                 path="support-information"
                 element={<SupportInformation />}
               />
+              <Route path="support" element={<SupportAdmin />} />
               <Route
                 path="/land-documents-create"
                 element={<LandDocumentCreate />}
               />
               <Route path="/video" element={<Video />} />
 
-              <Route path="*" element={<Navigate to="/main" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to={userRole === "support_admin" ? "/support" : "/main"} replace />}
+              />
             </Routes>
           </Suspense>
-          <SupportChatWidget />
+          {userRole !== "support_admin" && <SupportChatWidget />}
         </div>
       </div>
     </>

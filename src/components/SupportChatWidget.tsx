@@ -7,51 +7,20 @@ import type { RootState } from "@/app/store";
 import {
   ChatConversation,
   ChatMessage,
-  ChatUser,
   useCreateConversationMutation,
   useGetConversationMessagesQuery,
   useGetConversationsListQuery,
   useMarkConversationReadMutation,
 } from "@/services/uniqeApi";
-
-interface IncomingSocketPayload {
-  id?: string;
-  sender?: string | ChatUser;
-  text?: string;
-  message?: string;
-  is_read?: boolean;
-  created_at?: string;
-}
-
-const formatTime = (value?: string | null) => {
-  if (!value) return "";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleTimeString("uz-UZ", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const resolveSenderId = (sender: string | ChatUser | undefined): string => {
-  if (!sender) return "";
-  return typeof sender === "string" ? sender : sender.id;
-};
-
-const normalizeSocketMessage = (
-  payload: IncomingSocketPayload
-): ChatMessage | null => {
-  const text = payload.text ?? payload.message;
-  if (!text) return null;
-
-  return {
-    id: payload.id ?? crypto.randomUUID(),
-    sender: payload.sender ?? "support",
-    text,
-    is_read: payload.is_read ?? false,
-    created_at: payload.created_at ?? new Date().toISOString(),
-  };
-};
+import {
+  appendIncomingMessages,
+  buildChatSocketUrl,
+  createPendingMessage,
+  formatChatTime,
+  mergeChatMessages,
+  parseSocketMessages,
+  resolveSenderId,
+} from "@/utils/chatUtils";
 
 function stateSelectorUserId(user: RootState["auth"]["user"]): string {
   if (!user?.user_id) return "";
@@ -70,14 +39,13 @@ function SupportChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([]);
-  const [pendingMessages, setPendingMessages] = useState<
-    Array<{ id: string; text: string; created_at: string }>
-  >([]);
+  const [queuedCount, setQueuedCount] = useState(0);
   const [wsConnected, setWsConnected] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const wsAttemptRef = useRef(0);
-  const wsOpenedRef = useRef(false);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const queuedMessagesRef = useRef<string[]>([]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const markedConversationRef = useRef<string | null>(null);
 
@@ -104,25 +72,28 @@ function SupportChatWidget() {
     [activeConversationId, conversations]
   );
 
-  const mergedMessages = useMemo(() => {
-    const map = new Map<string, ChatMessage>();
-    [...historyMessages, ...liveMessages].forEach((msg) => {
-      const key =
-        msg.id || `${resolveSenderId(msg.sender)}-${msg.created_at}-${msg.text}`;
-      map.set(key, msg);
-    });
-    return Array.from(map.values());
-  }, [historyMessages, liveMessages]);
+  const mergedMessages = useMemo(
+    () => mergeChatMessages(historyMessages, liveMessages),
+    [historyMessages, liveMessages]
+  );
 
   useEffect(() => {
+    if (!isOpen) return;
     if (!activeConversationId && conversations.length > 0) {
       setActiveConversationId(conversations[0].id);
     }
-  }, [activeConversationId, conversations]);
+  }, [isOpen, activeConversationId, conversations]);
+
+  useEffect(() => {
+    if (isOpen) return;
+    setActiveConversationId(null);
+    setDraft("");
+  }, [isOpen]);
 
   useEffect(() => {
     setLiveMessages([]);
-    setPendingMessages([]);
+    queuedMessagesRef.current = [];
+    setQueuedCount(0);
     markedConversationRef.current = null;
   }, [activeConversationId]);
 
@@ -139,92 +110,75 @@ function SupportChatWidget() {
   }, [mergedMessages]);
 
   useEffect(() => {
-    if (!activeConversationId || !token) {
-      if (wsRef.current) {
-        wsRef.current.close();
+    const clearReconnectTimer = () => {
+      if (reconnectTimerRef.current) {
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
       }
+    };
+
+    if (!isOpen || !activeConversationId || !token) {
+      wsRef.current?.close();
       setWsConnected(false);
-      wsAttemptRef.current = 0;
-      wsOpenedRef.current = false;
+      clearReconnectTimer();
       return;
     }
 
-    const wsBase = String(import.meta.env.VITE_WS_URL || "").replace(/\/$/, "");
-    const wsCandidates = [
-      `${wsBase}/ws/chat/${activeConversationId}/?token=${encodeURIComponent(token)}`,
-    ];
-
+    const socketUrl = buildChatSocketUrl(activeConversationId, token);
     let closedByCleanup = false;
 
-    const connect = (candidateIndex: number) => {
+    const openSocket = () => {
       if (closedByCleanup) return;
-      const candidate = wsCandidates[candidateIndex];
-      if (!candidate) {
-        setWsConnected(false);
-        return;
-      }
-
-      wsAttemptRef.current = candidateIndex;
-      wsOpenedRef.current = false;
-      const ws = new WebSocket(candidate);
+      const ws = new WebSocket(socketUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        wsOpenedRef.current = true;
+        clearReconnectTimer();
+        reconnectAttemptRef.current = 0;
         setWsConnected(true);
-        setPendingMessages((messages) => {
-          messages.forEach((message) => {
-            try {
-              ws.send(JSON.stringify({ text: message.text }));
-            } catch {
-              // Pending xabarlar keyingi reconnect'da yana urinib ko'riladi.
-            }
+        if (queuedMessagesRef.current.length > 0) {
+          queuedMessagesRef.current.forEach((text) => {
+            ws.send(JSON.stringify({ text }));
           });
-          return [];
-        });
+          queuedMessagesRef.current = [];
+          setQueuedCount(0);
+        }
+      };
+      ws.onclose = () => {
+        setWsConnected(false);
+        if (!closedByCleanup) {
+          reconnectAttemptRef.current += 1;
+          const delay = Math.min(15000, 1000 * reconnectAttemptRef.current);
+          reconnectTimerRef.current = window.setTimeout(() => openSocket(), delay);
+        }
+      };
+      ws.onerror = () => {
+        setWsConnected(false);
       };
       ws.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data) as
-            | IncomingSocketPayload
-            | IncomingSocketPayload[];
-          const incomingList = Array.isArray(payload) ? payload : [payload];
-          const nextMessages = incomingList
-            .map((item) => normalizeSocketMessage(item))
-            .filter((item): item is ChatMessage => item !== null);
+          const payload = JSON.parse(event.data);
+          const nextMessages = parseSocketMessages(payload);
 
           if (nextMessages.length > 0) {
-            setLiveMessages((prev) => [...prev, ...nextMessages]);
+            setLiveMessages((prev) => appendIncomingMessages(prev, nextMessages));
             refetchConversations();
           }
         } catch {
           // Socket payload noto'g'ri formatda bo'lsa UI ishlashda davom etadi.
         }
       };
-      ws.onerror = () => {
-        if (!closedByCleanup && wsAttemptRef.current === candidateIndex && !wsOpenedRef.current) {
-          connect(candidateIndex + 1);
-        }
-      };
-      ws.onclose = () => {
-        if (!closedByCleanup && wsAttemptRef.current === candidateIndex) {
-          setWsConnected(false);
-          if (!wsOpenedRef.current) {
-            connect(candidateIndex + 1);
-          }
-        }
-      };
     };
 
-    connect(0);
+    reconnectAttemptRef.current = 0;
+    openSocket();
 
     return () => {
       closedByCleanup = true;
-      wsAttemptRef.current = 0;
-      wsOpenedRef.current = false;
+      clearReconnectTimer();
       wsRef.current?.close();
     };
-  }, [activeConversationId, token, refetchConversations]);
+  }, [isOpen, activeConversationId, token, refetchConversations]);
 
   const handleCreateConversation = async () => {
     try {
@@ -237,47 +191,28 @@ function SupportChatWidget() {
     }
   };
 
+  const appendOptimisticMessage = (text: string) => {
+    setLiveMessages((prev) => [...prev, createPendingMessage(userId, text)]);
+  };
+
   const handleSendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const text = draft.trim();
-    if (
-      !text ||
-      !activeConversationId ||
-      !wsRef.current ||
-      wsRef.current.readyState !== WebSocket.OPEN
-    ) {
-      const optimisticMessage = {
-        id: crypto.randomUUID(),
-        text,
-        created_at: new Date().toISOString(),
-      };
-      setPendingMessages((prev) => [...prev, optimisticMessage]);
-      setLiveMessages((prev) => [
-        ...prev,
-        {
-          id: optimisticMessage.id,
-          sender: userId,
-          text,
-          is_read: false,
-          created_at: optimisticMessage.created_at,
-        },
-      ]);
+    if (!text || !activeConversationId) {
+      return;
+    }
+
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      queuedMessagesRef.current.push(text);
+      setQueuedCount(queuedMessagesRef.current.length);
+      appendOptimisticMessage(text);
       setDraft("");
       return;
     }
 
     wsRef.current.send(JSON.stringify({ text }));
-    setLiveMessages((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        sender: userId,
-        text,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    appendOptimisticMessage(text);
     setDraft("");
   };
 
@@ -348,16 +283,12 @@ function SupportChatWidget() {
               <div className="flex items-center gap-2">
                 <span
                   className={`text-xs font-medium px-3 py-1 rounded-full ${
-                    wsConnected || pendingMessages.length > 0
-                      ? "bg-amber-100 text-amber-700"
+                    wsConnected
+                      ? "bg-emerald-100 text-emerald-700"
                       : "bg-amber-100 text-amber-700"
                   }`}
                 >
-                  {wsConnected
-                    ? "Onlayn"
-                    : pendingMessages.length > 0
-                      ? `Navbatda ${pendingMessages.length}`
-                      : "Ulanmoqda"}
+                  {wsConnected ? "Onlayn" : queuedCount > 0 ? `Navbatda ${queuedCount}` : "Ulanmoqda"}
                 </span>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -406,7 +337,7 @@ function SupportChatWidget() {
                             mine ? "text-emerald-100" : "text-slate-400"
                           }`}
                         >
-                          {formatTime(msg.created_at)}
+                          {formatChatTime(msg.created_at)}
                         </p>
                       </div>
                     </div>

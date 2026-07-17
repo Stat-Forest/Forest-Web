@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { setCookie } from "./utils/cookie";
 import AuthVideo from "./views/Video/AuthVideo";
 import Landing from "./views/Landing";
+import { USER_ROLE } from "./services/constants";
 
 // Lazy loading - code splitting uchun
 const Auth = lazy(() => import("./views/Auth/Auth"));
@@ -30,7 +31,23 @@ const loadAOS = async () => {
   return AOS;
 };
 
-export const user_role = import.meta.env.USER_ROLE;
+const parseAllowedRoles = (): string[] => {
+  const raw =
+    import.meta.env.VITE_USER_ROLE ?? import.meta.env.USER_ROLE ?? "";
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch {
+      // Fallback to constants when env is malformed.
+    }
+  }
+  return USER_ROLE;
+};
+
+export const user_role = parseAllowedRoles();
 
 function App() {
   const reportIds = useSelector((state: RootState) => state.report.reportId);
