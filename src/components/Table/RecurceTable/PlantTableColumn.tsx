@@ -12,6 +12,11 @@ import {
   MessageSquareWarning,
   NotebookText,
   Trash2,
+  Save,
+  Send,
+  XCircle,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { base_url } from "@/services/baseUrl";
@@ -52,6 +57,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { regions2, statuses } from "@/services/constants";
+
+const getQuarterStatusConfig = (status: string | null | undefined) => {
+  switch (status) {
+    case "saved":
+      return { label: "Qoralama", color: "bg-zinc-100 text-zinc-800 border-zinc-300 shadow-sm", Icon: Save };
+    case "sent":
+      return { label: "Jo'natilgan", color: "bg-amber-50 text-amber-600 border-amber-300 shadow-sm", Icon: Send };
+    case "cancelled":
+      return { label: "Qaytarilgan", color: "bg-red-50 text-red-600 border-red-300 shadow-sm", Icon: XCircle };
+    case "accepted":
+      return { label: "Qabul qilingan", color: "bg-blue-50 text-blue-600 border-blue-300 shadow-sm", Icon: CheckCircle2 };
+    default:
+      return { label: "Mavjud emas", color: "bg-gray-50 text-gray-400 border-gray-100 border-dashed", Icon: Clock };
+  }
+};
 
 const PlantTableColumn = forwardRef(
   (
@@ -181,7 +201,7 @@ const PlantTableColumn = forwardRef(
           console.warn("Download URL topilmadi, response:", result);
           alert(
             result?.detail ||
-              "Export muvaffaqiyatli bajarildi, lekin download URL topilmadi",
+            "Export muvaffaqiyatli bajarildi, lekin download URL topilmadi",
           );
         }
       } catch (error: any) {
@@ -225,25 +245,25 @@ const PlantTableColumn = forwardRef(
 
     const normalizedPlantReportItems = (plantDetail as any)?.report_items
       ? ((plantDetail as any).report_items || []).map((reportItem: any) => {
-          const cols = reportItem.statement_columns || [];
-          const normalizedColumns =
-            expectedColumnIds.length > 0
-              ? expectedColumnIds.map((colId) => {
-                  const found = cols.find(
-                    (c: any) => c.statement_column_id === colId,
-                  );
-                  return (
-                    found || {
-                      statement_column_id: colId,
-                      value: "-",
-                      inners: [],
-                    }
-                  );
-                })
-              : cols;
+        const cols = reportItem.statement_columns || [];
+        const normalizedColumns =
+          expectedColumnIds.length > 0
+            ? expectedColumnIds.map((colId) => {
+              const found = cols.find(
+                (c: any) => c.statement_column_id === colId,
+              );
+              return (
+                found || {
+                  statement_column_id: colId,
+                  value: "-",
+                  inners: [],
+                }
+              );
+            })
+            : cols;
 
-          return { ...reportItem, statement_columns: normalizedColumns };
-        })
+        return { ...reportItem, statement_columns: normalizedColumns };
+      })
       : [];
 
     const formatInnerValue = (inner: any) => {
@@ -621,9 +641,8 @@ const PlantTableColumn = forwardRef(
               {allReports?.results?.map((item: any) => (
                 <TableRow
                   key={item.id}
-                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${
-                    selectedRow?.id === item.id ? "bg-gray-200" : ""
-                  }`}
+                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${selectedRow?.id === item.id ? "bg-gray-200" : ""
+                    }`}
                   onClick={() =>
                     onRowClick?.(selectedRow?.id === item.id ? null : item)
                   }
@@ -647,15 +666,14 @@ const PlantTableColumn = forwardRef(
                   </TableCell>
                   <TableCell className="text-right text-base font-[400] border-none">
                     <span
-                      className={`px-4 py-1 rounded-full ${
-                        item.status === "accepted"
-                          ? "bg-[#7fa1f84f] text-[#4579FF]"
-                          : item.status === "cancelled"
-                            ? "bg-[#f9695c74] text-[#FF5445]"
-                            : item.status == "saved"
-                              ? "bg-[#65656555] text-[#4D4D4D]"
-                              : "bg-[#fcc7544a] text-[#fd9c15]"
-                      }`}
+                      className={`px-4 py-1 rounded-full ${item.status === "accepted"
+                        ? "bg-[#7fa1f84f] text-[#4579FF]"
+                        : item.status === "cancelled"
+                          ? "bg-[#f9695c74] text-[#FF5445]"
+                          : item.status == "saved"
+                            ? "bg-[#65656555] text-[#4D4D4D]"
+                            : "bg-[#fcc7544a] text-[#fd9c15]"
+                        }`}
                     >
                       {item?.status == "accepted"
                         ? t("received")
@@ -709,65 +727,58 @@ const PlantTableColumn = forwardRef(
                 )}
 
                 {detailQuarter != null && (
-                  <div className="text-lg mt-2 w-full">
-                    <b className="font-bold">Hozirgi chorak:</b>{" "}
-                    <span className="ml-2 text-gray-800">{detailQuarter}</span>
+                  <div className="w-full mt-4 flex items-center gap-4 bg-indigo-50 border border-indigo-200 p-4 rounded-xl shadow-sm transition-all hover:shadow-md">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                      <Clock size={24} className="opacity-90" />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <p className="text-xs font-bold text-indigo-900 uppercase tracking-widest opacity-70">
+                        Hozirgi faol chorak
+                      </p>
+                      <p className="text-xl font-extrabold text-indigo-700 mt-0.5 shadow-sm-text">
+                        {String(detailQuarter).match(/\d/) ? `${String(detailQuarter).match(/\d/)?.[0]}-chorak` : detailQuarter}
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {selectedRow?.statement_name == "Daromad" &&
                   detailQuarterInfo && (
-                    <div className="text-lg w-full p-3 rounded">
-                      <div className="flex flex-wrap gap-6 mt-3">
-                        <div className="flex items-center gap-2">
-                          <b className="font-semibold text-gray-700">
-                            1-chorak:
-                          </b>
-                          <span className="text-base text-gray-800 font-medium">
-                            {detailQuarterInfo?.quarter_1_status
-                              ? String(detailQuarterInfo.quarter_1_status)
-                              : "-"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <b className="font-semibold text-gray-700">
-                            2-chorak:
-                          </b>
-                          <span className="text-base text-gray-800 font-medium">
-                            {detailQuarterInfo?.quarter_2_status
-                              ? String(detailQuarterInfo.quarter_2_status)
-                              : "-"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <b className="font-semibold text-gray-700">
-                            3-chorak:
-                          </b>
-                          <span className="text-base text-gray-800 font-medium">
-                            {detailQuarterInfo?.quarter_3_status
-                              ? String(detailQuarterInfo.quarter_3_status)
-                              : "-"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <b className="font-semibold text-gray-700">
-                            4-chorak:
-                          </b>
-                          <span className="text-base text-gray-800 font-medium">
-                            {detailQuarterInfo?.quarter_4_status
-                              ? String(detailQuarterInfo.quarter_4_status)
-                              : "-"}
-                          </span>
-                        </div>
+                    <div className="w-full mt-6">
+                      <b className="text-lg font-bold text-gray-800 mb-4 block">Choraklar holati:</b>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { id: 1, status: detailQuarterInfo?.quarter_1_status },
+                          { id: 2, status: detailQuarterInfo?.quarter_2_status },
+                          { id: 3, status: detailQuarterInfo?.quarter_3_status },
+                          { id: 4, status: detailQuarterInfo?.quarter_4_status },
+                        ].map((quarter) => {
+                          const config = getQuarterStatusConfig(String(quarter.status || ""));
+                          const Icon = config.Icon;
+                          return (
+                            <div
+                              key={quarter.id}
+                              className={`flex flex-col p-4 rounded-xl border transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-md ${config.color}`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-semibold uppercase tracking-wider opacity-80">{quarter.id}-chorak</span>
+                                <Icon size={20} className="opacity-90" />
+                              </div>
+                              <div className="text-base font-bold flex-1 flex items-end">
+                                {config.label}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
                 {detailQuarterInfo === undefined &&
                   selectedRow?.statement_name == "Daromad" && (
-                    <div className="text-lg mt-4 w-full p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800">
-                      ⚠️ quarter_info ma'lumoti topilmadi. API dan olib kelish
-                      kerak bo'lishi mumkin.
+                    <div className="text-lg mt-4 w-full p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800 flex flex-row items-center gap-2">
+                      <MessageSquareWarning color="#a16207" size={24} />
+                      <span>quarter_info ma'lumoti topilmadi. API dan olib kelish kerak bo'lishi mumkin.</span>
                     </div>
                   )}
               </div>
@@ -778,13 +789,13 @@ const PlantTableColumn = forwardRef(
                     selectedRow?.status == "saved") ||
                     (user_role === "bolim_admin" &&
                       selectedRow?.status == "sent")) && (
-                    <Button
-                      onClick={() => setIsCancelModalOpen(true)}
-                      className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
-                    >
-                      {t("recycle")}
-                    </Button>
-                  )}
+                      <Button
+                        onClick={() => setIsCancelModalOpen(true)}
+                        className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                      >
+                        {t("recycle")}
+                      </Button>
+                    )}
 
                   {/* 🔹 Yuborish (Send) button - faqat tashkilot_rahbari va saved status'da */}
                   {user_role == "tashkilot_rahbari" &&
@@ -1072,27 +1083,27 @@ const PlantTableColumn = forwardRef(
                                               </Button>
                                               {selectedRow.status ==
                                                 "saved" && (
-                                                <Button
-                                                  className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                                  onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    try {
-                                                      await deleteReport(
-                                                        selectedRow.id,
-                                                      ).unwrap();
-                                                      // Mutasyon muvaffaqiyatli bo'lgandan keyin sahifani yangilash
-                                                      window.location.reload();
-                                                    } catch (error) {
-                                                      console.error(
-                                                        "Delete error:",
-                                                        error,
-                                                      );
-                                                    }
-                                                  }}
-                                                >
-                                                  <Trash2 />
-                                                </Button>
-                                              )}
+                                                  <Button
+                                                    className="bg-[#3B82F6] hover:bg-[#2563EB]"
+                                                    onClick={async (e) => {
+                                                      e.stopPropagation();
+                                                      try {
+                                                        await deleteReport(
+                                                          selectedRow.id,
+                                                        ).unwrap();
+                                                        // Mutasyon muvaffaqiyatli bo'lgandan keyin sahifani yangilash
+                                                        window.location.reload();
+                                                      } catch (error) {
+                                                        console.error(
+                                                          "Delete error:",
+                                                          error,
+                                                        );
+                                                      }
+                                                    }}
+                                                  >
+                                                    <Trash2 />
+                                                  </Button>
+                                                )}
                                             </div>
                                           </td>
                                         )}
