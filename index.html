@@ -3,12 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Stat-Forest Platform - O'rmon xo'jaligi statistikasi"
-    />
+    <meta name="description" content="STAT-URMON — O'zbekiston o'rmon xo'jaligi statistika portali. Yer maydonlari, o'rmon qoplami va ko'rsatkichlarni real vaqtda kuzating." />
+    <meta name="keywords" content="stat urmon, o'rmon xo'jaligi, statistika, o'zbekiston o'rmon, dasht, niholxona, ormon statistikasi" />
+    <meta name="author" content="O'rmon xo'jaligi agentligi" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="STAT-URMON — O'rmon xo'jaligi statistika portali" />
+    <meta property="og:description" content="O'zbekiston o'rmon xo'jaligi statistik ma'lumotlarini real vaqtda kuzating va tahlil qiling." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:locale" content="uz_UZ" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="STAT-URMON — O'rmon xo'jaligi statistika portali" />
+    <meta name="twitter:description" content="O'zbekiston o'rmon xo'jaligi statistik ma'lumotlarini real vaqtda kuzating." />
+    <link rel="canonical" href="https://stat-urmon.uz/" />
     <link rel="icon" type="image/svg+xml" href="./src/assets/logo.png" />
     <title>Stat-Forest Platform</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans & Merriweather -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Performance optimizatsiyasi - Resource hints -->
     <link rel="preconnect" href="https://stat-urmon.uz" crossorigin />
@@ -45,9 +66,21 @@
         y.parentNode.insertBefore(t, y);
       })(window, document, "clarity", "script", "v6hcd4v83q");
     </script>
+
+    <!-- Theme Initializer -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
   </head>
 
-  <body style="background-color: #fafafa">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
