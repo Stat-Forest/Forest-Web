@@ -284,6 +284,60 @@ const PlantTableColumn = forwardRef(
       return name.includes("tashkilot") && name.includes("nomi");
     };
 
+    const formatCellValue = (val: any) => {
+      if (val === undefined || val === null || val === "" || val === "-") return "-";
+      const numStr = String(val).replace(/\s/g, "").replace(",", ".");
+      const num = parseFloat(numStr);
+      if (!isNaN(num)) {
+        return num.toFixed(2);
+      }
+      return val;
+    };
+
+    const calculateColumnTotal = (col: any) => {
+      if (
+        col?.value !== undefined &&
+        col?.value !== null &&
+        col?.value !== "-" &&
+        col?.value !== ""
+      ) {
+        const num = parseFloat(
+          String(col.value).replace(/\s/g, "").replace(",", "."),
+        );
+        if (!isNaN(num)) {
+          return num.toFixed(2);
+        }
+        return col.value;
+      }
+
+      if (!col?.inners || col.inners.length === 0) return "-";
+
+      let sum = 0;
+      let hasValue = false;
+
+      for (const inner of col.inners) {
+        if (
+          inner?.value !== undefined &&
+          inner?.value !== null &&
+          inner?.value !== "-" &&
+          inner?.value !== ""
+        ) {
+          const numStr = String(inner.value)
+            .replace(/\s/g, "")
+            .replace(",", ".");
+          const num = parseFloat(numStr);
+          if (!isNaN(num)) {
+            sum += num;
+            hasValue = true;
+          }
+        }
+      }
+
+      if (!hasValue) return "-";
+
+      return sum.toFixed(2);
+    };
+
     // 🔹 Yangi: Print uchun to'liq jadvalni olish
     const getPrintableTable = () => {
       if (!tableRef.current) return "";
@@ -418,28 +472,42 @@ const PlantTableColumn = forwardRef(
                     </th>
                   )}
                   {row.map((cell: any, cellIndex: number) => {
-                    // Plant detail rejimida "Tashkilot nomi" o'rniga "O'simlik nomi" ko'rsatish
-                    let displayTitle = cell.title;
-                    if (isPlantStatement && cell.title) {
-                      const titleLower = cell.title.toLowerCase();
-                      if (
-                        titleLower.includes("tashkilot") &&
-                        titleLower.includes("nomi")
-                      ) {
-                        displayTitle = cell.title.replace(
-                          /tashkilot nomi/gi,
-                          "O'simlik nomi",
-                        );
-                      }
+                    const titleLower = (cell.title || "").toLowerCase();
+                    const isOrg =
+                      (titleLower.includes("tashkilot") &&
+                        titleLower.includes("nomi")) ||
+                      cellIndex === 0;
+
+                    if (isOrg) {
+                      if (rowIndex > 0) return null;
+                      return (
+                        <Fragment key={cellIndex}>
+                          <th
+                            className="border min-w-[220px] border-black px-2 py-1 text-center"
+                            colSpan={1}
+                            rowSpan={maxDepth}
+                          >
+                            Tashkilot nomi
+                          </th>
+                          <th
+                            className="border min-w-[200px] border-black px-2 py-1 text-center"
+                            colSpan={1}
+                            rowSpan={maxDepth}
+                          >
+                            O'simlik nomi
+                          </th>
+                        </Fragment>
+                      );
                     }
+
                     return (
                       <th
                         key={cellIndex}
-                        className="border w-[400px] border-black px-2 py-1 text-center"
+                        className="border min-w-[120px] border-black px-2 py-1 text-center"
                         colSpan={cell.colSpan}
                         rowSpan={cell.rowSpan}
                       >
-                        {displayTitle}
+                        {cell.title}
                       </th>
                     );
                   })}
@@ -448,97 +516,239 @@ const PlantTableColumn = forwardRef(
             </thead>
             <tbody>
               {rows.map((row: any, rowIndex: number) => {
-                const maxInners = Math.max(
-                  ...row.report_items.map((reportItem: any) =>
-                    Math.max(
-                      ...reportItem.statement_columns.map(
-                        (col: any) => col.inners?.length || 0,
-                      ),
+                const allInnerCounts = row.report_items.flatMap(
+                  (reportItem: any) =>
+                    reportItem.statement_columns.map(
+                      (col: any) => col.inners?.length || 0,
                     ),
-                  ),
                 );
+                const maxInners = Math.max(0, ...allInnerCounts);
+                const orgName =
+                  row.organization_name ||
+                  row.region_name ||
+                  row.name ||
+                  "";
 
                 return (
                   <Fragment key={row.id}>
-                    {/* 🔹 Parent row */}
-                    {Array.from({ length: maxInners }).map((_, innerIndex) => (
-                      <tr
-                        key={innerIndex}
-                        className="cursor-pointer hover:bg-gray-100"
-                      >
-                        {/* TR faqat birinchi qatorda chiqadi */}
-                        {innerIndex === 0 && (
-                          <td
-                            className="border border-black px-2 py-1 text-center"
-                            rowSpan={maxInners}
-                          >
+                    {/* Har bir inner o'simlik uchun qator (0..maxInners-1) */}
+                    {Array.from({ length: maxInners }).map((_, innerIndex) => {
+                      let plantName = "";
+                      for (const rItem of row.report_items || []) {
+                        for (const col of rItem.statement_columns || []) {
+                          if (col.inners?.[innerIndex]?.plant_name) {
+                            plantName = col.inners[innerIndex].plant_name;
+                            break;
+                          }
+                        }
+                        if (plantName) break;
+                      }
+
+                      return (
+                        <tr
+                          key={`inner-${innerIndex}`}
+                          className="cursor-pointer hover:bg-gray-100"
+                        >
+                          {/* Birinchi qatorda № va Tashkilot nomi rowSpan=maxInners+1 bilan chiqadi */}
+                          {innerIndex === 0 && (
+                            <>
+                              <td
+                                className="border border-black px-2 py-1 text-center font-bold"
+                                rowSpan={maxInners + 1}
+                              >
+                                {rowIndex + 1}
+                              </td>
+                              <td
+                                className="border min-w-[220px] border-black px-2 py-1 text-center font-bold"
+                                rowSpan={maxInners + 1}
+                              >
+                                {orgName}
+                              </td>
+                            </>
+                          )}
+
+                          {/* O'simlik nomi ustuni */}
+                          <td className="border min-w-[200px] border-black px-2 py-1 text-center font-semibold">
+                            {plantName || "-"}
+                          </td>
+
+                          {/* Qolgan qiymat ustunlari */}
+                          {row.report_items?.map((reportItem: any) =>
+                            reportItem.statement_columns?.map(
+                              (col: any, colIdx: number) => {
+                                if (isOrganizationColumn(col)) {
+                                  return null;
+                                }
+                                const inner = col.inners?.[innerIndex];
+                                return (
+                                  <td
+                                    key={`inner-${col.id || colIdx}-${innerIndex}`}
+                                    className="border min-w-[120px] border-black px-2 py-1 text-center"
+                                  >
+                                    {formatCellValue(inner?.value)}
+                                  </td>
+                                );
+                              },
+                            ),
+                          )}
+                        </tr>
+                      );
+                    })}
+
+                    {/* 🔥 Oxirgi qator: Tashkilot Jami qatori (summa qiymatlari bilan) */}
+                    <tr className="cursor-pointer hover:bg-gray-200 font-bold">
+                      {maxInners === 0 && (
+                        <>
+                          <td className="border border-black px-2 py-1 text-center font-bold">
                             {rowIndex + 1}
                           </td>
-                        )}
-
-                        {row.report_items?.map((reportItem: any) =>
-                          reportItem.statement_columns?.map((col: any) => (
-                            <td
-                              key={col.id}
-                              className="border min-w-[380px] border-black px-2 py-1 text-center font-bold"
-                            >
-                              {col.inners?.[innerIndex]?.value || ""}
-                            </td>
-                          )),
-                        )}
-                      </tr>
-                    ))}
+                          <td className="border min-w-[220px] border-black px-2 py-1 text-center font-bold">
+                            {orgName}
+                          </td>
+                        </>
+                      )}
+                      <td className="border min-w-[200px] border-black px-2 py-1 text-center font-bold">
+                        Tashkilot Jami
+                      </td>
+                      {row.report_items?.map((reportItem: any) =>
+                        reportItem.statement_columns?.map(
+                          (col: any, colIdx: number) => {
+                            if (isOrganizationColumn(col)) {
+                              return null;
+                            }
+                            return (
+                              <td
+                                key={`tot-${col.id || colIdx}`}
+                                className="border min-w-[120px] border-black px-2 py-1 text-center font-bold"
+                              >
+                                {calculateColumnTotal(col)}
+                              </td>
+                            );
+                          },
+                        ),
+                      )}
+                    </tr>
 
                     {/* 🔥 Children rows */}
                     {row.children_reports?.length > 0 &&
                       row.children_reports.map(
                         (child: any, childIndex: number) => {
-                          const childMaxInners = Math.max(
-                            ...child.report_items.map((reportItem: any) =>
-                              Math.max(
-                                ...reportItem.statement_columns.map(
-                                  (col: any) => col.inners?.length || 0,
-                                ),
+                          const childAllInnerCounts = child.report_items.flatMap(
+                            (reportItem: any) =>
+                              reportItem.statement_columns.map(
+                                (col: any) => col.inners?.length || 0,
                               ),
-                            ),
                           );
+                          const childMaxInners = Math.max(0, ...childAllInnerCounts);
+                          const childOrgName =
+                            child.organization_name ||
+                            child.region_name ||
+                            child.name ||
+                            "";
 
                           return (
                             <Fragment key={child.id || childIndex}>
                               {Array.from({ length: childMaxInners }).map(
-                                (_, innerIndex) => (
-                                  <tr
-                                    key={innerIndex}
-                                    onClick={() => onRowClick(child)}
-                                    className="cursor-pointer hover:bg-gray-100"
-                                  >
-                                    {/* Child TR faqat birinchi qatorda chiqadi */}
-                                    {innerIndex === 0 && (
-                                      <td
-                                        className="border border-black px-2 py-1 text-center"
-                                        rowSpan={childMaxInners}
-                                      >
-                                        {rowIndex + 1}.{childIndex + 1}
-                                      </td>
-                                    )}
+                                (_, innerIndex) => {
+                                  let childPlantName = "";
+                                  for (const rItem of child.report_items || []) {
+                                    for (const col of rItem.statement_columns || []) {
+                                      if (col.inners?.[innerIndex]?.plant_name) {
+                                        childPlantName = col.inners[innerIndex].plant_name;
+                                        break;
+                                      }
+                                    }
+                                    if (childPlantName) break;
+                                  }
 
-                                    {child.report_items?.map(
-                                      (reportItem: any) =>
-                                        reportItem.statement_columns?.map(
-                                          (col: any) => (
-                                            <td
-                                              key={col.id}
-                                              className="border min-w-[380px] border-black px-2 py-1 text-center"
-                                            >
-                                              {col.inners?.[innerIndex]
-                                                ?.value || ""}
-                                            </td>
+                                  return (
+                                    <tr
+                                      key={`child-inner-${innerIndex}`}
+                                      onClick={() => onRowClick(child)}
+                                      className="cursor-pointer hover:bg-gray-100"
+                                    >
+                                      {innerIndex === 0 && (
+                                        <>
+                                          <td
+                                            className="border border-black px-2 py-1 text-center font-semibold"
+                                            rowSpan={childMaxInners + 1}
+                                          >
+                                            {rowIndex + 1}.{childIndex + 1}
+                                          </td>
+                                          <td
+                                            className="border min-w-[220px] border-black px-2 py-1 text-center font-semibold"
+                                            rowSpan={childMaxInners + 1}
+                                          >
+                                            {childOrgName}
+                                          </td>
+                                        </>
+                                      )}
+
+                                      <td className="border min-w-[200px] border-black px-2 py-1 text-center font-semibold">
+                                        {childPlantName || "-"}
+                                      </td>
+
+                                      {child.report_items?.map(
+                                        (reportItem: any) =>
+                                          reportItem.statement_columns?.map(
+                                            (col: any, colIdx: number) => {
+                                              if (isOrganizationColumn(col)) {
+                                                return null;
+                                              }
+                                              const inner = col.inners?.[innerIndex];
+                                              return (
+                                                <td
+                                                  key={`cinner-${col.id || colIdx}-${innerIndex}`}
+                                                  className="border min-w-[120px] border-black px-2 py-1 text-center"
+                                                >
+                                                  {formatCellValue(inner?.value)}
+                                                </td>
+                                              );
+                                            },
                                           ),
-                                        ),
-                                    )}
-                                  </tr>
-                                ),
+                                      )}
+                                    </tr>
+                                  );
+                                },
                               )}
+
+                              {/* Child Tashkilot Jami qatori */}
+                              <tr
+                                onClick={() => onRowClick(child)}
+                                className="cursor-pointer hover:bg-gray-200 font-bold"
+                              >
+                                {childMaxInners === 0 && (
+                                  <>
+                                    <td className="border border-black px-2 py-1 text-center font-semibold">
+                                      {rowIndex + 1}.{childIndex + 1}
+                                    </td>
+                                    <td className="border min-w-[220px] border-black px-2 py-1 text-center font-semibold">
+                                      {childOrgName}
+                                    </td>
+                                  </>
+                                )}
+                                <td className="border min-w-[200px] border-black px-2 py-1 text-center font-bold">
+                                  Tashkilot Jami
+                                </td>
+                                {child.report_items?.map(
+                                  (reportItem: any) =>
+                                    reportItem.statement_columns?.map(
+                                      (col: any, colIdx: number) => {
+                                        if (isOrganizationColumn(col)) {
+                                          return null;
+                                        }
+                                        return (
+                                          <td
+                                            key={`ctot-${col.id || colIdx}`}
+                                            className="border min-w-[120px] border-black px-2 py-1 text-center font-bold"
+                                          >
+                                            {calculateColumnTotal(col)}
+                                          </td>
+                                        );
+                                      },
+                                    ),
+                                )}
+                              </tr>
                             </Fragment>
                           );
                         },
@@ -906,28 +1116,42 @@ const PlantTableColumn = forwardRef(
                         </th>
                       )}
                       {row.map((cell: any, cellIndex: number) => {
-                        // Plant detail rejimida "Tashkilot nomi" o'rniga "O'simlik nomi" ko'rsatish
-                        let displayTitle = cell.title;
-                        if (isPlantStatement && cell.title) {
-                          const titleLower = cell.title.toLowerCase();
-                          if (
-                            titleLower.includes("tashkilot") &&
-                            titleLower.includes("nomi")
-                          ) {
-                            displayTitle = cell.title.replace(
-                              /tashkilot nomi/gi,
-                              "O'simlik nomi",
-                            );
-                          }
+                        const titleLower = (cell.title || "").toLowerCase();
+                        const isOrg =
+                          (titleLower.includes("tashkilot") &&
+                            titleLower.includes("nomi")) ||
+                          cellIndex === 0;
+
+                        if (isOrg) {
+                          if (rowIndex > 0) return null;
+                          return (
+                            <Fragment key={cellIndex}>
+                              <th
+                                className="border min-w-[220px] border-black px-2 py-1 text-center"
+                                colSpan={1}
+                                rowSpan={maxDepth}
+                              >
+                                Tashkilot nomi
+                              </th>
+                              <th
+                                className="border min-w-[200px] border-black px-2 py-1 text-center"
+                                colSpan={1}
+                                rowSpan={maxDepth}
+                              >
+                                O'simlik nomi
+                              </th>
+                            </Fragment>
+                          );
                         }
+
                         return (
                           <th
                             key={cellIndex}
-                            className="border w-[400px] border-black px-2 py-1 text-center"
+                            className="border min-w-[120px] border-black px-2 py-1 text-center"
                             colSpan={cell.colSpan}
                             rowSpan={cell.rowSpan}
                           >
-                            {displayTitle}
+                            {cell.title}
                           </th>
                         );
                       })}
