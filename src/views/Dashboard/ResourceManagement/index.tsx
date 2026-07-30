@@ -50,28 +50,32 @@ function ResourceManagement() {
   };
 
   return (
-    <div className="px-3 py-4">
-      <div className="pt-2 pl-2">
-        <div className="mb-3 flex items-center gap-3 px-2">
+    <div className="px-3 py-2 space-y-4">
+      <div className="bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-slate-800 text-blue-700 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition-all duration-200 font-semibold text-xs sm:text-sm shadow-sm cursor-pointer active:scale-95"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 font-semibold text-xs sm:text-sm shadow-xs cursor-pointer active:scale-95 shrink-0"
           >
-            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+            <ArrowLeft size={16} className="text-white transition-transform group-hover:-translate-x-0.5" />
             <span>{t("back") || "Orqaga qaytish"}</span>
           </button>
-        </div>
 
-        <h2 className="text-xl font-[500] w-[530px] text-start px-2">
-          <span className="text-[white]">
-            {isLoading && (t("loading") || "Yuklanmoqda...")}
-            {isError && (t("error") || "Xatolik")}
-            {!isLoading && !isError && parentTitle + ": "}
-          </span>
-          {!isLoading && !isError && childTitle}
-        </h2>
-        <div className="w-full bg-[#E8E8E8] h-[4px] rounded-full">
-          <div className="w-[540px] h-[4px] rounded-full bg-blue-500"></div>
+          <div className="flex items-baseline gap-2 flex-wrap leading-none">
+            <span className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-blue-400 leading-none">
+              {isLoading && (t("loading") || "Yuklanmoqda...")}
+              {isError && (t("error") || "Xatolik")}
+              {!isLoading && !isError && parentTitle}
+            </span>
+            {!isLoading && !isError && parentTitle && (
+              <span className="text-xs sm:text-sm font-medium text-slate-400 dark:text-slate-500 leading-none select-none">
+                /
+              </span>
+            )}
+            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">
+              {!isLoading && !isError && childTitle}
+            </span>
+          </div>
         </div>
       </div>
 

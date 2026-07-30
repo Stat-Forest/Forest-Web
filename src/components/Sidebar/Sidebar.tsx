@@ -73,15 +73,15 @@ function Sidebar() {
 
   if (!isSupportAdmin && (sidebarLoading || userLoading)) {
     return (
-      <div className="w-[320px] h-screen flex justify-center items-center">
-        <h2 className="text-lg font-bold">{t("loading")}...</h2>
+      <div className="w-[320px] h-screen flex justify-center items-center bg-[#ffffff] dark:bg-gray-900">
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">{t("loading")}...</h2>
       </div>
     );
   }
 
   if (!isSupportAdmin && (sidebarError || userError)) {
     return (
-      <div className="w-[320px] h-screen flex justify-center items-center">
+      <div className="w-[320px] h-screen flex justify-center items-center bg-[#ffffff] dark:bg-gray-900">
         <h2 className="text-lg font-bold text-red-500">{t("error")}</h2>
       </div>
     );
@@ -105,8 +105,8 @@ function Sidebar() {
               onClick={() => setOpenSheetId(openSheetId === item.id ? null : item.id)}
               className={`sidebar-menu-item cursor-pointer p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
                 isParentActive
-                  ? "bg-blue-100/80 text-blue-800 border-blue-400/50 shadow-md font-semibold"
-                  : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
+                  ? "bg-blue-100/80 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-400/50 shadow-md font-semibold"
+                  : "text-gray-800 dark:text-gray-200 border-transparent hover:text-blue-700 dark:hover:text-blue-400 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40 dark:hover:bg-blue-900/20"
               }`}
             >
               {item.icon && (
@@ -127,7 +127,7 @@ function Sidebar() {
                 />
               )}
 
-              <span className="font-medium flex-1">{t(item.name)}</span>
+              <span className="font-medium flex-1 dark:text-gray-200">{t(item.name)}</span>
 
               <div
                 className={`w-1.5 h-1.5 rounded-full bg-blue-400 transition-opacity ${
@@ -141,10 +141,10 @@ function Sidebar() {
 
           <SheetContent
             side="left"
-            className="ml-[320px] bg-ice backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-white/20 shadow-2xl z-[100]"
+            className="ml-[320px] bg-[#f8fafc] dark:bg-gray-900 backdrop-blur-xl min-w-[460px] sm:w-[460px] border-r border-gray-200 dark:border-gray-700 shadow-2xl z-[100]"
           >
-            <SheetHeader className="bg-gradient-to-r from-blue-600/30 via-blue-500/25 to-blue-400/30 rounded-lg p-4 border border-white/30 shadow-md mb-4">
-              <SheetTitle className="text-gray-900 font-bold text-lg">
+            <SheetHeader className="bg-gradient-to-r from-blue-600/30 via-blue-500/25 to-blue-400/30 dark:from-blue-900/60 dark:via-blue-800/50 dark:to-blue-700/60 rounded-lg p-4 border border-blue-200 dark:border-blue-700/40 shadow-md mb-4">
+              <SheetTitle className="text-gray-900 dark:text-gray-100 font-bold text-lg">
                 {t(item.name)}
               </SheetTitle>
             </SheetHeader>
@@ -160,13 +160,13 @@ function Sidebar() {
                   className={({ isActive }) =>
                     `group flex items-center gap-3 transition-all duration-200 p-3 rounded-lg border ${
                       isActive
-                        ? "bg-blue-100/80 text-blue-800 border-blue-400/50 shadow-md font-semibold [&_svg]:text-blue-600 [&_.indicator]:opacity-100"
-                        : "text-gray-800 bg-white/40 border-white/50 hover:bg-blue-50/70 hover:text-blue-700 hover:border-blue-300/60 hover:shadow-md [&_svg]:text-blue-500 [&_svg]:group-hover:text-blue-600 [&_.indicator]:opacity-0 [&_.indicator]:group-hover:opacity-100"
+                        ? "bg-blue-100/80 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border-blue-400/50 shadow-md font-semibold [&_svg]:text-blue-600 dark:[&_svg]:text-blue-400 [&_.indicator]:opacity-100"
+                        : "text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 hover:border-blue-300 hover:shadow-md [&_svg]:text-blue-500 dark:[&_svg]:text-blue-400 [&_svg]:group-hover:text-blue-600 [&_.indicator]:opacity-0 [&_.indicator]:group-hover:opacity-100"
                     }`
                   }
                 >
                   <FileText size={20} />
-                  <h2 className="text-[14px] font-medium flex-1">
+                  <h2 className="text-[14px] font-medium flex-1 dark:text-gray-200">
                     {t(child.name)}
                   </h2>
                   <div className="indicator w-2 h-2 rounded-full bg-blue-400 transition-opacity"></div>
@@ -185,8 +185,8 @@ function Sidebar() {
         className={({ isActive }) =>
           `sidebar-menu-item p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
             isActive
-              ? "text-blue-800 bg-blue-100/60 border-blue-400/50 shadow-md font-semibold"
-              : "text-gray-800 border-transparent hover:text-blue-700 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40"
+              ? "text-blue-800 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-900/40 border-blue-400/50 shadow-md font-semibold"
+              : "text-gray-800 dark:text-gray-200 border-transparent hover:text-blue-700 dark:hover:text-blue-400 hover:border-blue-300/40 bg-white/10 hover:bg-blue-50/40 dark:hover:bg-blue-900/20"
           }`
         }
       >
@@ -197,18 +197,18 @@ function Sidebar() {
             className="w-5 h-5 transition-transform duration-200 group-hover:scale-110"
           />
         )}
-        <span className="font-medium flex-1">{t(item.name)}</span>
+        <span className="font-medium flex-1 dark:text-gray-200">{t(item.name)}</span>
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </NavLink>
     );
   };
 
   return (
-    <div className="w-[320px] h-screen overflow-y-auto p-4 bg-ice sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-white/20 shadow-2xl">
+    <div className="w-[320px] h-screen overflow-y-auto p-4 bg-[#ffffff] dark:bg-gray-900 sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-gray-200 dark:border-gray-700 shadow-2xl transition-colors duration-300">
       <div>
         <Link
           to="/main"
-          className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 backdrop-blur-sm shadow-lg border border-white/20 hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer"
+          className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 dark:from-blue-800/90 dark:to-blue-700/90 backdrop-blur-sm shadow-lg border border-white/20 dark:border-blue-600/30 hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer"
         >
           <img
             width={40}
@@ -222,7 +222,7 @@ function Sidebar() {
           </h2>
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-600/90 via-blue-500/85 to-blue-400/90 w-full rounded-2xl p-4 flex justify-center flex-col gap-0.5 shadow-xl border border-white/30 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-blue-600/90 via-blue-500/85 to-blue-400/90 dark:from-blue-900/90 dark:via-blue-800/85 dark:to-blue-700/90 w-full rounded-2xl p-4 flex justify-center flex-col gap-0.5 shadow-xl border border-white/30 dark:border-blue-600/20 backdrop-blur-sm">
           <div className="mb-2 flex gap-2">
             <div className="bg-white/30 backdrop-blur-md h-[50px] w-[50px] flex items-center justify-center rounded-3xl shadow-lg border border-white/40">
               <User2 className="text-white drop-shadow-md" size={24} />

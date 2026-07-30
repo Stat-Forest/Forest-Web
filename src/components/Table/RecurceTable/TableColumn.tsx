@@ -318,17 +318,17 @@ const TableColumn = forwardRef(
     return (
       <>
         <div
-          className="overflow-x-auto bg-ice p-4 rounded-xl"
+          className="overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl transition-colors shadow-xs"
           ref={tableRef}
           id="printableTable"
         >
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse text-xs">
             <thead className="w-full">
               {headerRows.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {rowIndex === 0 && (
                     <th
-                      className="border border-black px-2 py-1 text-center"
+                      className="border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-2 py-1.5 text-center font-bold"
                       rowSpan={maxDepth}
                     >
                       №
@@ -338,7 +338,7 @@ const TableColumn = forwardRef(
                     return (
                       <th
                         key={cellIndex}
-                        className="border w-[400px] border-black px-2 py-1 text-center"
+                        className="border min-w-[150px] border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-2 py-1.5 text-center font-bold"
                         colSpan={cell.colSpan}
                         rowSpan={cell.rowSpan}
                       >
@@ -367,12 +367,12 @@ const TableColumn = forwardRef(
                     {Array.from({ length: maxInners }).map((_, innerIndex) => (
                       <tr
                         key={innerIndex}
-                        className="cursor-pointer hover:bg-gray-100"
+                        className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
                       >
                         {/* TR faqat birinchi qatorda chiqadi */}
                         {innerIndex === 0 && (
                           <td
-                            className="border border-black px-2 py-1 text-center"
+                            className="border border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
                             rowSpan={maxInners}
                           >
                             {rowIndex + 1}
@@ -383,7 +383,7 @@ const TableColumn = forwardRef(
                           reportItem.statement_columns?.map((col: any) => (
                             <td
                               key={col.id}
-                              className="border min-w-[380px] border-black px-2 py-1 text-center font-bold"
+                              className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold"
                             >
                               {col.inners?.[innerIndex]?.value || ""}
                             </td>
@@ -413,12 +413,12 @@ const TableColumn = forwardRef(
                                   <tr
                                     key={innerIndex}
                                     onClick={() => onRowClick(child)}
-                                    className="cursor-pointer hover:bg-gray-100"
+                                    className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
                                   >
                                     {/* Child TR faqat birinchi qatorda chiqadi */}
                                     {innerIndex === 0 && (
                                       <td
-                                        className="border border-black px-2 py-1 text-center"
+                                        className="border border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
                                         rowSpan={childMaxInners}
                                       >
                                         {rowIndex + 1}.{childIndex + 1}
@@ -431,7 +431,7 @@ const TableColumn = forwardRef(
                                           (col: any) => (
                                             <td
                                               key={col.id}
-                                              className="border min-w-[380px] border-black px-2 py-1 text-center"
+                                              className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
                                             >
                                               {col.inners?.[innerIndex]
                                                 ?.value || ""}
@@ -451,15 +451,13 @@ const TableColumn = forwardRef(
               })}
             </tbody>
           </table>
-        </div>
-
-        <div className="p-4 my-2 bg-ice rounded-xl">
-          <div className="flex items-center gap-2 mb-6 ">
+            <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors mt-6">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <div>
               <Input
                 type="text"
                 placeholder={`${t("item_79")}...`}
-                className="w-[260px] text-xl min-h-[40px] border-black"
+                className="w-[220px] text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:!bg-slate-800 text-slate-800 dark:!text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500"
                 value={searchTermReport}
                 onChange={(e: any) => setSearchTermReport(e.target.value)}
               />
@@ -470,15 +468,13 @@ const TableColumn = forwardRef(
                 value={selectedOrganizationReport}
                 onValueChange={(value) => setSelectedOrganizationReport(value)}
               >
-                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-[220px] text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-none">
                   <SelectValue placeholder={t("region")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                   {regions2.map((region) => {
-                    // regions array faqat Uzbek tilida label ga ega, shuning uchun faqat Uzbek tilida ko'rsatamiz
-                    // Yoki regions2 ni ishlatish kerak, lekin regions2 da "all" yo'q
                     return (
-                      <SelectItem key={region.value} value={region.value}>
+                      <SelectItem key={region.value} value={region.value} className="dark:text-slate-100">
                         {region.value}
                       </SelectItem>
                     );
@@ -492,18 +488,18 @@ const TableColumn = forwardRef(
                 value={selectedStatusReport}
                 onValueChange={(value) => setSelectedStatusReport(value)}
               >
-                <SelectTrigger className="w-[200px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-[180px] text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-none">
                   <SelectValue placeholder={t("item_28")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                   {statuses.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
+                    <SelectItem key={status.value} value={status.value} className="dark:text-slate-100">
                       {i18n.language === "uz"
                         ? status.label_uz
                         : status.label_ru}
                     </SelectItem>
                   ))}
-                </SelectContent>
+                  </SelectContent>
               </Select>
             </div>
             <div>
@@ -514,135 +510,139 @@ const TableColumn = forwardRef(
                   setSelectedStatusReport("");
                   setSearchTermReport("");
                 }}
-                className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
+                className="h-[40px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
               >
                 {t("reset")}
               </Button>
             </div>
           </div>
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow className="bg-[#eaeaea] h-[50px]">
-                <TableHead className="w-[20%] pl-2 text-lg text-[#717171] border-none">
-                  {t("item_12")}
-                </TableHead>
-                <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-                  {t("item_83")}
-                </TableHead>
-                <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-                  {t("item_14")}
-                </TableHead>
-                <TableHead className="text-[#717171] text-left text-lg w-[20%] border-none">
-                  {t("item_15")}
-                </TableHead>
-                <TableHead className="text-right pr-2 text-[#717171] text-lg w-[20%] border-none">
-                  {t("item_16")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allReports?.results?.map((item: any) => (
-                <TableRow
-                  key={item.id}
-                  className={`h-[50px] cursor-pointer hover:bg-gray-100 ${
-                    selectedRow?.id === item.id ? "bg-gray-200" : ""
-                  }`}
-                  onClick={() =>
-                    onRowClick?.(selectedRow?.id === item.id ? null : item)
-                  }
-                >
-                  <TableCell className="w-[20%] text-lg font-[300] border-none">
-                    {item?.organization_name}
-                  </TableCell>
-                  <TableCell className="w-[20%] text-base font-[300] border-none">
-                    {item?.statement_name}
-                  </TableCell>
-                  <TableCell className="w-[20%] text-base font-[300] border-none">
-                    {item?.submit_at}
-                  </TableCell>
-                  <TableCell className="w-[20%] text-base font-[300] border-none">
-                    {[
-                      item?.accepted_at,
-                      item?.cancelled_at,
-                      item?.sent_at,
-                      item?.created_at,
-                    ].find((v) => v != null && v !== "")}
-                  </TableCell>
-                  <TableCell className="text-right text-base font-[400] border-none">
-                    <span
-                      className={`px-4 py-1 rounded-full ${
-                        item.status === "accepted"
-                          ? "bg-[#7fa1f84f] text-[#4579FF]"
-                          : item.status === "cancelled"
-                            ? "bg-[#f9695c74] text-[#FF5445]"
-                            : item.status == "saved"
-                              ? "bg-[#65656555] text-[#4D4D4D]"
-                              : "bg-[#fcc7544a] text-[#fd9c15]"
-                      }`}
-                    >
-                      {item?.status == "accepted"
-                        ? t("received")
-                        : item.status == "cancelled"
-                          ? t("returned")
-                          : item.status == "saved"
-                            ? t("draft")
-                            : t("sended")}
-                    </span>
-                  </TableCell>
+
+          <div className="w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow className="bg-slate-100/90 dark:bg-slate-800/90 h-[44px] border-b border-slate-200 dark:border-slate-700">
+                  <TableHead className="w-[35%] pl-3 text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-left border-none">
+                    {t("item_12")}
+                  </TableHead>
+                  <TableHead className="text-slate-700 dark:text-slate-200 text-left text-xs font-bold uppercase tracking-wider w-[20%] border-none">
+                    {t("item_83")}
+                  </TableHead>
+                  <TableHead className="text-slate-700 dark:text-slate-200 text-left text-xs font-bold uppercase tracking-wider w-[15%] border-none">
+                    {t("item_14")}
+                  </TableHead>
+                  <TableHead className="text-slate-700 dark:text-slate-200 text-left text-xs font-bold uppercase tracking-wider w-[15%] border-none">
+                    {t("item_15")}
+                  </TableHead>
+                  <TableHead className="text-right pr-3 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider w-[15%] border-none">
+                    {t("item_16")}
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                {allReports?.results?.map((item: any) => (
+                  <TableRow
+                    key={item.id}
+                    className={`h-[46px] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors ${
+                      selectedRow?.id === item.id ? "bg-blue-50/50 dark:bg-slate-800" : ""
+                    }`}
+                    onClick={() =>
+                      onRowClick?.(selectedRow?.id === item.id ? null : item)
+                    }
+                  >
+                    <TableCell className="w-[35%] pl-3 text-xs font-semibold text-slate-800 dark:text-slate-100 border-none whitespace-normal break-words leading-snug">
+                      {item?.organization_name}
+                    </TableCell>
+                    <TableCell className="w-[20%] text-xs font-medium text-slate-700 dark:text-slate-200 border-none whitespace-normal break-words">
+                      {item?.statement_name}
+                    </TableCell>
+                    <TableCell className="w-[15%] text-xs font-medium text-slate-600 dark:text-slate-300 border-none">
+                      {item?.submit_at}
+                    </TableCell>
+                    <TableCell className="w-[15%] text-xs font-medium text-slate-600 dark:text-slate-300 border-none">
+                      {[
+                        item?.accepted_at,
+                        item?.cancelled_at,
+                        item?.sent_at,
+                        item?.created_at,
+                      ].find((v) => v != null && v !== "")}
+                    </TableCell>
+                    <TableCell className="text-right pr-3 text-xs font-medium border-none">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold inline-block whitespace-nowrap border ${
+                          item.status === "accepted"
+                            ? "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/60"
+                            : item.status === "cancelled"
+                              ? "bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 border-red-200 dark:border-red-800/60"
+                              : item.status == "saved"
+                                ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                : "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-800/60"
+                        }`}
+                      >
+                        {item?.status == "accepted"
+                          ? t("received")
+                          : item.status == "cancelled"
+                            ? t("returned")
+                            : item.status == "saved"
+                              ? t("draft")
+                              : t("sended")}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>        </div>
 
         {/* Detal ko'rinish */}
         {selectedRow && (
-          <div ref={detailRef} className="p-4 bg-ice rounded-xl">
-            <div className="flex items-center justify-between my-5">
+          <div ref={detailRef} className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs transition-colors">
+            <div className="flex items-center justify-between my-5 flex-wrap gap-4">
               <div className="flex gap-2 flex-col">
                 {selectedRow.status === "cancelled" && (
-                  <span className="text-xl flex items-center gap-2 font-[500]">
-                    <MessageSquareWarning color="#FF5445" size={36} />{" "}
+                  <span className="text-xl flex items-center gap-2 font-[500] text-red-600 dark:text-red-400">
+                    <MessageSquareWarning size={32} />{" "}
                     Qaytarilish sababi:{" "}
-                    <span className="text-red-500">
+                    <span className="font-bold">
                       {selectedRow?.cancel_reason || "Noma'lum"}
                     </span>
                   </span>
                 )}
-                <div className="flex items-center gap-2">
-                  <span className="flex text-xl items-center">
-                    <NotebookText size={30} /> {t("deadline")}:
+                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                  <span className="flex text-lg sm:text-xl items-center gap-2 font-semibold">
+                    <NotebookText size={24} /> {t("deadline")}:
                   </span>
-                  <span className="text-xl">{selectedRow.submit_at}</span>
+                  <span className="text-lg sm:text-xl font-bold">{selectedRow.submit_at}</span>
                 </div>
-                <div className="text-lg">
+                <div className="text-sm sm:text-base text-slate-800 dark:text-slate-100">
                   <b className="font-bold">{t("item_12")}:</b>{" "}
                   {selectedRow.organization_name}
                 </div>
                 {selectedRow.foot_note && (
-                  <div className="text-lg mt-2">
+                  <div className="text-sm sm:text-base mt-2 text-slate-700 dark:text-slate-300">
                     <b className="font-bold">Izoh:</b> {selectedRow.foot_note}
                   </div>
                 )}
               </div>
               <div>
-                <div className="flex justify-end items-center gap-3 mb-3">
+                <div className="flex justify-end items-center gap-2.5 mb-3 flex-wrap">
                   {/* 🔹 Qaytarish (Recycle) button */}
-                  {((user_role === "tashkilot_rahbari" &&
-                    selectedRow?.status == "saved") ||
-                    (user_role === "bolim_admin" &&
-                      selectedRow?.status == "sent") || (user_role === "hududiy_boshqarma" && selectedRow?.status == "sent")) && (
+                  {selectedRow?.status !== "accepted" &&
+                    (selectedRow?.status == "saved" ||
+                      selectedRow?.status == "cancelled" ||
+                      selectedRow?.status == "sent") && (
                     <Button
                       onClick={() => setIsCancelModalOpen(true)}
-                      className="bg-[#FF5445B2] rounded border-1 border-[#FF5445] hover:bg-[#FF5445B2] hover:border-[#FF5445]"
+                      className="h-[40px] px-4 font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
                     >
                       {t("recycle")}
                     </Button>
                   )}
 
-                  {/* 🔹 Yuborish (Send) button - faqat tashkilot_rahbari va saved status'da */}
-                  {user_role == "tashkilot_rahbari" &&
-                    selectedRow?.status == "saved" && (
+                  {/* 🔹 Yuborish (Send) button */}
+                  {selectedRow?.status !== "accepted" &&
+                    (selectedRow?.status == "saved" ||
+                      selectedRow?.status == "cancelled") && (
                       <Button
                         onClick={async () => {
                           if (!selectedRow?.id) {
@@ -656,14 +656,24 @@ const TableColumn = forwardRef(
                             }).unwrap();
                             alert("Hisobot muvaffaqiyatli yuborildi!");
                           } catch (error: any) {
-                            const msg =
-                              error?.data?.message ||
-                              "Hisobot yuborishda xatolik yuz berdi";
+                            console.error("sendReport error:", error);
+                            const isForbidden =
+                              error?.status === 403 ||
+                              error?.originalStatus === 403 ||
+                              error?.status === 401;
+                            const msg = isForbidden
+                              ? "Buyruq bajarish uchun sizda ruxsat yo'q"
+                              : error?.data?.detail ||
+                                error?.data?.message ||
+                                (typeof error?.data === "string"
+                                  ? error.data
+                                  : null) ||
+                                "Hisobot yuborishda xatolik yuz berdi";
                             alert(msg);
                           }
                         }}
                         disabled={isSending}
-                        className="bg-[#3B82F6] rounded w-[100px] hover:bg-[#2563EB]"
+                        className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
                       >
                         {isSending ? t("sending") : t("send2")}
                       </Button>
@@ -693,16 +703,22 @@ const TableColumn = forwardRef(
 
                             alert("Hisobot muvaffaqiyatli qabul qilindi!");
                           } catch (error: any) {
-                            const msg =
-                              error?.data?.message ||
-                              "Qabul qilishda xatolik yuz berdi";
+                            const isForbidden =
+                              error?.status === 403 ||
+                              error?.originalStatus === 403 ||
+                              error?.status === 401;
+                            const msg = isForbidden
+                              ? "Buyruq bajarish uchun sizda ruxsat yo'q"
+                              : error?.data?.detail ||
+                                error?.data?.message ||
+                                "Qabul qilishda xatolik yuz berdi";
                             alert(msg);
                           }
                         }}
                         disabled={
                           isAccepting || acceptedReports.has(selectedRow.id)
                         }
-                        className="bg-[#3B82F6] rounded w-[150px] hover:bg-[#2563EB]"
+                        className="h-[40px] px-4 font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
                       >
                         {isAccepting
                           ? "Qabul qilinmoqda..."
@@ -715,7 +731,7 @@ const TableColumn = forwardRef(
                   {/* 🔹 Export button - har doim ko'rinadi */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button className="bg-[#3B82F6] rounded w-[100px] hover:bg-[#2563EB]">
+                      <Button className="h-[40px] px-4 font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95">
                         Export
                       </Button>
                     </DropdownMenuTrigger>
@@ -735,7 +751,7 @@ const TableColumn = forwardRef(
                 </div>
               </div>
             </div>
-            <div className="mt-6 border border-black overflow-x-auto">
+            <div className="mt-6 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-xs">
               <table className="w-full border-collapse">
                 <thead>
                   {headerRows.map((row, rowIndex) => (

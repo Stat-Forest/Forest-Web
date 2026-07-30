@@ -198,7 +198,164 @@ body {
 
 html.dark body {
   background-color: #0B132B;
-  color: #F8FAFC;
+  color: #e2e8f0;
+}
+
+/* ==========================================================================
+   DARK MODE TEXT CONTRAST & LEGIBILITY FIXES FOR ALL PAGES
+   ========================================================================== */
+
+/* Light-only containers in Dark mode should have dark text (excluding elements with dark: classes) */
+html.dark .bg-white:not([class*="dark:bg-"]),
+html.dark .bg-ice,
+html.dark .bg-ice-strong,
+html.dark .bg-ice-light {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.95) 0%,
+    rgba(17, 24, 39, 0.95) 50%,
+    rgba(30, 41, 59, 0.95) 100%
+  ) !important;
+  color: #f8fafc !important;
+  border-color: rgba(51, 65, 85, 0.7) !important;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .bg-ice span,
+html.dark .bg-ice p,
+html.dark .bg-ice h1,
+html.dark .bg-ice h2,
+html.dark .bg-ice h3,
+html.dark .bg-ice td,
+html.dark .bg-ice th {
+  color: #f8fafc !important;
+}
+
+/* Dropdown Menu Content dark mode fix */
+html.dark [data-slot="dropdown-menu-content"],
+html.dark [data-slot="dropdown-content"] {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark [data-slot="dropdown-menu-content"] div,
+html.dark [data-slot="dropdown-menu-content"] span,
+html.dark [data-slot="dropdown-menu-content"] p,
+html.dark [data-slot="dropdown-menu-content"] label {
+  color: #f8fafc !important;
+}
+
+html.dark [data-slot="dropdown-menu-content"] .text-white,
+html.dark [data-slot="dropdown-menu-content"] .text-white * {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   SIDEBAR DARK MODE — bg-white qoidasini bekor qilish
+   ============================================================ */
+html.dark .sidebar-gradient {
+  color: #e2e8f0 !important;
+}
+html.dark .sidebar-gradient span,
+html.dark .sidebar-gradient h2,
+html.dark .sidebar-gradient h3,
+html.dark .sidebar-gradient p,
+html.dark .sidebar-gradient a,
+html.dark .sidebar-gradient div,
+html.dark .sidebar-gradient button,
+html.dark .sidebar-gradient li {
+  color: #e2e8f0 !important;
+}
+/* Gradient va white text bloklarini qaytarish */
+html.dark .sidebar-gradient .text-white,
+html.dark .sidebar-gradient .text-white *,
+html.dark .sidebar-gradient [class*="bg-gradient"] *,
+html.dark .sidebar-gradient [class*="bg-blue"] span,
+html.dark .sidebar-gradient [class*="bg-blue"] h2,
+html.dark .sidebar-gradient [class*="bg-blue"] h3 {
+  color: #ffffff !important;
+}
+
+/* Background chooser card label text always white */
+html.dark [data-slot="dropdown-menu-content"] button div,
+html.dark [data-slot="dropdown-menu-content"] button span {
+  color: #ffffff !important;
+}
+
+/* Tables and cells in dark mode */
+html.dark table {
+  color: #0f172a !important;
+}
+
+html.dark table th,
+html.dark table td {
+  color: #0f172a !important;
+}
+
+html.dark thead th {
+  color: #0f172a !important;
+}
+
+/* Inputs, Selects, Textareas in dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Select dropdown triggers and items */
+html.dark [data-slot="select-trigger"],
+html.dark [data-slot="select-content"],
+html.dark [data-slot="select-item"] {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+/* Colored buttons & icons override to stay white */
+html.dark button.bg-[#3B82F6],
+html.dark button.bg-blue-600,
+html.dark button.bg-blue-500,
+html.dark button.bg-[#FF5445B2],
+html.dark button.bg-[#00BC7D],
+html.dark .bg-blue-600,
+html.dark .bg-blue-500,
+html.dark .bg-[#3B82F6],
+html.dark .bg-[#00BC7D],
+html.dark .text-white,
+html.dark .text-white * {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   SHEET / DIALOG DARK MODE — Portal ichida ham ishlaydi
+   ============================================================ */
+html.dark [data-slot="sheet-content"] {
+  background-color: #111827 !important;
+  color: #e2e8f0 !important;
+  border-color: #374151 !important;
+}
+
+html.dark [data-slot="sheet-content"] span,
+html.dark [data-slot="sheet-content"] h2,
+html.dark [data-slot="sheet-content"] h3,
+html.dark [data-slot="sheet-content"] p,
+html.dark [data-slot="sheet-content"] div:not([class*="bg-blue"]):not([class*="bg-gradient"]) {
+  color: #e2e8f0 !important;
+}
+
+html.dark [data-slot="sheet-content"] a {
+  color: #cbd5e1 !important;
+}
+
+html.dark [data-slot="sheet-content"] a:hover {
+  color: #93c5fd !important;
 }
 
 /* Qor animatsiyasi - mayda qorlar asta sekin yogib turishi */
@@ -409,6 +566,42 @@ html.dark body {
   background: white;
 }
 
+html.dark .sidebar-gradient {
+  background: #111827;
+  color: #e2e8f0;
+}
+
+/* ============================================================
+   Sidebar dark mode: barcha ichki matnlar oq
+   ============================================================ */
+html.dark .sidebar-gradient > div > nav a span,
+html.dark .sidebar-gradient > div > nav div span,
+html.dark .sidebar-gradient > div > nav a h2,
+html.dark .sidebar-gradient > div > nav div h2 {
+  color: #e2e8f0 !important;
+}
+
+html.dark .sidebar-menu-item {
+  color: #e2e8f0 !important;
+}
+
+html.dark .sidebar-menu-item span,
+html.dark .sidebar-menu-item h2,
+html.dark .sidebar-menu-item div {
+  color: #e2e8f0 !important;
+}
+
+/* Dark modeda sidebar iconlari (img) oq ko'rinadi */
+html.dark .sidebar-gradient img:not([src*="logo"]):not([alt="logo"]) {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+
+html.dark .sidebar-gradient .sidebar-menu-item img {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+
 .sidebar-menu-item {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -440,4 +633,87 @@ html.dark body {
   input[type="number"] {
     -moz-appearance: textfield;
   }
+}
+
+/* ============================================================
+   Dark Mode: Barcha jadvallar (table) va kartalar matni oq
+   ============================================================ */
+html.dark table th,
+html.dark table td,
+html.dark table span,
+html.dark table div:not([class*="text-blue"]):not([class*="text-amber"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-green"]) {
+  color: #ffffff !important;
+}
+
+html.dark table th {
+  color: #ffffff !important;
+  opacity: 0.95;
+}
+
+html.dark table .text-blue-600,
+html.dark table .text-blue-500,
+html.dark table .text-blue-400,
+html.dark table .text-blue-300 {
+  color: #93c5fd !important;
+}
+
+html.dark table .text-amber-600,
+html.dark table .text-amber-500,
+html.dark table .text-amber-400,
+html.dark table .text-amber-300,
+html.dark table .text-orange-500 {
+  color: #fcd34d !important;
+}
+
+html.dark table .text-red-600,
+html.dark table .text-red-500,
+html.dark table .text-red-400,
+html.dark table .text-red-300 {
+  color: #fca5a5 !important;
+}
+
+html.dark table .text-emerald-600,
+html.dark table .text-emerald-500,
+html.dark table .text-emerald-400,
+html.dark table .text-emerald-300,
+html.dark table .text-green-600 {
+  color: #6ee7b7 !important;
+}
+
+html.dark .bg-slate-800 p,
+html.dark .bg-slate-800 h1,
+html.dark .bg-slate-800 h2,
+html.dark .bg-slate-800 h3,
+html.dark .bg-slate-800 span:not([class*="text-amber"]):not([class*="text-red"]):not([class*="text-blue"]):not([class*="text-emerald"]):not([class*="text-sky"]):not([class*="text-purple"]) {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   Dark Mode: Barcha Input va Select boshqaruv elementlari
+   ============================================================ */
+html.dark input,
+html.dark [data-slot="input"],
+html.dark [data-slot="select-trigger"],
+html.dark button[role="combobox"] {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark [data-slot="select-trigger"] [data-placeholder] {
+  color: #94a3b8 !important;
+}
+
+html.dark [data-slot="select-content"],
+html.dark [data-slot="select-item"] {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark [data-slot="select-item"]:hover,
+html.dark [data-slot="select-item"][data-highlighted] {
+  background-color: #334155 !important;
+  color: #ffffff !important;
 }
