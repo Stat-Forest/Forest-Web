@@ -595,99 +595,109 @@ const TableColumn = forwardRef(
         </div>        </div>
 
         {/* Detal ko'rinish */}
-        {selectedRow && (
-          <div ref={detailRef} className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs transition-colors">
-            <div className="flex items-center justify-between my-5 flex-wrap gap-4">
-              <div className="flex gap-2 flex-col">
-                {selectedRow.status === "cancelled" && (
-                  <span className="text-xl flex items-center gap-2 font-[500] text-red-600 dark:text-red-400">
-                    <MessageSquareWarning size={32} />{" "}
-                    Qaytarilish sababi:{" "}
-                    <span className="font-bold">
-                      {selectedRow?.cancel_reason || "Noma'lum"}
+        {selectedRow && (() => {
+          const detailQuarterInfo = selectedRow?.quarter_info;
+          const detailQuarter = selectedRow?.quarter;
+          const currentQuarterNum = String(detailQuarter || "").match(/\d/)?.[0];
+          const activeQuarterStatus =
+            selectedRow?.statement_name === "Daromad" && currentQuarterNum && detailQuarterInfo
+              ? detailQuarterInfo[`quarter_${currentQuarterNum}_status`]
+              : null;
+          const effectiveStatus = activeQuarterStatus || selectedRow?.status;
+
+          return (
+            <div ref={detailRef} className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs transition-colors">
+              <div className="flex items-center justify-between my-5 flex-wrap gap-4">
+                <div className="flex gap-2 flex-col">
+                  {selectedRow.status === "cancelled" && (
+                    <span className="text-xl flex items-center gap-2 font-[500] text-red-600 dark:text-red-400">
+                      <MessageSquareWarning size={32} />{" "}
+                      Qaytarilish sababi:{" "}
+                      <span className="font-bold">
+                        {selectedRow?.cancel_reason || "Noma'lum"}
+                      </span>
                     </span>
-                  </span>
-                )}
-                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                  <span className="flex text-lg sm:text-xl items-center gap-2 font-semibold">
-                    <NotebookText size={24} /> {t("deadline")}:
-                  </span>
-                  <span className="text-lg sm:text-xl font-bold">{selectedRow.submit_at}</span>
-                </div>
-                <div className="text-sm sm:text-base text-slate-800 dark:text-slate-100">
-                  <b className="font-bold">{t("item_12")}:</b>{" "}
-                  {selectedRow.organization_name}
-                </div>
-                {selectedRow.foot_note && (
-                  <div className="text-sm sm:text-base mt-2 text-slate-700 dark:text-slate-300">
-                    <b className="font-bold">Izoh:</b> {selectedRow.foot_note}
+                  )}
+                  <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                    <span className="flex text-lg sm:text-xl items-center gap-2 font-semibold">
+                      <NotebookText size={24} /> {t("deadline")}:
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold">{selectedRow.submit_at}</span>
                   </div>
-                )}
-              </div>
-              <div>
-                <div className="flex justify-end items-center gap-2.5 mb-3 flex-wrap">
-                  {/* 🔹 Qaytarish (Recycle) button */}
-                  {(user_role === "tashkilot_rahbari" ||
-                    user_role === "bolim_admin" ||
-                    user_role === "super_admin") &&
-                    selectedRow?.status !== "accepted" &&
-                    (selectedRow?.status == "saved" ||
-                      selectedRow?.status == "cancelled" ||
-                      selectedRow?.status == "sent") && (
-                      <Button
-                        onClick={() => setIsCancelModalOpen(true)}
-                        className="h-[40px] px-4 font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
-                      >
-                        {t("recycle")}
-                      </Button>
-                    )}
+                  <div className="text-sm sm:text-base text-slate-800 dark:text-slate-100">
+                    <b className="font-bold">{t("item_12")}:</b>{" "}
+                    {selectedRow.organization_name}
+                  </div>
+                  {selectedRow.foot_note && (
+                    <div className="text-sm sm:text-base mt-2 text-slate-700 dark:text-slate-300">
+                      <b className="font-bold">Izoh:</b> {selectedRow.foot_note}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="flex justify-end items-center gap-2.5 mb-3 flex-wrap">
+                    {/* 🔹 Qaytarish (Recycle) button */}
+                    {(user_role === "tashkilot_rahbari" ||
+                      user_role === "bolim_admin" ||
+                      user_role === "super_admin") &&
+                      effectiveStatus !== "accepted" &&
+                      (effectiveStatus == "saved" ||
+                        effectiveStatus == "cancelled" ||
+                        effectiveStatus == "sent") && (
+                        <Button
+                          onClick={() => setIsCancelModalOpen(true)}
+                          className="h-[40px] px-4 font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+                        >
+                          {t("recycle")}
+                        </Button>
+                      )}
 
-                  {/* 🔹 Yuborish (Send) button */}
-                  {(user_role === "tashkilot_rahbari" ||
-                    user_role === "super_admin") &&
-                    selectedRow?.status !== "accepted" &&
-                    (selectedRow?.status == "saved" ||
-                      selectedRow?.status == "cancelled") && (
-                      <Button
-                        onClick={async () => {
-                          if (!selectedRow?.id) {
-                            alert("Hisobot ID topilmadi");
-                            return;
-                          }
+                    {/* 🔹 Yuborish (Send) button */}
+                    {(user_role === "tashkilot_rahbari" ||
+                      user_role === "super_admin") &&
+                      effectiveStatus !== "accepted" &&
+                      (effectiveStatus == "saved" ||
+                        effectiveStatus == "cancelled") && (
+                        <Button
+                          onClick={async () => {
+                            if (!selectedRow?.id) {
+                              alert("Hisobot ID topilmadi");
+                              return;
+                            }
 
-                          try {
-                            await sendReport({
-                              id: selectedRow.id,
-                            }).unwrap();
-                            alert("Hisobot muvaffaqiyatli yuborildi!");
-                          } catch (error: any) {
-                            console.error("sendReport error:", error);
-                            const isForbidden =
-                              error?.status === 403 ||
-                              error?.originalStatus === 403 ||
-                              error?.status === 401;
-                            const msg = isForbidden
-                              ? "Buyruq bajarish uchun sizda ruxsat yo'q"
-                              : error?.data?.detail ||
-                                error?.data?.message ||
-                                (typeof error?.data === "string"
-                                  ? error.data
-                                  : null) ||
-                                "Hisobot yuborishda xatolik yuz berdi";
-                            alert(msg);
-                          }
-                        }}
-                        disabled={isSending}
-                        className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
-                      >
-                        {isSending ? t("sending") : t("send2")}
-                      </Button>
-                    )}
+                            try {
+                              await sendReport({
+                                id: selectedRow.id,
+                              }).unwrap();
+                              alert("Hisobot muvaffaqiyatli yuborildi!");
+                            } catch (error: any) {
+                              console.error("sendReport error:", error);
+                              const isForbidden =
+                                error?.status === 403 ||
+                                error?.originalStatus === 403 ||
+                                error?.status === 401;
+                              const msg = isForbidden
+                                ? "Buyruq bajarish uchun sizda ruxsat yo'q"
+                                : error?.data?.detail ||
+                                  error?.data?.message ||
+                                  (typeof error?.data === "string"
+                                    ? error.data
+                                    : null) ||
+                                  "Hisobot yuborishda xatolik yuz berdi";
+                              alert(msg);
+                            }
+                          }}
+                          disabled={isSending}
+                          className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+                        >
+                          {isSending ? t("sending") : t("send2")}
+                        </Button>
+                      )}
 
-                  {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
-                  {(user_role === "bolim_admin" ||
-                    user_role === "super_admin") &&
-                    selectedRow?.status == "sent" && (
+                    {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
+                    {(user_role === "bolim_admin" ||
+                      user_role === "super_admin") &&
+                      effectiveStatus == "sent" && (
                       <Button
                         onClick={async () => {
                           if (!selectedRow?.id) {
@@ -963,7 +973,8 @@ const TableColumn = forwardRef(
               reportId={selectedRow?.id}
             />
           </div>
-        )}
+          );
+        })()}
       </>
     );
   },
