@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { FileText, User2 } from "lucide-react";
 import {
@@ -34,6 +35,18 @@ function Sidebar() {
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const authUser = useSelector((state: RootState) => state.auth.user);
   const lang = useSelector((state: RootState) => state.language.lang);
+  const [openSheetId, setOpenSheetId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOpenSubmenu = (e: CustomEvent<{ parentId?: string; id?: string }>) => {
+      const pId = e.detail?.parentId || e.detail?.id;
+      if (pId) {
+        setOpenSheetId(pId);
+      }
+    };
+    window.addEventListener("open-sidebar-submenu", handleOpenSubmenu as EventListener);
+    return () => window.removeEventListener("open-sidebar-submenu", handleOpenSubmenu as EventListener);
+  }, []);
 
   const {
     data: sidebarData = [],
@@ -82,9 +95,14 @@ function Sidebar() {
 
     if (item.children?.length > 0) {
       return (
-        <Sheet key={item.id}>
+        <Sheet
+          key={item.id}
+          open={openSheetId === item.id}
+          onOpenChange={(open) => setOpenSheetId(open ? item.id : null)}
+        >
           <SheetTrigger asChild>
             <div
+              onClick={() => setOpenSheetId(openSheetId === item.id ? null : item.id)}
               className={`sidebar-menu-item cursor-pointer p-3 rounded-lg flex items-center gap-3 border transition-all duration-200 group ${
                 isParentActive
                   ? "bg-blue-100/80 text-blue-800 border-blue-400/50 shadow-md font-semibold"
@@ -138,6 +156,7 @@ function Sidebar() {
                   to={`/resource-management/${child.id}/${encodeURIComponent(
                     child.name,
                   )}`}
+                  onClick={() => setOpenSheetId(null)}
                   className={({ isActive }) =>
                     `group flex items-center gap-3 transition-all duration-200 p-3 rounded-lg border ${
                       isActive
@@ -187,7 +206,10 @@ function Sidebar() {
   return (
     <div className="w-[320px] h-screen overflow-y-auto p-4 bg-ice sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-white/20 shadow-2xl">
       <div>
-        <div className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 backdrop-blur-sm shadow-lg border border-white/20">
+        <Link
+          to="/main"
+          className="w-full h-[50px] rounded-full flex items-center justify-center text-white mb-3 gap-3 bg-gradient-to-r from-blue-600/80 to-blue-500/80 backdrop-blur-sm shadow-lg border border-white/20 hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer"
+        >
           <img
             width={40}
             height={40}
@@ -198,7 +220,7 @@ function Sidebar() {
           <h2 className="font-extrabold text-[20px] drop-shadow-md">
             STAT-URMON
           </h2>
-        </div>
+        </Link>
 
         <div className="bg-gradient-to-br from-blue-600/90 via-blue-500/85 to-blue-400/90 w-full rounded-2xl p-4 flex justify-center flex-col gap-0.5 shadow-xl border border-white/30 backdrop-blur-sm">
           <div className="mb-2 flex gap-2">

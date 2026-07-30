@@ -81,7 +81,7 @@ const PlantTableColumn = forwardRef(
       onRowClick,
       selectedRow,
       allReports,
-      individualRows = [],
+      individualRows: _individualRows = [],
       setSelectedOrganizationReport,
       setSelectedPeriodReport,
       setSelectedStatusReport,
@@ -549,18 +549,18 @@ const PlantTableColumn = forwardRef(
                           key={`inner-${innerIndex}`}
                           className="cursor-pointer hover:bg-gray-100"
                         >
-                          {/* Birinchi qatorda № va Tashkilot nomi rowSpan=maxInners+1 bilan chiqadi */}
+                          {/* Birinchi qatorda № va Tashkilot nomi rowSpan=maxInners bilan chiqadi (faqat o'simlik qatorlari) */}
                           {innerIndex === 0 && (
                             <>
                               <td
                                 className="border border-black px-2 py-1 text-center font-bold"
-                                rowSpan={maxInners + 1}
+                                rowSpan={maxInners}
                               >
                                 {rowIndex + 1}
                               </td>
                               <td
                                 className="border min-w-[220px] border-black px-2 py-1 text-center font-bold"
-                                rowSpan={maxInners + 1}
+                                rowSpan={maxInners}
                               >
                                 {orgName}
                               </td>
@@ -596,19 +596,17 @@ const PlantTableColumn = forwardRef(
                     })}
 
                     {/* 🔥 Oxirgi qator: Tashkilot Jami qatori (summa qiymatlari bilan) */}
-                    <tr className="cursor-pointer hover:bg-gray-200 font-bold">
-                      {maxInners === 0 && (
-                        <>
-                          <td className="border border-black px-2 py-1 text-center font-bold">
-                            {rowIndex + 1}
-                          </td>
-                          <td className="border min-w-[220px] border-black px-2 py-1 text-center font-bold">
-                            {orgName}
-                          </td>
-                        </>
-                      )}
-                      <td className="border min-w-[200px] border-black px-2 py-1 text-center font-bold">
+                    <tr className="cursor-pointer hover:bg-gray-200 font-bold bg-gray-50">
+                      {/* № ustuni */}
+                      <td className="border border-black px-2 py-1 text-center font-bold">
+                        {rowIndex + 1}
+                      </td>
+                      {/* Tashkilot nomi ustunida "Tashkilot Jami" yozuvi */}
+                      <td className="border min-w-[220px] border-black px-2 py-1 text-center font-bold">
                         Tashkilot Jami
+                      </td>
+                      {/* O'simlik nomi ustuni bo'sh qolsin */}
+                      <td className="border min-w-[200px] border-black px-2 py-1 text-center">
                       </td>
                       {row.report_items?.map((reportItem: any) =>
                         reportItem.statement_columns?.map(
@@ -671,13 +669,13 @@ const PlantTableColumn = forwardRef(
                                         <>
                                           <td
                                             className="border border-black px-2 py-1 text-center font-semibold"
-                                            rowSpan={childMaxInners + 1}
+                                            rowSpan={childMaxInners}
                                           >
                                             {rowIndex + 1}.{childIndex + 1}
                                           </td>
                                           <td
                                             className="border min-w-[220px] border-black px-2 py-1 text-center font-semibold"
-                                            rowSpan={childMaxInners + 1}
+                                            rowSpan={childMaxInners}
                                           >
                                             {childOrgName}
                                           </td>
@@ -715,20 +713,18 @@ const PlantTableColumn = forwardRef(
                               {/* Child Tashkilot Jami qatori */}
                               <tr
                                 onClick={() => onRowClick(child)}
-                                className="cursor-pointer hover:bg-gray-200 font-bold"
+                                className="cursor-pointer hover:bg-gray-200 font-bold bg-gray-50"
                               >
-                                {childMaxInners === 0 && (
-                                  <>
-                                    <td className="border border-black px-2 py-1 text-center font-semibold">
-                                      {rowIndex + 1}.{childIndex + 1}
-                                    </td>
-                                    <td className="border min-w-[220px] border-black px-2 py-1 text-center font-semibold">
-                                      {childOrgName}
-                                    </td>
-                                  </>
-                                )}
-                                <td className="border min-w-[200px] border-black px-2 py-1 text-center font-bold">
+                                {/* № ustuni */}
+                                <td className="border border-black px-2 py-1 text-center font-bold">
+                                  {rowIndex + 1}.{childIndex + 1}
+                                </td>
+                                {/* Tashkilot nomi ustunida "Tashkilot Jami" yozuvi */}
+                                <td className="border min-w-[220px] border-black px-2 py-1 text-center font-bold">
                                   Tashkilot Jami
+                                </td>
+                                {/* O'simlik nomi ustuni bo'sh qolsin */}
+                                <td className="border min-w-[200px] border-black px-2 py-1 text-center">
                                 </td>
                                 {child.report_items?.map(
                                   (reportItem: any) =>
@@ -1189,6 +1185,14 @@ const PlantTableColumn = forwardRef(
                               ),
                             );
 
+                            const orgName =
+                              reportItem.organization_name ||
+                              reportItem.region_name ||
+                              selectedRow?.organization_name ||
+                              selectedRow?.region_name ||
+                              selectedRow?.name ||
+                              "-";
+
                             // 🔹 Har bir inner object uchun alohida qator yaratish
                             // Har bir column'da inner'lar ketma-ketligida bo'lishi mumkin
                             // Har bir innerIndex uchun bir qator yaratamiz, har bir qatorda barcha column'lardan inner[innerIndex] ko'rsatiladi
@@ -1239,19 +1243,37 @@ const PlantTableColumn = forwardRef(
                                 {finalRows.map((rowData, rowIdx) => {
                                   return (
                                     <tr key={`plant-${reportIndex}-${rowIdx}`}>
-                                      {/* T/R bo'sh */}
+                                      {/* T/R */}
                                       {rowIdx === 0 && (
                                         <td
-                                          className="border border-black px-2 py-1 text-center"
+                                          className="border border-black px-2 py-1 text-center font-bold"
                                           rowSpan={finalRows.length}
                                         >
                                           {reportIndex + 1}
                                         </td>
                                       )}
 
+                                      {/* Tashkilot nomi ustuni */}
+                                      {rowIdx === 0 && (
+                                        <td
+                                          className="border min-w-[220px] border-black px-2 py-1 text-center font-bold"
+                                          rowSpan={finalRows.length}
+                                        >
+                                          {orgName}
+                                        </td>
+                                      )}
+
+                                      {/* O'simlik nomi ustuni */}
+                                      <td className="border min-w-[200px] border-black px-2 py-1 text-center font-semibold">
+                                        {rowData.plantName || "-"}
+                                      </td>
+
+                                      {/* Qiymat ustunlari */}
                                       {reportItem.statement_columns?.map(
                                         (col: any) => {
-                                          // Bu column uchun bu innerIndex'dagi inner'ni topish
+                                          if (isOrganizationColumn(col)) {
+                                            return null;
+                                          }
                                           const colData = rowData.columns.find(
                                             (c: any) =>
                                               (c.col.statement_column_id ||
@@ -1260,10 +1282,6 @@ const PlantTableColumn = forwardRef(
                                                 col.id),
                                           );
                                           const inner = colData?.inner || null;
-                                          const plantName =
-                                            inner?.plant_name ||
-                                            rowData.plantName ||
-                                            "";
 
                                           return (
                                             <td
@@ -1273,26 +1291,23 @@ const PlantTableColumn = forwardRef(
                                               }
                                               className="border min-w-[120px] border-black px-2 py-1 text-center"
                                             >
-                                              {/* ✅ Tashkilot nomi o'rniga: plant_name */}
-                                              {isOrganizationColumn(col)
-                                                ? plantName
-                                                : formatInnerValue(inner)}
+                                              {formatInnerValue(inner)}
                                             </td>
                                           );
                                         },
                                       )}
 
-                                      {/* Amallar faqat birinchi qatorda chiqsin */}
-                                      {rowIdx === 0 &&
-                                        (selectedRow.status == "saved" ||
-                                          selectedRow.status == "cancelled" ||
-                                          (selectedRow.status == "accepted" &&
-                                            reportName == "Daromad")) &&
-                                        user_role == "tashkilot_hodimi" && (
-                                          <td
-                                            className="border border-black px-2 py-1 text-center"
-                                            rowSpan={finalRows.length}
-                                          >
+                                      {/* Amallar ustuni */}
+                                      {rowIdx === 0 && (
+                                        <td
+                                          className="border border-black px-2 py-1 text-center"
+                                          rowSpan={finalRows.length}
+                                        >
+                                          {(selectedRow.status == "saved" ||
+                                            selectedRow.status == "cancelled" ||
+                                            (selectedRow.status == "accepted" &&
+                                              reportName == "Daromad")) &&
+                                          user_role == "tashkilot_hodimi" ? (
                                             <div className="flex items-center justify-center gap-2">
                                               <Button
                                                 className="bg-[#3B82F6] hover:bg-[#2563EB]"
@@ -1307,33 +1322,69 @@ const PlantTableColumn = forwardRef(
                                               </Button>
                                               {selectedRow.status ==
                                                 "saved" && (
-                                                  <Button
-                                                    className="bg-[#3B82F6] hover:bg-[#2563EB]"
-                                                    onClick={async (e) => {
-                                                      e.stopPropagation();
-                                                      try {
-                                                        await deleteReport(
-                                                          selectedRow.id,
-                                                        ).unwrap();
-                                                        // Mutasyon muvaffaqiyatli bo'lgandan keyin sahifani yangilash
-                                                        window.location.reload();
-                                                      } catch (error) {
-                                                        console.error(
-                                                          "Delete error:",
-                                                          error,
-                                                        );
-                                                      }
-                                                    }}
-                                                  >
-                                                    <Trash2 />
-                                                  </Button>
-                                                )}
+                                                <Button
+                                                  className="bg-[#3B82F6] hover:bg-[#2563EB]"
+                                                  onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    try {
+                                                      await deleteReport(
+                                                        selectedRow.id,
+                                                      ).unwrap();
+                                                      window.location.reload();
+                                                    } catch (error) {
+                                                      console.error(
+                                                        "Delete error:",
+                                                        error,
+                                                      );
+                                                    }
+                                                  }}
+                                                >
+                                                  <Trash2 />
+                                                </Button>
+                                              )}
                                             </div>
-                                          </td>
-                                        )}
+                                          ) : (
+                                            "-"
+                                          )}
+                                        </td>
+                                      )}
                                     </tr>
                                   );
                                 })}
+
+                                {/* 🔥 Tashkilot Jami qatori */}
+                                <tr className="font-bold bg-gray-50">
+                                  {/* № */}
+                                  <td className="border border-black px-2 py-1 text-center font-bold">
+                                    {reportIndex + 1}
+                                  </td>
+                                  {/* Tashkilot nomi */}
+                                  <td className="border min-w-[220px] border-black px-2 py-1 text-center font-bold">
+                                    Tashkilot Jami
+                                  </td>
+                                  {/* O'simlik nomi - bo'sh */}
+                                  <td className="border min-w-[200px] border-black px-2 py-1 text-center">
+                                  </td>
+                                  {/* Qiymat ustunlari - jami */}
+                                  {reportItem.statement_columns?.map(
+                                    (col: any) => {
+                                      if (isOrganizationColumn(col)) {
+                                        return null;
+                                      }
+                                      return (
+                                        <td
+                                          key={`dtot-${col.statement_column_id || col.id}`}
+                                          className="border min-w-[120px] border-black px-2 py-1 text-center font-bold"
+                                        >
+                                          {calculateColumnTotal(col)}
+                                        </td>
+                                      );
+                                    },
+                                  )}
+                                  {/* Amallar - bo'sh */}
+                                  <td className="border border-black px-2 py-1 text-center">
+                                  </td>
+                                </tr>
                               </Fragment>
                             );
                           },
@@ -1342,56 +1393,8 @@ const PlantTableColumn = forwardRef(
                     </>
                   )}
 
-                  {/* 🔥 Individual Rows (Jami), plant mode'da ham ko'rsatamiz */}
-                  {individualRows?.length > 0 &&
-                    individualRows.map((indRow: any) =>
-                      indRow.report_items?.map(
-                        (reportItem: any, reportIndex: number) => {
-                          const maxInners = Math.max(
-                            ...reportItem.statement_columns.map(
-                              (col: any) => col.inners?.length || 0,
-                            ),
-                          );
 
-                          return (
-                            <Fragment key={reportIndex}>
-                              {Array.from({ length: maxInners }).map(
-                                (_, innerIndex) => (
-                                  <tr key={innerIndex}>
-                                    {/* T/R bo'ish, faqat birinchi qatorda chiqsin */}
-                                    {innerIndex === 0 && (
-                                      <td
-                                        className="border border-black px-2 py-1 text-center"
-                                        rowSpan={maxInners}
-                                      >
-                                        {innerIndex + 1}
-                                      </td>
-                                    )}
 
-                                    {reportItem.statement_columns?.map(
-                                      (col: any) => (
-                                        <td
-                                          key={col.id}
-                                          className="border min-w-[120px] border-black px-2 py-1 text-center"
-                                        >
-                                          {col.inners?.[innerIndex]?.value ||
-                                            ""}
-                                        </td>
-                                      ),
-                                    )}
-
-                                    {/* Amallar faqat birinchi qatorda chiqsin */}
-                                    <td className="flex items-center justify-center">
-                                      -
-                                    </td>
-                                  </tr>
-                                ),
-                              )}
-                            </Fragment>
-                          );
-                        },
-                      ),
-                    )}
                 </tbody>
               </table>
 
