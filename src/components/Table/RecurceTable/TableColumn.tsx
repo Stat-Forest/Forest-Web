@@ -627,20 +627,25 @@ const TableColumn = forwardRef(
               <div>
                 <div className="flex justify-end items-center gap-2.5 mb-3 flex-wrap">
                   {/* 🔹 Qaytarish (Recycle) button */}
-                  {selectedRow?.status !== "accepted" &&
+                  {(user_role === "tashkilot_rahbari" ||
+                    user_role === "bolim_admin" ||
+                    user_role === "super_admin") &&
+                    selectedRow?.status !== "accepted" &&
                     (selectedRow?.status == "saved" ||
                       selectedRow?.status == "cancelled" ||
                       selectedRow?.status == "sent") && (
-                    <Button
-                      onClick={() => setIsCancelModalOpen(true)}
-                      className="h-[40px] px-4 font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
-                    >
-                      {t("recycle")}
-                    </Button>
-                  )}
+                      <Button
+                        onClick={() => setIsCancelModalOpen(true)}
+                        className="h-[40px] px-4 font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+                      >
+                        {t("recycle")}
+                      </Button>
+                    )}
 
                   {/* 🔹 Yuborish (Send) button */}
-                  {selectedRow?.status !== "accepted" &&
+                  {(user_role === "tashkilot_rahbari" ||
+                    user_role === "super_admin") &&
+                    selectedRow?.status !== "accepted" &&
                     (selectedRow?.status == "saved" ||
                       selectedRow?.status == "cancelled") && (
                       <Button
@@ -680,7 +685,8 @@ const TableColumn = forwardRef(
                     )}
 
                   {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
-                  {user_role == "bolim_admin" &&
+                  {(user_role === "bolim_admin" ||
+                    user_role === "super_admin") &&
                     selectedRow?.status == "sent" && (
                       <Button
                         onClick={async () => {
