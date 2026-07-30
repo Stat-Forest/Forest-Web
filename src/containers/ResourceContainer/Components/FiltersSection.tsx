@@ -19,23 +19,29 @@ interface FiltersSectionProps {
   setSelectedPeriod: (value: string) => void;
   selectedYear: string;
   setSelectedYear: (value: string) => void;
+  selectedQuarter?: string;
+  setSelectedQuarter?: (value: string) => void;
   deadline: any;
   deadlinePage: number;
   setDeadlinePage: (fn: (p: number) => number) => void;
   perPage: number;
   onSearch: () => void;
   isLoading: boolean;
+  exportComponent?: React.ReactNode;
 }
 
 export default function FiltersSection({
   selectedPeriod,
   setSelectedPeriod,
+  selectedQuarter,
+  setSelectedQuarter,
   deadline,
   deadlinePage,
   setDeadlinePage,
   perPage,
   onSearch,
   isLoading,
+  exportComponent,
 }: FiltersSectionProps) {
   const { t } = useTranslation();
 
@@ -57,37 +63,40 @@ export default function FiltersSection({
       data-aos="fade-left"
       data-aos-delay="100"
     >
-      <span className="font-[500] bg-white min-h-[40px] py-2 px-3 rounded-xl text-md flex items-center gap-3">Davrni tanlang va umumiy hisobotlarni oling <ArrowRight /></span>
+      <span className="font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-h-[40px] py-2 px-3.5 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2 shadow-xs transition-colors">
+        Davrni tanlang va umumiy hisobotlarni oling <ArrowRight size={16} />
+      </span>
 
       <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
         <SelectTrigger
-          className="w-full md:w-[220px] text-xl min-h-[40px] bg-ice border-white/30 focus:border-[#3B82F6] transition-colors duration-300"
+          className="w-full md:w-[200px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500 rounded-xl"
           data-aos="fade-up"
           data-aos-delay="160"
         >
           <SelectValue placeholder={`${t("reportType")}`} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
           {deadline?.results?.length > 0 ? (
             <>
-              <SelectItem value=" ">{`${t("allReports")}`}</SelectItem>
+              <SelectItem value=" " className="dark:text-slate-100">{`${t("allReports")}`}</SelectItem>
               {deadline.results.map((item: any) => (
-                <SelectItem key={item.id} value={item.id}>
+                <SelectItem key={item.id} value={item.id} className="dark:text-slate-100">
                   {item.submit_at}
                 </SelectItem>
               ))}
 
-              <div className="flex items-center justify-between px-2 py-1 border-t">
+              <div className="flex items-center justify-between px-2 py-1 border-t border-slate-200 dark:border-slate-700">
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   disabled={deadlinePage === 1}
                   onClick={() => setDeadlinePage((p) => Math.max(p - 1, 1))}
+                  className="h-7 text-xs rounded-lg"
                 >
                   {t("before")}
                 </Button>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   {deadlinePage} / {Math.ceil(deadline.count / perPage)}
                 </span>
                 <Button
@@ -102,26 +111,50 @@ export default function FiltersSection({
                       Math.min(p + 1, Math.ceil(deadline.count / perPage)),
                     )
                   }
+                  className="h-7 text-xs rounded-lg"
                 >
                   {t("next")}
                 </Button>
               </div>
             </>
           ) : (
-            <div className="p-2 text-center text-muted-foreground text-sm">
+            <div className="p-2 text-center text-muted-foreground text-xs">
               {t("noDeadlines")}
             </div>
           )}
         </SelectContent>
       </Select>
+
+      <Select
+        value={selectedQuarter || "all"}
+        onValueChange={(val) => setSelectedQuarter?.(val === "all" ? "" : val)}
+      >
+        <SelectTrigger
+          className="w-full md:w-[150px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500 rounded-xl"
+          data-aos="fade-up"
+          data-aos-delay="180"
+        >
+          <SelectValue placeholder="Chorak" />
+        </SelectTrigger>
+        <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+          <SelectItem value="all" className="dark:text-slate-100">Barchasi</SelectItem>
+          <SelectItem value="q1" className="dark:text-slate-100">1-chorak</SelectItem>
+          <SelectItem value="q2" className="dark:text-slate-100">2-chorak</SelectItem>
+          <SelectItem value="q3" className="dark:text-slate-100">3-chorak</SelectItem>
+          <SelectItem value="q4" className="dark:text-slate-100">4-chorak</SelectItem>
+        </SelectContent>
+      </Select>
+
       <Button
         onClick={onSearch}
         data-aos="zoom-in"
         data-aos-delay="200"
-        className="hover:bg-[#2563EB] transition-colors duration-300"
+        className="h-[40px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap"
       >
         {t("item_79")}
       </Button>
+
+      {exportComponent}
     </div>
   );
 }

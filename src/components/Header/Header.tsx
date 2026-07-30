@@ -7,6 +7,8 @@ import {
   PanelRightClose,
   Sparkles,
   SlidersHorizontal,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -75,6 +77,30 @@ function Header({ onLogout }: HeaderProps) {
     (state: RootState) => state.ui.header,
   );
   const currentLang = useSelector((state: RootState) => state.language.lang);
+
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDark(true);
+    }
+  };
 
   type BackgroundPreset = {
     key: string;
@@ -228,20 +254,24 @@ function Header({ onLogout }: HeaderProps) {
 
   return (
     <>
-      <div className="h-[70px] shadow flex items-center justify-between px-3 bg-white">
+      <div className="h-[64px] shadow-sm flex items-center justify-between px-4 bg-[#ffffff] dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
         <div className="flex items-center gap-3">
-          <button onClick={() => dispatch(toggleSidebar())}>
+          <button
+            onClick={() => dispatch(toggleSidebar())}
+            className="h-[40px] w-[40px] flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            title={isOpen ? "Sidebar-ni yopish" : "Sidebar-ni ochish"}
+          >
             {isOpen ? (
-              <PanelLeftClose color="black" className="cursor-pointer" />
+              <PanelLeftClose size={20} className="cursor-pointer text-slate-700 dark:text-white" />
             ) : (
-              <PanelRightClose color="black" className="cursor-pointer" />
+              <PanelRightClose size={20} className="cursor-pointer text-slate-700 dark:text-white" />
             )}
           </button>
 
-          <span className="text-[18px] text-black">
+          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
             {t("technical_inquiries")}:
             <NavLink
-              className={"text-blue-600 px-2"}
+              className="text-blue-600 dark:text-blue-400 font-bold px-1.5 hover:underline"
               to={"tel:+998 71 207 88 77 (1010)"}
             >
               +998 71 207 88 77 ({t("phone_extension")}: 1010)
@@ -249,73 +279,80 @@ function Header({ onLogout }: HeaderProps) {
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* <button> */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="h-[45px] w-[45px] bg-transparent text-[#3B82F6] hover:text-[white] hover:bg-[#3B82F6]">
-                  <SlidersHorizontal size={30} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[420px] mt-3 mr-2 p-6 rounded-[28px] border border-slate-200 bg-white shadow-xl">
-                <div className="text-center font-extrabold tracking-wide text-[18px] text-slate-900">
-                  FONNI TANLASH
-                </div>
+        <div className="flex items-center gap-2">
+          {/* Background Chooser */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-[40px] w-[40px] p-0 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-blue-600 dark:text-white hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center"
+                title="Fonni tanlash"
+              >
+                <SlidersHorizontal size={18} className="text-blue-600 dark:text-white" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[420px] mt-3 mr-2 p-6 rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl">
+              <div className="text-center font-extrabold tracking-wide text-[18px] text-slate-900 dark:text-slate-100">
+                FONNI TANLASH
+              </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-4">
-                  {backgroundPresets.map((p) => {
-                    const isSelected = selectedBg === p.key;
-                    return (
-                      <button
-                        key={p.key}
-                        type="button"
-                        onClick={() => applyBackground(p.key)}
-                        className={[
-                          "relative h-[92px] rounded-2xl overflow-hidden border transition-all",
-                          isSelected
-                            ? "border-blue-500 ring-2 ring-blue-500/30"
-                            : "border-slate-200 hover:border-slate-300",
-                        ].join(" ")}
-                        style={{
-                          backgroundImage: p.preview,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-black/0" />
-                        <div className="absolute inset-x-0 bottom-0 p-3">
-                          <div className="text-left text-[14px] font-semibold text-white drop-shadow">
-                            {p.label}
-                          </div>
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                {backgroundPresets.map((p) => {
+                  const isSelected = selectedBg === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => applyBackground(p.key)}
+                      className={[
+                        "relative h-[92px] rounded-2xl overflow-hidden border transition-all cursor-pointer",
+                        isSelected
+                          ? "border-blue-500 ring-2 ring-blue-500/30"
+                          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
+                      ].join(" ")}
+                      style={{
+                        backgroundImage: p.preview,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-black/30 dark:bg-black/50" />
+                      <div className="absolute inset-x-0 bottom-0 p-3 z-10">
+                        <div
+                          style={{ color: "#ffffff" }}
+                          className="text-left text-[14px] font-bold text-white drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.9)]"
+                        >
+                          {p.label}
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
 
+              <div className="my-4 h-px bg-slate-200 dark:bg-slate-700" />
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-                <div className="my-4 h-px bg-slate-200" />
-              </DropdownMenuContent>
-            </DropdownMenu>
-          {/* </button> */}
+          {/* AI Assistant Button */}
           <button
-            className="bg-[#4f46e5] px-5 py-2 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-[#8379ee]"
+            className="h-[40px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap shrink-0"
             onClick={() => setAiOpen(true)}
           >
-            <Sparkles size={18} color="#fff" />{" "}
-            <span className="text-white font-bold ">AI yordamchi</span>
+            <Sparkles size={16} className="text-white shrink-0" />
+            <span className="text-white font-semibold whitespace-nowrap leading-none">AI yordamchi</span>
           </button>
-          {/* Notification Button with Sheet */}
+
+          {/* Notification Button */}
           <Sheet open={notificationOpen} onOpenChange={handleNotificationOpen}>
             <SheetTrigger asChild>
               <Button
-                className="h-[42px] w-[42px] bg-white/80 border-1 text-gray-600 hover:text-[#3B82F6] hover:bg-gray-100 relative"
                 variant="outline"
+                className="h-[40px] w-[40px] p-0 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative flex items-center justify-center cursor-pointer"
               >
-                <Bell size={20} color="blue" />
-                {/* ✅ Local storage'dan o'qilgan count ni ko'rsatamiz */}
+                <Bell size={18} className="text-blue-600 dark:text-white" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px] font-bold flex items-center justify-center shadow-xs">
                     {unreadCount}
                   </span>
                 )}
@@ -359,53 +396,79 @@ function Header({ onLogout }: HeaderProps) {
             </SheetContent>
           </Sheet>
 
+          {/* Video Guide Button */}
           <Button
-            className="bg-[#3B82F6] h-[42px] w-[170px] hover:bg-[#2563EB]"
+            className="h-[40px] px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap shrink-0"
             onClick={() => navigate("/video")}
           >
-            <VideoIcon />
-            {t("item_65")}
+            <VideoIcon size={16} className="text-white shrink-0" />
+            <span className="text-white font-semibold whitespace-nowrap leading-none">{t("item_65")}</span>
           </Button>
 
+          {/* Language Selector */}
           <Select value={currentLang} onValueChange={handleChangeLang}>
-            <SelectTrigger className="w-[120px] bg-white/80 text-blue-800 min-h-[42px] shadow-none">
+            <SelectTrigger className="h-[40px] w-[115px] rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-blue-800 dark:text-slate-100 font-semibold text-xs sm:text-sm shadow-none focus:ring-1 focus:ring-blue-500 flex items-center justify-between px-3">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="uz">O'zbek</SelectItem>
-              <SelectItem value="ru">Русский</SelectItem>
+            <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+              <SelectItem value="uz" className="dark:text-gray-100 dark:hover:bg-slate-700">O'zbek</SelectItem>
+              <SelectItem value="ru" className="dark:text-gray-100 dark:hover:bg-slate-700">Русский</SelectItem>
             </SelectContent>
           </Select>
 
-          <span>|</span>
+          {/* Dark / Light Theme Toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+            className="h-[40px] w-[40px] p-0 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center cursor-pointer"
+            title={isDark ? "Yorug' rejimga o'tish" : "Tungi rejimga o'tish"}
+          >
+            {isDark ? (
+              <Sun size={18} className="text-amber-400" />
+            ) : (
+              <Moon size={18} className="text-slate-600 dark:text-white" />
+            )}
+          </Button>
 
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+          {/* User Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-[40px] w-[40px] rounded-full bg-white/80 border-1 text-[#3B82F6] hover:text-[white] hover:bg-[#3B82F6]">
-                <User2 size={38} />
+              <Button
+                variant="outline"
+                className="h-[40px] w-[40px] p-0 rounded-xl border border-blue-200 dark:border-slate-800 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-white hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center cursor-pointer"
+                title={t("item_81") || "Profil"}
+              >
+                <User2 size={20} className="text-blue-600 dark:text-white" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 mt-2 mr-2">
+            <DropdownMenuContent className="w-48 mt-2 mr-2 dark:bg-slate-800 dark:border-slate-700">
               <DropdownMenuItem
+                className="dark:text-gray-100 dark:hover:bg-slate-700"
                 onClick={() =>
                   dispatch(setHeaderState({ changePasswordOpen: true }))
                 }
               >
-                <User2 color="#3B82F6" />
+                <User2 size={16} className="text-blue-500 mr-2" />
                 {t("item_81")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut color="#FF5445" />
+              <DropdownMenuItem className="dark:text-gray-100 dark:hover:bg-slate-700" onClick={handleLogout}>
+                <LogOut size={16} className="text-red-500 mr-2" />
                 {t("item_80")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Logout Button */}
           <Button
-            className="h-[40px] w-[40px] bg-white/80 border-1 hover:bg-[#FF5445] text-[#FF5445] hover:text-[white]"
+            variant="outline"
+            className="h-[40px] w-[40px] p-0 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
             onClick={handleLogout}
+            title={t("item_80") || "Chiqish"}
           >
-            <LogOut />
+            <LogOut size={18} className="text-red-600 dark:text-red-400" />
           </Button>
         </div>
       </div>

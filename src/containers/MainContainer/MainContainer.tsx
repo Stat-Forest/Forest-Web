@@ -71,25 +71,25 @@ function MainContainer() {
   }
 
   const cardClasses =
-    "w-full h-[100px] rounded-lg flex items-center gap-5 pl-6 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300 bg-ice border-2 border-white/30";
+    "w-full min-h-[90px] rounded-2xl flex items-center gap-4 px-4 py-3 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs backdrop-blur-md";
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-5 py-4 px-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-4 px-2">
         {/* Sent Reports */}
         <div
           data-aos="fade-up"
           onClick={() => navigate("/main/send-report")}
-          className={`${cardClasses}`}
+          className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-yellow-500">
-            <FileText color="white" size={25} />
+          <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs bg-amber-500 shrink-0">
+            <FileText color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_1")}
-            </h2>
-            <span className="text-[22px] font-semibold text-yellow-600">
+            </h3>
+            <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
               {dashboard_data?.sent_reports || 0} {t("count")}
             </span>
           </div>
@@ -102,14 +102,14 @@ function MainContainer() {
           onClick={() => navigate("/main/returned-report")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center bg-red-600 shadow-md">
-            <FolderSync color="white" size={25} />
+          <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center bg-red-600 shadow-xs shrink-0">
+            <FolderSync color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_2")}
-            </h2>
-            <span className="text-[22px] font-semibold text-red-700">
+            </h3>
+            <span className="text-sm font-bold text-red-600 dark:text-red-400">
               {dashboard_data?.returned_reports || 0} {t("count")}
             </span>
           </div>
@@ -122,14 +122,14 @@ function MainContainer() {
           onClick={() => navigate("/main/received-report")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-600">
-            <ClipboardCheck color="white" size={25} />
+          <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs bg-blue-600 shrink-0">
+            <ClipboardCheck color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_3")}
-            </h2>
-            <span className="text-[22px] font-semibold text-blue-700">
+            </h3>
+            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
               {dashboard_data?.accepted_reports || 0} {t("count")}
             </span>
           </div>
@@ -142,14 +142,14 @@ function MainContainer() {
           onClick={() => navigate("/main/responsible-representative")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-green-600">
-            <IdCard color="white" size={25} />
+          <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs bg-emerald-600 shrink-0">
+            <IdCard color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_4")}
-            </h2>
-            <span className="text-[22px] font-semibold text-gray-800">
+            </h3>
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
               {dashboard_data?.responsible_users || 0} {t("count")}
             </span>
           </div>
@@ -162,14 +162,14 @@ function MainContainer() {
           onClick={() => navigate("/main/draft")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-gray-600">
-            <PencilLine color="white" size={25} />
+          <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs bg-slate-600 shrink-0">
+            <PencilLine color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-700">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_5")}
-            </h2>
-            <span className="text-[22px] font-semibold text-gray-800">
+            </h3>
+            <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
               {dashboard_data?.draft_reports || 0} {t("count")}
             </span>
           </div>
@@ -182,14 +182,14 @@ function MainContainer() {
           onClick={() => navigate("/main/newsletter")}
           className={cardClasses}
         >
-          <div className="w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md bg-blue-300">
-            <Mail color="white" size={25} />
+          <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs bg-sky-500 shrink-0">
+            <Mail color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_6")}
-            </h2>
-            <span className="text-[22px] font-semibold text-blue-700">
+            </h3>
+            <span className="text-sm font-bold text-sky-600 dark:text-sky-400">
               {dashboard_data?.deadlines || 0} {t("count")}
             </span>
           </div>
@@ -203,13 +203,13 @@ function MainContainer() {
             onClick={() => navigate("/plan/create-report")}
             className={cardClasses}
           >
-            <div className="bg-purple-600 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-              <CalendarPlus color="white" size={25} />
+            <div className="bg-purple-600 w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs shrink-0">
+              <CalendarPlus color="white" size={22} />
             </div>
             <div>
-              <h2 className="font-medium text-[22px] text-gray-800">
+              <h3 className="font-semibold text-sm text-purple-700 dark:text-purple-300 leading-snug">
                 {t("item_82")}
-              </h2>
+              </h3>
             </div>
           </div>
         )}
@@ -221,71 +221,75 @@ function MainContainer() {
           onClick={() => navigate("/main/created-plans")}
           className={cardClasses}
         >
-          <div className="bg-orange-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <CalendarRange color="white" size={25} />
+          <div className="bg-orange-600 w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs shrink-0">
+            <CalendarRange color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("item_7")}
-            </h2>
-            <span className="text-[22px] font-semibold text-orange-800">
+            </h3>
+            <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
               {dashboard_data?.plans || 0} {t("count")}
             </span>
           </div>
         </div>
       </div>
-      <hr className="my-4 mx-4" />
-      <div className="grid grid-cols-3 gap-5 py-4 px-2">
+
+      <hr className="my-2 mx-2 border-slate-200 dark:border-slate-800" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-4 px-2">
         <div
           data-aos="fade-up"
           data-aos-delay="560"
           onClick={() => navigate("/main/on-time")}
           className={cardClasses}
         >
-          <div className="bg-green-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <CircleCheck color="white" size={25} />
+          <div className="bg-emerald-600 w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs shrink-0">
+            <CircleCheck color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("completed")}
-            </h2>
-            <span className="text-[22px] font-semibold text-green-800">
+            </h3>
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
               {dashboard_data?.on_time_reports || 0} {t("count")}
             </span>
           </div>
         </div>
+
         <div
           data-aos="fade-up"
           data-aos-delay="560"
           onClick={() => navigate("/main/late")}
           className={cardClasses}
         >
-          <div className="bg-yellow-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <History color="white" size={25} />
+          <div className="bg-amber-600 w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs shrink-0">
+            <History color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("late")}
-            </h2>
-            <span className="text-[22px] font-semibold text-yellow-800">
+            </h3>
+            <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
               {dashboard_data?.late_reports || 0} {t("count")}
             </span>
           </div>
         </div>
+
         <div
           data-aos="fade-up"
           data-aos-delay="560"
           onClick={() => navigate("/main/expired-deadlines")}
           className={cardClasses}
         >
-          <div className="bg-red-700 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-md">
-            <CircleX color="white" size={25} />
+          <div className="bg-red-600 w-[44px] h-[44px] rounded-xl flex items-center justify-center shadow-xs shrink-0">
+            <CircleX color="white" size={22} />
           </div>
-          <div>
-            <h2 className="font-medium text-[22px] text-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-medium text-sm text-slate-800 dark:text-slate-100 leading-snug">
               {t("not_completed")}
-            </h2>
-            <span className="text-[22px] font-semibold text-red-800">
+            </h3>
+            <span className="text-sm font-bold text-red-600 dark:text-red-400">
               {dashboard_data?.expired_deadlines || 0} {t("count")}
             </span>
           </div>

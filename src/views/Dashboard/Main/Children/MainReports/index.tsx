@@ -49,205 +49,200 @@ function Mainreports() {
   }
 
   return (
-    <div className="px-5 py-4">
+    <div className="px-3 py-3">
       {/* Format yuklash */}
-    <div className="w-full bg-white px-7 py-8 mt-5 rounded-3xl flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+      <div className="w-full bg-white dark:bg-slate-900 px-5 py-4 mt-2 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-3 shadow-xs transition-colors">
+        {/* CSV */}
+        <button
+          onClick={() => handleDownload("csv")}
+          disabled={exportLoading}
+          className="h-[40px] text-xs sm:text-sm cursor-pointer text-white font-semibold bg-indigo-600 hover:bg-indigo-700 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all active:scale-95 whitespace-nowrap"
+        >
+          <FaRegFileAlt size={16} />
+          {exportLoading ? "Yuklanmoqda..." : "CSV formatda yuklab olish"}
+        </button>
 
-      {/* CSV */}
-      <button
-        onClick={() => handleDownload("csv")}
-        disabled={exportLoading}
-        className="text-lg sm:text-xl cursor-pointer text-white font-bold bg-indigo-500 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2 w-full sm:w-auto justify-center"
-      >
-        <FaRegFileAlt />
-        {exportLoading ? "Yuklanmoqda..." : "CSV formatda yuklab olish"}
-      </button>
-
-      {/* EXCEL */}
-      <button
-        onClick={() => handleDownload("excel")}
-        disabled={exportLoading}
-        className="text-lg sm:text-xl cursor-pointer text-white font-bold bg-green-600 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2 w-full sm:w-auto justify-center"
-      >
-        <FaRegFileAlt />
-        {exportLoading ? "Yuklanmoqda..." : "Excel formatda yuklab olish"}
-      </button>
-
-    </div>
+        {/* EXCEL */}
+        <button
+          onClick={() => handleDownload("excel")}
+          disabled={exportLoading}
+          className="h-[40px] text-xs sm:text-sm cursor-pointer text-white font-semibold bg-emerald-600 hover:bg-emerald-700 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all active:scale-95 whitespace-nowrap"
+        >
+          <FaRegFileAlt size={16} />
+          {exportLoading ? "Yuklanmoqda..." : "Excel formatda yuklab olish"}
+        </button>
+      </div>
 
       {/* To'plam */}
-   <div className="w-full mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="w-full mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* CARD1 */}
+        <div className="relative border border-slate-200 dark:border-slate-700 border-l-4 border-l-blue-500 bg-white dark:bg-slate-800 p-3.5 rounded-xl flex items-center gap-3 shadow-xs">
+          <div className="bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0">
+            <LuChartColumn />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight leading-snug">ASOSIY FORMALAR</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              {data?.father_statements ?? 0}
+            </h1>
+          </div>
+        </div>
 
-  {/* CARD1 */}
-  <div className="relative border-l-4 border-blue-500 bg-gray-50 p-5 sm:p-6 rounded-2xl flex items-center gap-4 shadow-sm">
-    <div className="bg-blue-100 text-blue-500 p-3 rounded-xl text-2xl">
-      <LuChartColumn />
-    </div>
-    <div>
-      <p className="text-gray-400 text-sm font-medium">ASOSIY FORMALAR</p>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {data?.father_statements ?? 0}
-      </h1>
-    </div>
-  </div>
+        {/* CARD2 */}
+        <div className="relative border border-slate-200 dark:border-slate-700 border-l-4 border-l-indigo-500 bg-white dark:bg-slate-800 p-3.5 rounded-xl flex items-center gap-3 shadow-xs">
+          <div className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0">
+            <FaRegCheckCircle />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight leading-snug">JAMI HISOBOTLAR</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              {data?.total_reports ?? 0}
+            </h1>
+          </div>
+        </div>
 
-  {/* CARD2 */}
-  <div className="relative border-l-4 border-indigo-500 bg-gray-50 p-5 sm:p-6 rounded-2xl flex items-center gap-4 shadow-sm">
-    <div className="bg-indigo-100 text-indigo-500 p-3 rounded-xl text-2xl">
-      <FaRegCheckCircle />
-    </div>
-    <div>
-      <p className="text-gray-400 text-sm font-medium">JAMI HISOBOTLAR</p>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {data?.total_reports ?? 0}
-      </h1>
-    </div>
-  </div>
+        {/* CARD3 */}
+        <div className="relative border border-slate-200 dark:border-slate-700 border-l-4 border-l-cyan-600 bg-white dark:bg-slate-800 p-3.5 rounded-xl flex items-center gap-3 shadow-xs">
+          <div className="bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-300 w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0">
+            <RiSdCardMiniLine />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight leading-snug">JAMI SAQLANGAN</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              {data?.draft_reports ?? 0}
+            </h1>
+          </div>
+        </div>
 
-  {/* CARD3 */}
-  <div className="relative border-l-4 border-cyan-600 bg-gray-50 p-5 sm:p-6 rounded-2xl flex items-center gap-4 shadow-sm">
-    <div className="bg-cyan-100 text-cyan-600 p-3 rounded-xl text-2xl">
-      <RiSdCardMiniLine />
-    </div>
-    <div>
-      <p className="text-gray-400 text-sm font-medium">JAMI SAQLANGAN</p>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {data?.draft_reports ?? 0}
-      </h1>
-    </div>
-  </div>
+        {/* CARD4 */}
+        <div className="relative border border-slate-200 dark:border-slate-700 border-l-4 border-l-amber-500 bg-white dark:bg-slate-800 p-3.5 rounded-xl flex items-center gap-3 shadow-xs">
+          <div className="bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0">
+            <FiArrowUpCircle />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight leading-snug">JAMI YUBORILGAN</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              {data?.sent_reports ?? 0}
+            </h1>
+          </div>
+        </div>
 
-  {/* CARD4 */}
-  <div className="relative border-l-4 border-yellow-500 bg-gray-50 p-5 sm:p-6 rounded-2xl flex items-center gap-4 shadow-sm">
-    <div className="bg-yellow-100 text-yellow-500 p-3 rounded-xl text-2xl">
-      <FiArrowUpCircle />
-    </div>
-    <div>
-      <p className="text-gray-400 text-sm font-medium">JAMI YUBORILGAN</p>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {data?.sent_reports ?? 0}
-      </h1>
-    </div>
-  </div>
+        {/* CARD5 */}
+        <div className="relative border border-slate-200 dark:border-slate-700 border-l-4 border-l-red-500 bg-white dark:bg-slate-800 p-3.5 rounded-xl flex items-center gap-3 shadow-xs">
+          <div className="bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0">
+            <BiXCircle />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight leading-snug">JAMI BEKOR QILINGAN</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              {data?.returned_reports ?? 0}
+            </h1>
+          </div>
+        </div>
 
-  {/* CARD5 */}
-  <div className="relative border-l-4 border-red-500 bg-gray-50 p-5 sm:p-6 rounded-2xl flex items-center gap-4 shadow-sm">
-    <div className="bg-red-100 text-red-500 p-3 rounded-xl text-2xl">
-      <BiXCircle />
-    </div>
-    <div>
-      <p className="text-gray-400 text-sm font-medium">JAMI BEKOR QILINGAN</p>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {data?.returned_reports ?? 0}
-      </h1>
-    </div>
-  </div>
-
-  {/* CARD6 */}
-  <div className="relative border-l-4 border-green-600 bg-gray-50 p-5 sm:p-6 rounded-2xl flex items-center gap-4 shadow-sm">
-    <div className="bg-green-100 text-green-600 p-3 rounded-xl text-2xl">
-      <FaRegCheckCircle />
-    </div>
-    <div>
-      <p className="text-gray-400 text-sm font-medium">JAMI QABUL QILINGAN</p>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {data?.accepted_reports ?? 0}
-      </h1>
-    </div>
-  </div>
-
-</div>
+        {/* CARD6 */}
+        <div className="relative border border-slate-200 dark:border-slate-700 border-l-4 border-l-emerald-600 bg-white dark:bg-slate-800 p-3.5 rounded-xl flex items-center gap-3 shadow-xs">
+          <div className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0">
+            <FaRegCheckCircle />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight leading-snug">JAMI QABUL QILINGAN</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              {data?.accepted_reports ?? 0}
+            </h1>
+          </div>
+        </div>
+      </div>
 
       {/* Jadval */}
 
       <div className="w-full mt-10">
-  <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
-
-    <table className="w-full border-collapse text-sm">
-
+  {/* Jadval */}
+  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xs overflow-hidden border border-slate-200 dark:border-slate-800 transition-colors mt-4">
+    <table className="w-full border-collapse text-xs">
       {/* HEADER */}
-      <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+      <thead className="bg-indigo-600 dark:bg-indigo-900 text-white">
         <tr>
-          <th className="px-6 py-4 text-left w-[35%]">
+          <th className="px-4 py-3 text-left w-[38%] text-xs font-bold text-white dark:text-white uppercase tracking-wider">
             HISOBOT FORMASI
           </th>
-          <th className="py-4">ICHKI FORMALAR</th>
-          <th className="py-4">SAQLANGAN</th>
-          <th className="py-4">YUBORILGAN</th>
-          <th className="py-4">BEKOR</th>
-          <th className="py-4">QABUL</th>
-          <th className="py-4">JAMI</th>
+          <th className="py-3 text-xs font-bold text-white dark:text-white uppercase tracking-wider text-center">ICHKI FORMALAR</th>
+          <th className="py-3 text-xs font-bold text-white dark:text-white uppercase tracking-wider text-center">SAQLANGAN</th>
+          <th className="py-3 text-xs font-bold text-white dark:text-white uppercase tracking-wider text-center">YUBORILGAN</th>
+          <th className="py-3 text-xs font-bold text-white dark:text-white uppercase tracking-wider text-center">BEKOR</th>
+          <th className="py-3 text-xs font-bold text-white dark:text-white uppercase tracking-wider text-center">QABUL</th>
+          <th className="py-3 text-xs font-bold text-white dark:text-white uppercase tracking-wider text-center">JAMI</th>
         </tr>
       </thead>
 
-      <tbody className="text-gray-700">
-
+      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
         {loading && (
           <tr>
-            <td colSpan={7} className="text-center py-6">
-              Loading...
+            <td colSpan={7} className="text-center py-6 text-slate-500 dark:text-slate-300">
+              Yuklanmoqda...
             </td>
           </tr>
         )}
 
         {reportData?.data?.map((item: any) => (
           <React.Fragment key={item.id}>
-
             {/* MAIN ROW */}
             <tr
               onClick={() =>
                 setIsOpen(isOpen === item.id ? null : item.id)
               }
-              className="border-b cursor-pointer hover:bg-gray-50 transition group"
+              className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group"
             >
-              <td className="px-6 py-4">
-                <div className="flex items-center gap-2 font-bold text-black">
-                  <span className="text-gray-400  group-hover:text-indigo-500 transition">
-                    {isOpen === item.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              <td className="px-4 py-2.5">
+                <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-white">
+                  <span className="text-slate-400 group-hover:text-indigo-400 transition-colors">
+                    {isOpen === item.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </span>
-                  {item.name}
+                  <span className="text-xs text-slate-800 dark:text-white">{item.name}</span>
                 </div>
               </td>
 
-              <td className="text-center font-bold text-black">{item.count} ta</td>
-              <td className="text-center text-blue-600 font-medium">{item.saved}</td>
-              <td className="text-center text-orange-500 font-medium">{item.sent}</td>
-              <td className="text-center text-red-500 font-medium">{item.cancelled}</td>
-              <td className="text-center text-green-600 font-medium">{item.accepted}</td>
-              <td className="text-center font-bold text-gray-900">{item.total}</td>
+              <td className="text-center font-bold text-slate-800 dark:text-white">{item.count} ta</td>
+              <td className="text-center text-blue-600 dark:text-blue-300 font-semibold">{item.saved}</td>
+              <td className="text-center text-amber-600 dark:text-amber-300 font-semibold">{item.sent}</td>
+              <td className="text-center text-red-600 dark:text-red-300 font-semibold">{item.cancelled}</td>
+              <td className="text-center text-emerald-600 dark:text-emerald-300 font-semibold">{item.accepted}</td>
+              <td className="text-center font-extrabold text-slate-900 dark:text-white">{item.total}</td>
             </tr>
 
             {/* CHILDREN */}
             {isOpen === item.id && item.children?.map((child: any) => (
-              <tr key={child.id} onClick={()=> navigate(`/resource-management/${child.id}/${encodeURIComponent(child.name)}`)} className="bg-gray-50 border-b cursor-pointer">
-                <td className="pl-12 py-5 font-medium text-gray-700">
+              <tr
+                key={child.id}
+                onClick={() => navigate(`/resource-management/${child.id}/${encodeURIComponent(child.name)}`)}
+                className="bg-slate-50/70 dark:bg-slate-800/50 cursor-pointer hover:bg-indigo-50/60 dark:hover:bg-indigo-950/40 transition-colors"
+              >
+                <td className="pl-10 py-2 font-semibold text-xs text-slate-700 dark:text-slate-100">
                   ↳ {child.name}
                 </td>
-                <td className="text-center font-medium text-gray-800">{child.count} ta</td>
-                <td className="text-center text-blue-600">{child.saved}</td>
-                <td className="text-center text-orange-500">{child.sent}</td>
-                <td className="text-center text-red-500">{child.cancelled}</td>
-                <td className="text-center text-green-600">{child.accepted}</td>
-                <td className="text-center font-semibold">{child.total}</td>
+                <td className="text-center font-semibold text-xs text-slate-700 dark:text-slate-100">{child.count} ta</td>
+                <td className="text-center text-xs text-blue-600 dark:text-blue-300 font-semibold">{child.saved}</td>
+                <td className="text-center text-xs text-amber-600 dark:text-amber-300 font-semibold">{child.sent}</td>
+                <td className="text-center text-xs text-red-600 dark:text-red-300 font-semibold">{child.cancelled}</td>
+                <td className="text-center text-xs text-emerald-600 dark:text-emerald-300 font-semibold">{child.accepted}</td>
+                <td className="text-center text-xs font-bold text-slate-800 dark:text-white">{child.total}</td>
               </tr>
             ))}
-
           </React.Fragment>
         ))}
 
         {/* TOTAL */}
         {reportData?.totals && (
-          <tr className="bg-gray-100 font-bold text-gray-800">
-            <td className="px-6 py-4">JAMI</td>
-            <td className="text-center font-bold text-black ">{reportData.totals.count}ta</td>
-            <td className="text-center">{reportData.totals.saved}</td>
-            <td className="text-center">{reportData.totals.sent}</td>
-            <td className="text-center">{reportData.totals.cancelled}</td>
-            <td className="text-center">{reportData.totals.accepted}</td>
-            <td className="text-center">{reportData.totals.total}</td>
+          <tr className="bg-slate-100 dark:bg-slate-800/90 font-bold text-xs text-slate-900 dark:text-white border-t-2 border-slate-200 dark:border-slate-700">
+            <td className="px-4 py-3 font-extrabold text-slate-900 dark:text-white">JAMI</td>
+            <td className="text-center font-extrabold text-slate-900 dark:text-white">{reportData.totals.count} ta</td>
+            <td className="text-center font-bold text-blue-600 dark:text-blue-300">{reportData.totals.saved}</td>
+            <td className="text-center font-bold text-amber-600 dark:text-amber-300">{reportData.totals.sent}</td>
+            <td className="text-center font-bold text-red-600 dark:text-red-300">{reportData.totals.cancelled}</td>
+            <td className="text-center font-bold text-emerald-600 dark:text-emerald-300">{reportData.totals.accepted}</td>
+            <td className="text-center font-extrabold text-slate-900 dark:text-white">{reportData.totals.total}</td>
           </tr>
         )}
-
       </tbody>
     </table>
   </div>

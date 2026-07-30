@@ -330,47 +330,50 @@ function ForestAnalysisContainer({
   }
 
   return (
-    <div className="py-3">
-      <div className=" m-1 rounded-2xl p-3 bg-white flex items-start flex-wrap gap-4 ">
+    <div className="py-3 space-y-4">
+      <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors flex items-center flex-wrap gap-3">
         <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-          <SelectTrigger className="w-full min-w-[300px] max-w-48">
+          <SelectTrigger className="w-full md:w-[220px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl">
             <SelectValue placeholder="Hududni tanlang" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
            {regions_information.map((region) => (
-              <SelectItem key={region.value} value={region.value}>
+              <SelectItem key={region.value} value={region.value} className="dark:text-slate-100">
                 {region.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+
         <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
-          <SelectTrigger className="w-full min-w-[300px] max-w-48">
+          <SelectTrigger className="w-full md:w-[260px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl">
             <SelectValue placeholder="Tashkilotni tanlang" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
             {organizationData?.map((org: any) => (
-              <SelectItem key={org.id} value={org.id}>
+              <SelectItem key={org.id} value={org.id} className="dark:text-slate-100">
                 {org.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+
         <div className="flex flex-col gap-1">
           <input
             type="text"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
             placeholder="Hisobot davri (masalan: 2025, 2025-CHORAK_1, 2025-01)"
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm min-w-[260px] max-w-64"
+            className="w-full md:w-[320px] text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:!bg-slate-800 dark:!text-slate-100 px-3 transition-colors"
           />
-          <span className="text-[12px] text-gray-500">
-            Formatlar: Yillik: 2025 | <br /> Choraklik: 2025-CHORAK_1 | <br /> Oylik: 2025-01
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            Formatlar: Yillik: 2025 | Choraklik: 2025-CHORAK_1 | Oylik: 2025-01
           </span>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <button
-            className="bg-blue-400 text-white py-2 px-3 text-sm rounded-lg"
+            className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
             onClick={() => {
               setSelectedRegion("");
               setSelectedOrganization("");
@@ -380,28 +383,29 @@ function ForestAnalysisContainer({
             Tozalash
           </button>
           <button
-            className="bg-green-500 hover:bg-green-600 text-white py-2 px-3 text-sm rounded-lg"
+            className="h-[40px] px-4 font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
             onClick={handleDownloadReport}
           >
             Hisobotni yuklab olish
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto bg-ice p-4 rounded-xl">
+
+      <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="w-full">
+          <thead className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold">
             {headerRows.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {rowIndex === 0 && (
                   <>
                     <th
-                      className="border border-black px-2 py-1 text-center bg-[#f8f9fa] font-bold"
+                      className="border border-slate-300 dark:border-slate-700 px-2 py-2 text-center font-bold"
                       rowSpan={maxDepth}
                     >
                       №
                     </th>
                     <th
-                      className="border border-black px-2 py-1 text-center bg-[#f8f9fa] font-bold min-w-[180px]"
+                      className="border border-slate-300 dark:border-slate-700 px-2 py-2 text-center font-bold min-w-[180px]"
                       rowSpan={maxDepth}
                     >
                       Hudud
@@ -411,7 +415,7 @@ function ForestAnalysisContainer({
                 {row.map((cell, cellIndex) => (
                   <th
                     key={cellIndex}
-                    className="border border-black px-2 py-1 text-center bg-[#f8f9fa] font-bold min-w-[120px]"
+                    className="border border-slate-300 dark:border-slate-700 px-2 py-2 text-center font-bold min-w-[120px]"
                     colSpan={cell.colSpan}
                     rowSpan={cell.rowSpan}
                   >
@@ -421,14 +425,14 @@ function ForestAnalysisContainer({
               </tr>
             ))}
           </thead>
-          <tbody>
+          <tbody className="text-xs text-slate-800 dark:text-slate-100">
             {tableRows.map((row, rowIndex) => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                <td className="border border-black px-2 py-1 text-center">
+              <tr key={row.id} className="hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+                <td className="border border-slate-300 dark:border-slate-700 px-2 py-1.5 text-center">
                   {rowIndex + 1}
                 </td>
                 <td
-                  className={`border border-black px-2 py-1 text-left min-w-[180px] ${
+                  className={`border border-slate-300 dark:border-slate-700 px-2 py-1.5 text-left min-w-[180px] ${
                     row.hasChildren ? "font-bold" : ""
                   }`}
                 >
@@ -437,7 +441,7 @@ function ForestAnalysisContainer({
                 {row.cells.map((cell, cellIndex) => (
                   <td
                     key={cellIndex}
-                    className="border border-black px-2 py-1 text-center min-w-[120px]"
+                    className="border border-slate-300 dark:border-slate-700 px-2 py-1.5 text-center min-w-[120px]"
                   >
                     {cell}
                   </td>
