@@ -174,7 +174,7 @@ function MainDetail() {
   ) {
     return (
       <div className="px-5 w-full">
-        <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
+        <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl px-4 py-4 shadow-xs backdrop-blur-md transition-colors">
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
             <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
               <Input
@@ -320,13 +320,13 @@ function MainDetail() {
       )}
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
 
-      <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
-          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
+      <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl px-4 py-4 shadow-xs backdrop-blur-md transition-colors">
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[260px]">
             <Input
               type="text"
               placeholder={`${t("item_79")}...`}
-              className="w-full text-base sm:text-lg min-h-[40px] border-black"
+              className="w-full text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500"
               value={searchTerm}
               onChange={(e) =>
                 dispatch(
@@ -339,7 +339,7 @@ function MainDetail() {
             />
           </div>
 
-          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[240px]">
             <Select
               value={selectedOrganization}
               onValueChange={(value) =>
@@ -351,12 +351,12 @@ function MainDetail() {
                 )
               }
             >
-              <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
+              <SelectTrigger className="w-full text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-none">
                 <SelectValue placeholder={`${t("region")}`} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                 {regions2.map((region) => (
-                  <SelectItem key={region.value} value={region.value}>
+                  <SelectItem key={region.value} value={region.value} className="dark:text-slate-100">
                     {i18n.language === "uz" ? region.label : region.label2}
                   </SelectItem>
                 ))}
@@ -364,7 +364,7 @@ function MainDetail() {
             </Select>
           </div>
 
-          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[260px]">
             <Select
               value={selectedStatement}
               onValueChange={(value) =>
@@ -376,17 +376,17 @@ function MainDetail() {
                 )
               }
             >
-              <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
+              <SelectTrigger className="w-full text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-none">
                 <SelectValue placeholder={`${t("chooseDirection")}`} />
               </SelectTrigger>
 
-              <SelectContent>
+              <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                 {isStatementLoading && (
-                  <div className="px-3 py-2 text-gray-500">Yuklanmoqda...</div>
+                  <div className="px-3 py-2 text-slate-500 text-xs">Yuklanmoqda...</div>
                 )}
 
                 {statementError && (
-                  <div className="px-3 py-2 text-red-500">
+                  <div className="px-3 py-2 text-red-500 text-xs">
                     Xatolik yuz berdi! Ma'lumotlar olinmadi.
                   </div>
                 )}
@@ -395,7 +395,7 @@ function MainDetail() {
                   !statementError &&
                   statement?.results?.flatMap((parent: any) =>
                     parent.children?.map((child: any) => (
-                      <SelectItem key={child.id} value={child.id}>
+                      <SelectItem key={child.id} value={child.id} className="dark:text-slate-100">
                         {child.name}
                       </SelectItem>
                     )),
@@ -404,7 +404,7 @@ function MainDetail() {
             </Select>
           </div>
 
-          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
+          <div className="w-full sm:w-auto flex-1 min-w-[150px] max-w-[200px]">
             <Select
               value={selectedPeriod}
               onValueChange={(value) =>
@@ -416,23 +416,23 @@ function MainDetail() {
                 )
               }
             >
-              <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
+              <SelectTrigger className="w-full text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-none">
                 <SelectValue placeholder={`${t("reportType")}`} />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">{t("daily")}</SelectItem>
-                <SelectItem value="weekly">{t("weekly")}</SelectItem>
-                <SelectItem value="monthly">{t("monthly")}</SelectItem>
-                <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
-                <SelectItem value="yearly">{t("yearly")}</SelectItem>
+              <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                <SelectItem value="daily" className="dark:text-slate-100">{t("daily")}</SelectItem>
+                <SelectItem value="weekly" className="dark:text-slate-100">{t("weekly")}</SelectItem>
+                <SelectItem value="monthly" className="dark:text-slate-100">{t("monthly")}</SelectItem>
+                <SelectItem value="quarterly" className="dark:text-slate-100">{t("quarterly")}</SelectItem>
+                <SelectItem value="yearly" className="dark:text-slate-100">{t("yearly")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Button
               onClick={handleReset}
-              className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
+              className="h-[40px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
             >
               {t("reset")}
             </Button>
@@ -441,7 +441,7 @@ function MainDetail() {
               onClick={() =>
                 exportReportsToExcel(reportsData, t, deadline_at)
               }
-              className="whitespace-nowrap"
+              className="h-[40px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-semibold text-xs sm:text-sm hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer shadow-xs whitespace-nowrap"
             >
               {t("XLSXexport")}
             </Button>

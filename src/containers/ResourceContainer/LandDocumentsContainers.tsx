@@ -152,13 +152,13 @@ function LandDocumentsContainers() {
   }
 
   return (
-    <div className="w-full p-5 my-5 bg-ice rounded-xl">
+    <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl p-5 shadow-xs backdrop-blur-md transition-colors my-4">
       {/* 🔍 Filter */}
-      <div className="my-5 flex items-center gap-3 flex-wrap">
+      <div className="mb-5 flex items-center gap-3 flex-wrap">
         <Input
           type="text"
           placeholder={`${t("search")}...`}
-          className="w-[260px] text-xl min-h-[40px] border-black"
+          className="w-[260px] text-xs sm:text-sm h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:!bg-slate-800 dark:!text-slate-100"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -167,7 +167,7 @@ function LandDocumentsContainers() {
           <Button
             variant="outline"
             onClick={() => setSearchTerm("")}
-            className="min-h-[40px]"
+            className="h-[40px] rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs sm:text-sm"
           >
             {t("reset")}
           </Button>
@@ -176,7 +176,7 @@ function LandDocumentsContainers() {
         <div className="ml-auto">
           <Button
             onClick={() => navigate("/land-documents-create")}
-            className="bg-blue-600 text-white hover:bg-blue-700 min-h-[40px]"
+            className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
           >
             {t("new_document")}
           </Button>
@@ -184,58 +184,59 @@ function LandDocumentsContainers() {
       </div>
 
       {/* 📄 Table */}
-      <div className="w-full border border-[silver] rounded-xl px-3 py-5">
-        <div className="mb-3 text-sm text-gray-600">
+      <div className="w-full border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-xs p-1">
+        <div className="p-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
           {t("totalRecords", { count: landDocumentsData?.count || 0 })}
           {landDocumentsData?.results?.length > 0 && (
             <span> ({t("shown", { count: startItem, count2: endItem })})</span>
           )}
         </div>
 
-        <Table className="w-full">
-          <TableHeader>
-            <TableRow className="bg-[#eaeaea] h-[50px]">
-              <TableHead className="w-[20%] text-lg text-[#717171] pl-2">
+        <Table className="w-full border-collapse">
+          <TableHeader className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+            <TableRow className="h-[44px] hover:bg-transparent border-b border-slate-200 dark:border-slate-700">
+              <TableHead className="w-[20%] text-xs sm:text-sm font-bold pl-3 text-slate-800 dark:text-slate-200">
                 {t("name")}
               </TableHead>
-              <TableHead className="text-lg text-[#717171]">
+              <TableHead className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("date")}
               </TableHead>
-              <TableHead className="text-lg text-[#717171]">
+              <TableHead className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("document_type")}
               </TableHead>
-              <TableHead className="text-lg text-[#717171]">
+              <TableHead className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("organization")}
               </TableHead>
-              <TableHead className="text-right pr-2 text-lg text-[#717171]">
+              <TableHead className="text-right pr-3 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("actions")}
               </TableHead>
             </TableRow>
           </TableHeader>
 
-          <TableBody>
+          <TableBody className="text-xs sm:text-sm text-slate-800 dark:text-slate-100">
             {landDocumentsData?.results?.map((doc: any) => (
-              <TableRow key={doc.id} className="h-[50px] hover:bg-gray-100">
-                <TableCell className="text-base font-[300]">
+              <TableRow key={doc.id} className="h-[46px] hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-200 dark:border-slate-800">
+                <TableCell className="font-medium pl-3">
                   {doc.name}
                 </TableCell>
-                <TableCell className="text-base font-[300]">
+                <TableCell className="font-normal">
                   {doc.date}
                 </TableCell>
-                <TableCell className="text-base font-[300]">
+                <TableCell className="font-normal">
                   {doc.document_type_display}
                 </TableCell>
-                <TableCell className="text-base font-[300]">
+                <TableCell className="font-normal">
                   {doc.organization_name || doc.organization}
                 </TableCell>
 
-                <TableCell className="text-right">
+                <TableCell className="text-right pr-3">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleDownload(doc)}
                       disabled={!doc.file_url}
+                      className="h-8 rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs"
                     >
                       {t("download")}
                     </Button>

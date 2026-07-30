@@ -201,10 +201,10 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
     }),
     getReganalReport: builder.query<
       any,
-      { statement: string; region: string; deadline: string }
+      { statement: string; region: string; deadline: string; quarter?: string }
     >({
-      query: ({ statement, region = "", deadline }) => ({
-        url: `/filtered-general/?statement=${statement}&region=${region}&deadline=${deadline}`,
+      query: ({ statement, region = "", deadline, quarter = "" }) => ({
+        url: `/filtered-general/?statement=${statement}&region=${region}&deadline=${deadline}${quarter ? `&quarter=${quarter}` : ""}`,
         method: "GET",
       }),
       providesTags: ["Reports"],

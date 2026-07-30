@@ -60,6 +60,7 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const [selectedQuarter, setSelectedQuarter] = useState<string>("");
   const [deadlinePage, setDeadlinePage] = useState(1);
   const perPage = 5;
 
@@ -159,6 +160,7 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
       statement: id || "",
       region: selectedRegion,
       deadline: selectedPeriod,
+      quarter: selectedQuarter,
     });
   };
 
@@ -201,10 +203,13 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
     isPlantByIdError;
 
   useEffect(() => {
+    setActiveTab("");
+    setSelectedRow(null);
     setSearchTerm("");
     setSelectedRegion("");
     setSelectedPeriod("");
     setSelectedYear("");
+    setSelectedQuarter("");
   }, [id]);
 
   useEffect(() => {
@@ -234,10 +239,13 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
   }, [tableHeadersData]);
 
   useEffect(() => {
-    if (tableHeadersData.length > 0 && !activeTab) {
-      setActiveTab(tableHeadersData[0].title);
+    if (tableHeadersData.length > 0) {
+      const exists = tableHeadersData.some((col: any) => col.title === activeTab);
+      if (!activeTab || !exists) {
+        setActiveTab(tableHeadersData[0].title);
+      }
     }
-  }, [tableHeadersData]);
+  }, [tableHeadersData, activeTab]);
 
   const activeLeafIds = useMemo(() => {
     return tabLeafIdMap[activeTab] || [];
@@ -592,14 +600,14 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
           <TabSkeleton />
         ) : (
           <TabsList
-            className="w-full border overflow-x-auto border-[#A3A3A3] min-h-[50px] justify-start px-3 bg-ice"
+            className="w-full border border-slate-200 dark:border-slate-800 h-[52px] justify-start px-2 bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-xs gap-1.5 overflow-x-auto my-2 backdrop-blur-md transition-colors"
             data-aos="fade-down"
           >
             {tableHeadersData.map((col: ReportColumn) => (
               <TabsTrigger
                 key={col.id}
                 value={col.title}
-                className="max-w-[400px] min-w-[130px] bg-transparent text-[#A3A3A3] data-[state=active]:border-b-3 data-[state=active]:border-[#3B82F6] data-[state=active]:text-[#000]"
+                className="max-w-[400px] min-w-[120px] h-[38px] px-4 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white data-[state=active]:!bg-blue-600 dark:data-[state=active]:!bg-blue-600 data-[state=active]:!text-white dark:data-[state=active]:!text-white shadow-xs transition-all cursor-pointer whitespace-nowrap"
                 data-aos="fade-up"
                 data-aos-delay={20 * tableHeadersData.indexOf(col)}
               >
@@ -643,11 +651,11 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
                 </div>
 
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                  {/* Filters */}
-                  <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-end">
+                  {/* Action Button */}
+                  <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-start">
                     {user_role === "tashkilot_hodimi" && (
                       <button
-                        className="bg-[#3B82F6] text-md font-semibold text-white w-full md:w-[220px] py-3 rounded hover:bg-[#2563EB] transition-colors duration-300"
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-4 h-[40px] rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                         onClick={() =>
                           navigate(`/resource-management/create/${reportName}`)
                         }
@@ -655,13 +663,9 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
                         {t("createNewReport")}
                       </button>
                     )}
-                    <ExportDropdown
-                      onPrint={handlePrint}
-                      reportsData={tableRowsData}
-                    />
                   </div>
 
-                  {/* Search & Filters */}
+                  {/* Search & Filters & Export */}
                   <FiltersSection
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
@@ -671,12 +675,20 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
                     setSelectedPeriod={setSelectedPeriod}
                     selectedYear={selectedYear}
                     setSelectedYear={setSelectedYear}
+                    selectedQuarter={selectedQuarter}
+                    setSelectedQuarter={setSelectedQuarter}
                     deadline={deadline}
                     deadlinePage={deadlinePage}
                     setDeadlinePage={setDeadlinePage}
                     perPage={perPage}
                     onSearch={handleSearchRegional}
                     isLoading={isRowsLoading}
+                    exportComponent={
+                      <ExportDropdown
+                        onPrint={handlePrint}
+                        reportsData={tableRowsData}
+                      />
+                    }
                   />
                 </div>
 

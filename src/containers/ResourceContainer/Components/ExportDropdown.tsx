@@ -399,7 +399,7 @@ export default function ExportDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="py-2.5 font-semibold w-full md:w-[150px] rounded bg-[#3B82F6] border-1 text-[white] hover:bg-[#2563EB] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-[40px] px-4 font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           data-aos="zoom-in"
           data-aos-delay="50"
           disabled={isExporting}

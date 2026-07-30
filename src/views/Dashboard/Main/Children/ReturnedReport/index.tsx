@@ -174,7 +174,7 @@ function ReturnedReport() {
   ) {
     return (
       <div className="px-5 w-full">
-        <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
+        <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl px-4 py-4 shadow-xs backdrop-blur-md transition-colors">
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
             <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
               <Input
@@ -320,7 +320,7 @@ function ReturnedReport() {
       )}
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
 
-      <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
+      <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl px-4 py-4 shadow-xs backdrop-blur-md transition-colors">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
           <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
             <Input
