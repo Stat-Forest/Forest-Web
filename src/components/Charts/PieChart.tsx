@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RootState } from "@/app/store";
 import { useGetLandStatisticsQuery } from "@/services/generalApi";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from "recharts";
 
 type StatItem = {
@@ -22,6 +23,7 @@ type LandStatisticsResponse = {
 };
 
 export default function PieChartLanding() {
+  const { t } = useTranslation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -64,7 +66,7 @@ export default function PieChartLanding() {
           />
           <span className="text-slate-600 dark:text-slate-400">{item.name}:</span>
           <span className="font-black text-slate-900 dark:text-white">
-            {val.toFixed(2).replace(".", ",")} mln ga
+            {val.toFixed(2).replace(".", ",")} {t("pie_unit")}
           </span>
         </div>
       );
@@ -97,7 +99,7 @@ export default function PieChartLanding() {
       <div className="w-full rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-8 shadow-sm sm:px-5 sm:py-10">
         <div className="flex flex-col items-center justify-center gap-3 text-center">
           <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-[#00BC7D]" />
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Yuklanmoqda...</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t("loading")}</p>
         </div>
       </div>
     );
@@ -107,7 +109,7 @@ export default function PieChartLanding() {
     return (
       <div className="w-full rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-8 text-center shadow-sm sm:px-5 sm:py-10">
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Statistika yuklanmadi. Tizimga kiring.
+          {t("stats_load_error")}
         </p>
       </div>
     );
@@ -121,7 +123,7 @@ export default function PieChartLanding() {
   const total = filteredItems.reduce((sum, item) => sum + getArea(item), 0);
 
   const chartData = filteredItems.map((item) => ({
-    name: item.name ?? item.title ?? item.column_name ?? "Noma'lum",
+    name: item.name ?? item.title ?? item.column_name ?? t("landing_unknown"),
     value: getArea(item),
   }));
 
@@ -129,7 +131,7 @@ export default function PieChartLanding() {
     return (
       <div className="w-full rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-8 text-center shadow-sm sm:px-5 sm:py-10">
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Ma&apos;lumot mavjud emas
+          {t("noData")}
         </p>
       </div>
     );
@@ -143,10 +145,10 @@ export default function PieChartLanding() {
       <div className="mb-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div>
           <h3 className="text-base font-black text-slate-800 dark:text-white sm:text-lg">
-            Yer maydonlari taqsimoti
+            {t("pie_title")}
           </h3>
           <p className="text-xs font-medium text-slate-400 dark:text-slate-400">
-            Kategoriyalar kesimida umumiy ko'rsatkichlar
+            {t("pie_subtitle")}
           </p>
         </div>
         {activeIndex !== null ? (
@@ -154,11 +156,11 @@ export default function PieChartLanding() {
             onClick={() => setActiveIndex(null)}
             className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors"
           >
-            Barchasi
+            {t("pie_all")}
           </button>
         ) : (
           <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
-            Tahlil
+            {t("pie_analysis")}
           </span>
         )}
       </div>
@@ -222,13 +224,13 @@ export default function PieChartLanding() {
                 </span>
 
                 <span className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400 sm:text-sm">
-                  {activePercent}% ({activeItem.value < 0.1 ? activeItem.value.toFixed(2) : activeItem.value.toFixed(1)} mln ga)
+                  {activePercent}% ({activeItem.value < 0.1 ? activeItem.value.toFixed(2) : activeItem.value.toFixed(1)} {t("pie_unit")})
                 </span>
               </>
             ) : (
               <>
                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-400 sm:text-xs">
-                  Jami
+                  {t("pie_total")}
                 </span>
 
                 <span className="mt-1 text-xl font-black leading-none text-slate-900 dark:text-white sm:text-2xl md:text-3xl">
@@ -236,7 +238,7 @@ export default function PieChartLanding() {
                 </span>
 
                 <span className="mt-1 text-xs font-bold text-[#00BC7D] sm:text-sm">
-                  mln ga
+                  {t("pie_unit")}
                 </span>
               </>
             )}
@@ -292,7 +294,7 @@ export default function PieChartLanding() {
                       {item.value.toFixed(2).replace(".", ",")}
                     </div>
                     <div className={`text-[9px] font-bold uppercase tracking-wider ${ isSelected ? "text-emerald-400" : "text-slate-400" }`}>
-                      mln ga
+                      {t("pie_unit")}
                     </div>
                   </div>
                 </div>
