@@ -1084,7 +1084,7 @@ const PlantTableColumn = forwardRef(
                   {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
                   {(user_role === "bolim_admin" ||
                     user_role === "super_admin") &&
-                    selectedRow?.status == "sent" && (
+                    effectiveStatus == "sent" && (
                       <Button
                         onClick={async () => {
                           if (!selectedRow?.id) {
