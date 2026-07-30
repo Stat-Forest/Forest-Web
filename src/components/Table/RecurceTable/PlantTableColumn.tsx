@@ -85,7 +85,7 @@ const getQuarterStatusConfig = (status: string | null | undefined) => {
       return {
         label: "Qabul qilingan",
         color:
-          "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 shadow-xs",
+          "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700 shadow-xs",
         Icon: CheckCircle2,
       };
     default:
@@ -1024,7 +1024,10 @@ const PlantTableColumn = forwardRef(
               <div>
                 <div className="flex justify-end items-center gap-2.5 mb-3 flex-wrap">
                   {/* 🔹 Qaytarish (Recycle) button */}
-                  {effectiveStatus !== "accepted" &&
+                  {(user_role === "tashkilot_rahbari" ||
+                    user_role === "bolim_admin" ||
+                    user_role === "super_admin") &&
+                    effectiveStatus !== "accepted" &&
                     (effectiveStatus == "saved" ||
                       effectiveStatus == "cancelled" ||
                       effectiveStatus == "sent") && (
@@ -1037,7 +1040,9 @@ const PlantTableColumn = forwardRef(
                     )}
 
                   {/* 🔹 Yuborish (Send) button */}
-                  {effectiveStatus !== "accepted" &&
+                  {(user_role === "tashkilot_rahbari" ||
+                    user_role === "super_admin") &&
+                    effectiveStatus !== "accepted" &&
                     (effectiveStatus == "saved" ||
                       effectiveStatus == "cancelled") && (
                       <Button
@@ -1077,7 +1082,8 @@ const PlantTableColumn = forwardRef(
                     )}
 
                   {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
-                  {user_role == "bolim_admin" &&
+                  {(user_role === "bolim_admin" ||
+                    user_role === "super_admin") &&
                     selectedRow?.status == "sent" && (
                       <Button
                         onClick={async () => {
