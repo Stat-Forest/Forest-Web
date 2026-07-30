@@ -76,7 +76,7 @@ function Login() {
 
   const uiLoading = () => {
     setIsLoading(true);
-    setError("Yuklanmoqda...");
+    setError(t("loading"));
   };
 
   const uiNotLoaded = (e: any) => {
@@ -84,24 +84,18 @@ function Login() {
     if (e) {
       wsError(e);
     } else {
-      uiShowMessage(
-        "Brauzer WebSocket texnologiyasini qo'llab-quvvatlamaydi. Brauzeringizni yangilang.",
-        "error",
-      );
+      uiShowMessage(t("wsNotSupported"), "error");
     }
   };
 
   const uiUpdateApp = () => {
-    uiShowMessage(
-      "DIQQAT! E-IMZO dasturining yangi versiyasini o'rnating.",
-      "error",
-    );
+    uiShowMessage(t("eimzoUpdateRequired"), "error");
   };
 
   const uiAppLoad = useCallback(() => {
     uiClearCombo();
     if (!window.EIMZOClient) {
-      uiShowMessage("E-IMZO klienti yuklanmagan. Sahifani yangilang.", "error");
+      uiShowMessage(t("eimzoClientNotLoaded"), "error");
       return;
     }
 
@@ -120,7 +114,7 @@ function Login() {
       },
       uiHandleError,
     );
-  }, []);
+  }, [t]);
 
   const uiComboSelect = (itm: string | null) => {
     if (itm) {
@@ -153,7 +147,7 @@ function Login() {
 
         const processed: EimzoKey = {
           id: item.id || item.value,
-          value: item.id || item.value,
+          value: item.value || item.id || "",
           label: item.label || item.text || vo.CN,
           disabled: item.disabled || false,
           vo: vo,
@@ -165,7 +159,6 @@ function Login() {
           eimzoKeysList.push(processed);
         }
       } catch (error) {
-        // Sertifikatni qayta ishlashda xatolik - o'tkazib yuborish
         if (process.env.NODE_ENV === "development") {
           console.error("Error processing certificate:", error);
         }
@@ -194,7 +187,7 @@ function Login() {
     return {
       id: itmkey,
       value: itmkey,
-      label: vo.expired ? vo.CN + " (muddati tugagan)" : vo.CN,
+      label: vo.expired ? vo.CN + " " + t("expired") : vo.CN,
       disabled: vo.expired,
       vo: vo,
     };
@@ -210,32 +203,28 @@ function Login() {
 
   const wsError = (e: any) => {
     if (e) {
-      const errorCAPIWS =
-        "E-IMZO bilan ulanishda xatolik. E-IMZO moduli o'rnatilmagan bo'lishi mumkin.";
+      const errorCAPIWS = t("eImzoConnectionErr");
       uiShowMessage(errorCAPIWS + " : " + wsErroCodeDesc(e), "error");
     } else {
-      uiShowMessage(
-        "Brauzer WebSocket texnologiyasini qo'llab-quvvatlamaydi. Brauzeringizni yangilang.",
-        "error",
-      );
+      uiShowMessage(t("wsNotSupported"), "error");
     }
   };
 
   const wsErroCodeDesc = (code: number) => {
     const reasons: { [key: number]: string } = {
-      1000: "Normal yopish",
-      1001: "Ketish",
-      1002: "Protokol xatosi",
-      1003: "Qo'llab-quvvatlanmaydigan ma'lumot",
-      1006: "Noormal yopish",
-      1007: "Noto'g'ri freym ma'lumoti",
-      1008: "Siyosat buzilishi",
-      1009: "Xabar juda katta",
-      1010: "Kengaytma yo'q",
-      1011: "Ichki xato",
-      1015: "TLS qo'l siqish xatosi",
+      1000: t("wsError1000"),
+      1001: t("wsError1001"),
+      1002: t("wsError1002"),
+      1003: t("wsError1003"),
+      1006: t("wsError1006"),
+      1007: t("wsError1007"),
+      1008: t("wsError1008"),
+      1009: t("wsError1009"),
+      1010: t("wsError1010"),
+      1011: t("wsError1011"),
+      1015: t("wsError1015"),
     };
-    return code + " - " + (reasons[code] || "Noma'lum xato");
+    return code + " - " + (reasons[code] || t("wsErrorUnknown"));
   };
 
   const uiHandleError = (e: any, r: any) => {
@@ -243,19 +232,19 @@ function Login() {
     if (r) {
       const errorMessage = String(r);
       if (errorMessage.includes("BadPaddingException")) {
-        uiShowMessage("Parol noto'g'ri.", "error");
+        uiShowMessage(t("inCorrectPass"), "error");
       } else if (
         errorMessage.includes("Token not found") ||
         errorMessage.includes("No token present")
       ) {
-        uiShowMessage("USB-token topilmadi. Iltimos, token ulang.", "error");
+        uiShowMessage(t("usbTokenNotFound"), "error");
       } else if (errorMessage.includes("PIN") || errorMessage.includes("pin")) {
-        uiShowMessage("PIN-kod noto'g'ri yoki token bloklangan.", "error");
+        uiShowMessage(t("incorrectPin"), "error");
       } else if (
         errorMessage.includes("expired") ||
         errorMessage.includes("muddati")
       ) {
-        uiShowMessage("Sertifikatning muddati tugagan.", "error");
+        uiShowMessage(t("certExpired"), "error");
       } else {
         uiShowMessage(errorMessage, "error");
       }
@@ -266,14 +255,12 @@ function Login() {
   // -------- E-IMZO INITIALIZATION ---------------
   useEffect(() => {
     if (!window.EIMZOClient) {
-      setError(
-        "E-IMZO klienti yuklanmadi. Iltimos, sahifani yangilang yoki E-IMZO dasturini o'rnating.",
-      );
+      setError(t("eimzoClientNotLoaded"));
       return;
     }
 
     initializeEimzo();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (activeTab === "usb-token" && isEimzoInitialized) {
@@ -319,7 +306,7 @@ function Login() {
       () => {
         uiAppLoad();
         setIsEimzoInitialized(true);
-        showToast("E-IMZO muvaffaqiyatli ishga tushirildi", "success");
+        showToast(t("eimzoSuccess"), "success");
       },
       (e: any, r: any) => {
         if (r) {
@@ -374,11 +361,11 @@ function Login() {
         uiHideProgress();
         const access = response?.access;
         if (!access) {
-          uiShowMessage("Kirish muvaffaqiyatsiz: Token topilmadi", "error");
+          uiShowMessage(t("loginFailedNoToken"), "error");
           return;
         }
         dispatch(setToken({ token: access, user: response }));
-        showToast("Muvaffaqiyatli kirish", "success");
+        showToast(t("loginSuccess"), "success");
         navigate("/main");
       })
       .catch((error: any) => {
@@ -386,7 +373,7 @@ function Login() {
         const errorMsg =
           error?.data?.message ||
           error?.message ||
-          "Server bilan aloqa xatoligi";
+          t("serverConnectError");
         uiShowMessage(errorMsg, "error");
       });
   };
@@ -394,50 +381,45 @@ function Login() {
   const auth = (keyId: string, challenge: string) => {
     // Himoya: E-IMZO mavjudmi
     if (!window.EIMZOClient) {
-      uiShowMessage("E-IMZO klienti yuklanmagan", "error");
+      uiShowMessage(t("eimzoClientNotLoaded"), "error");
       uiHideProgress();
       return;
     }
 
     // Himoya: majburiy parametrlar
     if (!keyId || !challenge) {
-      uiShowMessage("Imzolash uchun ma'lumotlar yetarli emas", "error");
+      uiShowMessage(t("signingDataInsufficient"), "error");
       uiHideProgress();
       return;
     }
 
     try {
-      // createPkcs7(keyId, challenge, timestamper, successCb, errorCb, detach?)
-      // USB-token uchun keyId "ckc" — ulanadigan tokenni avtomatik tanlaydi
       window.EIMZOClient.createPkcs7(
         keyId,
         challenge,
-        undefined, // optional timestamper
+        undefined,
 
-        // ✅ SUCCESS
         (pkcs7: string) => {
           if (!pkcs7) {
             uiHideProgress();
-            uiShowMessage("PKCS7 yaratilmadi", "error");
+            uiShowMessage(t("pkcs7NotCreated"), "error");
             return;
           }
 
-          // Send only pkcs7, no vo needed
           handleEimzoLogin(pkcs7);
         },
 
-        // ❌ ERROR
         (e: any, r: any) => {
           uiHideProgress();
 
           if (r) {
             if (r.includes("BadPaddingException")) {
-              uiShowMessage("Parol noto‘g‘ri", "error");
+              uiShowMessage(t("inCorrectPass"), "error");
               return;
             }
 
             if (r.includes("PIN") || r.includes("pin")) {
-              uiShowMessage("PIN-kod noto‘g‘ri yoki token bloklangan", "error");
+              uiShowMessage(t("incorrectPin"), "error");
               return;
             }
 
@@ -445,12 +427,12 @@ function Login() {
               r.includes("Token not found") ||
               r.includes("No token present")
             ) {
-              uiShowMessage("USB-token topilmadi", "error");
+              uiShowMessage(t("usbTokenNotFound"), "error");
               return;
             }
 
             if (r.includes("expired") || r.includes("muddati")) {
-              uiShowMessage("Sertifikat muddati tugagan", "error");
+              uiShowMessage(t("certExpired"), "error");
               return;
             }
 
@@ -461,12 +443,12 @@ function Login() {
             wsError(e);
           }
         },
-        false // detach — misoldagi kabi
+        false
       );
     } catch (err) {
       uiHideProgress();
       console.error("E-IMZO createPkcs7 exception:", err);
-      uiShowMessage("E-IMZO bilan imzolashda kutilmagan xatolik", "error");
+      uiShowMessage(t("unexpectedSignError"), "error");
     }
   };
 
@@ -475,7 +457,7 @@ function Login() {
 
     const itm = selectedEimzoKey;
     if (!itm) {
-      uiShowMessage("Iltimos, E-IMZO sertifikatni tanlang", "error");
+      uiShowMessage(t("selectCertFirst"), "error");
       uiHideProgress();
       return;
     }
@@ -485,7 +467,7 @@ function Login() {
 
       if (!selectedItem) {
         uiHideProgress();
-        uiShowMessage("Sertifikat topilmadi", "error");
+        uiShowMessage(t("certNotFound"), "error");
         return;
       }
 
@@ -501,7 +483,7 @@ function Login() {
 
   const signinToken = () => {
     if (!window.EIMZOClient) {
-      uiShowMessage("E-IMZO klienti yuklanmagan. Sahifani yangilang.", "error");
+      uiShowMessage(t("eimzoClientNotLoaded"), "error");
       return;
     }
 
@@ -554,15 +536,15 @@ function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-white rounded-2xl">
-      <div className=" w-full max-w-xl rounded-2xl shadow-xl px-8 py-8 flex flex-col gap-5">
+    <div className="flex items-center justify-center bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors duration-200">
+      <div className="w-full max-w-xl rounded-2xl px-8 py-8 flex flex-col gap-5">
         {/* Header */}
         <div className="text-center flex justify-between items-center mb-1">
-          <h2 className="text-3xl font-bold text-gray-800">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-slate-100">
             {t("loginTitle")}
           </h2>
           <Button
-            className="bg-[#3B82F6] h-[44px] font-bold w-[180px] hover:bg-[#2563EB]"
+            className="bg-[#00BC7D] hover:bg-[#00a36c] text-white h-[44px] font-bold w-[180px]"
             onClick={() => navigate("/auth/auth_video")}
           >
             <VideoIcon size={40} />
@@ -578,8 +560,8 @@ function Login() {
             onClick={() => setActiveTab("login")}
             className={`h-12 text-sm font-medium transition-all duration-200 ${
               activeTab === "login"
-                ? "bg-blue-600 hover:bg-blue-700 shadow-sm"
-                : "hover:bg-gray-50"
+                ? "bg-[#00BC7D] hover:bg-[#00a36c] text-white shadow-sm"
+                : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             <LogIn className="w-4 h-4 mr-2" />
@@ -591,8 +573,8 @@ function Login() {
             onClick={() => setActiveTab("eimzo")}
             className={`h-12 text-sm font-medium transition-all duration-200 ${
               activeTab === "eimzo"
-                ? "bg-blue-600 hover:bg-blue-700 shadow-sm"
-                : "hover:bg-gray-50"
+                ? "bg-[#00BC7D] hover:bg-[#00a36c] text-white shadow-sm"
+                : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             <Key className="w-4 h-4 mr-2" />
@@ -604,8 +586,8 @@ function Login() {
             onClick={() => setActiveTab("usb-token")}
             className={`h-12 text-sm font-medium transition-all duration-200 ${
               activeTab === "usb-token"
-                ? "bg-blue-600 hover:bg-blue-700 shadow-sm"
-                : "hover:bg-gray-50"
+                ? "bg-[#00BC7D] hover:bg-[#00a36c] text-white shadow-sm"
+                : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             <Usb className="w-4 h-4 mr-2" />
@@ -620,36 +602,36 @@ function Login() {
         >
           {/* ------------ E-IMZO (PFX) LOGIN ------------- */}
           <TabsContent value="eimzo" className="space-y-4">
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <p className="text-sm text-blue-700 font-medium">
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 rounded-lg p-4">
+              <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
                 E-imzo sertifikati (PFX fayl) orqali kirish
               </p>
-              <p className="text-xs text-blue-600 mt-1">
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
                 Kompyuteringizda saqlangan sertifikat
               </p>
             </div>
 
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <p className="mt-2 text-gray-600">
+                <Loader2 className="w-8 h-8 animate-spin text-[#00BC7D]" />
+                <p className="mt-2 text-gray-600 dark:text-slate-300">
                   Sertifikatlar yuklanmoqda...
                 </p>
               </div>
             ) : eimzoKeysOnly.length > 0 ? (
               <>
                 <div>
-                  <Label htmlFor="eimzo-select" className="mb-2 block">
+                  <Label htmlFor="eimzo-select" className="mb-2 block text-slate-700 dark:text-slate-200">
                     Sertifikatni tanlang:
                   </Label>
                   <select
                     id="eimzo-select"
                     value={selectedEimzoKey}
                     onChange={(e) => setSelectedEimzoKey(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                     disabled={isLoading}
                   >
-                    <option value="" disabled>
+                    <option value="" disabled className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                       E-imzo sertifikatini tanlang
                     </option>
                     {eimzoKeysOnly.map((key) => (
@@ -657,7 +639,7 @@ function Login() {
                         key={key.id}
                         value={key.id}
                         disabled={key.disabled}
-                        className={key.disabled ? "text-gray-400" : ""}
+                        className={`bg-white dark:bg-slate-800 ${key.disabled ? "text-gray-400 dark:text-slate-500" : "text-slate-900 dark:text-slate-100"}`}
                       >
                         {key.label}
                         {key.disabled && " (muddati tugagan)"}
@@ -669,7 +651,7 @@ function Login() {
                 <div className="flex gap-2">
                   <Button
                     onClick={signinPFX}
-                    className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
+                    className="flex-1 h-12 bg-[#00BC7D] hover:bg-[#00a36c] text-white font-medium"
                     disabled={!selectedEimzoKey || isLoading || showProgress}
                   >
                     {showProgress ? (
@@ -689,7 +671,7 @@ function Login() {
                     variant="outline"
                     onClick={handleRefreshKeys}
                     disabled={isLoading || showProgress}
-                    className="h-12 px-4"
+                    className="h-12 px-4 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </Button>
@@ -697,11 +679,11 @@ function Login() {
               </>
             ) : (
               <div className="text-center py-6">
-                <Key className="w-12 h-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-gray-600">
+                <Key className="w-12 h-12 mx-auto text-gray-400 dark:text-slate-500" />
+                <p className="mt-2 text-gray-600 dark:text-slate-300">
                   E-imzo sertifikatlari topilmadi
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                   E-IMZO dasturini o'rnating yoki sertifikat qo'shing
                 </p>
                 <Button
@@ -709,7 +691,7 @@ function Login() {
                   variant="outline"
                   onClick={handleRefreshKeys}
                   disabled={isLoading}
-                  className="mt-4"
+                  className="mt-4 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   {t("refreshCertificates")}
@@ -718,20 +700,20 @@ function Login() {
             )}
 
             {showProgress && (
-              <div className="flex items-center justify-center p-3 bg-blue-50 rounded-lg">
-                <Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" />
-                <span className="text-blue-700">Imzolanmoqda, kuting...</span>
+              <div className="flex items-center justify-center p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 rounded-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-[#00BC7D] mr-2" />
+                <span className="text-emerald-700 dark:text-emerald-300">Imzolanmoqda, kuting...</span>
               </div>
             )}
           </TabsContent>
 
           {/* ------------ USB-TOKEN LOGIN (misoldagi kabi: keyId "ckc") ------------- */}
           <TabsContent value="usb-token" className="space-y-4">
-            <div className="bg-green-50 border border-green-100 rounded-lg p-4">
-              <p className="text-sm text-green-700 font-medium">
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 rounded-lg p-4">
+              <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
                 USB-token (ID-card, BAIK-token) orqali kirish
               </p>
-              <p className="text-xs text-green-600 mt-1">
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
                 Fizik USB token ulanib turgan bo'lishi kerak. Tugmani bosganda PIN so'raladi.
               </p>
             </div>
@@ -739,7 +721,7 @@ function Login() {
             <div className="flex gap-2">
               <Button
                 onClick={signinToken}
-                className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+                className="flex-1 h-12 bg-[#00BC7D] hover:bg-[#00a36c] text-white font-medium"
                 disabled={isLoading || showProgress}
               >
                 {showProgress ? (
@@ -759,16 +741,16 @@ function Login() {
                 variant="outline"
                 onClick={() => window.open("https://e-imzo.uz/help", "_blank")}
                 disabled={isLoading || showProgress}
-                className="h-12 px-4"
+                className="h-12 px-4 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 <AlertCircle className="w-4 h-4" />
               </Button>
             </div>
 
             {showProgress && (
-              <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg">
-                <Loader2 className="w-5 h-5 animate-spin text-green-600 mr-2" />
-                <span className="text-green-700">Imzolanmoqda, kuting...</span>
+              <div className="flex items-center justify-center p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 rounded-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-[#00BC7D] mr-2" />
+                <span className="text-emerald-700 dark:text-emerald-300">Imzolanmoqda, kuting...</span>
               </div>
             )}
           </TabsContent>
@@ -777,7 +759,7 @@ function Login() {
           <TabsContent value="login" className="space-y-4">
             <form onSubmit={checkAuthHandler} className="space-y-5">
               <div>
-                <Label htmlFor="email" className="mb-2 block">
+                <Label htmlFor="email" className="mb-2 block text-slate-700 dark:text-slate-200 font-medium">
                   {t("email")}
                 </Label>
                 <Input
@@ -786,13 +768,13 @@ function Login() {
                   type="email"
                   placeholder="email@example.com"
                   required
-                  className="h-12"
+                  className="h-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                   autoComplete="username"
                 />
               </div>
 
               <div>
-                <Label htmlFor="password" className="mb-2 block">
+                <Label htmlFor="password" className="mb-2 block text-slate-700 dark:text-slate-200 font-medium">
                   {t("password")}
                 </Label>
                 <div className="relative">
@@ -802,7 +784,7 @@ function Login() {
                     type={showPassword ? "text" : "password"}
                     placeholder="********"
                     required
-                    className="h-12 pr-10"
+                    className="h-12 pr-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                     autoComplete="current-password"
                   />
                   <Button
@@ -810,7 +792,7 @@ function Login() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-transparent dark:hover:bg-transparent"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -823,7 +805,7 @@ function Login() {
                 <div className="flex justify-end mt-2">
                   <Link
                     to="/auth/forget-password"
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-sm text-[#00BC7D] hover:text-[#00a36c] font-medium transition-colors"
                   >
                     {t("forgotPassword")}
                   </Link>
@@ -832,7 +814,7 @@ function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700"
+                className="w-full h-12 bg-[#00BC7D] hover:bg-[#00a36c] text-white font-medium shadow-sm"
               >
                 <LogIn className="w-4 h-4 mr-2" />
                 {t("enter")}
@@ -843,10 +825,10 @@ function Login() {
 
         {/* Error display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-lg p-4">
             <div className="flex items-start">
-              <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-              <p className="text-red-700 text-sm">{error}</p>
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mr-2 flex-shrink-0 mt-0.5" />
+              <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
             </div>
           </div>
         )}
