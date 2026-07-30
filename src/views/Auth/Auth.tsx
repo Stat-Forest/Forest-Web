@@ -6,32 +6,30 @@ function Auth() {
   const { t } = useTranslation();
   return (
     <div
-      className="w-full h-screen"
-      style={{backgroundImage:`url(https://images.photowall.com/products/58341/foggy-forest-4.jpg?h=699&q=85)`, backgroundSize:'cover'}}
+      className="w-full min-h-screen h-screen flex flex-col justify-between overflow-y-auto bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(https://images.photowall.com/products/58341/foggy-forest-4.jpg?h=699&q=85)`,
+      }}
     >
-      <div className="h-full w-full bg-black/40">
+      <div className="min-h-full w-full bg-black/40 backdrop-blur-[2px] flex flex-col justify-between flex-1">
+        <AuthHeader />
 
-      <AuthHeader />
+        <main className="flex-1 flex items-center justify-center p-4 my-auto">
+          <Outlet />
+        </main>
 
-      <div
-        className="flex items-center justify-center h-screen w-full flex-col gap-10 bg-white/10"
-        >
-        
-        <Outlet />
-        {/* <Login /> */}
-        <div className=" py-1 px-2 rounded-2xl">
-          <span className="text-[18px] text-white">
-            © 2025 "{t('compny_name')}" {t("auth_bottom")}
+        <footer className="py-3 px-4 text-center">
+          <span className="text-sm sm:text-base text-white/90 font-medium">
+            © 2025 "{t("compny_name")}" {t("auth_bottom")}{" "}
             <NavLink
-              className={"text-white px-2"}
-              to={"tel:+998 71 207 88 77 (1010)"}
-              >
-              +998 71 207 88 77 ({t('phone_extension')}: 1010)
+              className="text-white hover:underline font-semibold px-1"
+              to="tel:+998712078877"
+            >
+              +998 71 207 88 77 ({t("phone_extension")}: 1010)
             </NavLink>
           </span>
-        </div>
+        </footer>
       </div>
-              </div>
     </div>
   );
 }

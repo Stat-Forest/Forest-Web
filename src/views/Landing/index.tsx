@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useGetLoginStatsQuery } from "@/services/statistikApi";
 import { useGetLoginStatDeadlineQuery } from "@/services/reportsApi";
@@ -148,6 +149,7 @@ function SkeletonCard() {
 
 // ─── Scroll-to-top floating button ────────────────────────────────────────────
 function ScrollToTopButton() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 400);
@@ -158,7 +160,7 @@ function ScrollToTopButton() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      aria-label="Tepaga qaytish"
+      aria-label={t("landing_scroll_top")}
       className="fixed bottom-8 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/30 transition-all duration-300 hover:bg-[#00a36c] hover:scale-110 hover:shadow-xl active:scale-95"
     >
       <ArrowUp size={22} />
@@ -166,19 +168,19 @@ function ScrollToTopButton() {
   );
 }
 
-// ─── Hero global stats ─────────────────────────────────────────────────────────
-const HERO_STATS = [
-  { icon: BarChart3, label: "Yillik ko'rsatkichlar", value: "12+" },
-  { icon: TrendingUp, label: "Bajarilish foizi", value: "114%" },
-  { icon: Globe, label: "Hududlar qamrovi", value: "14" },
-] as const;
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ModernLanding() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const [monthly, setMonthly] = useState("");
   const [yearly, setYearly] = useState("");
+
+  const heroStats = [
+    { icon: BarChart3, label: t("landing_stat_yearly"), value: "12+" },
+    { icon: TrendingUp, label: t("landing_stat_percent"), value: "114%" },
+    { icon: Globe, label: t("landing_stat_regions"), value: "14" },
+  ];
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -187,14 +189,14 @@ export default function ModernLanding() {
     }
   };
 
-  const handleQuickLinkClick = (link: string) => {
-    if (link === "Bosh sahifa") {
+  const handleQuickLinkClick = (key: string) => {
+    if (key === "home") {
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (link === "Statistik ko'rsatkichlar") {
+    } else if (key === "strategic") {
       scrollToSection("strategik-korsatkichlar");
-    } else if (link === "Operatsion tahlil") {
+    } else if (key === "operational") {
       scrollToSection("operatsion-tahlil");
-    } else if (link === "Tizimga kirish") {
+    } else if (key === "login") {
       navigate("/auth");
     }
   };
@@ -241,26 +243,25 @@ export default function ModernLanding() {
               <div className="mb-5 inline-flex items-center gap-2.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 px-3.5 py-1 backdrop-blur-md">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 sm:text-xs">
-                  Platforma tahlili
+                  {t("landing_hero_tag")}
                 </span>
               </div>
 
               <h1 className="text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-4xl md:text-5xl drop-shadow-md">
-                O'rmon xo'jaligi <br />
+                {t("landing_hero_title1")} <br />
                 <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent">
-                  statistika portali
+                  {t("landing_hero_title2")}
                 </span>
               </h1>
 
               <p className="mt-5 max-w-lg text-base font-medium leading-relaxed text-slate-200 sm:text-lg drop-shadow-xs">
-                Ma&apos;lumotlar vizualizatsiyasi orqali reja va natijalarni
-                real vaqt rejimida boshqaring.
+                {t("landing_hero_desc")}
               </p>
             </div>
 
             {/* Hero bottom stats */}
             <div className="relative z-10 mt-8 grid grid-cols-3 gap-3 border-t border-white/10 pt-6">
-              {HERO_STATS.map(({ icon: Icon, label, value }) => (
+              {heroStats.map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5">
                     <Icon size={14} className="text-emerald-400" />
@@ -290,8 +291,8 @@ export default function ModernLanding() {
         <div className="space-y-12 sm:space-y-14 lg:space-y-16">
           <SectionLayout
             id="strategik-korsatkichlar"
-            title="Strategik ko'rsatkichlar"
-            subtitle="Yillik rejalashtirilgan ishlar natijalari"
+            title={t("landing_strategic_title")}
+            subtitle={t("landing_strategic_subtitle")}
             icon={<Layers className="text-[#00BC7D]" />}
             value={yearly}
             onChange={setYearly}
@@ -308,8 +309,8 @@ export default function ModernLanding() {
 
           <SectionLayout
             id="operatsion-tahlil"
-            title="Operatsion tahlil"
-            subtitle="Oylik dinamika va bajarilish darajasi"
+            title={t("landing_operational_title")}
+            subtitle={t("landing_operational_subtitle")}
             icon={<Calendar className="text-[#00BC7D]" />}
             value={monthly}
             onChange={setMonthly}
@@ -338,26 +339,31 @@ export default function ModernLanding() {
                 <span className="text-xl font-black tracking-tight text-white">STAT-URMON</span>
               </div>
               <p className="mb-6 max-w-sm text-sm leading-relaxed text-slate-400">
-                O'rmon xo'jaligi sohasidagi statistik ma'lumotlarni real vaqt rejimida kuzatish va tahlil qilish uchun milliy platforma.
+                {t("landing_footer_desc")}
               </p>
               <div className="flex items-center gap-2 rounded-full border border-[#00BC7D]/30 bg-[#00BC7D]/10 px-3 py-1.5 w-fit">
                 <span className="h-2 w-2 rounded-full bg-[#00BC7D] animate-pulse" />
-                <span className="text-xs font-bold text-[#00BC7D]">Tizim faol</span>
+                <span className="text-xs font-bold text-[#00BC7D]">{t("landing_system_active")}</span>
               </div>
             </div>
 
             {/* Quick links */}
             <div className="lg:col-span-3">
-              <h4 className="mb-5 text-sm font-black uppercase tracking-widest text-white">Tezkor havolalar</h4>
+              <h4 className="mb-5 text-sm font-black uppercase tracking-widest text-white">{t("landing_quick_links")}</h4>
               <ul className="space-y-3">
-                {["Bosh sahifa", "Statistik ko'rsatkichlar", "Operatsion tahlil", "Tizimga kirish"].map((link) => (
-                  <li key={link}>
+                {[
+                  { key: "home", label: t("landing_nav_home") },
+                  { key: "strategic", label: t("landing_nav_strategic") },
+                  { key: "operational", label: t("landing_nav_operational") },
+                  { key: "login", label: t("landing_nav_login") },
+                ].map(({ key, label }) => (
+                  <li key={key}>
                     <span
-                      onClick={() => handleQuickLinkClick(link)}
+                      onClick={() => handleQuickLinkClick(key)}
                       className="group flex items-center gap-2 text-sm text-slate-400 cursor-pointer transition-colors hover:text-[#00BC7D]"
                     >
                       <span className="h-px w-4 bg-slate-600 transition-all group-hover:w-6 group-hover:bg-[#00BC7D]" />
-                      {link}
+                      {label}
                     </span>
                   </li>
                 ))}
@@ -366,14 +372,14 @@ export default function ModernLanding() {
 
             {/* Contact */}
             <div className="lg:col-span-4">
-              <h4 className="mb-5 text-sm font-black uppercase tracking-widest text-white">Aloqa</h4>
+              <h4 className="mb-5 text-sm font-black uppercase tracking-widest text-white">{t("landing_contact")}</h4>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#00BC7D]/15">
                     <MapPin size={14} className="text-[#00BC7D]" />
                   </div>
                   <span className="text-sm text-slate-400">
-                    Ekologiya va iqlim o‘zgarishi milliy qo‘mitasi
+                    {t("landing_committee")}
                   </span>
                 </li>
 
@@ -406,11 +412,11 @@ export default function ModernLanding() {
 
           <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-800 py-6 sm:flex-row">
             <p className="text-xs text-slate-500">
-              © {new Date().getFullYear()} STAT-URMON. Barcha huquqlar himoyalangan.
+              © {new Date().getFullYear()} STAT-URMON. {t("landing_rights")}
             </p>
             <div className="flex items-center gap-2">
               <Trees size={14} className="text-[#00BC7D]" />
-              <span className="text-xs text-slate-500">O'zbekiston Respublikasi O'rmon xo'jaligi agentligi</span>
+              <span className="text-xs text-slate-500">{t("landing_agency")}</span>
             </div>
           </div>
         </div>
@@ -435,6 +441,7 @@ type SectionLayoutProps = {
 };
 
 function SectionLayout({ id, title, subtitle, icon, value, onChange, options, children }: SectionLayoutProps) {
+  const { t } = useTranslation();
   const { ref, inView } = useInView(0.1);
   return (
     <div
@@ -465,7 +472,7 @@ function SectionLayout({ id, title, subtitle, icon, value, onChange, options, ch
             <SelectTrigger className="relative h-12 w-full rounded-xl border-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-4 font-bold shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 focus:ring-2 focus:ring-[#00BC7D] sm:h-14 sm:px-6 md:w-[280px]">
               <div className="flex items-center gap-2">
                 <Filter size={16} className="text-slate-400" />
-                <SelectValue placeholder="Davrni tanlang" />
+                <SelectValue placeholder={t("landing_select_period")} />
               </div>
             </SelectTrigger>
             <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-2xl">
@@ -490,6 +497,7 @@ type ModernStatCardProps = {
 };
 
 function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
+  const { t } = useTranslation();
   const config = getCardConfig(item.column_name);
   const Icon = config.icon;
   const percent = item.percentage ? Math.round(item.percentage) : 0;
@@ -529,19 +537,19 @@ function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
                   <circle cx="6" cy="6" r="6" fill="#00BC7D"/>
                   <path d="M3.5 6.2l1.8 1.8 3.2-3.5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Bajarildi · {percent}%
+                {t("landing_completed")} · {percent}%
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 sm:text-xs">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400 animate-pulse" />
-                Jarayonda · {percent}%
+                {t("landing_in_progress")} · {percent}%
               </span>
             )}
           </div>
         </div>
 
         <h3 className="min-h-[52px] text-sm font-bold leading-[1.4] text-slate-800 dark:text-slate-100 line-clamp-3 sm:min-h-[60px]">
-          {item.column_name ?? "Noma'lum"}
+          {item.column_name ?? t("landing_unknown")}
         </h3>
       </div>
 
@@ -552,7 +560,7 @@ function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
               {formatNumber(countedActual)}
             </p>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Amalda ({item.unit ?? "–"})
+              {t("landing_actual")} ({item.unit ?? "–"})
             </p>
           </div>
           <div className="shrink-0 text-right">
@@ -569,7 +577,7 @@ function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
         </div>
 
         <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase text-slate-400 sm:text-[11px]">
-          <span>Reja: {formatNumber(item.plan ?? 0)}</span>
+          <span>{t("landing_plan")}: {formatNumber(item.plan ?? 0)}</span>
           <ArrowUpRight
             size={14}
             className="text-[#00BC7D] opacity-0 transition-opacity group-hover:opacity-100"

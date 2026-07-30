@@ -175,12 +175,12 @@ function MainDetail() {
     return (
       <div className="px-5 w-full">
         <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
-          <div className="flex items-center gap-5 mb-6">
-            <div>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
+            <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
               <Input
                 type="text"
                 placeholder={`${t("item_79")}...`}
-                className="w-[260px] text-xl min-h-[40px] border-black"
+                className="w-full text-base sm:text-lg min-h-[40px] border-black"
                 value={searchTerm}
                 onChange={(e) =>
                   dispatch(
@@ -193,7 +193,7 @@ function MainDetail() {
               />
             </div>
 
-            <div>
+            <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
               <Select
                 value={selectedOrganization}
                 onValueChange={(value) =>
@@ -205,7 +205,7 @@ function MainDetail() {
                   )
                 }
               >
-                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
                   <SelectValue placeholder={`${t("region")}`} />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,7 +218,7 @@ function MainDetail() {
               </Select>
             </div>
 
-            <div>
+            <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
               <Select
                 value={selectedStatement}
                 onValueChange={(value) =>
@@ -230,7 +230,7 @@ function MainDetail() {
                   )
                 }
               >
-                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
                   <SelectValue placeholder={`${t("chooseDirection")}`} />
                 </SelectTrigger>
 
@@ -260,7 +260,7 @@ function MainDetail() {
               </Select>
             </div>
 
-            <div>
+            <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
               <Select
                 value={selectedPeriod}
                 onValueChange={(value) =>
@@ -272,7 +272,7 @@ function MainDetail() {
                   )
                 }
               >
-                <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+                <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
                   <SelectValue placeholder={`${t("reportType")}`} />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,33 +282,25 @@ function MainDetail() {
                   <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
                   <SelectItem value="yearly">{t("yearly")}</SelectItem>
                 </SelectContent>
-                {/* <SelectContent>
-                  {periods.map((reportType) => (
-                    <SelectItem key={reportType.value} value={reportType.value}>
-                      {i18n.language === "uz" ? reportType.label_uz : reportType.label_ru}
-                    </SelectItem>
-                  ))}
-                </SelectContent> */}
               </Select>
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3 flex-wrap">
               <Button
                 onClick={handleReset}
                 className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
               >
                 {t("reset")}
               </Button>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    exportReportsToExcel(reportsData, t, deadline_at)
-                  }
-                >
-                  XLSX export
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  exportReportsToExcel(reportsData, t, deadline_at)
+                }
+                className="whitespace-nowrap"
+              >
+                {t("XLSXexport")}
+              </Button>
             </div>
           </div>
           <div className="text-center py-8 text-gray-500">
@@ -329,12 +321,12 @@ function MainDetail() {
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
 
       <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
-        <div className="flex items-center gap-5 mb-6">
-          <div>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
             <Input
               type="text"
               placeholder={`${t("item_79")}...`}
-              className="w-[260px] text-xl min-h-[40px] border-black"
+              className="w-full text-base sm:text-lg min-h-[40px] border-black"
               value={searchTerm}
               onChange={(e) =>
                 dispatch(
@@ -347,7 +339,7 @@ function MainDetail() {
             />
           </div>
 
-          <div>
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
             <Select
               value={selectedOrganization}
               onValueChange={(value) =>
@@ -359,7 +351,7 @@ function MainDetail() {
                 )
               }
             >
-              <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+              <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("region")}`} />
               </SelectTrigger>
               <SelectContent>
@@ -372,7 +364,7 @@ function MainDetail() {
             </Select>
           </div>
 
-          <div>
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
             <Select
               value={selectedStatement}
               onValueChange={(value) =>
@@ -384,7 +376,7 @@ function MainDetail() {
                 )
               }
             >
-              <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+              <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("chooseDirection")}`} />
               </SelectTrigger>
 
@@ -412,7 +404,7 @@ function MainDetail() {
             </Select>
           </div>
 
-          <div>
+          <div className="w-full sm:w-auto flex-1 min-w-[180px] max-w-[280px]">
             <Select
               value={selectedPeriod}
               onValueChange={(value) =>
@@ -424,7 +416,7 @@ function MainDetail() {
                 )
               }
             >
-              <SelectTrigger className="w-[260px] text-xl min-h-[40px] border-black">
+              <SelectTrigger className="w-full text-base sm:text-lg min-h-[40px] border-black">
                 <SelectValue placeholder={`${t("reportType")}`} />
               </SelectTrigger>
               <SelectContent>
@@ -437,23 +429,22 @@ function MainDetail() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 flex-wrap">
             <Button
               onClick={handleReset}
               className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
             >
               {t("reset")}
             </Button>
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  exportReportsToExcel(reportsData, t, deadline_at)
-                }
-              >
-                {t("XLSXexport")}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() =>
+                exportReportsToExcel(reportsData, t, deadline_at)
+              }
+              className="whitespace-nowrap"
+            >
+              {t("XLSXexport")}
+            </Button>
           </div>
         </div>
 
