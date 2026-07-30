@@ -154,7 +154,7 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
 
           {/* LANGUAGE */}
           <Select value={currentLang} onValueChange={handleChangeLang}>
-            <SelectTrigger className="w-[120px] !h-[42px] py-0 shadow-none bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-medium box-border flex items-center justify-between">
+            <SelectTrigger className="w-[120px] h-[40px] py-0 shadow-none bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-medium box-border flex items-center justify-between px-3">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -39,7 +39,11 @@ export default function CancelReportModal({ open, setOpen, reportId }: Props) {
       setReason("");
       setOpen(false);
     } catch (err: any) {
-      const msg = err?.data?.message || "Xatolik yuz berdi";
+      const isForbidden =
+        err?.status === 403 || err?.originalStatus === 403 || err?.status === 401;
+      const msg = isForbidden
+        ? "Buyruq bajarish uchun sizda ruxsat yo'q"
+        : err?.data?.detail || err?.data?.message || "Xatolik yuz berdi";
       setError(msg);
     }
   };

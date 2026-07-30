@@ -169,7 +169,7 @@ function OnTime() {
   ) {
     return (
       <div className="px-5 w-full">
-        <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
+        <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl px-4 py-4 shadow-xs backdrop-blur-md transition-colors">
           <div className="flex items-center gap-2 mb-6 flex-wrap">
             <div>
               <Input
@@ -277,7 +277,7 @@ function OnTime() {
       )}
       {reportsError && <h1 className="text-[red]">Xatolik yuz berdi!</h1>}
 
-      <div className="w-full bg-ice border border-[silver] rounded-xl px-3 py-5">
+      <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl px-4 py-4 shadow-xs backdrop-blur-md transition-colors">
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <div>
             <Input

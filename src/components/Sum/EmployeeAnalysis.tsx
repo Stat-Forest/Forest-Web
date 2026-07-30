@@ -101,10 +101,12 @@ const { data: landAcquisition, isLoading: isLandAcquisitionLoading } =
   };
 
   return (
-    <div className="bg-ice shadow px-5 py-4 rounded-2xl mb-6">
-      <div className="flex items-end gap-2 pb-3">
-        <ChartNoAxesColumn color="#3B82F6" fontWeight={800} />
-        <h2>{t("tableSummary")}</h2>
+    <div className="bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs px-5 py-4 rounded-2xl mb-6 backdrop-blur-md transition-colors">
+      <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800/80 mb-4">
+        <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+          <ChartNoAxesColumn size={18} />
+        </div>
+        <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">{t("tableSummary")}</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
