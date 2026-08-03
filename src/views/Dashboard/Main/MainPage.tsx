@@ -17,7 +17,7 @@ function MainPage() {
               {t("item_8")}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Barcha hisobotlar va tahliliy ko'rsatkichlar monitoringi
+              {t("home_subtitle")}
             </p>
           </div>
         </div>

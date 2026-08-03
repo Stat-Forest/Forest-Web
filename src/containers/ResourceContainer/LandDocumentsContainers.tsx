@@ -18,7 +18,8 @@ import { useDebounce } from "@/utils/useDebounce";
 import { useNavigate } from "react-router-dom";
 
 function LandDocumentsContainers() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || "uz";
   const [page, setPage] = useState(1);
   const perPage = 10;
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,7 +36,50 @@ function LandDocumentsContainers() {
     page,
     per_page: perPage,
     search: debouncedSearchTerm,
+    lang,
   });
+
+  const formatDocType = (docType?: string) => {
+    if (!docType) return "-";
+    if (i18n.language === "ru") {
+      const map: Record<string, string> = {
+        Qaror: "Решение",
+        "Yo'riqnoma": "Инструкция",
+        Nizom: "Положение",
+        Farmoish: "Распоряжение",
+        Buyruq: "Приказ",
+      };
+      return map[docType] || docType;
+    }
+    return docType;
+  };
+
+  const formatOrganizationName = (orgName?: string) => {
+    if (!orgName) return "-";
+    if (i18n.language === "ru") {
+      if (orgName === "O'rmon xo'jaligini raqamlashtirish markazi davlat muassasasi") {
+        return t("compny_name");
+      }
+      let name = orgName;
+      name = name.replace(/davlat o'rmon xo'jaligi/gi, "Государственное лесное хозяйство");
+      name = name.replace(/davlat o'rmon ishlab chiqarish korxonasi/gi, "Государственное лесопроизводственное предприятие");
+      return name;
+    }
+    return orgName;
+  };
+
+  const formatDocName = (docName?: string) => {
+    if (!docName) return "-";
+    if (i18n.language === "ru") {
+      let name = docName;
+      name = name.replace(/Туман ҳокимининг қарори/gi, "Решение хокима района");
+      name = name.replace(/Tuman hokimining qarori/gi, "Решение хокима района");
+      name = name.replace(/Хатирчи туман ҳокимининг қарори/gi, "Решение хокима Хатирчинского района");
+      name = name.replace(/Тахтакопир районы хакими шешеими/gi, "Решение хокима Тахтакупырского района");
+      return name;
+    }
+    return docName;
+  };
 
   // ------------------------------------------------
   // ✅ 100% TO'G'RI ISHLAYDIGAN DOWNLOAD FUNKSIYASI
@@ -217,16 +261,16 @@ function LandDocumentsContainers() {
             {landDocumentsData?.results?.map((doc: any) => (
               <TableRow key={doc.id} className="h-[46px] hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-200 dark:border-slate-800">
                 <TableCell className="font-medium pl-3">
-                  {doc.name}
+                  {formatDocName(doc.name)}
                 </TableCell>
                 <TableCell className="font-normal">
                   {doc.date}
                 </TableCell>
                 <TableCell className="font-normal">
-                  {doc.document_type_display}
+                  {formatDocType(doc.document_type_display)}
                 </TableCell>
                 <TableCell className="font-normal">
-                  {doc.organization_name || doc.organization}
+                  {formatOrganizationName(doc.organization_name || doc.organization)}
                 </TableCell>
 
                 <TableCell className="text-right pr-3">

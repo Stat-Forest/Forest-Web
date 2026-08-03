@@ -335,6 +335,15 @@ const TableColumn = forwardRef(
                     </th>
                   )}
                   {row.map((cell: any, cellIndex: number) => {
+                    const titleLower = (cell.title || "").toLowerCase();
+                    let displayTitle = cell.title;
+
+                    if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
+                      displayTitle = t("organization_name_header");
+                    } else if (titleLower.includes("o'simlik") || titleLower.includes("osimlik")) {
+                      displayTitle = t("plant_name_header");
+                    }
+
                     return (
                       <th
                         key={cellIndex}
@@ -342,7 +351,7 @@ const TableColumn = forwardRef(
                         colSpan={cell.colSpan}
                         rowSpan={cell.rowSpan}
                       >
-                        {cell.title}
+                        {displayTitle}
                       </th>
                     );
                   })}
@@ -550,13 +559,19 @@ const TableColumn = forwardRef(
                     }
                   >
                     <TableCell className="w-[35%] pl-3 text-xs font-semibold text-slate-800 dark:text-slate-100 border-none whitespace-normal break-words leading-snug">
-                      {item?.organization_name}
+                      {i18n.language === "ru" &&
+                      (item?.organization_name === "O'rmon xo'jaligini raqamlashtirish markazi davlat muassasasi" ||
+                        !item?.organization_name)
+                        ? t("compny_name")
+                        : item?.organization_name}
                     </TableCell>
                     <TableCell className="w-[20%] text-xs font-medium text-slate-700 dark:text-slate-200 border-none whitespace-normal break-words">
                       {item?.statement_name}
                     </TableCell>
                     <TableCell className="w-[15%] text-xs font-medium text-slate-600 dark:text-slate-300 border-none">
-                      {item?.submit_at}
+                      {i18n.language === "ru" && typeof item?.submit_at === "string"
+                        ? item.submit_at.replace("CHORAK", "КВАРТАЛ")
+                        : item?.submit_at}
                     </TableCell>
                     <TableCell className="w-[15%] text-xs font-medium text-slate-600 dark:text-slate-300 border-none">
                       {[
@@ -688,7 +703,7 @@ const TableColumn = forwardRef(
                             }
                           }}
                           disabled={isSending}
-                          className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+                          className="h-[40px] px-4 font-semibold rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
                         >
                           {isSending ? t("sending") : t("send2")}
                         </Button>
@@ -734,7 +749,7 @@ const TableColumn = forwardRef(
                         disabled={
                           isAccepting || acceptedReports.has(selectedRow.id)
                         }
-                        className="h-[40px] px-4 font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+                        className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
                       >
                         {isAccepting
                           ? "Qabul qilinmoqda..."

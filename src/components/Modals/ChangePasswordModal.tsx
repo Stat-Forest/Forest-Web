@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChangePasswordMutation } from "@/services/authApi";
 import {
   Dialog,
@@ -21,8 +21,30 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [changePassword, { isLoading }] = useChangePasswordMutation();
+
+  useEffect(() => {
+    if (!open) {
+      document.body.style.pointerEvents = "auto";
+      document.body.removeAttribute("data-scroll-locked");
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = "auto";
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      document.body.style.pointerEvents = "auto";
+      document.body.removeAttribute("data-scroll-locked");
+      setTimeout(() => {
+        document.body.style.pointerEvents = "auto";
+      }, 50);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +52,20 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
     setError("");
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      setError("Barcha maydonlar to‘ldirilishi shart");
+      setError(
+        i18n.language === "ru"
+          ? "Все поля обязательны для заполнения"
+          : "Barcha maydonlar to‘ldirilishi shart"
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Yangi parollar bir-biriga mos emas");
+      setError(
+        i18n.language === "ru"
+          ? "Новые пароли не совпадают"
+          : "Yangi parollar bir-biriga mos emas"
+      );
       return;
     }
 
@@ -46,25 +76,33 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
         confirm_password: confirmPassword,
       }).unwrap();
 
-      alert("Parol muvaffaqiyatli o‘zgartirildi");
+      alert(
+        i18n.language === "ru"
+          ? "Пароль успешно изменён"
+          : "Parol muvaffaqiyatli o‘zgartirildi"
+      );
 
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setOpen(false);
+      handleOpenChange(false);
     } catch (err: any) {
-      const msg = err?.data?.message || "Xatolik yuz berdi";
+      const msg =
+        err?.data?.message ||
+        (i18n.language === "ru" ? "Произошла ошибка" : "Xatolik yuz berdi");
       setError(msg);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent  className="p-8">
         <DialogHeader>
           <DialogTitle>{t("item_81")}</DialogTitle>
           <DialogDescription>
-            Parolingizni o'zgartirish uchun ma'lumotlarni kiriting
+            {i18n.language === "ru"
+              ? "Введите данные для изменения пароля"
+              : "Parolingizni o'zgartirish uchun ma'lumotlarni kiriting"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,7 +128,11 @@ export default function ChangePasswordModal({ open, setOpen }: Props) {
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <Button type="submit" disabled={isLoading} className="w-full bg-[#3B82F6] min-h-[40px] hover:bg-[#2563EB]">
-            {isLoading ? "Yuborilmoqda..." : t("changePassword")}
+            {isLoading
+              ? i18n.language === "ru"
+                ? "Отправка..."
+                : "Yuborilmoqda..."
+              : t("changePassword")}
           </Button>
         </form>
       </DialogContent>

@@ -37,6 +37,7 @@ function ResponsibleRepresentatives() {
     role: selectedRole,
     search: searchTerm,
     organization: selectedOrganization,
+    lang,
   });
 
   /* ORGANIZATIONS */

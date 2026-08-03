@@ -22,10 +22,10 @@ export const generalApi = createApi({
     }),
     getLandDocumentsReports: builder.query<
       any,
-      { ordering: string; page: number; per_page: number; search: string }
+      { ordering: string; page: number; per_page: number; search: string; lang?: string }
     >({
-      query: ({ ordering, page, per_page, search }) =>
-        `/land-documents/?ordering=${ordering}&page=${page}&per_page=${per_page}&search=${search}`,
+      query: ({ ordering, page, per_page, search, lang = "" }) =>
+        `/land-documents/?ordering=${ordering}&page=${page}&per_page=${per_page}&search=${search}${lang ? `&lang=${lang}` : ""}`,
       providesTags: ["Reports"],
     }),
     getHandbooks: builder.query<any, void>({

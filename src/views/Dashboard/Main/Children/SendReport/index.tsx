@@ -50,6 +50,7 @@ function MainDetail() {
     search: searchTerm,
     page: currentPage,
     per_page: pageSize,
+    lang: i18n.language,
   });
 
   const {
@@ -432,7 +433,7 @@ function MainDetail() {
           <div className="flex items-center gap-2.5 flex-wrap">
             <Button
               onClick={handleReset}
-              className="h-[40px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+              className="h-[40px] px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
             >
               {t("reset")}
             </Button>

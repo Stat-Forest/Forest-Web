@@ -139,7 +139,7 @@ function ResourceContainer({ reportName }: { reportName: string }) {
           search: searchTermReport,
           page: 1,
           per_page: 2000,
-          // time_status: "",
+          lang,
         }
       : skipToken,
   );
