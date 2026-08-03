@@ -442,16 +442,16 @@ function AllCreateReportItem() {
     <>
       <div className="p-6">
         <Button
-          className="min-w-[50px] min-h-[25px] bg-ice text-black text-sm border-1 border-black"
+          className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
           onClick={() => navigate(-1)}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
           <span className="text-sm">{t("back")}</span>
         </Button>
       </div>
       <form
         onSubmit={handleSubmit}
-        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${
+        className={`max-w-full m-6 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-6 bg-white dark:bg-slate-900 transition-colors ${
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
@@ -648,7 +648,7 @@ function AllCreateReportItem() {
                             type="text"
                             value={planItem?.plan_value || ""}
                             disabled
-                            className="bg-gray-100 cursor-not-allowed"
+                            className="bg-slate-100 dark:!bg-slate-950/80 dark:!text-slate-400 dark:!border-slate-800 cursor-not-allowed"
                           />
                         </TableCell>
                       </TableRow>

@@ -706,16 +706,16 @@ function PlantCreate() {
     <>
       <div className="p-6">
         <Button
-          className="min-w-[50px] min-h-[25px] bg-ice text-black text-sm border-1 border-black"
+          className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
           onClick={() => navigate(-1)}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
           <span className="text-sm">{t("back")}</span>
         </Button>
       </div>
       <form
         onSubmit={handleSubmit}
-        className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${
+        className={`max-w-full m-6 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-6 bg-white dark:bg-slate-900 transition-colors ${
           isSubmitting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
@@ -869,7 +869,7 @@ function PlantCreate() {
             {currentFormGroup.forms.map((form, formIndex) => (
               <div
                 key={formIndex}
-                className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
+                className="overflow-x-auto mb-6 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/80 dark:bg-slate-950/80 transition-colors shadow-xs"
               >
                 <div className="mb-4 flex justify-between items-center">
                   <h2 className="text-lg font-semibold">
@@ -1174,21 +1174,21 @@ function PlantCreate() {
             ))}
 
             {/* Formula qo'shish tugmasi */}
-            <div className="flex justify-center">
+            <div className="flex justify-center my-4">
               <Button
                 type="button"
                 onClick={() => handleAddForm(state.currentStep)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 !text-white font-semibold text-sm shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
               >
-                {t("add_new_form")}
+                + {t("add_new_form")}
               </Button>
             </div>
           </div>
         )}
 
         {/* Step boshqarish */}
-        <div className="flex justify-between items-center pt-4">
-          <div className="space-x-2">
+        <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="space-x-3">
             <Button
               type="button"
               variant="outline"
@@ -1199,6 +1199,7 @@ function PlantCreate() {
                 })
               }
               disabled={state.currentStep === 0 || isSubmitting}
+              className="h-10 px-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold text-sm transition-colors cursor-pointer"
             >
               {t("before")}
             </Button>
@@ -1213,13 +1214,14 @@ function PlantCreate() {
                   })
                 }
                 disabled={isSubmitting}
+                className="h-10 px-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold text-sm transition-colors cursor-pointer"
               >
                 {t("next")}
               </Button>
             )}
           </div>
           {state.currentStep === totalSteps - 1 && (
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 !text-white font-semibold text-sm shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer">
               {isSubmitting ? `⏳ ${t("sending")}` : t("submit")}
             </Button>
           )}
@@ -1228,22 +1230,22 @@ function PlantCreate() {
         {/* Foot note - faqat oxirgi qadamda */}
         {state.currentStep === totalSteps - 1 && (
           <div className="mt-6">
-            <label className="block mb-2 text-lg font-medium">
+            <label className="block mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100 font-sans">
               {t("note_optional")}
             </label>
             <Textarea
               value={footNote}
               onChange={(e) => setFootNote(e.target.value)}
               placeholder={t("enter_note")}
-              className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
+              className="min-h-[100px] rounded-2xl bg-white dark:!bg-slate-950 border border-slate-200 dark:!border-slate-800 text-slate-800 dark:!text-slate-100 placeholder:text-slate-400 p-4 font-sans text-sm shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               rows={4}
             />
           </div>
         )}
 
         {/* Tanlangan o'simliklarni ko'rsatish */}
-        <div className="mt-4 p-4 bg-gray-50 rounded">
-          <h3 className="font-semibold mb-2">{t("selected_plants")}</h3>
+        <div className="mt-6 p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs transition-colors">
+          <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-3 font-sans">{t("selected_plants")}</h3>
           {state.formGroups.map((group: FormGroup) =>
             group.forms.map((form, formIndex) => {
               const plantName = form.plantId
@@ -1256,15 +1258,17 @@ function PlantCreate() {
               return (
                 <div
                   key={`${group.step}-${formIndex}`}
-                  className="text-sm mb-1 p-2 bg-white rounded border"
+                  className="text-sm mb-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 font-sans text-slate-800 dark:text-slate-200 shadow-xs flex items-center justify-between"
                 >
-                  <strong>
-                    {t("step")} {group.step + 1} {t("form")} {formIndex + 1}:
-                  </strong>{" "}
-                  {plantName}
+                  <div>
+                    <strong className="font-semibold text-blue-600 dark:text-blue-400">
+                      {t("step")} {group.step + 1} {t("form")} {formIndex + 1}:
+                    </strong>{" "}
+                    <span className="font-medium">{plantName}</span>
+                  </div>
                   {plantCategory && (
-                    <span className="text-gray-500 ml-2">
-                      ({plantCategory})
+                    <span className="text-xs text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                      {plantCategory}
                     </span>
                   )}
                 </div>
