@@ -71,8 +71,8 @@
   --card-foreground: #2a2a2a;
   --popover: #ffffff;
   --popover-foreground: #2a2a2a;
-  --primary: #4d4d4d;
-  --primary-foreground: #f0f0f0;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
   --secondary: #f7f7f7;
   --secondary-foreground: #4d4d4d;
   --muted: #f7f7f7;
@@ -109,8 +109,8 @@
   --card-foreground: #f0f0f0;
   --popover: #4d4d4d;
   --popover-foreground: #f0f0f0;
-  --primary: #e6e6e6;
-  --primary-foreground: #4d4d4d;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
   --secondary: #4b4b4b;
   --secondary-foreground: #f0f0f0;
   --muted: #4b4b4b;
@@ -533,7 +533,7 @@ html.dark [data-slot="sheet-content"] a:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
-/* ✅ Glass ichida input/select/textarea border va text kontrasti */
+/* ✅ Glass ichida input/select/textarea border va text kontrasti (Light Mode) */
 .bg-ice [data-slot="input"],
 .bg-ice [data-slot="select-trigger"],
 .bg-ice textarea,
@@ -561,15 +561,94 @@ html.dark [data-slot="sheet-content"] a:hover {
   border-color: rgba(59, 130, 246, 0.25);
 }
 
-/* Sidebar qish vibe uchun qo'shimcha stillar */
-.sidebar-gradient {
-  background: white;
+/* ✅ Glass ichida input/select/textarea va bg-ice containerlar (Dark Mode) */
+html.dark .bg-ice,
+html.dark .bg-ice-strong,
+html.dark .bg-ice-light {
+  background: rgba(15, 23, 42, 0.88) !important;
+  color: #f8fafc !important;
+  border-color: rgba(51, 65, 85, 0.7) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
-html.dark .sidebar-gradient {
-  background: #111827;
-  color: #e2e8f0;
+/* ✅ Light Mode: Editable vs Disabled inputs */
+html:not(.dark) .bg-ice [data-slot="input"]:not(:disabled),
+html:not(.dark) .bg-ice [data-slot="select-trigger"]:not(:disabled),
+html:not(.dark) .bg-ice textarea:not(:disabled),
+html:not(.dark) .bg-ice select:not(:disabled),
+html:not(.dark) table input:not(:disabled):not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) table select:not(:disabled),
+html:not(.dark) table textarea:not(:disabled) {
+  background-color: #f0f7ff !important;
+  border: 1.5px solid #3b82f6 !important;
+  color: #0f172a !important;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+  transition: all 0.2s ease;
 }
+
+html:not(.dark) .bg-ice [data-slot="input"]:disabled,
+html:not(.dark) .bg-ice [data-slot="select-trigger"]:disabled,
+html:not(.dark) .bg-ice textarea:disabled,
+html:not(.dark) .bg-ice select:disabled,
+html:not(.dark) table input:disabled,
+html:not(.dark) table select:disabled,
+html:not(.dark) table textarea:disabled {
+  background-color: #e2e8f0 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+
+/* ✅ Dark Mode: Editable inputs (Oq emas, sal to'qroq ko'k-slate, ko'k nurli chegara bilan!) */
+html.dark .bg-ice [data-slot="input"]:not(:disabled),
+html.dark .bg-ice [data-slot="select-trigger"]:not(:disabled),
+html.dark .bg-ice textarea:not(:disabled),
+html.dark .bg-ice select:not(:disabled),
+html.dark table input:not(:disabled):not([type="checkbox"]):not([type="radio"]),
+html.dark table select:not(:disabled),
+html.dark table textarea:not(:disabled) {
+  background-color: rgba(30, 58, 138, 0.45) !important;
+  border: 1.5px solid #3b82f6 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.25);
+  transition: all 0.2s ease;
+}
+
+html.dark .bg-ice [data-slot="input"]:not(:disabled):hover,
+html.dark table input:not(:disabled):hover,
+html.dark .bg-ice [data-slot="input"]:not(:disabled):focus,
+html.dark table input:not(:disabled):focus {
+  background-color: rgba(30, 58, 138, 0.65) !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
+}
+
+/* ✅ Dark Mode: Disabled / Read-Only inputs (Juda to'q zamin va xira matn, taqiqlangan) */
+html.dark .bg-ice [data-slot="input"]:disabled,
+html.dark .bg-ice [data-slot="select-trigger"]:disabled,
+html.dark .bg-ice textarea:disabled,
+html.dark .bg-ice select:disabled,
+html.dark table input:disabled,
+html.dark table select:disabled,
+html.dark table textarea:disabled,
+html.dark input:disabled.bg-gray-100,
+html.dark input:disabled.bg-slate-100 {
+  background-color: rgba(9, 14, 26, 0.95) !important;
+  border: 1px solid rgba(51, 65, 85, 0.5) !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  opacity: 0.65;
+  box-shadow: none !important;
+}
+
+html.dark .bg-ice hr {
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Sidebar theme transitions */
 
 /* ============================================================
    Sidebar dark mode styling

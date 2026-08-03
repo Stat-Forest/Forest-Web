@@ -498,7 +498,7 @@ function AllUpdateReportItem() {
                             type="text"
                             value={planValue}
                             disabled
-                            className="bg-gray-100 cursor-not-allowed"
+                            className="bg-slate-100 dark:!bg-slate-950/80 dark:!text-slate-400 dark:!border-slate-800 cursor-not-allowed"
                           />
                         </TableCell>
                       </TableRow>
@@ -582,7 +582,7 @@ function AllUpdateReportItem() {
             )}
           </div>
           {currentStep === totalSteps - 1 && (
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 !text-white font-semibold text-sm shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer">
               {isSubmitting ? `⏳ ${t("updating")}` : t("update")}
             </Button>
           )}
