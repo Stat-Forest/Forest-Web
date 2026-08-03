@@ -222,20 +222,28 @@ function SupportAdmin() {
 
   return (
     <div className="p-4 h-[calc(100vh-88px)]">
-      <div className="h-full rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden flex flex-col md:flex-row">
-        <aside className="w-full md:w-[340px] border-r border-slate-200 bg-slate-50 flex flex-col">
-          <div className="p-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-800">Support</h2>
+      <div className="h-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden flex flex-col md:flex-row transition-colors">
+        <aside className="w-full md:w-[340px] border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex flex-col shrink-0">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Support</h2>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => setTab("new")}
-                className={`px-3 py-2 rounded-md text-sm ${tab === "new" ? "bg-emerald-600 text-white" : "bg-white border border-slate-300"}`}
+                className={`px-3 py-2 rounded-md text-sm transition ${
+                  tab === "new"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
               >
                 Yangi ({newConversations.length})
               </button>
               <button
                 onClick={() => setTab("my")}
-                className={`px-3 py-2 rounded-md text-sm ${tab === "my" ? "bg-emerald-600 text-white" : "bg-white border border-slate-300"}`}
+                className={`px-3 py-2 rounded-md text-sm transition ${
+                  tab === "my"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
               >
                 Mening ({myConversations.length})
               </button>
@@ -244,7 +252,7 @@ function SupportAdmin() {
 
           <div className="flex-1 overflow-y-auto">
             {currentList.length === 0 ? (
-              <p className="p-4 text-sm text-slate-500">Suhbatlar topilmadi.</p>
+              <p className="p-4 text-sm text-slate-500 dark:text-slate-400">Suhbatlar topilmadi.</p>
             ) : (
               currentList.map((conversation: ChatConversation) => {
                 const isActive = conversation.id === activeConversationId;
@@ -252,14 +260,16 @@ function SupportAdmin() {
                   <button
                     key={conversation.id}
                     onClick={() => setActiveConversationId(conversation.id)}
-                    className={`w-full text-left px-4 py-3 border-b border-slate-200 ${
-                      isActive ? "bg-emerald-50" : "hover:bg-slate-100"
+                    className={`w-full text-left px-4 py-3 border-b border-slate-200 dark:border-slate-800/60 transition ${
+                      isActive
+                        ? "bg-emerald-50 dark:bg-emerald-950/50"
+                        : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                     }`}
                   >
-                    <p className="font-medium text-slate-800 truncate">
+                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
                       {formatUserName(conversation.user)}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       #{conversation.id.slice(0, 8)} · {conversation.created_at}
                     </p>
                     {!!conversation.unread_count && (
@@ -274,11 +284,11 @@ function SupportAdmin() {
           </div>
         </aside>
 
-        <section className="flex-1 flex flex-col min-h-0">
-          <header className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
+        <section className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900">
+          <header className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
             <div>
-              <p className="text-sm text-slate-500">Support Administrator</p>
-              <p className="text-base font-semibold text-slate-900">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Support Administrator</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {activeConversation
                   ? formatUserName(activeConversation.user)
                   : "Suhbat tanlanmagan"}
@@ -288,7 +298,9 @@ function SupportAdmin() {
             <div className="flex items-center gap-2">
               <span
                 className={`text-xs font-medium px-3 py-1 rounded-full ${
-                  wsConnected ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                  wsConnected
+                    ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300"
+                    : "bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300"
                 }`}
               >
                 {wsConnected ? "Onlayn" : queuedCount > 0 ? `Navbatda ${queuedCount}` : "Ulanmoqda"}
@@ -297,7 +309,7 @@ function SupportAdmin() {
                 <button
                   onClick={handleAssign}
                   disabled={!activeConversationId || assignLoading}
-                  className="px-3 py-2 rounded-md bg-blue-600 text-white text-sm disabled:opacity-60"
+                  className="px-3 py-2 rounded-md bg-blue-600 text-white text-sm disabled:opacity-60 transition hover:bg-blue-700"
                 >
                   Qabul qilish
                 </button>
@@ -306,7 +318,7 @@ function SupportAdmin() {
                 <button
                   onClick={handleClose}
                   disabled={!activeConversationId || closeLoading}
-                  className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm disabled:opacity-60"
+                  className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm disabled:opacity-60 transition hover:bg-rose-700"
                 >
                   Yopish
                 </button>
@@ -314,27 +326,27 @@ function SupportAdmin() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-5 bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">
+          <div className="flex-1 overflow-y-auto p-5 bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] dark:bg-none dark:bg-slate-950">
             {!activeConversationId ? (
-              <div className="h-full grid place-items-center text-slate-500">Suhbat tanlang.</div>
+              <div className="h-full grid place-items-center text-slate-500 dark:text-slate-400">Suhbat tanlang.</div>
             ) : messagesLoading && mergedMessages.length === 0 ? (
-              <div className="h-full grid place-items-center text-slate-500">Xabarlar yuklanmoqda...</div>
+              <div className="h-full grid place-items-center text-slate-500 dark:text-slate-400">Xabarlar yuklanmoqda...</div>
             ) : mergedMessages.length === 0 ? (
-              <div className="h-full grid place-items-center text-slate-500">Xabarlar yo'q.</div>
+              <div className="h-full grid place-items-center text-slate-500 dark:text-slate-400">Xabarlar yo'q.</div>
             ) : (
               mergedMessages.map((msg) => {
                 const mine = resolveSenderId(msg.sender) === userId;
                 return (
                   <div key={msg.id} className={`mb-3 flex ${mine ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
                         mine
                           ? "bg-emerald-600 text-white rounded-br-md"
-                          : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
+                          : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-md"
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                      <p className={`mt-1 text-[11px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>
+                      <p className={`mt-1 text-[11px] ${mine ? "text-emerald-100" : "text-slate-400 dark:text-slate-400"}`}>
                         {formatChatTime(msg.created_at)}
                       </p>
                     </div>
@@ -345,9 +357,9 @@ function SupportAdmin() {
             <div ref={bottomRef} />
           </div>
 
-          <form onSubmit={handleSend} className="p-4 border-t border-slate-200 bg-white">
+          <form onSubmit={handleSend} className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             {!canReply && activeConversationId && (
-              <p className="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <p className="mb-3 text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-lg px-3 py-2">
                 Javob berish uchun avval suhbatni "Qabul qilish" tugmasi orqali oling.
               </p>
             )}
@@ -358,12 +370,12 @@ function SupportAdmin() {
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={canReply ? "Javob yozing..." : "Avval suhbatni qabul qiling..."}
                 disabled={!activeConversationId || !canReply}
-                className="flex-1 h-12 rounded-xl border border-slate-300 px-4 outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
+                className="flex-1 h-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50"
               />
               <button
                 type="submit"
                 disabled={!activeConversationId || !canReply || !draft.trim()}
-                className="h-12 rounded-xl bg-emerald-600 px-6 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="h-12 rounded-xl bg-emerald-600 px-6 font-medium text-white hover:bg-emerald-700 disabled:opacity-60 transition"
               >
                 Yuborish
               </button>

@@ -285,37 +285,39 @@ html.dark [data-slot="dropdown-menu-content"] button span {
 
 /* Tables and cells in dark mode */
 html.dark table {
-  color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 html.dark table th,
 html.dark table td {
-  color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 html.dark thead th {
-  color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 /* Inputs, Selects, Textareas in dark mode */
 html.dark input:not([type="checkbox"]):not([type="radio"]),
 html.dark select,
 html.dark textarea {
-  color: #0f172a !important;
-  background-color: #ffffff !important;
+  color: #f8fafc !important;
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 
 /* Select dropdown triggers and items */
 html.dark [data-slot="select-trigger"],
 html.dark [data-slot="select-content"],
 html.dark [data-slot="select-item"] {
-  color: #0f172a !important;
-  background-color: #ffffff !important;
+  color: #f8fafc !important;
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
 }
 
 /* Colored buttons & icons override to stay white */
