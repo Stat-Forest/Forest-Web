@@ -64,6 +64,14 @@ function RecurceTable() {
     }
   };
 
+
+
+
+
+
+
+
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -84,7 +92,7 @@ function RecurceTable() {
         </div>
       </div>
 
-      <div ref={tableRef} style={{overflow:"auto"}} dangerouslySetInnerHTML={{ __html: htmlContent }} />
+      <div ref={tableRef} style={{ overflow: "auto" }} dangerouslySetInnerHTML={{ __html: htmlContent }} />
 
       {/* Excel uchun custom style */}
       <style>{`
