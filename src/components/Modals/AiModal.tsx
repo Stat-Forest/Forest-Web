@@ -114,6 +114,7 @@ function extractErrorText(err: unknown): string {
 }
 
 function AiModal({ open, onOpenChange }: Props) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",

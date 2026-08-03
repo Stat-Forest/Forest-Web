@@ -29,7 +29,7 @@ function stateSelectorUserId(user: RootState["auth"]["user"]): string {
 }
 
 function SupportChatWidget() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isRu = i18n.language === "ru";
   const token = useSelector((state: RootState) => state.auth.token);
   const userId = String(

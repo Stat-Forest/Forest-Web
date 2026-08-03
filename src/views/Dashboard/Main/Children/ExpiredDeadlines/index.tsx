@@ -26,7 +26,6 @@ import {
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { getSimpleCookie } from "@/utils/cookie";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
