@@ -64,7 +64,7 @@ export default function FiltersSection({
       data-aos-delay="100"
     >
       <span className="font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-h-[40px] py-2 px-3.5 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2 shadow-xs transition-colors">
-        Davrni tanlang va umumiy hisobotlarni oling <ArrowRight size={16} />
+        {t("select_period_hint")} <ArrowRight size={16} />
       </span>
 
       <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
@@ -73,12 +73,12 @@ export default function FiltersSection({
           data-aos="fade-up"
           data-aos-delay="160"
         >
-          <SelectValue placeholder={`${t("reportType")}`} />
+          <SelectValue placeholder={`${t("report_type") || t("reportType")}`} />
         </SelectTrigger>
         <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
           {deadline?.results?.length > 0 ? (
             <>
-              <SelectItem value=" " className="dark:text-slate-100">{`${t("allReports")}`}</SelectItem>
+              <SelectItem value=" " className="dark:text-slate-100">{`${t("all")}`}</SelectItem>
               {deadline.results.map((item: any) => (
                 <SelectItem key={item.id} value={item.id} className="dark:text-slate-100">
                   {item.submit_at}
@@ -134,14 +134,14 @@ export default function FiltersSection({
           data-aos="fade-up"
           data-aos-delay="180"
         >
-          <SelectValue placeholder="Chorak" />
+          <SelectValue placeholder={t("quarter")} />
         </SelectTrigger>
         <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
-          <SelectItem value="all" className="dark:text-slate-100">Barchasi</SelectItem>
-          <SelectItem value="q1" className="dark:text-slate-100">1-chorak</SelectItem>
-          <SelectItem value="q2" className="dark:text-slate-100">2-chorak</SelectItem>
-          <SelectItem value="q3" className="dark:text-slate-100">3-chorak</SelectItem>
-          <SelectItem value="q4" className="dark:text-slate-100">4-chorak</SelectItem>
+          <SelectItem value="all" className="dark:text-slate-100">{t("all")}</SelectItem>
+          <SelectItem value="q1" className="dark:text-slate-100">{t("quarter_1")}</SelectItem>
+          <SelectItem value="q2" className="dark:text-slate-100">{t("quarter_2")}</SelectItem>
+          <SelectItem value="q3" className="dark:text-slate-100">{t("quarter_3")}</SelectItem>
+          <SelectItem value="q4" className="dark:text-slate-100">{t("quarter_4")}</SelectItem>
         </SelectContent>
       </Select>
 

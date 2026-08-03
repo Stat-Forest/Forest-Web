@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { MessageCircle, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { RootState } from "@/app/store";
 import {
   ChatConversation,
@@ -28,6 +29,8 @@ function stateSelectorUserId(user: RootState["auth"]["user"]): string {
 }
 
 function SupportChatWidget() {
+  const { i18n } = useTranslation();
+  const isRu = i18n.language === "ru";
   const token = useSelector((state: RootState) => state.auth.token);
   const userId = String(
     stateSelectorUserId(useSelector((state: RootState) => state.auth.user))
@@ -187,7 +190,11 @@ function SupportChatWidget() {
       setIsOpen(true);
       refetchConversations();
     } catch {
-      alert("Chat yaratib bo'lmadi. Qaytadan urinib ko'ring.");
+      alert(
+        isRu
+          ? "Не удалось создать чат. Попробуйте еще раз."
+          : "Chat yaratib bo'lmadi. Qaytadan urinib ko'ring."
+      );
     }
   };
 
@@ -228,16 +235,26 @@ function SupportChatWidget() {
                 disabled={creatingConversation}
                 className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
               >
-                {creatingConversation ? "Yaratilmoqda..." : "Yangi chat"}
+                {creatingConversation
+                  ? isRu
+                    ? "Создание..."
+                    : "Yaratilmoqda..."
+                  : isRu
+                    ? "Новый чат"
+                    : "Yangi chat"}
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto">
               {conversationsLoading ? (
-                <p className="p-4 text-sm text-slate-500">Chatlar yuklanmoqda...</p>
+                <p className="p-4 text-sm text-slate-500">
+                  {isRu ? "Загрузка чатов..." : "Chatlar yuklanmoqda..."}
+                </p>
               ) : conversations.length === 0 ? (
                 <p className="p-4 text-sm text-slate-500">
-                  Sizda hali chat yo'q. "Yangi chat" ni bosing.
+                  {isRu
+                    ? 'У вас пока нет чатов. Нажмите "Новый чат".'
+                    : 'Sizda hali chat yo\'q. "Yangi chat" ni bosing.'}
                 </p>
               ) : (
                 conversations.map((conversation: ChatConversation) => {
@@ -252,7 +269,9 @@ function SupportChatWidget() {
                     >
                       <div className="flex items-center justify-between gap-3">
                         <p className="font-medium text-slate-800 truncate">
-                          Murojaat #{conversation.id.slice(0, 8)}
+                          {isRu
+                            ? `Обращение #${conversation.id.slice(0, 8)}`
+                            : `Murojaat #${conversation.id.slice(0, 8)}`}
                         </p>
                         {!!conversation.unread_count && (
                           <span className="min-w-5 h-5 rounded-full bg-rose-500 px-1 text-center text-xs leading-5 text-white">
@@ -273,11 +292,17 @@ function SupportChatWidget() {
           <section className="flex-1 flex flex-col min-h-0">
             <header className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
               <div>
-                <p className="text-sm text-slate-500">Operator bilan muloqot</p>
+                <p className="text-sm text-slate-500">
+                  {isRu ? "Связь с оператором" : "Operator bilan muloqot"}
+                </p>
                 <p className="text-base font-semibold text-slate-900">
                   {activeConversation
-                    ? `Murojaat #${activeConversation.id.slice(0, 8)}`
-                    : "Chat tanlanmagan"}
+                    ? isRu
+                      ? `Обращение #${activeConversation.id.slice(0, 8)}`
+                      : `Murojaat #${activeConversation.id.slice(0, 8)}`
+                    : isRu
+                      ? "Чат не выбран"
+                      : "Chat tanlanmagan"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -288,12 +313,22 @@ function SupportChatWidget() {
                       : "bg-amber-100 text-amber-700"
                   }`}
                 >
-                  {wsConnected ? "Onlayn" : queuedCount > 0 ? `Navbatda ${queuedCount}` : "Ulanmoqda"}
+                  {wsConnected
+                    ? isRu
+                      ? "Онлайн"
+                      : "Onlayn"
+                    : queuedCount > 0
+                      ? isRu
+                        ? `В очереди ${queuedCount}`
+                        : `Navbatda ${queuedCount}`
+                      : isRu
+                        ? "Подключение..."
+                        : "Ulanmoqda"}
                 </span>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="h-8 w-8 grid place-items-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100"
-                  aria-label="Chatni yopish"
+                  aria-label={isRu ? "Закрыть чат" : "Chatni yopish"}
                 >
                   <X size={16} />
                 </button>
@@ -303,15 +338,17 @@ function SupportChatWidget() {
             <div className="flex-1 overflow-y-auto p-5 bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">
               {!activeConversation ? (
                 <div className="h-full grid place-items-center text-slate-500">
-                  Chap tomondan chat tanlang yoki yangi chat yarating.
+                  {isRu
+                    ? "Выберите чат слева или создайте новый чат."
+                    : "Chap tomondan chat tanlang yoki yangi chat yarating."}
                 </div>
               ) : messagesLoading && mergedMessages.length === 0 ? (
                 <div className="h-full grid place-items-center text-slate-500">
-                  Xabarlar yuklanmoqda...
+                  {isRu ? "Загрузка сообщений..." : "Xabarlar yuklanmoqda..."}
                 </div>
               ) : mergedMessages.length === 0 ? (
                 <div className="h-full grid place-items-center text-slate-500">
-                  Hozircha xabarlar mavjud emas.
+                  {isRu ? "Пока нет сообщений." : "Hozircha xabarlar mavjud emas."}
                 </div>
               ) : (
                 mergedMessages.map((msg) => {
@@ -356,7 +393,9 @@ function SupportChatWidget() {
                   type="text"
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Xabaringizni yozing..."
+                  placeholder={
+                    isRu ? "Введите ваше сообщение..." : "Xabaringizni yozing..."
+                  }
                   disabled={!activeConversationId}
                   className="flex-1 h-12 rounded-xl border border-slate-300 px-4 outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
                 />
@@ -365,7 +404,7 @@ function SupportChatWidget() {
                   disabled={!activeConversationId || !draft.trim()}
                   className="h-12 rounded-xl bg-emerald-600 px-6 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
                 >
-                  Yuborish
+                  {isRu ? "Отправить" : "Yuborish"}
                 </button>
               </div>
             </form>

@@ -17,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
-import { getSimpleCookie } from "@/utils/cookie";
 import { exportReportsToExcel } from "@/utils/exportToExcel";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -34,8 +33,8 @@ function ReceivedReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
-  const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
+  const lang = i18n.language || "uz";
   const deadline_at = false;
 
   const {
@@ -50,6 +49,7 @@ function ReceivedReport() {
     search: searchTerm,
     page: currentPage,
     per_page: pageSize,
+    lang,
   });
 
   const {

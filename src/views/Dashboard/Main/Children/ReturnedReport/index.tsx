@@ -17,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { resetReportsFilter, setReportsFilter } from "@/features/uiSlice";
-import { getSimpleCookie } from "@/utils/cookie";
 import { exportReportsToExcel } from "@/utils/exportToExcel";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -35,7 +34,7 @@ function ReturnedReport() {
   const [pageSize] = useState(10);
 
   const { t, i18n } = useTranslation();
-  const lang = getSimpleCookie("lang") || "uz";
+  const lang = i18n.language || "uz";
   const deadline_at = false;
 
   const {
@@ -50,6 +49,7 @@ function ReturnedReport() {
     search: searchTerm,
     page: currentPage,
     per_page: pageSize,
+    lang,
   });
 
   const {
@@ -432,7 +432,7 @@ function ReturnedReport() {
           <div className="flex items-center gap-3 flex-wrap">
             <Button
               onClick={handleReset}
-              className="bg-[#3B82F6] text-[white] hover:bg-[#2563EB] cursor-pointer"
+              className="h-[40px] px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
             >
               {t("reset")}
             </Button>

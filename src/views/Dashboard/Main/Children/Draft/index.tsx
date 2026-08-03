@@ -15,7 +15,6 @@ import {
 } from "@/services/reportsApi";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { getSimpleCookie } from "@/utils/cookie";
 import { exportReportsToExcel } from "@/utils/exportToExcel";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -27,8 +26,8 @@ function Draft() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
-  const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
+  const lang = i18n.language || "uz";
   const deadline_at = false;
 
   const {
@@ -43,6 +42,7 @@ function Draft() {
     search: searchTerm,
     page: currentPage,
     per_page: pageSize,
+    lang,
   });
 
   const {

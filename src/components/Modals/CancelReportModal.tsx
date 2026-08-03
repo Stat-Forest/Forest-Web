@@ -72,9 +72,9 @@ export default function CancelReportModal({ open, setOpen, reportId }: Props) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white min-h-[40px]"
+            className="w-full bg-red-600 hover:bg-red-700 text-white min-h-[40px] rounded-xl font-semibold cursor-pointer shadow-xs transition-all active:scale-95"
           >
-            {isLoading ? "Yuborilmoqda..." : "Jonatish"}
+            {isLoading ? "Qaytarilmoqda..." : "Qaytarish"}
           </Button>
         </form>
       </DialogContent>
