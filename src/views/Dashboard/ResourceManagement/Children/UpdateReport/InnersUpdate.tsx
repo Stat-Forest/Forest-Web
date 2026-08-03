@@ -712,7 +712,7 @@ function InnersUpdateReportItem() {
                             type="text"
                             value={planValue}
                             disabled
-                            className="bg-gray-100 cursor-not-allowed"
+                            className="bg-slate-100 dark:!bg-slate-950/80 dark:!text-slate-400 dark:!border-slate-800 cursor-not-allowed"
                           />
                         </TableCell>
                       </TableRow>
@@ -775,7 +775,7 @@ function InnersUpdateReportItem() {
             )}
           </div>
           {currentStep === totalSteps - 1 && (
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 !text-white font-semibold text-sm shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer">
               {isSubmitting ? `⏳ ${t("updating")}` : t("update")}
             </Button>
           )}
@@ -783,15 +783,15 @@ function InnersUpdateReportItem() {
 
         {/* Foot note - faqat oxirgi qadamda */}
         {currentStep === totalSteps - 1 && (
-          <div className="mt-6">
-            <label className="block mb-2 text-lg font-medium">
+          <div className="mt-6 pb-4">
+            <label className="block mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100 font-sans">
               {t("note_optional")}
             </label>
             <Textarea
               value={footNote}
               onChange={(e) => setFootNote(e.target.value)}
               placeholder={t("enter_note")}
-              className="min-h-[100px] bg-ice border-white/30 focus:border-[#3B82F6]"
+              className="min-h-[100px] rounded-2xl bg-white dark:!bg-slate-900 border border-slate-200 dark:!border-slate-800 text-slate-800 dark:!text-slate-100 placeholder:text-slate-400 p-4 font-sans text-sm shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               rows={4}
             />
           </div>
