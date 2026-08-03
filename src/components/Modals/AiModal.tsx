@@ -176,7 +176,7 @@ function AiModal({ open, onOpenChange }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]">
-      <div className="flex h-[92vh] max-h-[960px] w-full max-w-[1010px] flex-col overflow-hidden rounded-[36px] bg-[#F3F4F6] shadow-2xl">
+      <div className="flex h-[92vh] max-h-[960px] w-full max-w-[1010px] flex-col overflow-hidden rounded-[36px] bg-[#F3F4F6] dark:bg-slate-900 border border-transparent dark:border-slate-800 shadow-2xl transition-colors">
         <div className="flex min-h-[102px] items-center justify-between bg-gradient-to-r from-[#2563EB] via-[#3347D6] to-[#4F2FD3] px-9 py-6 text-white">
           <div className="flex items-center gap-4">
             <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] bg-white/12 backdrop-blur">
@@ -199,7 +199,7 @@ function AiModal({ open, onOpenChange }: Props) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-9 py-9">
+        <div className="flex-1 overflow-y-auto px-9 py-9 bg-[#F3F4F6] dark:bg-slate-950">
           <div className="space-y-8">
             {messages.map((msg, i) => {
               const isUser = msg.role === "user";
@@ -226,8 +226,8 @@ function AiModal({ open, onOpenChange }: Props) {
                       isUser
                         ? "rounded-tr-[10px] border-[#4F46E5] bg-[#4F46E5] text-white"
                         : msg.isError
-                          ? "rounded-tl-[10px] border-red-200 bg-red-50 text-red-700"
-                          : "rounded-tl-[10px] border-[#D8DEE8] bg-white text-[#1F2937]"
+                          ? "rounded-tl-[10px] border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300"
+                          : "rounded-tl-[10px] border-[#D8DEE8] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#1F2937] dark:text-slate-100"
                     }`}
                   >
                     {msg.text}
@@ -248,7 +248,7 @@ function AiModal({ open, onOpenChange }: Props) {
                   <Sparkles className="h-5 w-5 text-[#FFD84D]" />
                 </div>
 
-                <div className="rounded-[26px] rounded-tl-[10px] border border-[#D8DEE8] bg-white px-6 py-5 text-[17px] text-[#6B7280] shadow-sm">
+                <div className="rounded-[26px] rounded-tl-[10px] border border-[#D8DEE8] dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-5 text-[17px] text-[#6B7280] dark:text-slate-400 shadow-sm">
                   {t("ai_writing")}
                 </div>
               </div>
@@ -258,8 +258,8 @@ function AiModal({ open, onOpenChange }: Props) {
           </div>
         </div>
 
-        <div className="border-t border-[#E5E7EB] bg-[#F7F7F8] px-6 pb-6 pt-5">
-          <div className="mx-auto flex w-full items-center gap-4 rounded-[26px] border border-[#D6DBE3] bg-[#EEF1F5] px-7 py-3 shadow-sm">
+        <div className="border-t border-[#E5E7EB] dark:border-slate-800 bg-[#F7F7F8] dark:bg-slate-900 px-6 pb-6 pt-5">
+          <div className="mx-auto flex w-full items-center gap-4 rounded-[26px] border border-[#D6DBE3] dark:border-slate-700 bg-[#EEF1F5] dark:bg-slate-800 px-7 py-3 shadow-sm">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -270,7 +270,7 @@ function AiModal({ open, onOpenChange }: Props) {
                   handleSend();
                 }
               }}
-              className="h-[56px] flex-1 bg-transparent text-[18px] text-[#1F2937] outline-none placeholder:text-[#98A2B3]"
+              className="h-[56px] flex-1 bg-transparent text-[18px] text-[#1F2937] dark:text-slate-100 outline-none placeholder:text-[#98A2B3] dark:placeholder:text-slate-400"
             />
 
             <button
@@ -283,7 +283,7 @@ function AiModal({ open, onOpenChange }: Props) {
             </button>
           </div>
 
-          <p className="mt-5 text-center text-[14px] font-medium text-[#94A3B8]">
+          <p className="mt-5 text-center text-[14px] font-medium text-[#94A3B8] dark:text-slate-400">
             AI xato qilishi mumkin. Muhim ma&apos;lumotlarni tekshirib
             ko&apos;ring.
           </p>
