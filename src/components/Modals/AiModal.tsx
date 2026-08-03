@@ -1,6 +1,7 @@
 import { useCreateAiChatMutation } from "@/services/uniqeApi";
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, SendHorizonal, UserRound, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -113,6 +114,7 @@ function extractErrorText(err: unknown): string {
 }
 
 function AiModal({ open, onOpenChange }: Props) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -183,7 +185,7 @@ function AiModal({ open, onOpenChange }: Props) {
 
             <div>
               <h2 className="text-[22px] font-bold leading-none">
-                STAT-URMON Aqlli Yordamchisi
+                {t("ai_assistant_title")}
               </h2>
             </div>
           </div>
@@ -247,7 +249,7 @@ function AiModal({ open, onOpenChange }: Props) {
                 </div>
 
                 <div className="rounded-[26px] rounded-tl-[10px] border border-[#D8DEE8] bg-white px-6 py-5 text-[17px] text-[#6B7280] shadow-sm">
-                  AI yozmoqda...
+                  {t("ai_writing")}
                 </div>
               </div>
             )}
@@ -261,7 +263,7 @@ function AiModal({ open, onOpenChange }: Props) {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Savolingizni bu yerga yozing..."
+              placeholder={t("ai_placeholder")}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();

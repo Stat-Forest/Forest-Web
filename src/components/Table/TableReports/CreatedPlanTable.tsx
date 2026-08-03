@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { toast } from "react-toastify";
+import { translateStatementName } from "@/utils/i18nHelpers";
 
 interface CreatedPlantableProps {
   data: any[];
@@ -29,7 +30,7 @@ function CreatedPlantable({
   perPage,
 }: CreatedPlantableProps) {
   const [deletePlan] = useDeletePlanMutation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [openRow, setOpenRow] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -62,53 +63,58 @@ function CreatedPlantable({
   };
 
   return (
-    <Table className="w-full">
-      <TableHeader>
-        <TableRow className="bg-[#eaeaea] h-[50px]">
-          <TableHead className="w-[5%] text-lg pl-2 text-[#717171] text-left rounded-tl-lg rounded-bl-lg border-none">
-            №
-          </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
-            {t("item_12")}
-          </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
-            {t("item_83")}
-          </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[15%] text-left border-none">
-            {t("item_14")}
-          </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none">
-            {t("item_15")}
-          </TableHead>
-          <TableHead className="text-[#717171] text-lg w-[20%] text-left border-none rounded-tr-lg rounded-br-lg"></TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors shadow-xs">
+      <Table className="w-full">
+        <TableHeader>
+          <TableRow className="bg-slate-100/90 dark:bg-slate-800/90 h-[50px] border-b border-slate-200 dark:border-slate-700">
+            <TableHead className="w-[5%] text-sm font-semibold pl-3 text-slate-700 dark:text-slate-200 text-left border-none">
+              №
+            </TableHead>
+            <TableHead className="text-slate-700 dark:text-slate-200 text-sm font-semibold w-[20%] text-left border-none">
+              {t("item_12")}
+            </TableHead>
+            <TableHead className="text-slate-700 dark:text-slate-200 text-sm font-semibold w-[20%] text-left border-none">
+              {t("item_83")}
+            </TableHead>
+            <TableHead className="text-slate-700 dark:text-slate-200 text-sm font-semibold w-[15%] text-left border-none">
+              {t("item_14")}
+            </TableHead>
+            <TableHead className="text-slate-700 dark:text-slate-200 text-sm font-semibold w-[20%] text-left border-none">
+              {t("item_15")}
+            </TableHead>
+            <TableHead className="text-slate-700 dark:text-slate-200 text-sm font-semibold w-[20%] text-left border-none"></TableHead>
+          </TableRow>
+        </TableHeader>
 
-      <TableBody>
-        {data?.map((item: any, index: number) => (
-          <Fragment key={item.id}>
-            <TableRow
-              className="h-[50px] cursor-pointer hover:bg-gray-100"
-              onClick={() => toggleRow(index)}
-            >
-              {/* Global raqam: 1-20, 21-40, 41-60, ... */}
-              <TableCell className="w-[5%] text-base font-[300] border-none">
-                {getGlobalIndex(index)}
-              </TableCell>
-              <TableCell className="w-[50%] text-lg font-[300] border-none whitespace-normal break-words">
-                {item?.organization || "N/A"}
-              </TableCell>
-              <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.statement || "N/A"}
-              </TableCell>
-              <TableCell className="w-[15%] text-base font-[300] border-none">
-                {item?.year || "N/A"}
-              </TableCell>
-              <TableCell className="w-[20%] text-base font-[300] border-none">
-                {item?.created_at || "N/A"}
-              </TableCell>
-              {(user_role == "super_admin" || user_role == "bolim_admin") && (
-                <TableCell className="w-[20%] text-base font-[300] border-none">
+        <TableBody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+          {data?.map((item: any, index: number) => (
+            <Fragment key={item.id}>
+              <TableRow
+                className="h-[50px] cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800/60"
+                onClick={() => toggleRow(index)}
+              >
+                {/* Global raqam: 1-20, 21-40, 41-60, ... */}
+                <TableCell className="w-[5%] text-sm font-medium text-slate-700 dark:text-slate-300 border-none pl-3">
+                  {getGlobalIndex(index)}
+                </TableCell>
+                <TableCell className="w-[50%] text-sm font-medium text-slate-800 dark:text-slate-100 border-none whitespace-normal break-words">
+                  {i18n.language === "ru" &&
+                  (item?.organization === "O'rmon xo'jaligini raqamlashtirish markazi davlat muassasasi" ||
+                    !item?.organization)
+                    ? t("compny_name")
+                    : item?.organization || "N/A"}
+                </TableCell>
+                <TableCell className="w-[20%] text-sm font-medium text-slate-700 dark:text-slate-200 border-none">
+                  {translateStatementName(item?.statement, i18n.language) || "N/A"}
+                </TableCell>
+                <TableCell className="w-[15%] text-sm font-medium text-slate-600 dark:text-slate-300 border-none">
+                  {item?.year || "N/A"}
+                </TableCell>
+                <TableCell className="w-[20%] text-sm font-medium text-slate-600 dark:text-slate-300 border-none">
+                  {item?.created_at || "N/A"}
+                </TableCell>
+                {(user_role == "super_admin" || user_role == "bolim_admin") && (
+                  <TableCell className="w-[20%] text-sm font-medium border-none">
                   <div className="flex items-center justify-center gap-2">
                     <Button
                       onClick={(e) => {
@@ -233,6 +239,7 @@ function CreatedPlantable({
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }
 
