@@ -24,7 +24,7 @@ import {
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
@@ -371,70 +371,131 @@ function PlantUpdate() {
         </TableHeader>
 
         <TableBody>
-          {plantData?.report_items?.map((reportItem: any) =>
-            reportItem.statement_columns.map((column: any) => (
-              <TableRow key={column.statement_column_id}>
-                <TableCell className="whitespace-normal break-words">
-                  {column.statement_column_name}
-                </TableCell>
-                <TableCell>
-                  {column.inners.map((inner: any) => {
-                    if (column.is_organization) {
-                      // Organization column - faqat tanlangan organization nomini ko'rsatamiz
-                      const orgName = organizationsData?.find(
-                        (org: any) => org.id === selectedOrganization,
-                      )?.name;
-                      return (
-                        <div key={inner.id} className="px-2 py-1">
-                          {orgName || t("no_organization_selected")}
-                        </div>
-                      );
-                    } else {
-                      // Oddiy column - input
-                      const editable = isEditableForSelectedQuarter(column);
-                      return (
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h2>{inner.plant_name}</h2>
+          {plantData?.report_items?.map((reportItem: any) => {
+            let lastQuarter: string | null = null;
+            return reportItem.statement_columns.map((column: any, colIdx: number) => {
+              const currentQuarter =
+                getQuarterFromStatusPlan(column.status_plan) ||
+                columnQuarterMap[column.statement_column_id] ||
+                null;
+
+              const showQuarterHeader =
+                currentQuarter && currentQuarter !== lastQuarter;
+              if (currentQuarter) {
+                lastQuarter = currentQuarter;
+              }
+
+              const isPlanRow = column.status_plan !== null;
+              const editable = isEditableForSelectedQuarter(column);
+
+              return (
+                <Fragment key={column.statement_column_id || colIdx}>
+                  {showQuarterHeader && currentQuarter && (
+                    <TableRow className="bg-slate-900/90 dark:bg-slate-900/90 border-y-2 border-blue-500/40">
+                      <TableCell
+                        colSpan={2}
+                        className="py-3 px-4 bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-900"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-7 px-3 rounded-lg bg-blue-600/20 text-blue-400 font-extrabold text-xs tracking-wider uppercase border border-blue-500/30 flex items-center gap-2 font-sans">
+                            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                            {QUARTER_LABELS[currentQuarter] || currentQuarter.toUpperCase()}
                           </div>
-                          <input
-                            key={inner.id}
-                            type="number"
-                            value={
-                              editable
-                                ? values[inner.id]?.value ?? ""
-                                : values[inner.id]?.value ?? "0"
-                            }
-                            disabled={!editable}
-                            onChange={(e) =>
-                              handleValueChange(inner.id, e.target.value)
-                            }
-                            className={`border px-2 py-1 rounded w-[200px] ${
-                              !editable ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""
-                            }`}
-                          />
+                          {selectedQuarter === currentQuarter && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/30 font-sans">
+                              ✓ Tanlangan faol chorak
+                            </span>
+                          )}
                         </div>
-                      );
-                    }
-                  })}
-                </TableCell>
-              </TableRow>
-            )),
-          )}
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  <TableRow className="hover:bg-slate-800/30 transition-colors">
+                    <TableCell className="whitespace-normal break-words font-sans py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                          {column.statement_column_name}
+                        </span>
+                        {isPlanRow ? (
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-400 border border-slate-700/80 shrink-0">
+                            Reja
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 shrink-0">
+                            Amalda
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="py-3.5">
+                      {column.inners.map((inner: any) => {
+                        if (column.is_organization) {
+                          const orgName = organizationsData?.find(
+                            (org: any) => org.id === selectedOrganization,
+                          )?.name;
+                          return (
+                            <div key={inner.id} className="px-2 py-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+                              {orgName || t("no_organization_selected")}
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div key={inner.id} className="flex items-center justify-between gap-4">
+                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1">
+                                {inner.plant_name}
+                              </span>
+                              <input
+                                type="number"
+                                value={
+                                  editable
+                                    ? values[inner.id]?.value ?? ""
+                                    : values[inner.id]?.value ?? "0"
+                                }
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  handleValueChange(inner.id, e.target.value)
+                                }
+                                className={`px-3 py-1.5 rounded-xl w-[200px] text-sm font-medium transition-all outline-none ${
+                                  !editable
+                                    ? "bg-slate-950/80 text-slate-500 border border-slate-800 cursor-not-allowed opacity-60"
+                                    : "bg-blue-950/60 dark:bg-blue-950/60 text-white border-1.5 border-blue-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/40 shadow-sm font-semibold"
+                                }`}
+                              />
+                            </div>
+                          );
+                        }
+                      })}
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
+              );
+            });
+          })}
         </TableBody>
       </Table>
 
       <div className="mt-6">
+        <label className="block mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100 font-sans">
+          {t("note_optional")}
+        </label>
         <Textarea
           value={footNote}
           onChange={(e) => setFootNote(e.target.value)}
           placeholder={t("enter_note")}
+          className="min-h-[100px] rounded-2xl bg-white dark:!bg-slate-900 border border-slate-200 dark:!border-slate-800 text-slate-800 dark:!text-slate-100 placeholder:text-slate-400 p-4 font-sans text-sm shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          rows={4}
         />
       </div>
 
-      <div className="flex justify-end mt-4">
-        <Button onClick={handleSubmit} disabled={isSubmitting}>
-          {t("update")}
+      <div className="flex justify-end mt-6 pb-6">
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 !text-white font-semibold text-sm shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
+        >
+          {isSubmitting ? `⏳ ${t("updating")}` : t("update")}
         </Button>
       </div>
       {checkPayload && (

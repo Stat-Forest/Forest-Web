@@ -326,7 +326,7 @@ function InnersCreateReportItem() {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`max-w-full m-6 p-6 border rounded-lg shadow space-y-6 bg-ice ${
+      className={`max-w-full m-6 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-6 bg-white dark:bg-slate-900 transition-colors ${
         isSubmitting ? "opacity-50 pointer-events-none" : ""
       }`}
     >
@@ -479,7 +479,7 @@ function InnersCreateReportItem() {
       {formGroups.map((formValues, formIndex) => (
         <div
           key={formIndex}
-          className="overflow-x-auto mb-6 border rounded-lg p-4 bg-gray-50"
+          className="overflow-x-auto mb-6 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/80 dark:bg-slate-950/80 transition-colors shadow-xs"
         >
           <div className="mb-4 flex justify-between items-center">
             <h2 className="text-lg font-semibold">
