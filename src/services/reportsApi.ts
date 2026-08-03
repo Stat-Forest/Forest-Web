@@ -21,6 +21,7 @@ export const reportApi = createApi({
         time_status?: string;
         page?: number;
         per_page?: number;
+        lang?: string;
       }
     >({
       query: ({
@@ -32,11 +33,15 @@ export const reportApi = createApi({
         time_status,
         page,
         per_page,
+        lang,
       }) => {
         let url = `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&page=${page}&per_page=${per_page}`;
         // Faqat late_reports va ontime_reports uchun time_status parametrini qo'shish
         if (time_status) {
           url += `&time_status=${time_status}`;
+        }
+        if (lang) {
+          url += `&lang=${lang}`;
         }
         return url;
       },
@@ -57,8 +62,11 @@ export const reportApi = createApi({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
       providesTags: ["Reports"],
     }),
-    getStatementStatsReport: builder.query<any, void>({
-      query: () => ({ url: `/dashboard/statement-stats/`, method: "GET" }),
+    getStatementStatsReport: builder.query<any, { lang?: string } | void>({
+      query: (params) => ({
+        url: `/dashboard/statement-stats/${params?.lang ? `?lang=${params.lang}` : ""}`,
+        method: "GET",
+      }),
       providesTags: ["Reports"],
     }),
 getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
@@ -77,6 +85,7 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         perPage: number;
         statement__period: string;
         is_new_deadline?: string;
+        lang?: string;
       }
     >({
       query: ({
@@ -85,8 +94,9 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         perPage,
         statement__period,
         is_new_deadline,
+        lang = "",
       }) => {
-        let url = `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}`;
+        let url = `/deadlines/?statement=${statement}&page=${page}&per_page=${perPage}&statement__period=${statement__period}${lang ? `&lang=${lang}` : ""}`;
         if (is_new_deadline) {
           url += `&is_new_deadline=${is_new_deadline}`;
         }
@@ -107,11 +117,16 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         statement?: any;
         submit_at?: string;
         period?: string;
+        lang?: string;
       }
     >({
       query: (params = {}) => {
+        let url = `/expired-deadlines/?deadline_at=${params.deadline_at}&organizations=${params.organizations}&page=${params.page || 1}&per_page=${params.per_page || 10}&statement=${params.statement}&submit_at=${params.submit_at}&period=${params.period}`;
+        if (params.lang) {
+          url += `&lang=${params.lang}`;
+        }
         return {
-          url: `/expired-deadlines/?deadline_at=${params.deadline_at}&organizations=${params.organizations}&page=${params.page || 1}&per_page=${params.per_page || 10}&statement=${params.statement}&submit_at=${params.submit_at}&period=${params.period}`,
+          url,
           method: "GET",
         };
       },
@@ -155,10 +170,11 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         search?: any;
         organization?: any;
         role?: string;
+        lang?: string;
       }
     >({
-      query: ({ user_id = "", page, perPage, search, organization, role }) => ({
-        url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}&first_name=${search}&organization=${organization}&role=${role}`,
+      query: ({ user_id = "", page, perPage, search, organization, role, lang = "" }) => ({
+        url: `/users/?id=${user_id}&page=${page}&per_page=${perPage}&first_name=${search}&organization=${organization}&role=${role}${lang ? `&lang=${lang}` : ""}`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -220,6 +236,7 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         year: string;
         perPage: number;
         season: string;
+        lang?: string;
       }
     >({
       query: ({
@@ -231,8 +248,9 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         year,
         perPage,
         season,
+        lang = "",
       }) => ({
-        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}&per_page=${perPage}&&season=${season}`,
+        url: `/plan-list/?column__id=${columnId}&organization=${organization}&statement=${statement}&page=${page}&search=${search}&year=${year}&per_page=${perPage}&season=${season}${lang ? `&lang=${lang}` : ""}`,
         method: "GET",
       }),
       providesTags: ["Reports"],

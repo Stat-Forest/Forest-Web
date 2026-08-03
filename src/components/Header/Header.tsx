@@ -3,6 +3,7 @@ import {
   User2,
   VideoIcon,
   Bell,
+  BellOff,
   PanelLeftClose,
   PanelRightClose,
   Sparkles,
@@ -33,6 +34,7 @@ import { RootState } from "@/app/store";
 import { setLanguage } from "@/features/languageSlice";
 import { useEffect, useMemo, useState } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
+import LogoutConfirmModal from "../Modals/LogoutConfirmModal";
 import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
 
 // RTK Query APIs
@@ -73,6 +75,7 @@ function Header({ onLogout }: HeaderProps) {
   const { t } = useTranslation();
   const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
   const [aiOpen, setAiOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { changePasswordOpen, notificationOpen, unreadCount } = useSelector(
     (state: RootState) => state.ui.header,
   );
@@ -281,7 +284,7 @@ function Header({ onLogout }: HeaderProps) {
 
         <div className="flex items-center gap-2">
           {/* Background Chooser */}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
@@ -340,7 +343,7 @@ function Header({ onLogout }: HeaderProps) {
             onClick={() => setAiOpen(true)}
           >
             <Sparkles size={16} className="text-white shrink-0" />
-            <span className="text-white font-semibold whitespace-nowrap leading-none">AI yordamchi</span>
+            <span className="text-white font-semibold whitespace-nowrap leading-none">{t("ai_assistant")}</span>
           </button>
 
           {/* Notification Button */}
@@ -358,38 +361,66 @@ function Header({ onLogout }: HeaderProps) {
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent className="sm:max-w-md overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>{t("notifications")}</SheetTitle>
+            <SheetContent side="right" className="sm:max-w-md w-full bg-slate-50/98 dark:bg-slate-950/98 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800 shadow-2xl p-6 font-sans flex flex-col">
+              <SheetHeader className="bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-700 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 rounded-2xl p-5 border border-white/20 dark:border-slate-800 shadow-lg text-white pr-14 relative shrink-0 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-white backdrop-blur-md border border-white/30 shrink-0">
+                    <Bell size={20} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <SheetTitle className="text-white font-bold text-lg leading-snug tracking-tight font-sans text-left">
+                      {t("notifications") || (i18n.language === "ru" ? "Уведомления" : "Bildirishnomalar")}
+                    </SheetTitle>
+                    <p className="text-xs font-medium text-blue-100 dark:text-slate-300 font-sans text-left truncate">
+                      {i18n.language === "ru" ? "Системные оповещения и новости" : "Tizim xabarlari va yangiliklar"}
+                    </p>
+                  </div>
+                </div>
               </SheetHeader>
 
-              <div className="m-2">
+              <div className="flex-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
                 {isLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <p className="text-gray-500">{t("loading")}</p>
+                  <div className="flex flex-col justify-center items-center h-64 gap-3 text-slate-400">
+                    <div className="w-8 h-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                    <p className="text-sm font-medium">{t("loading") || "Yuklanmoqda..."}</p>
                   </div>
                 ) : error ? (
-                  <div className="flex justify-center items-center h-40">
-                    <p className="text-red-500">{t("error")}</p>
+                  <div className="flex justify-center items-center h-64">
+                    <p className="text-red-500 text-sm font-medium">{t("error") || "Xatolik yuz berdi"}</p>
                   </div>
                 ) : data?.results?.length ? (
-                  <div className="space-y-4 overflow-y-auto flex flex-col">
+                  <div className="space-y-3">
                     {data.results.map((notification: any) => (
                       <Card
                         key={notification.id}
-                        className="hover:shadow-lg transition-shadow duration-300"
+                        className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-md transition-all duration-200 rounded-2xl p-4 shadow-xs"
                       >
-                        <CardContent className="pt-3">
-                          <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-                            {notification.text}
-                          </p>
-                        </CardContent>
+                        <div className="flex gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <Bell size={16} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans">
+                              {notification.text}
+                            </p>
+                          </div>
+                        </div>
                       </Card>
                     ))}
                   </div>
                 ) : (
-                  <div className="flex justify-center items-center h-40">
-                    <p className="text-gray-500">{t("no_notifications")}</p>
+                  <div className="flex flex-col justify-center items-center h-[calc(100vh-220px)] text-center p-6">
+                    <div className="h-20 w-20 rounded-3xl bg-blue-50 dark:bg-slate-900 text-blue-500 dark:text-blue-400 flex items-center justify-center mb-4 shadow-inner border border-blue-100 dark:border-slate-800 animate-pulse">
+                      <BellOff size={36} />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 font-sans mb-1">
+                      {t("no_notifications") || (i18n.language === "ru" ? "Уведомлений пока нет" : "Hozircha bildirishnomalar yo'q")}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs font-sans leading-relaxed">
+                      {i18n.language === "ru"
+                        ? "Здесь будут появляться важные системные сообщения и обновления."
+                        : "Bu yerda muhim tizim xabarlari va yangilanishlar ko'rinadi."}
+                    </p>
                   </div>
                 )}
               </div>
@@ -434,7 +465,7 @@ function Header({ onLogout }: HeaderProps) {
           <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
           {/* User Profile Menu */}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
@@ -447,14 +478,17 @@ function Header({ onLogout }: HeaderProps) {
             <DropdownMenuContent className="w-48 mt-2 mr-2 dark:bg-slate-800 dark:border-slate-700">
               <DropdownMenuItem
                 className="dark:text-gray-100 dark:hover:bg-slate-700"
-                onClick={() =>
+                onSelect={() =>
                   dispatch(setHeaderState({ changePasswordOpen: true }))
                 }
               >
                 <User2 size={16} className="text-blue-500 mr-2" />
                 {t("item_81")}
               </DropdownMenuItem>
-              <DropdownMenuItem className="dark:text-gray-100 dark:hover:bg-slate-700" onClick={handleLogout}>
+              <DropdownMenuItem
+                className="dark:text-gray-100 dark:hover:bg-slate-700 cursor-pointer"
+                onSelect={() => setLogoutModalOpen(true)}
+              >
                 <LogOut size={16} className="text-red-500 mr-2" />
                 {t("item_80")}
               </DropdownMenuItem>
@@ -465,7 +499,7 @@ function Header({ onLogout }: HeaderProps) {
           <Button
             variant="outline"
             className="h-[40px] w-[40px] p-0 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
-            onClick={handleLogout}
+            onClick={() => setLogoutModalOpen(true)}
             title={t("item_80") || "Chiqish"}
           >
             <LogOut size={18} className="text-red-600 dark:text-red-400" />
@@ -475,11 +509,23 @@ function Header({ onLogout }: HeaderProps) {
 
       <ChangePasswordModal
         open={changePasswordOpen}
-        setOpen={(value) =>
-          dispatch(setHeaderState({ changePasswordOpen: value }))
-        }
+        setOpen={(value) => {
+          dispatch(setHeaderState({ changePasswordOpen: value }));
+          if (!value) {
+            document.body.style.pointerEvents = "auto";
+            document.body.removeAttribute("data-scroll-locked");
+            setTimeout(() => {
+              document.body.style.pointerEvents = "auto";
+            }, 50);
+          }
+        }}
       />
       <AiModal open={aiOpen} onOpenChange={setAiOpen} />
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        setOpen={setLogoutModalOpen}
+        onConfirm={handleLogout}
+      />
     </>
   );
 }

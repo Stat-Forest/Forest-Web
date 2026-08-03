@@ -34,6 +34,7 @@ function Newsletters() {
     page,
     perPage,
     statement__period: selectedPeriod,
+    lang,
   });
 
   // 📌 Statements list query
@@ -91,8 +92,10 @@ function Newsletters() {
           key={i}
           onClick={() => dispatch(setNewsletterState({ page: i }))}
           variant={page === i ? "default" : "outline"}
-          className={`mx-1 min-w-[40px] ${
-            page === i ? "bg-blue-600 text-white" : ""
+          className={`mx-1 min-w-[40px] rounded-lg ${
+            page === i
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
           disabled={isFetching}
         >
@@ -105,7 +108,7 @@ function Newsletters() {
   };
 
   return (
-    <div className="p-5 w-full pb-10 bg-ice">
+    <div className="p-5 w-full pb-10">
       {/* ✅ Filter Select */}
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         <Select
@@ -115,17 +118,17 @@ function Newsletters() {
           }
           disabled={isStatementsLoading}
         >
-          <SelectTrigger className="w-[300px] min-h-[40px] text-xl border border-black">
+          <SelectTrigger className="w-[300px] min-h-[40px] text-sm font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl shadow-xs">
             <SelectValue
               placeholder={
                 isStatementsLoading ? "Yuklanmoqda..." : t("selectChapter")
               }
             />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100">
             {statementsData?.flatMap((parent: any) =>
               parent.children?.map((child: any) => (
-                <SelectItem key={child.id} value={child.id.toString()}>
+                <SelectItem key={child.id} value={child.id.toString()} className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">
                   {child.name}
                 </SelectItem>
               )) || []
@@ -139,13 +142,13 @@ function Newsletters() {
             dispatch(setNewsletterState({ selectedPeriod: value }))
           }
         >
-          <SelectTrigger className="w-[300px] text-xl min-h-[40px] border border-black">
+          <SelectTrigger className="w-[300px] text-sm min-h-[40px] font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl shadow-xs">
             <SelectValue placeholder={t("item_14")} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100">
             {periods?.map((child: any) => (
-              <SelectItem key={child.id} value={child.value}>
-                {i18n.language === "uz"? child.label_uz : child.label_ru}
+              <SelectItem key={child.id} value={child.value} className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer">
+                {i18n.language === "uz" ? child.label_uz : child.label_ru}
               </SelectItem>
             ))}
           </SelectContent>
@@ -154,6 +157,7 @@ function Newsletters() {
         <Button
           onClick={handleClearFilters}
           variant="outline"
+          className="border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
           disabled={!selectedStatement && !selectedPeriod}
         >
           {t("reset")}
@@ -163,7 +167,7 @@ function Newsletters() {
       {/* ✅ Loading & Error states */}
       {isLoading ? (
         <div className="flex justify-center items-center h-40">
-          <h1>Yuklanmoqda...</h1>
+          <h1 className="text-slate-600 dark:text-slate-400">Yuklanmoqda...</h1>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-40">
@@ -178,9 +182,9 @@ function Newsletters() {
           </h1>
         </div>
       ) : (
-        <div className="w-full border border-[silver] rounded-xl px-3 py-5">
+        <div className="w-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors space-y-4">
           {/* Count info table ustida */}
-          <div className="mb-3 text-sm text-gray-600">
+          <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
             {t("totalRecords", { count: data?.count || 0 })}
             {data?.results?.length > 0 && (
               <span>
@@ -200,7 +204,7 @@ function Newsletters() {
 
               {/* 📌 Pagination Controls */}
               <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
                   {t("records", { start: startItem, end: endItem, total: data?.count || 0 })}
                 </div>
 
@@ -210,6 +214,7 @@ function Newsletters() {
                     disabled={page === 1 || isFetching}
                     variant="outline"
                     size="sm"
+                    className="border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                   >
                     {t("before")}
                   </Button>
@@ -221,19 +226,20 @@ function Newsletters() {
                     disabled={page >= totalPages || isFetching}
                     variant="outline"
                     size="sm"
+                    className="border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                   >
                     {t("next")}
                   </Button>
                 </div>
 
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
                   {t("page")} {page} / {totalPages}
                 </div>
               </div>
             </>
           ) : (
             <div className="flex justify-center items-center h-40">
-              <h1 className="text-gray-500">Ma'lumot topilmadi</h1>
+              <h1 className="text-slate-500 dark:text-slate-400">Ma'lumot topilmadi</h1>
             </div>
           )}
         </div>
@@ -241,7 +247,7 @@ function Newsletters() {
 
       {/* 📌 Secondary loading indicator */}
       {isFetching && !isLoading && (
-        <div className="flex justify-center items-center mt-4">
+        <div className="flex justify-center items-center mt-4 text-slate-600 dark:text-slate-400">
           <span>Yuklanmoqda...</span>
         </div>
       )}

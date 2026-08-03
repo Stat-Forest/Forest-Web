@@ -26,8 +26,8 @@ function OnTime() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
-  const lang = getSimpleCookie("lang") || "uz";
   const { t, i18n } = useTranslation();
+  const lang = i18n.language || "uz";
 
   const {
     data: reportsData,
@@ -42,6 +42,7 @@ function OnTime() {
     time_status: "on_time",
     page: currentPage,
     per_page: pageSize,
+    lang,
   });
 
   const {

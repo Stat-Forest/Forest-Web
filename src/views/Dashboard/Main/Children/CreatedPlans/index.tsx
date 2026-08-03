@@ -41,6 +41,7 @@ function CreatedPlans() {
     search: "",
     year: debouncedSearchYear,
     season: "",
+    lang,
   });
 
   const {
