@@ -245,10 +245,10 @@ function Sidebar() {
           </h2>
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 w-full rounded-2xl p-4 flex flex-col gap-2.5 shadow-xl border border-white/20 dark:border-slate-800 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-md h-[46px] w-[46px] flex items-center justify-center rounded-xl shadow-inner border border-white/30 shrink-0">
-              <User2 className="text-white drop-shadow-xs" size={22} />
+        <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 w-full rounded-2xl p-4 flex flex-col gap-3 shadow-xl border border-white/20 dark:border-slate-800 backdrop-blur-md">
+          <div className="flex items-start gap-3">
+            <div className="bg-white/20 backdrop-blur-md h-[48px] w-[48px] flex items-center justify-center rounded-xl shadow-inner border border-white/30 shrink-0 mt-0.5">
+              <User2 className="text-white drop-shadow-xs" size={24} />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-bold text-white text-base leading-snug truncate drop-shadow-xs font-sans">
@@ -258,14 +258,16 @@ function Sidebar() {
                   `${user?.results[0]?.first_name || ""} ${user?.results[0]?.last_name || ""}`
                 )}
               </h3>
-              <span className="inline-block mt-1 bg-white/20 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-0.5 rounded-full border border-white/30 truncate">
-                {isSupportAdmin
-                  ? t("roles.support_admin")
-                  : user?.results[0]?.role &&
-                    t(`roles.${user.results[0].role}`) !== `roles.${user.results[0].role}`
-                  ? t(`roles.${user.results[0].role}`)
-                  : user?.results[0]?.role_display || ""}
-              </span>
+              <div className="mt-1.5 flex flex-wrap">
+                <span className="inline-flex items-center bg-white/25 dark:bg-blue-600/40 backdrop-blur-md text-white text-sm font-bold px-3.5 py-1 rounded-xl border border-white/35 dark:border-blue-400/40 shadow-xs tracking-wide">
+                  {isSupportAdmin
+                    ? t("roles.support_admin")
+                    : user?.results[0]?.role &&
+                      t(`roles.${user.results[0].role}`) !== `roles.${user.results[0].role}`
+                    ? t(`roles.${user.results[0].role}`)
+                    : user?.results[0]?.role_display || ""}
+                </span>
+              </div>
             </div>
           </div>
 
