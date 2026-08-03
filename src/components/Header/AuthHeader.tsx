@@ -84,11 +84,10 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-colors duration-300 ${
-        isLanding
+      className={`sticky top-0 z-50 w-full transition-colors duration-300 ${isLanding
           ? "bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-b-2 border-[#00BC7D] shadow-xs"
           : "bg-transparent"
-      }`}
+        }`}
     >
       <div className="flex h-[68px] sm:h-[82px] items-center justify-between px-4 sm:px-6">
         {/* LOGO */}
@@ -102,9 +101,8 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
             className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-xl transition-transform duration-200 group-hover:scale-105"
           />
           <h2
-            className={`font-extrabold text-lg sm:text-[22px] tracking-tight whitespace-nowrap transition-colors duration-200 ${
-              isAuthPage ? "text-white" : "text-slate-900 dark:text-white group-hover:text-[#00BC7D]"
-            }`}
+            className={`font-extrabold text-lg sm:text-[22px] tracking-tight whitespace-nowrap transition-colors duration-200 ${isAuthPage ? "text-white" : "text-slate-900 dark:text-white group-hover:text-[#00BC7D]"
+              }`}
           >
             STAT-URMON
           </h2>

@@ -226,14 +226,14 @@ function SupportChatWidget() {
   return (
     <div className="fixed right-10 bottom-10 z-[120]">
       {isOpen && (
-        <div className="w-[min(92vw,980px)] h-[min(78vh,640px)] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col md:flex-row mb-4">
-          <aside className="w-full md:w-[320px] border-r border-slate-200 bg-slate-50 flex flex-col">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-slate-800">Support Chat</h2>
+        <div className="w-[min(92vw,980px)] h-[min(78vh,640px)] rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col md:flex-row mb-4 transition-colors">
+          <aside className="w-full md:w-[320px] border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex flex-col shrink-0">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Support Chat</h2>
               <button
                 onClick={handleCreateConversation}
                 disabled={creatingConversation}
-                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60 transition"
               >
                 {creatingConversation
                   ? isRu
@@ -247,11 +247,11 @@ function SupportChatWidget() {
 
             <div className="flex-1 overflow-y-auto">
               {conversationsLoading ? (
-                <p className="p-4 text-sm text-slate-500">
+                <p className="p-4 text-sm text-slate-500 dark:text-slate-400">
                   {isRu ? "Загрузка чатов..." : "Chatlar yuklanmoqda..."}
                 </p>
               ) : conversations.length === 0 ? (
-                <p className="p-4 text-sm text-slate-500">
+                <p className="p-4 text-sm text-slate-500 dark:text-slate-400">
                   {isRu
                     ? 'У вас пока нет чатов. Нажмите "Новый чат".'
                     : 'Sizda hali chat yo\'q. "Yangi chat" ni bosing.'}
@@ -263,12 +263,14 @@ function SupportChatWidget() {
                     <button
                       key={conversation.id}
                       onClick={() => setActiveConversationId(conversation.id)}
-                      className={`w-full text-left px-4 py-3 border-b border-slate-200 transition ${
-                        isActive ? "bg-emerald-50" : "hover:bg-slate-100"
+                      className={`w-full text-left px-4 py-3 border-b border-slate-200 dark:border-slate-800/60 transition ${
+                        isActive
+                          ? "bg-emerald-50 dark:bg-emerald-950/50"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <p className="font-medium text-slate-800 truncate">
+                        <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
                           {isRu
                             ? `Обращение #${conversation.id.slice(0, 8)}`
                             : `Murojaat #${conversation.id.slice(0, 8)}`}
@@ -279,7 +281,7 @@ function SupportChatWidget() {
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {conversation.created_at}
                       </p>
                     </button>
@@ -289,13 +291,13 @@ function SupportChatWidget() {
             </div>
           </aside>
 
-          <section className="flex-1 flex flex-col min-h-0">
-            <header className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
+          <section className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900">
+            <header className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
               <div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   {isRu ? "Связь с оператором" : "Operator bilan muloqot"}
                 </p>
-                <p className="text-base font-semibold text-slate-900">
+                <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                   {activeConversation
                     ? isRu
                       ? `Обращение #${activeConversation.id.slice(0, 8)}`
@@ -309,8 +311,8 @@ function SupportChatWidget() {
                 <span
                   className={`text-xs font-medium px-3 py-1 rounded-full ${
                     wsConnected
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-amber-100 text-amber-700"
+                      ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300"
+                      : "bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300"
                   }`}
                 >
                   {wsConnected
@@ -327,7 +329,7 @@ function SupportChatWidget() {
                 </span>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="h-8 w-8 grid place-items-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100"
+                  className="h-8 w-8 grid place-items-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                   aria-label={isRu ? "Закрыть чат" : "Chatni yopish"}
                 >
                   <X size={16} />
@@ -335,19 +337,19 @@ function SupportChatWidget() {
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-5 bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">
+            <div className="flex-1 overflow-y-auto p-5 bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] dark:bg-none dark:bg-slate-950">
               {!activeConversation ? (
-                <div className="h-full grid place-items-center text-slate-500">
+                <div className="h-full grid place-items-center text-slate-500 dark:text-slate-400">
                   {isRu
                     ? "Выберите чат слева или создайте новый чат."
                     : "Chap tomondan chat tanlang yoki yangi chat yarating."}
                 </div>
               ) : messagesLoading && mergedMessages.length === 0 ? (
-                <div className="h-full grid place-items-center text-slate-500">
+                <div className="h-full grid place-items-center text-slate-500 dark:text-slate-400">
                   {isRu ? "Загрузка сообщений..." : "Xabarlar yuklanmoqda..."}
                 </div>
               ) : mergedMessages.length === 0 ? (
-                <div className="h-full grid place-items-center text-slate-500">
+                <div className="h-full grid place-items-center text-slate-500 dark:text-slate-400">
                   {isRu ? "Пока нет сообщений." : "Hozircha xabarlar mavjud emas."}
                 </div>
               ) : (
@@ -363,7 +365,7 @@ function SupportChatWidget() {
                         className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
                           mine
                             ? "bg-emerald-600 text-white rounded-br-md"
-                            : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
+                            : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-md"
                         }`}
                       >
                         <p className="text-sm leading-6 whitespace-pre-wrap">
@@ -371,7 +373,7 @@ function SupportChatWidget() {
                         </p>
                         <p
                           className={`mt-1 text-[11px] ${
-                            mine ? "text-emerald-100" : "text-slate-400"
+                            mine ? "text-emerald-100" : "text-slate-400 dark:text-slate-400"
                           }`}
                         >
                           {formatChatTime(msg.created_at)}
@@ -386,7 +388,7 @@ function SupportChatWidget() {
 
             <form
               onSubmit={handleSendMessage}
-              className="p-4 border-t border-slate-200 bg-white"
+              className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
             >
               <div className="flex items-center gap-3">
                 <input
@@ -397,12 +399,12 @@ function SupportChatWidget() {
                     isRu ? "Введите ваше сообщение..." : "Xabaringizni yozing..."
                   }
                   disabled={!activeConversationId}
-                  className="flex-1 h-12 rounded-xl border border-slate-300 px-4 outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
+                  className="flex-1 h-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50"
                 />
                 <button
                   type="submit"
                   disabled={!activeConversationId || !draft.trim()}
-                  className="h-12 rounded-xl bg-emerald-600 px-6 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                  className="h-12 rounded-xl bg-emerald-600 px-6 font-medium text-white hover:bg-emerald-700 disabled:opacity-60 transition"
                 >
                   {isRu ? "Отправить" : "Yuborish"}
                 </button>
