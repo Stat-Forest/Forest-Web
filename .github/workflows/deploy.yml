@@ -3,7 +3,8 @@ name: Stat-O'rmon Frontend CI/CD Pipeline
 on:
   push:
     branches:
-      - main   # faqat main branch uchun ishlaydi
+      - main
+      - front
   workflow_dispatch:  # qo‘lda ham run qilsa bo‘ladi
 
 jobs:
