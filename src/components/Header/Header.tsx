@@ -55,7 +55,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { Card, CardContent } from "../ui/card";
+import { Card } from "../ui/card";
 
 // persistor
 import { persistor } from "@/app/store";

@@ -15,7 +15,6 @@ import {
 } from "@/services/reportsApi";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { getSimpleCookie } from "@/utils/cookie";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function Lated() {
