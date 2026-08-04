@@ -146,7 +146,7 @@ function Sidebar() {
                 </div>
               )}
 
-              <span className={`text-sm font-medium flex-1 leading-tight ${isParentActive ? "!text-white" : ""}`}>{t(item.name)}</span>
+              <span className={`text-sm font-medium flex-1 leading-tight transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold ${isParentActive ? "!text-white" : ""}`}>{t(item.name)}</span>
 
               <div
                 className={`w-2 h-2 rounded-full transition-all ${
@@ -215,7 +215,7 @@ function Sidebar() {
                     <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
                       <FileText size={18} className="transition-transform group-hover:scale-110" />
                     </div>
-                    <span className="text-sm font-medium flex-1 leading-snug">
+                    <span className="text-sm font-medium flex-1 leading-snug transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold">
                       {t(child.name)}
                     </span>
                     <div className="indicator w-2 h-2 rounded-full bg-emerald-400 transition-opacity shrink-0"></div>
@@ -255,7 +255,7 @@ function Sidebar() {
                 />
               </div>
             )}
-            <span className={`text-sm font-medium flex-1 leading-tight ${isActive ? "!text-white" : ""}`}>{t(item.name)}</span>
+            <span className={`text-sm font-medium flex-1 leading-tight transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold ${isActive ? "!text-white" : ""}`}>{t(item.name)}</span>
             <div className={`w-2 h-2 rounded-full transition-all ${
               isActive ? "bg-emerald-400 opacity-100 shadow-xs" : "bg-blue-500 opacity-0 group-hover:opacity-100"
             }`}></div>
