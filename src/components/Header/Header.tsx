@@ -36,6 +36,8 @@ import { useEffect, useMemo, useState } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
 import LogoutConfirmModal from "../Modals/LogoutConfirmModal";
 import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
+import backimg1 from "@/assets/img/backimg1.png";
+import backimg2 from "@/assets/img/backimg2.png";
 
 // RTK Query APIs
 import { authApi } from "@/services/authApi";
@@ -121,25 +123,21 @@ function Header({ onLogout }: HeaderProps) {
       {
         key: "default",
         label: "Asl fon",
-        kind: "default",
-        preview:
-          "linear-gradient(135deg, #1D4ED8 0%, #EFF6FF 50%, #1D4ED8 100%)",
+        kind: "image",
+        preview: `url(${backimg1})`,
         apply: {
-          backgroundImage:
-            "linear-gradient(135deg, #1D4ED8 0%, #EFF6FF 50%, #1D4ED8 100%)",
-          backgroundColor: "transparent",
+          backgroundImage: `url(${backimg1})`,
+          backgroundColor: "#0b1220",
         },
       },
       {
         key: "mesh",
         label: "Mesh Gradient",
-        kind: "gradient",
-        preview:
-          "radial-gradient(at 20% 30%, rgba(59,130,246,0.35) 0px, transparent 55%), radial-gradient(at 80% 20%, rgba(16,185,129,0.28) 0px, transparent 55%), radial-gradient(at 30% 85%, rgba(168,85,247,0.22) 0px, transparent 55%), linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 60%, #ECFEFF 100%)",
+        kind: "image",
+        preview: `url(${backimg2})`,
         apply: {
-          backgroundImage:
-            "radial-gradient(at 20% 30%, rgba(59,130,246,0.35) 0px, transparent 55%), radial-gradient(at 80% 20%, rgba(16,185,129,0.28) 0px, transparent 55%), radial-gradient(at 30% 85%, rgba(168,85,247,0.22) 0px, transparent 55%), linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 60%, #ECFEFF 100%)",
-          backgroundColor: "transparent",
+          backgroundImage: `url(${backimg2})`,
+          backgroundColor: "#0b1220",
         },
       },
       {

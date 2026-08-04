@@ -21,6 +21,7 @@ interface FiltersSectionProps {
   setSelectedYear: (value: string) => void;
   selectedQuarter?: string;
   setSelectedQuarter?: (value: string) => void;
+  showQuarterFilter?: boolean;
   deadline: any;
   deadlinePage: number;
   setDeadlinePage: (fn: (p: number) => number) => void;
@@ -35,6 +36,7 @@ export default function FiltersSection({
   setSelectedPeriod,
   selectedQuarter,
   setSelectedQuarter,
+  showQuarterFilter = false,
   deadline,
   deadlinePage,
   setDeadlinePage,
@@ -125,25 +127,27 @@ export default function FiltersSection({
         </SelectContent>
       </Select>
 
-      <Select
-        value={selectedQuarter || "all"}
-        onValueChange={(val) => setSelectedQuarter?.(val === "all" ? "" : val)}
-      >
-        <SelectTrigger
-          className="w-full md:w-[150px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500 rounded-xl"
-          data-aos="fade-up"
-          data-aos-delay="180"
+      {showQuarterFilter && (
+        <Select
+          value={selectedQuarter || "all"}
+          onValueChange={(val) => setSelectedQuarter?.(val === "all" ? "" : val)}
         >
-          <SelectValue placeholder={t("quarter")} />
-        </SelectTrigger>
-        <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
-          <SelectItem value="all" className="dark:text-slate-100">{t("all")}</SelectItem>
-          <SelectItem value="q1" className="dark:text-slate-100">{t("quarter_1")}</SelectItem>
-          <SelectItem value="q2" className="dark:text-slate-100">{t("quarter_2")}</SelectItem>
-          <SelectItem value="q3" className="dark:text-slate-100">{t("quarter_3")}</SelectItem>
-          <SelectItem value="q4" className="dark:text-slate-100">{t("quarter_4")}</SelectItem>
-        </SelectContent>
-      </Select>
+          <SelectTrigger
+            className="w-full md:w-[150px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500 rounded-xl"
+            data-aos="fade-up"
+            data-aos-delay="180"
+          >
+            <SelectValue placeholder={t("quarter")} />
+          </SelectTrigger>
+          <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+            <SelectItem value="all" className="dark:text-slate-100">{t("all")}</SelectItem>
+            <SelectItem value="q1" className="dark:text-slate-100">{t("quarter_1")}</SelectItem>
+            <SelectItem value="q2" className="dark:text-slate-100">{t("quarter_2")}</SelectItem>
+            <SelectItem value="q3" className="dark:text-slate-100">{t("quarter_3")}</SelectItem>
+            <SelectItem value="q4" className="dark:text-slate-100">{t("quarter_4")}</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
 
       <Button
         onClick={onSearch}
