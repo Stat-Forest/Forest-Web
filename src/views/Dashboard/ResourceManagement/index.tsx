@@ -49,6 +49,17 @@ function ResourceManagement() {
     }
   };
 
+  const isFinance =
+    parentTitle === "Moliya-iqtisod va buxgalteriya hisobi" ||
+    parentTitle === "Финансово-экономический и бухгалтерский учёт" ||
+    parentTitle?.toLowerCase().includes("moliya") ||
+    parentTitle?.toLowerCase().includes("финанс") ||
+    parentTitle?.toLowerCase().includes("buxgalter") ||
+    parentTitle?.toLowerCase().includes("бухгалтер") ||
+    currentItem?.id === "ae359de0-328d-4c85-8da5-67731a2ec65b" ||
+    childTitle === "Daromad" ||
+    childTitle === "Доход";
+
   return (
     <div className="px-3 py-2 space-y-4">
       <div className="bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors flex flex-wrap items-center justify-between gap-4">
@@ -100,11 +111,11 @@ function ResourceManagement() {
         childTitle == "Shakl 11-O‘X" ||
         childTitle == "Форма 11-Ох" ||
         childTitle == "Daromad" ? (
-        <ResourcePlantContainer reportName={childTitle} />
+        <ResourcePlantContainer reportName={childTitle} isFinance={isFinance} />
       ) : childTitle == "O'rmonlar kesimida" ? (
         <ForestAnalysisContainer reportName={childTitle} />
       ) : (
-        <ResourceContainer reportName={childTitle} />
+        <ResourceContainer reportName={childTitle} isFinance={isFinance} />
       )}
     </div>
   );

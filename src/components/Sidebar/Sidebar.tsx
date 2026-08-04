@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
-import { FileText, User2 } from "lucide-react";
+import { FileText, User2, Search, X } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -36,6 +36,11 @@ function Sidebar() {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const lang = useSelector((state: RootState) => state.language.lang);
   const [openSheetId, setOpenSheetId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  useEffect(() => {
+    setSearchQuery("");
+  }, [openSheetId]);
 
   useEffect(() => {
     const handleOpenSubmenu = (e: CustomEvent<{ parentId?: string; id?: string }>) => {
@@ -94,6 +99,14 @@ function Sidebar() {
       ) || false;
 
     if (item.children?.length > 0) {
+      const filteredChildren = item.children.filter((child: any) => {
+        if (!searchQuery.trim()) return true;
+        const translatedName = String(t(child.name) || child.name || "").toLowerCase();
+        const rawName = String(child.name || "").toLowerCase();
+        const query = searchQuery.trim().toLowerCase();
+        return translatedName.includes(query) || rawName.includes(query);
+      });
+
       return (
         <Sheet
           key={item.id}
@@ -149,7 +162,7 @@ function Sidebar() {
             side="left"
             className="ml-[320px] bg-slate-50/98 dark:bg-slate-950/98 backdrop-blur-xl min-w-[440px] sm:w-[440px] border-r border-slate-200 dark:border-slate-800 shadow-2xl z-[100] font-sans p-6"
           >
-            <SheetHeader className="bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-700 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 rounded-2xl p-5 border border-white/20 dark:border-slate-800 shadow-lg mb-5 text-white pr-14 relative">
+            <SheetHeader className="bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-700 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 rounded-2xl p-5 border border-white/20 dark:border-slate-800 shadow-lg mb-4 text-white pr-14 relative">
               <SheetTitle className="text-white font-bold text-base leading-snug tracking-tight font-sans text-left pr-2">
                 {t(item.name)}
               </SheetTitle>
@@ -158,31 +171,57 @@ function Sidebar() {
               </p>
             </SheetHeader>
 
-            <div className="flex flex-col w-full gap-2.5 overflow-y-auto max-h-[calc(100vh-150px)] pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
-              {item.children.map((child: any, index: number) => (
-                <NavLink
-                  key={index}
-                  to={`/resource-management/${child.id}/${encodeURIComponent(
-                    child.name,
-                  )}`}
-                  onClick={() => setOpenSheetId(null)}
-                  className={({ isActive }) =>
-                    `group flex items-center gap-3.5 transition-all duration-200 p-3.5 rounded-xl border font-sans ${
-                      isActive
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 !text-white border-transparent shadow-md shadow-blue-500/25 font-semibold [&_svg]:text-white [&_.indicator]:opacity-100"
-                        : "text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300/80 shadow-xs [&_svg]:text-blue-500 dark:[&_svg]:text-blue-400 [&_.indicator]:opacity-0 [&_.indicator]:group-hover:opacity-100"
-                    }`
-                  }
+            <div className="relative mb-3.5">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={i18n.language === "ru" ? "Поиск разделов..." : "Bo'limlarni qidirish..."}
+                className="w-full h-11 pl-10 pr-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-xs transition-all font-sans"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
-                    <FileText size={18} className="transition-transform group-hover:scale-110" />
-                  </div>
-                  <span className="text-sm font-medium flex-1 leading-snug">
-                    {t(child.name)}
-                  </span>
-                  <div className="indicator w-2 h-2 rounded-full bg-emerald-400 transition-opacity shrink-0"></div>
-                </NavLink>
-              ))}
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col w-full gap-2.5 overflow-y-auto max-h-[calc(100vh-210px)] pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
+              {filteredChildren.length === 0 ? (
+                <div className="py-8 text-center text-sm font-medium text-slate-400 dark:text-slate-500">
+                  {i18n.language === "ru" ? "Ничего не найдено" : "Bo'limlar topilmadi"}
+                </div>
+              ) : (
+                filteredChildren.map((child: any, index: number) => (
+                  <NavLink
+                    key={index}
+                    to={`/resource-management/${child.id}/${encodeURIComponent(
+                      child.name,
+                    )}`}
+                    onClick={() => setOpenSheetId(null)}
+                    className={({ isActive }) =>
+                      `group flex items-center gap-3.5 transition-all duration-200 p-3.5 rounded-xl border font-sans ${
+                        isActive
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 !text-white border-transparent shadow-md shadow-blue-500/25 font-semibold [&_svg]:text-white [&_.indicator]:opacity-100"
+                          : "text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300/80 shadow-xs [&_svg]:text-blue-500 dark:[&_svg]:text-blue-400 [&_.indicator]:opacity-0 [&_.indicator]:group-hover:opacity-100"
+                      }`
+                    }
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
+                      <FileText size={18} className="transition-transform group-hover:scale-110" />
+                    </div>
+                    <span className="text-sm font-medium flex-1 leading-snug">
+                      {t(child.name)}
+                    </span>
+                    <div className="indicator w-2 h-2 rounded-full bg-emerald-400 transition-opacity shrink-0"></div>
+                  </NavLink>
+                ))
+              )}
             </div>
           </SheetContent>
         </Sheet>

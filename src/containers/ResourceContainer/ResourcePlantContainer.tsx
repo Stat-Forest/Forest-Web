@@ -38,7 +38,13 @@ const loadAOS = async () => {
   return AOS;
 };
 
-function ResourcePlantContainer({ reportName }: { reportName: string }) {
+function ResourcePlantContainer({
+  reportName,
+  isFinance = false,
+}: {
+  reportName: string;
+  isFinance?: boolean;
+}) {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -677,6 +683,7 @@ function ResourcePlantContainer({ reportName }: { reportName: string }) {
                     setSelectedYear={setSelectedYear}
                     selectedQuarter={selectedQuarter}
                     setSelectedQuarter={setSelectedQuarter}
+                    showQuarterFilter={Boolean(isFinance || reportName === "Daromad" || reportName === "Доход")}
                     deadline={deadline}
                     deadlinePage={deadlinePage}
                     setDeadlinePage={setDeadlinePage}
