@@ -32,6 +32,7 @@ import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import YearSelect from "@/components/YearSelect/YearSelect";
 import {
   updatePlansReducer,
   updatePlansInitialState,
@@ -743,15 +744,11 @@ function UpdatePlans() {
 
             {/* YEAR */}
             <div className="w-full">
-              <Label className="pb-1.5 text-md">Yil</Label>
-              <Input
-                type="number"
+              <Label className="pb-1.5 text-md">{t("year")}</Label>
+              <YearSelect
                 value={state.year}
-                onChange={(e) =>
-                  dispatch({
-                    type: "SET_YEAR",
-                    payload: Number(e.target.value),
-                  })
+                onChange={(year) =>
+                  dispatch({ type: "SET_YEAR", payload: year })
                 }
               />
             </div>
