@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -20,9 +20,12 @@ import {
   useGetReportSourceReportsQuery,
   useGetUsersReportQuery,
 } from "@/services/reportsApi";
-import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import {
+  generalApi,
+  useGetOrganizationReportsQuery,
+} from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Select,
@@ -33,6 +36,15 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
+import ImportExcelButton from "@/components/ImportExcelButton/ImportExcelButton";
+import { ParsedExcelReport } from "@/utils/parseExcelReport";
+import { ImportParseResponse } from "@/types/importReport";
+import {
+  findByName,
+  getExcelSheets,
+  matchSheetsToColumns,
+  normalizeExcelText,
+} from "@/utils/matchExcelColumns";
 
 interface ColumnItem {
   id: string;
@@ -71,9 +83,30 @@ function findEmptyChildrenColumnIds(children: any[]): ColumnItem[] {
   return result;
 }
 
+/** Butun ustunlar daraxtidan `id -> sarlavha zanjiri` xaritasini yig'adi */
+function collectColumnChains(tree: any[]): Map<string, string> {
+  const chainById = new Map<string, string>();
+
+  const walk = (nodes: any[], parentChain: string[]) => {
+    (nodes || []).forEach((node) => {
+      if (!node) return;
+      const chain = [...parentChain, node.title];
+      if (node.id != null) chainById.set(String(node.id), chain.join(" / "));
+      if (Array.isArray(node.children)) walk(node.children, chain);
+    });
+  };
+
+  // Yuqori qavat — qadamlar (ilovalar), forma zanjiri ularning ichidan boshlanadi
+  (tree || []).forEach((step: any) => walk(step?.children || [], []));
+
+  return chainById;
+}
+
 function AllCreateReportItem() {
   const { reportName } = useParams();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  /** Qaysi location.state allaqachon import qilingani — takroriy import bo'lmasin */
+  const appliedImportStateRef = useRef<unknown>(null);
   const [selectedDeadlineId, setSelectedDeadlineId] = useState<string>("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
@@ -85,6 +118,8 @@ function AllCreateReportItem() {
   >([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  /** Import paytida joylanmagan qiymatlar / bo'sh qolgan ustunlar ro'yxati */
+  const [importIssues, setImportIssues] = useState<string[]>([]);
   const [planItems, setPlanItems] = useState<
     {
       columnId: string;
@@ -98,9 +133,334 @@ function AllCreateReportItem() {
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
+
+  // Tashkilotlar hook orqali hali kelmagan bo'lishi mumkin — import paytida aniq so'raymiz
+  const fetchOrganizations = async (): Promise<{ id: string; name: string }[]> => {
+    const loaded = (organizationsData as { id: string; name: string }[]) || [];
+    if (loaded.length > 0) return loaded;
+
+    try {
+      const res: any = await dispatch(
+        generalApi.endpoints.getOrganizationReports.initiate({ lang }),
+      ).unwrap();
+
+      return Array.isArray(res) ? res : res?.results || [];
+    } catch (error) {
+      console.error("Excel import: tashkilotlarni olishda xatolik", error);
+      return [];
+    }
+  };
+
+  const handleExcelImport = async (data: ParsedExcelReport) => {
+    if (!data || !allEmptyColumnsByStep) return;
+
+    // Ilovalar alohida varaqlarda bo'lishi mumkin — hammasini o'qiymiz
+    const sheets = getExcelSheets(data);
+
+    if (sheets.length === 0) {
+      toast.error(t("excelImportNoTable"));
+      return;
+    }
+
+    const allCols = allEmptyColumnsByStep.flat();
+    const sheetMatches = matchSheetsToColumns(sheets, allCols).filter(
+      (match) => match.matchedCount > 0,
+    );
+
+    // Tashkilot select'i — Exceldagi tashkilot nomi bo'yicha (qaysi varaqda bo'lsa)
+    let excelOrgName = "";
+    sheetMatches.some(({ special, rows }) => {
+      if (special.organizationIndex < 0) return false;
+      excelOrgName = (rows[0]?.cells[special.organizationIndex] ?? "").trim();
+      return excelOrgName !== "";
+    });
+
+    const matchedOrg = excelOrgName
+      ? findByName(await fetchOrganizations(), excelOrgName, (org) => org.name)
+      : undefined;
+
+    const newValues: Record<string, string> = {};
+
+    // Bitta formulali hisobot — har bir varaqning birinchi qatori birlashtiriladi
+    sheetMatches.forEach(({ columnToExcel, rows }) => {
+      const row = rows[0];
+      if (!row) return;
+
+      allCols.forEach((col) => {
+        if (col.is_organization === true) return;
+        if (newValues[col.id]) return;
+
+        const excelIndex = columnToExcel[col.id];
+        if (excelIndex === undefined) return;
+
+        const cellValue = (row.cells[excelIndex] ?? "").trim();
+        if (cellValue !== "") newValues[col.id] = cellValue;
+      });
+    });
+
+    if (matchedOrg) {
+      allCols.forEach((col) => {
+        if (col.is_organization === true) newValues[col.id] = matchedOrg.id;
+      });
+    }
+
+    if (matchedOrg) setSelectedOrganizationId(matchedOrg.id);
+
+    if (Object.keys(newValues).length === 0) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    setFormValues((prev) => ({ ...prev, ...newValues }));
+  };
+
+  /**
+   * Backend `/reports/import-parse/` javobi — ustunlar UUID bo'yicha keladi.
+   */
+  const applyImportPayload = async (payload: ImportParseResponse) => {
+    const allCols = allEmptyColumnsByStep.flat();
+    if (allCols.length === 0) {
+      toast.error(t("excelImportNoTable"));
+      return;
+    }
+
+    const columnById = new Map(allCols.map((col) => [String(col.id), col]));
+
+    // Plant-based javob kelsa ham qiymatlarni tekislab olamiz
+    const items = [
+      ...(payload.items || []),
+      ...(payload.plants || []).flatMap((plant) => plant.items || []),
+    ];
+
+    // Avval kelgan qiymatlarni UUID bo'yicha yig'amiz (diagnostika uchun ham kerak)
+    const receivedById = new Map<string, string>();
+    const unmatched: { column: string; value: string }[] = [];
+    /** Nom bo'yicha bog'lab olingan UUID lar */
+    const resolvedIds = new Set<string>();
+    const resolvedByTitle: string[] = [];
+    /** Hisobot ustunlari daraxtida umuman uchramagan UUID lar */
+    const missingInTree = new Set<string>();
+
+    items.forEach((item) => {
+      const columnId = String(item.column ?? "");
+      const value = String(item.value ?? "").trim();
+
+      if (!columnById.has(columnId)) {
+        unmatched.push({ column: columnId, value });
+        return;
+      }
+      receivedById.set(columnId, value);
+    });
+
+    // Backend formada yo'q UUID qaytarsa — o'sha ustunning nomini aniqlab,
+    // shu nomdagi formadagi ustunga bog'laymiz (backend sarlavha bo'yicha
+    // moslashtirganda boshqa ustun UUID sini berib yuborishi mumkin)
+    if (unmatched.length > 0 && reportIds) {
+      try {
+        const fullTree = await dispatch(
+          reportApi.endpoints.getStatementColumnsReport.initiate({
+            statementId: reportIds as string,
+            lang,
+          }),
+        ).unwrap();
+
+        // Javob massiv yoki {results: [...]} ko'rinishida bo'lishi mumkin
+        const treeNodes = Array.isArray(fullTree)
+          ? fullTree
+          : fullTree?.results || [];
+
+        const chainById = collectColumnChains(treeNodes);
+
+        console.info(
+          `import-parse: to'liq ustunlar daraxtida ${chainById.size} ta ustun topildi`,
+          unmatched.map(({ column }) => ({
+            id: column,
+            daraxtdagi_nomi: chainById.get(column) || "— daraxtda ham yo'q",
+          })),
+        );
+
+        unmatched.forEach(({ column }) => {
+          if (!chainById.has(column)) missingInTree.add(column);
+        });
+
+        // Formadagi ustunlarni nom bo'yicha izlash uchun tayyorlaymiz
+        const formColumnsByChain = new Map<string, ColumnItem>();
+        const formColumnsByTitle = new Map<string, ColumnItem>();
+        allCols.forEach((column) => {
+          const chain = normalizeExcelText(column.fullParentChain);
+          const title = normalizeExcelText(column.title);
+          if (!formColumnsByChain.has(chain)) {
+            formColumnsByChain.set(chain, column);
+          }
+          if (!formColumnsByTitle.has(title)) {
+            formColumnsByTitle.set(title, column);
+          }
+        });
+
+        unmatched.forEach(({ column: columnId, value }) => {
+          const chain = chainById.get(columnId);
+          if (!chain || !value) return;
+
+          const normalizedChain = normalizeExcelText(chain);
+          const leaf = normalizeExcelText(chain.split("/").pop() || "");
+
+          const target =
+            formColumnsByChain.get(normalizedChain) ||
+            formColumnsByTitle.get(leaf);
+
+          // Faqat hali qiymat kelmagan ustunni to'ldiramiz
+          if (!target || receivedById.has(String(target.id))) return;
+
+          receivedById.set(String(target.id), value);
+          resolvedIds.add(columnId);
+          resolvedByTitle.push(`${chain} → ${target.fullParentChain}`);
+        });
+      } catch (error) {
+        console.warn(
+          "import-parse: noma'lum UUID larni nom bo'yicha aniqlab bo'lmadi",
+          error,
+        );
+      }
+    }
+
+    if (resolvedByTitle.length > 0) {
+      console.info("import-parse: nom bo'yicha bog'landi", resolvedByTitle);
+    }
+
+    const newValues: Record<string, string> = {};
+    let organizationValue = "";
+
+    allCols.forEach((column) => {
+      const value = receivedById.get(String(column.id));
+      if (!value) return;
+
+      if (column.is_organization === true) {
+        organizationValue = value;
+        return;
+      }
+
+      // Reja ustuni disabled — uni backenddan olingan qiymat bilan almashtirmaymiz
+      if (column.status_plan != null) return;
+
+      newValues[column.id] = value;
+    });
+
+    // Qaysi ustunga nima kelgani ko'rinib tursin — bo'sh qolgan ustunni tekshirish uchun
+    console.info("import-parse natijasi:");
+    console.table(
+      allCols.map((column) => ({
+        ustun: column.fullParentChain,
+        id: String(column.id),
+        turi: column.is_organization
+          ? "tashkilot"
+          : column.status_plan != null
+            ? "reja (disabled)"
+            : "input",
+        kelgan_qiymat: receivedById.has(String(column.id))
+          ? receivedById.get(String(column.id)) || "(bo'sh)"
+          : "— backend yubormadi",
+      })),
+    );
+
+    if (unmatched.length > 0) {
+      console.warn(
+        "import-parse: bu ustun UUID lari formada topilmadi",
+        unmatched,
+      );
+    }
+
+    // Foydalanuvchi DevTools ochmasdan ham sababini ko'rsin
+    const issues: string[] = [
+      ...unmatched
+        .filter(({ column }) => !resolvedIds.has(column))
+        .map(
+          ({ column, value }) =>
+            `«${value || "—"}» — ${t("excelImportUnknownColumn")} (ID: ${column})${
+              missingInTree.has(column)
+                ? ` — ${t("excelImportColumnNotInStatement")}`
+                : ""
+            }`,
+        ),
+      ...allCols
+        .filter(
+          (column) =>
+            column.status_plan == null && // reja qiymati plan API dan keladi
+            column.is_organization !== true && // tashkilot doim qo'lda tanlanadi
+            !receivedById.get(String(column.id)),
+        )
+        .map((column) => `${column.fullParentChain} — ${t("excelImportNoValue")}`),
+    ];
+
+    setImportIssues(issues);
+
+    if (organizationValue) {
+      const organizations = await fetchOrganizations();
+
+      // Qiymat UUID bo'lib kelishi ham mumkin — avval ID bo'yicha tekshiramiz
+      const matchedOrg =
+        organizations.find((org) => String(org.id) === organizationValue) ||
+        findByName(organizations, organizationValue, (org) => org.name);
+
+      if (matchedOrg) {
+        setSelectedOrganizationId(matchedOrg.id);
+        const orgColumn = allCols.find((col) => col.is_organization === true);
+        if (orgColumn) newValues[orgColumn.id] = matchedOrg.id;
+      } else {
+        // Tashkilot doim qo'lda tanlanadi — foydalanuvchini bezovta qilmaymiz
+        console.info("import-parse: tashkilot topilmadi", organizationValue);
+      }
+    }
+
+    if (Object.keys(newValues).length === 0) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    setFormValues((prev) => ({ ...prev, ...newValues }));
+  };
+
+  useEffect(() => {
+    if (allEmptyColumnsByStep.length === 0) return;
+
+    // Import bir marta qo'llaniladi — keyingi qayta chizishlarda foydalanuvchi
+    // kiritgan qiymatlar ustidan yozilmasin
+    if (appliedImportStateRef.current === location.state) return;
+
+    const payload = (location.state as any)?.importedPayload as
+      | ImportParseResponse
+      | undefined;
+    const imported = (location.state as any)?.importedExcelData as
+      | ParsedExcelReport
+      | undefined;
+
+    if (!payload && !imported) return;
+
+    appliedImportStateRef.current = location.state;
+
+    // Ilovalar alohida varaqlarda bo'lsa, backend odatda faqat birinchisini o'qiydi —
+    // bunday faylni o'zimiz o'qiganimiz to'liqroq bo'ladi
+    if (imported && getExcelSheets(imported).length > 1) {
+      console.info(
+        `import: faylda ${getExcelSheets(imported).length} ta varaq bor — fayl bo'yicha to'ldiramiz`,
+      );
+      handleExcelImport(imported);
+      return;
+    }
+
+    if (payload) {
+      applyImportPayload(payload);
+      return;
+    }
+
+    if (imported) {
+      handleExcelImport(imported);
+    }
+  }, [location.state, allEmptyColumnsByStep]);
 
   const {
     data: organizationsData,
@@ -425,6 +785,23 @@ function AllCreateReportItem() {
 
   const currentEmptyColumns = allEmptyColumnsByStep[currentStep] || [];
   const totalSteps = allEmptyColumnsByStep.length;
+
+  // Import qilishdan oldin muddat va tashkilot tanlangan bo'lishi shart:
+  // reja qiymatlari aynan shu ikkisiga qarab yuklanadi
+  const formHasOrganizationColumn = allEmptyColumnsByStep
+    .flat()
+    .some((col) => col.is_organization === true);
+
+  // Import tartibi: avval muddat, keyin tashkilot — undan so'nggina Excel fayl
+  const orgStillNeeded = formHasOrganizationColumn && !selectedOrganizationId;
+  const importDisabledReason =
+    !selectedDeadlineId && orgStillNeeded
+      ? t("excelImportOrderHint")
+      : !selectedDeadlineId
+        ? t("excelImportSelectDeadlineFirst")
+        : orgStillNeeded
+          ? t("excelImportSelectOrgFirst")
+          : "";
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title ?? `${t("step")} ${currentStep + 1}`;
 
@@ -440,7 +817,7 @@ function AllCreateReportItem() {
 
   return (
     <>
-      <div className="p-6">
+      <div className="p-6 flex items-center justify-between gap-3">
         <Button
           className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
           onClick={() => navigate(-1)}
@@ -448,6 +825,15 @@ function AllCreateReportItem() {
           <ChevronLeft size={18} />
           <span className="text-sm">{t("back")}</span>
         </Button>
+        {/* Excel import — faqat tashkilot hodimi uchun */}
+        {user_role === "tashkilot_hodimi" && (
+          <ImportExcelButton
+            statementId={reportIds ?? undefined}
+            onParsed={applyImportPayload}
+            onImportSuccess={handleExcelImport}
+            disabledReason={importDisabledReason}
+          />
+        )}
       </div>
       <form
         onSubmit={handleSubmit}
@@ -463,6 +849,34 @@ function AllCreateReportItem() {
               {formErrors.map((error, idx) => (
                 <li key={idx} className="text-sm">
                   {error}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Import bo'yicha eslatmalar */}
+        {importIssues.length > 0 && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+                {t("excelImportIssuesTitle")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setImportIssues([])}
+                className="text-xs text-amber-700 dark:text-amber-300 underline cursor-pointer"
+              >
+                {t("excelPreviewClose")}
+              </button>
+            </div>
+            <ul className="list-disc list-inside space-y-1 mt-2">
+              {importIssues.map((issue, idx) => (
+                <li
+                  key={idx}
+                  className="text-sm text-amber-800 dark:text-amber-200"
+                >
+                  {issue}
                 </li>
               ))}
             </ul>

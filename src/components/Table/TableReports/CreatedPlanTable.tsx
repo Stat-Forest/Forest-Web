@@ -8,8 +8,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useDeletePlanMutation } from "@/services/reportsApi";
-import { Edit2, Trash2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  useDeletePlanMutation,
+  useExportPlanExcelMutation,
+} from "@/services/reportsApi";
+import {
+  Edit2,
+  Trash2,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  FileSpreadsheet,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +27,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { toast } from "react-toastify";
 import { translateStatementName } from "@/utils/i18nHelpers";
+import { triggerBlobDownload, getApiErrorMessage } from "@/utils/downloadFile";
 
 interface CreatedPlantableProps {
   data: any[];
@@ -50,6 +61,28 @@ function CreatedPlantable({
       toast.error(message);
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  // Rejani to'ldirilgan Excel qilib yuklab olish (faqat bolim_admin)
+  const [exportPlanExcel] = useExportPlanExcelMutation();
+  const [exportingId, setExportingId] = useState<string | null>(null);
+
+  const handleExport = async (planId: string) => {
+    setExportingId(planId);
+    try {
+      const { blob, filename } = await exportPlanExcel({
+        plan: planId,
+        lang: i18n.language === "ru" ? "ru" : "uz",
+      }).unwrap();
+
+      triggerBlobDownload(blob, filename);
+      toast.success(t("planExported"));
+    } catch (error) {
+      console.error("Rejani export qilishda xatolik:", error);
+      toast.error(getApiErrorMessage(error, t("error_occurred")));
+    } finally {
+      setExportingId(null);
     }
   };
 
@@ -116,6 +149,24 @@ function CreatedPlantable({
                 {(user_role == "super_admin" || user_role == "bolim_admin") && (
                   <TableCell className="w-[20%] text-sm font-medium border-none">
                   <div className="flex items-center justify-center gap-2">
+                    {user_role === "bolim_admin" && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExport(String(item.id));
+                        }}
+                        disabled={exportingId === String(item.id)}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        size="sm"
+                        title={t("export")}
+                      >
+                        {exportingId === String(item.id) ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                          <FileSpreadsheet size={16} />
+                        )}
+                      </Button>
+                    )}
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();

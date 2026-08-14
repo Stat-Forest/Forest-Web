@@ -14,6 +14,8 @@ import {
   useGetPlanColumnsReportQuery,
   useGetStatementsReportQuery,
   useGetPlantsReportQuery,
+  useGetPlanExcelTemplateMutation,
+  useImportPlanExcelMutation,
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
@@ -35,6 +37,9 @@ import {
   createReportReducer,
   createReportInitialState,
 } from "@/reducers/formReducer";
+import YearSelect from "@/components/YearSelect/YearSelect";
+import PlanTemplateActions from "@/components/PlanTemplateActions/PlanTemplateActions";
+import { triggerBlobDownload, getApiErrorMessage } from "@/utils/downloadFile";
 
 function CreateReport() {
   const [state, dispatch] = useReducer(
@@ -43,6 +48,7 @@ function CreateReport() {
   );
   const [createReport, { isLoading: isSubmitting }] = usePlanCreateMutation();
   const lang = useSelector((state: RootState) => state.language.lang);
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const navigate = useNavigate();
 
   const { t } = useTranslation();
@@ -269,6 +275,58 @@ function CreateReport() {
     dispatch({ type: "RESET_FORM" });
   };
 
+  // ---- Reja shabloni (backend) va Excel import ----
+  // Backend bu endpointlarni faqat bolim_admin uchun ochadi
+  const canUsePlanExcel = user_role === "bolim_admin";
+
+  const [getPlanTemplate, { isLoading: templateLoading }] =
+    useGetPlanExcelTemplateMutation();
+  const [importPlanExcel, { isLoading: templateImporting }] =
+    useImportPlanExcelMutation();
+
+  const handleDownloadTemplate = async () => {
+    if (!state.statement) return;
+
+    try {
+      const { blob, filename } = await getPlanTemplate({
+        statement: state.statement,
+        lang,
+      }).unwrap();
+
+      triggerBlobDownload(blob, filename);
+      toast.success(t("templateDownloaded"));
+    } catch (error) {
+      console.error("Shablon yuklab olishda xatolik:", error);
+      toast.error(getApiErrorMessage(error, t("error_occurred")));
+    }
+  };
+
+  const handleTemplateImport = async (file: File) => {
+    if (!state.selectedOrg || !state.statement || !state.year) {
+      toast.error(t("must_select_all"));
+      return;
+    }
+
+    try {
+      const { status } = await importPlanExcel({
+        file,
+        organization: state.selectedOrg,
+        statement: state.statement,
+        year: state.year,
+        season: state.season,
+      }).unwrap();
+
+      // 201 — yangi reja yaratildi, 200 — mavjudi yangilandi
+      toast.success(status === 201 ? t("planImported") : t("planUpdated"));
+      resetForm();
+      setSelectedPlants([{ plantId: "", plantName: "", values: {} }]);
+      navigate("/main");
+    } catch (error) {
+      console.error("Rejani import qilishda xatolik:", error);
+      toast.error(getApiErrorMessage(error, t("templateImportError")));
+    }
+  };
+
   const createReportHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -448,15 +506,9 @@ function CreateReport() {
         {/* YEAR */}
         <div className="w-full">
           <Label className="pb-1.5 text-md block">{t("year")}</Label>
-          <Input
-            name="year"
-            className="min-h-[45px]"
-            type="number"
+          <YearSelect
             value={state.year}
-            onChange={(e) =>
-              dispatch({ type: "SET_YEAR", payload: Number(e.target.value) })
-            }
-            required
+            onChange={(year) => dispatch({ type: "SET_YEAR", payload: year })}
           />
         </div>
 
@@ -481,6 +533,19 @@ function CreateReport() {
             </Select>
           </div>
         )}
+
+        {/* SHABLON VA IMPORT — barcha select tanlangandan keyin (faqat bo'lim admin) */}
+        {canUsePlanExcel &&
+          state.selectedOrg &&
+          state.statement &&
+          state.year && (
+            <PlanTemplateActions
+              onDownloadTemplate={handleDownloadTemplate}
+              onImportFile={handleTemplateImport}
+              downloading={templateLoading}
+              importing={templateImporting}
+            />
+          )}
 
         {/* REJA USTUNLARI */}
         {state.statement && (

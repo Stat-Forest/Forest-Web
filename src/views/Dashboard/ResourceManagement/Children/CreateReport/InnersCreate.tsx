@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -18,10 +18,27 @@ import {
   reportApi,
   useGetDeadlinesReportQuery,
 } from "@/services/reportsApi";
-import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import {
+  generalApi,
+  useGetOrganizationReportsQuery,
+} from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft } from "lucide-react";
+import { toast } from "react-toastify";
+import ImportExcelButton from "@/components/ImportExcelButton/ImportExcelButton";
+import { ParsedExcelReport } from "@/utils/parseExcelReport";
+import {
+  ImportParseResponse,
+  splitImportItemsIntoRows,
+} from "@/types/importReport";
+import {
+  countExcelDataRows,
+  findByName,
+  getExcelSheets,
+  matchSheetsToColumns,
+} from "@/utils/matchExcelColumns";
 import {
   Select,
   SelectContent,
@@ -58,6 +75,8 @@ function findEmptyChildrenColumnIds(
 
 function InnersCreateReportItem() {
   const [formGroups, setFormGroups] = useState<Record<string, string>[]>([{}]);
+  /** Qaysi location.state allaqachon import qilingani — takroriy import bo'lmasin */
+  const appliedImportStateRef = useRef<unknown>(null);
   const [selectedDeadlineId, setSelectedDeadlineId] = useState("");
   const [selectedOrganizationId, setSelectedOrganizationId] =
     useState<string>("");
@@ -75,8 +94,240 @@ function InnersCreateReportItem() {
   const { t } = useTranslation();
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
+
+  // Tashkilotlar hook orqali hali kelmagan bo'lishi mumkin — import paytida aniq so'raymiz
+  const fetchOrganizations = async (): Promise<
+    { id: string; name: string }[]
+  > => {
+    const loaded = (organizationsData as { id: string; name: string }[]) || [];
+    if (loaded.length > 0) return loaded;
+
+    try {
+      const res: any = await dispatch(
+        generalApi.endpoints.getOrganizationReports.initiate({ lang }),
+      ).unwrap();
+
+      return Array.isArray(res) ? res : res?.results || [];
+    } catch (error) {
+      console.error("Excel import: tashkilotlarni olishda xatolik", error);
+      return [];
+    }
+  };
+
+  const handleExcelImport = async (data: ParsedExcelReport) => {
+    if (!data || !allEmptyColumnsByStep) return;
+
+    // Ilovalar alohida varaqlarda bo'lishi mumkin — hammasini o'qiymiz
+    const sheets = getExcelSheets(data);
+
+    if (sheets.length === 0) {
+      toast.error(t("excelImportNoTable"));
+      return;
+    }
+
+    const allCols = allEmptyColumnsByStep.flat();
+    const sheetMatches = matchSheetsToColumns(sheets, allCols).filter(
+      (match) => match.matchedCount > 0,
+    );
+
+    if (sheetMatches.length === 0) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    // Tashkilot select'i — Exceldagi tashkilot nomi bo'yicha (qaysi varaqda bo'lsa)
+    let excelOrgName = "";
+    sheetMatches.some(({ special, rows }) => {
+      if (special.organizationIndex < 0) return false;
+      excelOrgName = (rows[0]?.cells[special.organizationIndex] ?? "").trim();
+      return excelOrgName !== "";
+    });
+
+    const matchedOrg = excelOrgName
+      ? findByName(await fetchOrganizations(), excelOrgName, (org) => org.name)
+      : undefined;
+
+    // Har bir qator — alohida formula; qiymatlar hamma varaqlardan yig'iladi
+    const rowCount = Math.max(...sheetMatches.map((match) => match.rows.length));
+
+    const newGroups = Array.from({ length: rowCount }, (_, rowIndex) => {
+      const values: Record<string, string> = {};
+
+      sheetMatches.forEach(({ columnToExcel, rows }) => {
+        const row = rows[rowIndex];
+        if (!row) return;
+
+        allCols.forEach((col) => {
+          if (col.title.toLowerCase().includes("tashkilot")) return;
+          if (values[col.id]) return; // ustunroq varaqdan olingan qiymat saqlanadi
+
+          const excelIndex = columnToExcel[col.id];
+          if (excelIndex === undefined) return;
+
+          const cellValue = (row.cells[excelIndex] ?? "").trim();
+          if (cellValue !== "") values[col.id] = cellValue;
+        });
+      });
+
+      if (matchedOrg) {
+        allCols.forEach((col) => {
+          if (col.title.toLowerCase().includes("tashkilot")) {
+            values[col.id] = matchedOrg.id;
+          }
+        });
+      }
+
+      return values;
+    });
+
+    if (matchedOrg) setSelectedOrganizationId(matchedOrg.id);
+
+    if (newGroups.every((group) => Object.keys(group).length === 0)) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    setFormGroups(newGroups);
+  };
+
+  /**
+   * Backend `/reports/import-parse/` javobi — ustunlar UUID bo'yicha keladi.
+   * Har bir o'simlik/obyekt alohida formula bo'ladi.
+   */
+  const applyImportPayload = async (payload: ImportParseResponse) => {
+    const allCols = allEmptyColumnsByStep.flat();
+    if (allCols.length === 0) return;
+
+    const columnIds = new Set(allCols.map((col) => String(col.id)));
+    const orgColumn = allCols.find((col) =>
+      col.title.toLowerCase().includes("tashkilot"),
+    );
+
+    let organizationValue = "";
+
+    const unmatched: string[] = [];
+
+    const toValues = (items: ImportParseResponse["items"] = []) => {
+      const values: Record<string, string> = {};
+      items.forEach((item) => {
+        const columnId = String(item.column ?? "");
+        if (!columnIds.has(columnId)) {
+          unmatched.push(columnId);
+          return;
+        }
+
+        const value = String(item.value ?? "").trim();
+        if (value === "") return;
+
+        if (orgColumn && columnId === String(orgColumn.id)) {
+          organizationValue = value;
+          return;
+        }
+
+        values[columnId] = value;
+      });
+      return values;
+    };
+
+    const plants = payload.plants || [];
+    // `plants` kelmagan bo'lsa ham fayl bir nechta qatordan iborat bo'lishi mumkin —
+    // takrorlangan ustun UUID lari bo'yicha alohida formulalarga ajratamiz
+    const groups =
+      plants.length > 0
+        ? plants.map((plant) => toValues(plant.items))
+        : splitImportItemsIntoRows(payload.items).map((rowItems) =>
+            toValues(rowItems),
+          );
+
+    const filledGroups = groups.filter(
+      (group) => Object.keys(group).length > 0,
+    );
+
+    if (unmatched.length > 0) {
+      console.warn(
+        "import-parse: bu ustun UUID lari formada topilmadi",
+        unmatched,
+        "formadagi ustunlar:",
+        allCols.map((col) => col.id),
+      );
+    }
+
+    if (organizationValue) {
+      const organizations = await fetchOrganizations();
+      const matchedOrg =
+        organizations.find((org) => String(org.id) === organizationValue) ||
+        findByName(organizations, organizationValue, (org) => org.name);
+
+      if (matchedOrg) {
+        setSelectedOrganizationId(matchedOrg.id);
+        if (orgColumn) {
+          filledGroups.forEach((group) => {
+            group[orgColumn.id] = matchedOrg.id;
+          });
+        }
+      } else {
+        // Tashkilot doim qo'lda tanlanadi — foydalanuvchini bezovta qilmaymiz
+        console.info("import-parse: tashkilot topilmadi", organizationValue);
+      }
+    }
+
+    if (filledGroups.length === 0) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    setFormGroups(filledGroups);
+  };
+
+  useEffect(() => {
+    if (allEmptyColumnsByStep.length === 0) return;
+
+    // Import bir marta qo'llaniladi — keyingi qayta chizishlarda foydalanuvchi
+    // kiritgan qiymatlar ustidan yozilmasin
+    if (appliedImportStateRef.current === location.state) return;
+
+    const payload = (location.state as any)?.importedPayload as
+      | ImportParseResponse
+      | undefined;
+    const imported = (location.state as any)?.importedExcelData as
+      | ParsedExcelReport
+      | undefined;
+
+    if (!payload && !imported) return;
+
+    appliedImportStateRef.current = location.state;
+
+    // Backend fayldagi hamma qatorni qaytarmagan bo'lsa — faylning o'zidan o'qiymiz
+    const payloadRowCount = payload
+      ? payload.plants?.length ||
+        splitImportItemsIntoRows(payload.items).length ||
+        0
+      : 0;
+    const excelRowCount = countExcelDataRows(imported);
+    // Har bir ilova alohida varaqda bo'lsa, backend odatda faqat birinchisini o'qiydi
+    const sheetCount = getExcelSheets(imported).length;
+
+    if (imported && (sheetCount > 1 || excelRowCount > payloadRowCount)) {
+      console.info(
+        `import: backend ${payloadRowCount} ta formula qaytardi, faylda ${sheetCount} ta varaq / ${excelRowCount} ta qator bor — fayl bo'yicha to'ldiramiz`,
+      );
+      handleExcelImport(imported);
+      return;
+    }
+
+    if (payload) {
+      applyImportPayload(payload);
+      return;
+    }
+
+    if (imported) {
+      handleExcelImport(imported);
+    }
+  }, [location.state, allEmptyColumnsByStep]);
 
   // 🔹 Deadline state
   const [deadlinePage, setDeadlinePage] = useState(1);
@@ -323,9 +574,45 @@ function InnersCreateReportItem() {
   const currentStepTitle =
     tableHeadersData?.[currentStep]?.title ?? `Qadam ${currentStep + 1}`;
 
+  // Reja qiymatlari muddat va tashkilotga bog'liq — import shulardan keyin bo'lishi kerak
+  const formHasOrganizationColumn = allEmptyColumnsByStep
+    .flat()
+    .some((col) => col.title?.toLowerCase().includes("tashkilot"));
+
+  // Import tartibi: avval muddat, keyin tashkilot — undan so'nggina Excel fayl
+  const orgStillNeeded = formHasOrganizationColumn && !selectedOrganizationId;
+  const importDisabledReason =
+    !selectedDeadlineId && orgStillNeeded
+      ? t("excelImportOrderHint")
+      : !selectedDeadlineId
+        ? t("excelImportSelectDeadlineFirst")
+        : orgStillNeeded
+          ? t("excelImportSelectOrgFirst")
+          : "";
+
   return (
-    <form
-      onSubmit={handleSubmit}
+    <>
+      <div className="px-6 pt-6 flex items-center justify-between gap-3">
+        <Button
+          type="button"
+          className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeft size={18} />
+          <span className="text-sm">{t("back")}</span>
+        </Button>
+        {/* Excel import — faqat tashkilot hodimi uchun */}
+        {user_role === "tashkilot_hodimi" && (
+          <ImportExcelButton
+            statementId={reportIds ?? undefined}
+            onParsed={applyImportPayload}
+            onImportSuccess={handleExcelImport}
+            disabledReason={importDisabledReason}
+          />
+        )}
+      </div>
+      <form
+        onSubmit={handleSubmit}
       className={`max-w-full m-6 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-6 bg-white dark:bg-slate-900 transition-colors ${
         isSubmitting ? "opacity-50 pointer-events-none" : ""
       }`}
@@ -648,6 +935,7 @@ function InnersCreateReportItem() {
         </div>
       )}
     </form>
+    </>
   );
 }
 

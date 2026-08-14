@@ -3,6 +3,39 @@ import { base_url } from "./baseUrl";
 import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { decryptData } from "@/utils/crypto";
 import { DeadlineMonthResponse } from "@/types/reportInterface";
+import { ImportParseResponse } from "@/types/importReport";
+
+/**
+ * Fayl (blob) qaytaradigan endpointlar uchun javob ishlovchisi.
+ * Xato bo'lsa — backend JSON xabarini qaytaradi, aks holda blob + fayl nomi.
+ */
+const downloadResponseHandler =
+  (fallbackName: string) => async (response: Response) => {
+    if (!response.ok) {
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { detail: text };
+      }
+    }
+
+    const disposition = response.headers.get("content-disposition") || "";
+    const match = disposition.match(
+      /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i,
+    );
+
+    let filename = fallbackName;
+    if (match?.[1]) {
+      try {
+        filename = decodeURIComponent(match[1]);
+      } catch {
+        filename = match[1];
+      }
+    }
+
+    return { blob: await response.blob(), filename };
+  };
 
 export const reportApi = createApi({
   reducerPath: "reportApi",
@@ -145,10 +178,13 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
     }),
     getStatementColumnsReport: builder.query<
       any,
-      { statementId: any; lang: string; isUser: string }
+      { statementId: any; lang: string; isUser?: string }
     >({
+      // isUser berilmasa — barcha ustunlar (import UUID larini nom bo'yicha aniqlash uchun)
       query: ({ statementId, lang, isUser }) => ({
-        url: `/statement-columns/?statement=${statementId}&lang=${lang}&is_user_input=${isUser}`,
+        url: `/statement-columns/?statement=${statementId}&lang=${lang}${
+          isUser ? `&is_user_input=${isUser}` : ""
+        }`,
         method: "GET",
       }),
       providesTags: ["Reports"],
@@ -254,6 +290,102 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         method: "GET",
       }),
       providesTags: ["Reports"],
+    }),
+
+    // ==== 📥 Hisobot Excel import: shablon / parse ====
+    // Backend faylni DB ga yozmaydi — faqat o'qib, ustun UUID + qiymat qaytaradi
+    getReportImportTemplate: builder.mutation<
+      { blob: Blob; filename: string },
+      { statementId: string; lang?: string }
+    >({
+      query: ({ statementId, lang = "uz" }) => ({
+        url: `/import-template/?statement_id=${statementId}&lang=${lang}`,
+        method: "GET",
+        responseHandler: downloadResponseHandler("hisobot-shablon.xlsx"),
+      }),
+    }),
+
+    parseReportImport: builder.mutation<
+      ImportParseResponse,
+      {
+        file: File;
+        statementId: string;
+        sheetName?: string;
+        lang?: string;
+      }
+    >({
+      query: ({ file, statementId, sheetName, lang }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("statement_id", statementId);
+        if (sheetName) formData.append("sheet_name", sheetName);
+        if (lang) formData.append("lang", lang);
+
+        return {
+          url: `/import-parse/`,
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
+
+    // ==== 📊 Reja (Plan) Excel: shablon / import / export ====
+    // Faqat bolim_admin roli uchun ishlaydi (aks holda 403)
+    getPlanExcelTemplate: builder.mutation<
+      { blob: Blob; filename: string },
+      { statement: string; lang?: string }
+    >({
+      query: ({ statement, lang = "uz" }) => ({
+        url: `/plan-excel/template/?statement=${statement}&lang=${lang}`,
+        method: "GET",
+        responseHandler: downloadResponseHandler("reja-shablon.xlsx"),
+      }),
+    }),
+
+    importPlanExcel: builder.mutation<
+      { data: any; status: number },
+      {
+        file: File;
+        organization: string;
+        statement: string;
+        year: number | string;
+        season?: string | null;
+      }
+    >({
+      query: ({ file, organization, statement, year, season }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const params = new URLSearchParams({
+          organization,
+          statement,
+          year: String(year),
+        });
+        if (season) params.append("season", season);
+
+        return {
+          url: `/plan-excel/import/?${params.toString()}`,
+          method: "POST",
+          body: formData,
+        };
+      },
+      // 201 — yangi reja yaratildi, 200 — mavjudi yangilandi
+      transformResponse: (data: any, meta: any) => ({
+        data,
+        status: meta?.response?.status ?? 200,
+      }),
+      invalidatesTags: ["Reports"],
+    }),
+
+    exportPlanExcel: builder.mutation<
+      { blob: Blob; filename: string },
+      { plan: string; lang?: string }
+    >({
+      query: ({ plan, lang = "uz" }) => ({
+        url: `/plan-excel/export/?plan=${plan}&lang=${lang}`,
+        method: "GET",
+        responseHandler: downloadResponseHandler("reja.xlsx"),
+      }),
     }),
 
     getPlanItemsReport: builder.query<
@@ -562,6 +694,15 @@ export const {
   usePlantCreateMutation,
   useExportExcelMutation,
   useExportPdfMutation,
+  useImportPlanExcelMutation,
+
+  // Reja Excel (shablon / export)
+  useGetPlanExcelTemplateMutation,
+  useExportPlanExcelMutation,
+
+  // Hisobot Excel import
+  useGetReportImportTemplateMutation,
+  useParseReportImportMutation,
 
   // PUT
   useUpdateReportMutation,
