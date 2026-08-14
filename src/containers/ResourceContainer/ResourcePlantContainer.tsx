@@ -660,14 +660,17 @@ function ResourcePlantContainer({
                   {/* Action Button */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-start">
                     {user_role === "tashkilot_hodimi" && (
-                      <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-4 h-[40px] rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-                        onClick={() =>
-                          navigate(`/resource-management/create/${reportName}`)
-                        }
-                      >
-                        {t("createNewReport")}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {/* Excel import — "Yangi hisobot yaratish" sahifasining ichida */}
+                        <button
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-4 h-[40px] rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                          onClick={() =>
+                            navigate(`/resource-management/create/${reportName}`)
+                          }
+                        >
+                          {t("createNewReport")}
+                        </button>
+                      </div>
                     )}
                   </div>
 

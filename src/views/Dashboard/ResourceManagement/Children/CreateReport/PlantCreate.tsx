@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useMemo, useState } from "react";
+import { useReducer, useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -19,10 +19,30 @@ import {
   useGetPlantsReportQuery,
   usePlantCreateMutation,
 } from "@/services/reportsApi";
-import { useGetOrganizationReportsQuery } from "@/services/generalApi";
+import {
+  generalApi,
+  useGetOrganizationReportsQuery,
+} from "@/services/generalApi";
 import { removeCookie } from "@/utils/cookie";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import ImportExcelButton from "@/components/ImportExcelButton/ImportExcelButton";
+import { ParsedExcelReport } from "@/utils/parseExcelReport";
+import {
+  ImportParseResponse,
+  splitImportItemsIntoRows,
+} from "@/types/importReport";
+import {
+  countExcelDataRows,
+  excelNameKey,
+  excelNamesMatch,
+  findByName,
+  findSpecialExcelColumns,
+  getExcelDataRows,
+  getExcelSheets,
+  matchSheetsToColumns,
+  normalizeExcelText,
+} from "@/utils/matchExcelColumns";
 import {
   Select,
   SelectContent,
@@ -81,17 +101,43 @@ function PlantCreate() {
   const [plantMetaById, setPlantMetaById] = useState<
     Record<string, { name: string; categoryName?: string }>
   >({});
+  // Muddat nomlarini paginatsiya bo'ylab saqlash (tanlangani boshqa sahifada bo'lsa ham ko'rinsin)
+  const [deadlineMetaById, setDeadlineMetaById] = useState<
+    Record<string, string>
+  >({});
   const [footNote, setFootNote] = useState<string>("");
   const { reportName } = useParams<{ reportName?: string }>();
   const [selectedQuarter, setSelectedQuarter] = useState<string>("");
 
   const reportIds = useSelector((state: RootState) => state.report.reportId);
   const lang = useSelector((state: RootState) => state.language.lang);
+  const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const navigate = useNavigate();
+  const location = useLocation();
   const reduxDispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   const [yearPlan, setYearPlan] = useState<string>("");
   const isDaromadReport = reportName === "Daromad";
+
+  /** Qaysi location.state allaqachon import qilingani — takroriy import bo'lmasin */
+  const appliedImportStateRef = useRef<unknown>(null);
+
+  /**
+   * Deadline matnini formatlash.
+   * `const` emas, `function` — u komponent tepasidagi effect/state updater'larda
+   * ham chaqiriladi, hoisting bo'lmasa "before initialization" xatosi chiqadi.
+   */
+  function formatDeadlineText(submitAt: string) {
+    if (!submitAt) return t("unknown");
+
+    if (submitAt.includes("CHORAK")) {
+      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
+    }
+
+    return submitAt;
+  }
+
+
 
   const quarterLabelsByKey: Record<string, string> = {
     q1: "1-chorak",
@@ -206,6 +252,27 @@ function PlantCreate() {
     { skip: !reportIds },
   );
 
+  // Muddat nomlarini cache'ga yig'ib boramiz
+  useEffect(() => {
+    const results = (deadlineData as any)?.results;
+    if (!Array.isArray(results) || results.length === 0) return;
+
+    setDeadlineMetaById((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      results.forEach((item: Deadline) => {
+        const id = item?.id?.toString?.() ?? "";
+        if (!id) return;
+        const label = formatDeadlineText(item.submit_at);
+        if (next[id] !== label) {
+          next[id] = label;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [deadlineData]);
+
   const tableHeadersDataMemo = useMemo(
     () => tableHeadersData,
     [tableHeadersData],
@@ -244,8 +311,13 @@ function PlantCreate() {
       payload: allEmptyColumnsByStepMemo as EmptyColumn[][],
     });
 
-    // Har bir step uchun boshlang'ich formula guruhini yaratish
-    if (allEmptyColumnsByStepMemo.length > 0) {
+    // Boshlang'ich formula guruhlari — faqat hali yaratilmagan bo'lsa.
+    // Ustunlar qayta yuklanganda (refetch) to'ldirilgan formulalar o'chib
+    // ketmasligi uchun mavjud guruhlarga tegmaymiz.
+    if (
+      allEmptyColumnsByStepMemo.length > 0 &&
+      state.formGroups.length !== allEmptyColumnsByStepMemo.length
+    ) {
       const initialFormGroups = allEmptyColumnsByStepMemo.map(
         (_: any, stepIndex: number) => ({
           step: stepIndex,
@@ -254,7 +326,512 @@ function PlantCreate() {
       );
       dispatch({ type: "SET_FORM_GROUPS", payload: initialFormGroups });
     }
+    // state.formGroups — faqat tekshiruv uchun, unga qarab qayta ishga tushmasin
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allEmptyColumnsByStepMemo]);
+
+  // Excel select'lari uchun to'liq ro'yxatlar (select'lar paginatsiyali bo'lgani uchun)
+  const fetchAllPlants = async (): Promise<
+    { id: string; name: string; categoryName: string }[]
+  > => {
+    if (!reportIds) return [];
+    try {
+      const res: any = await reduxDispatch(
+        reportApi.endpoints.getPlantsReport.initiate({
+          statement: reportIds,
+          lang,
+          parent: "",
+          page: 1,
+          perPage: 1000,
+        }),
+      ).unwrap();
+
+      return ((res?.results as Category[]) || []).flatMap((category) =>
+        (category?.children || []).map((child) => ({
+          id: child.id.toString(),
+          name: child.name,
+          categoryName: category.name || "",
+        })),
+      );
+    } catch (error) {
+      console.error("Excel import: o'simliklarni olishda xatolik", error);
+      return [];
+    }
+  };
+
+  // Tashkilotlar hook orqali hali kelmagan bo'lishi mumkin — import paytida aniq so'raymiz
+  const fetchOrganizations = async (): Promise<Organization[]> => {
+    const loaded = (organizationsData as Organization[]) || [];
+    if (loaded.length > 0) return loaded;
+
+    try {
+      const res: any = await reduxDispatch(
+        generalApi.endpoints.getOrganizationReports.initiate({ lang }),
+      ).unwrap();
+
+      return (Array.isArray(res) ? res : res?.results || []) as Organization[];
+    } catch (error) {
+      console.error("Excel import: tashkilotlarni olishda xatolik", error);
+      return [];
+    }
+  };
+
+  const fetchAllDeadlines = async (): Promise<Deadline[]> => {
+    if (!reportIds) return [];
+    try {
+      const res: any = await reduxDispatch(
+        reportApi.endpoints.getDeadlinesReport.initiate({
+          statement: reportIds,
+          page: 1,
+          perPage: 1000,
+          statement__period: "",
+          is_new_deadline: "true",
+        }),
+      ).unwrap();
+
+      return (res?.results as Deadline[]) || [];
+    } catch (error) {
+      console.error("Excel import: muddatlarni olishda xatolik", error);
+      return [];
+    }
+  };
+
+  const handleExcelImport = async (data: ParsedExcelReport) => {
+    const stepsColumns = (allEmptyColumnsByStepMemo || []) as EmptyColumn[][];
+    if (!data || stepsColumns.length === 0) return;
+
+    // Har bir ilova alohida varaqda bo'lishi mumkin — hammasini olamiz
+    const sheets = getExcelSheets(data);
+
+    if (sheets.length === 0) {
+      toast.error(t("excelImportNoTable"));
+      return;
+    }
+
+    // 1. Tashkilot ustuni (select) — Exceldagi tashkilot nomi bo'yicha.
+    // Tashkilot nomi qaysi varaqda uchrasa — o'shanisi yetarli.
+    let excelOrgName = "";
+    sheets.some((sheet) => {
+      const special = findSpecialExcelColumns(sheet.headerChains);
+      if (special.organizationIndex < 0) return false;
+
+      const rows = getExcelDataRows(sheet.dataRows, [
+        special.numberIndex,
+        special.organizationIndex,
+        special.plantIndex,
+      ]);
+      excelOrgName = (rows[0]?.cells[special.organizationIndex] ?? "").trim();
+      return excelOrgName !== "";
+    });
+
+    const matchedOrg = excelOrgName
+      ? findByName(await fetchOrganizations(), excelOrgName, (org) => org.name)
+      : undefined;
+
+    // 2. O'simlik ustuni (select) — har bir Excel qatori alohida formula bo'ladi
+    const needsPlants = sheets.some(
+      (sheet) => findSpecialExcelColumns(sheet.headerChains).plantIndex >= 0,
+    );
+    const allPlants = needsPlants ? await fetchAllPlants() : [];
+
+    if (allPlants.length > 0) {
+      setPlantMetaById((prev) => {
+        const next = { ...prev };
+        allPlants.forEach((plant) => {
+          next[plant.id] = {
+            name: plant.name,
+            categoryName: plant.categoryName,
+          };
+        });
+        return next;
+      });
+    }
+
+    // 3. Har bir qadam uchun formulalarni Excel qatorlaridan yig'amiz
+    let matchedColumnCount = 0;
+    const unmatchedPlantNames: string[] = [];
+
+    // Nomi biror qadam nomiga to'g'ri keladigan varaqlar — faqat o'sha qadamniki
+    const stepTitles = stepsColumns.map(
+      (_, stepIndex) =>
+        (tableHeadersData as TableHeaderData[])?.[stepIndex]?.title ?? "",
+    );
+    const reservedSheetKeys = new Set(
+      sheets
+        .filter((sheet) =>
+          stepTitles.some((title) => excelNamesMatch(sheet.name, title)),
+        )
+        .map((sheet) => excelNameKey(sheet.name)),
+    );
+
+    const newFormGroups: FormGroup[] = stepsColumns.map(
+      (stepColumns, stepIndex) => {
+        const existingGroup = state.formGroups.find(
+          (group) => group.step === stepIndex,
+        );
+        const fallbackGroup: FormGroup = existingGroup || {
+          step: stepIndex,
+          forms: [{ values: {}, plantId: "" }],
+        };
+
+        // Qadam ustunlari bir nechta varaqda uchrashi mumkin (ilovalarning
+        // ustun nomlari deyarli bir xil) — shuning uchun avval varaq nomini
+        // qadam nomi bilan solishtiramiz, keyingina moslik bahosiga qaraymiz.
+        const stepTitle =
+          (tableHeadersData as TableHeaderData[])?.[stepIndex]?.title ?? "";
+        const matches = matchSheetsToColumns(sheets, stepColumns).filter(
+          (match) => match.matchedCount > 0,
+        );
+
+        const byName = stepTitle
+          ? matches.find((match) => excelNamesMatch(match.sheet.name, stepTitle))
+          : undefined;
+
+        // Nom bo'yicha topilmasa — boshqa qadamga atalgan varaqdan olmaymiz.
+        const freeMatch = matches.find(
+          (match) => !reservedSheetKeys.has(excelNameKey(match.sheet.name)),
+        );
+
+        // Gar varaq nomi bo'yicha mos kelmasa:
+        // 1) Boshqa qadamga biriktirilgan (reserved) varaq bo'lsa, bu qadamga olib kelmaymiz.
+        // 2) Bitta varaqli fayl bo'lib, uning nomi boshqa qadam bilan mos kelsa, bu qadamga TEGMAYMIZ!
+        let best = byName;
+        if (!best) {
+          if (freeMatch) {
+            best = freeMatch;
+          } else if (sheets.length === 1) {
+            const singleSheetName = sheets[0].name;
+            const isReservedForOtherStep = stepTitles.some(
+              (title, idx) =>
+                idx !== stepIndex && excelNamesMatch(singleSheetName, title),
+            );
+            if (!isReservedForOtherStep && matches.length > 0) {
+              best = matches[0];
+            }
+          }
+        }
+
+        // Bu qadam ustunlari Excelda topilmadi, mos emas yoki varaq bo'sh — eski to'ldirilgan ma'lumotni saqlaymiz!
+        if (!best || best.filledCount === 0) return fallbackGroup;
+
+        const { columnToExcel, special, rows: filledRows } = best;
+        console.info(
+          `import: ${stepIndex + 1}-qadam ("${stepTitle}") uchun "${best.sheet.name || "varaq"}" varag'i tanlandi — ${best.matchedCount} ta ustun, ${filledRows.length} ta qator${byName ? " (nom bo'yicha)" : ""}`,
+        );
+
+        let plantColIndex = special.plantIndex;
+        if (plantColIndex < 0 && allPlants.length > 0 && filledRows.length > 0) {
+          const sampleRow = filledRows[0];
+          const foundIdx = sampleRow.cells.findIndex((cell) => {
+            const val = (cell ?? "").trim();
+            return val ? findByName(allPlants, val, (item) => item.name) !== undefined : false;
+          });
+          if (foundIdx >= 0) {
+            plantColIndex = foundIdx;
+          }
+        }
+
+        const usePlantRows =
+          plantColIndex >= 0 && !isKoChatVaNiholIlova1Step(stepIndex);
+        const rows = usePlantRows ? filledRows : filledRows.slice(0, 1);
+
+        const forms = rows.map((row) => {
+          const values: Record<string, string> = {};
+
+          stepColumns.forEach((col) => {
+            // Tashkilot ustuni qiymati — tashkilot ID si
+            if (col.is_organization === true) {
+              if (matchedOrg) values[col.id] = matchedOrg.id;
+              return;
+            }
+
+            const excelIndex = columnToExcel[col.id];
+            if (excelIndex === undefined) return;
+
+            const cellValue = (row.cells[excelIndex] ?? "").trim();
+            if (cellValue !== "") {
+              values[col.id] = cellValue;
+              matchedColumnCount += 1;
+            }
+          });
+
+          let plantId = "";
+          if (usePlantRows && plantColIndex >= 0) {
+            const plantName = (row.cells[plantColIndex] ?? "").trim();
+            const plant = plantName
+              ? findByName(allPlants, plantName, (item) => item.name)
+              : undefined;
+
+            if (plant) {
+              plantId = plant.id;
+            } else if (plantName) {
+              unmatchedPlantNames.push(plantName);
+            }
+          }
+
+          return { values, plantId };
+        });
+
+        return { step: stepIndex, forms };
+      },
+    );
+
+    dispatch({ type: "SET_FORM_GROUPS", payload: newFormGroups });
+
+    if (matchedOrg) {
+      dispatch({ type: "SET_ORGANIZATION", payload: matchedOrg.id });
+    }
+
+    // 4. Muddat (deadline) — Excel matnida muddat nomi uchrasa tanlaymiz.
+    // "Export qilingan vaqt" — hisobot muddati emas, uni hisobga olmaymiz.
+    const sheetText = (data.sheets || [{ grid: data.grid || [] }])
+      .flatMap((sheet) => sheet.grid || [])
+      .flatMap((row) => row.cells.map((cell) => normalizeExcelText(cell.value)))
+      .filter(Boolean)
+      .filter(
+        (text) => !text.includes("export qilingan") && !text.includes("экспорт"),
+      );
+
+    const allDeadlines = await fetchAllDeadlines();
+    const deadlineMatches = allDeadlines.filter((item) => {
+      const label = normalizeExcelText(formatDeadlineText(item.submit_at));
+      if (label.length < 4) return false;
+      return sheetText.some((text) => text.includes(label));
+    });
+
+    // Bir nechta muddat mos kelsa — noto'g'ri tanlamaymiz, foydalanuvchi o'zi tanlaydi
+    const matchedDeadline =
+      deadlineMatches.length === 1 ? deadlineMatches[0] : undefined;
+
+    if (matchedDeadline) {
+      setDeadlineMetaById((prev) => ({
+        ...prev,
+        [matchedDeadline.id.toString()]: formatDeadlineText(
+          matchedDeadline.submit_at,
+        ),
+      }));
+      dispatch({
+        type: "SET_DEADLINE",
+        payload: matchedDeadline.id.toString(),
+      });
+      setYearPlan(formatDeadlineText((matchedDeadline as any).year));
+    }
+
+    // 5. Natijani foydalanuvchiga aytamiz
+    if (matchedColumnCount === 0) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    if (unmatchedPlantNames.length > 0) {
+      toast.warning(
+        `${t("excelImportPlantsNotFound")}: ${Array.from(new Set(unmatchedPlantNames)).join(", ")}`,
+      );
+    }
+
+    if (excelOrgName && !matchedOrg) {
+      // Tashkilot doim qo'lda tanlanadi — faqat konsolga yozamiz
+      console.info("excel-import: tashkilot topilmadi", excelOrgName);
+    }
+
+    if (!matchedDeadline) {
+      toast.info(t("excelImportSelectDeadline"));
+    }
+  };
+
+  /**
+   * Backend `/reports/import-parse/` javobini formaga qo'llash.
+   * Bu yerda ustunlar UUID bo'yicha keladi — nom bo'yicha taxmin qilish shart emas.
+   */
+  const applyImportPayload = async (payload: ImportParseResponse) => {
+    const stepsColumns = (allEmptyColumnsByStepMemo || []) as EmptyColumn[][];
+    if (stepsColumns.length === 0) return;
+
+    const items = payload.items || [];
+    const plants = payload.plants || [];
+
+    // Ustun UUID -> qaysi qadamda ekani va ustun ma'lumoti
+    const columnById = new Map<string, { step: number; column: EmptyColumn }>();
+    stepsColumns.forEach((columns, stepIndex) => {
+      columns.forEach((column) => {
+        columnById.set(String(column.id), { step: stepIndex, column });
+      });
+    });
+
+    // Mavjud formulalardan nusxa olamiz
+    const nextGroups: FormGroup[] = stepsColumns.map((_, stepIndex) => {
+      const existing = state.formGroups.find((group) => group.step === stepIndex);
+      return existing
+        ? {
+            step: stepIndex,
+            forms: existing.forms.map((form) => ({
+              ...form,
+              values: { ...form.values },
+            })),
+          }
+        : { step: stepIndex, forms: [{ values: {}, plantId: "" }] };
+    });
+
+    let filledCount = 0;
+    let organizationValue = "";
+
+    const unmatched: string[] = [];
+
+    const setValue = (columnId: string, rawValue: string, formIndex: number) => {
+      const found = columnById.get(columnId);
+      if (!found) {
+        unmatched.push(columnId);
+        return;
+      }
+
+      const value = rawValue.trim();
+      if (value === "") return;
+
+      // Tashkilot ustuni — qiymat nom bo'lib kelishi mumkin, keyinroq ID ga aylantiramiz
+      if (found.column.is_organization === true) {
+        organizationValue = value;
+        return;
+      }
+
+      const group = nextGroups.find((item) => item.step === found.step);
+      if (!group) return;
+
+      while (group.forms.length <= formIndex) {
+        group.forms.push({ values: {}, plantId: "" });
+      }
+
+      group.forms[formIndex].values[columnId] = value;
+      filledCount += 1;
+    };
+
+    // 1. O'simlik kesimidagi hisobot — har bir o'simlik alohida formula
+    if (plants.length > 0) {
+      setPlantMetaById((prev) => {
+        const next = { ...prev };
+        plants.forEach((plant) => {
+          if (plant.plant && plant.plant_name) {
+            next[String(plant.plant)] = { name: plant.plant_name };
+          }
+        });
+        return next;
+      });
+
+      plants.forEach((plant, plantIndex) => {
+        (plant.items || []).forEach((item) => {
+          setValue(String(item.column), String(item.value ?? ""), plantIndex);
+        });
+
+        // Qaysi qadamda o'simlik ustunlari bo'lsa, o'sha formulaga plantId yozamiz
+        nextGroups.forEach((group) => {
+          if (group.forms[plantIndex]) {
+            group.forms[plantIndex].plantId = String(plant.plant);
+          }
+        });
+      });
+    }
+
+    // 2. Oddiy (flat) hisobot.
+    // Backend `plants` yubormagan bo'lsa ham fayl bir nechta qatordan iborat
+    // bo'lishi mumkin — takrorlangan ustun UUID lari bo'yicha qatorlarga bo'lamiz,
+    // aks holda hamma qator bitta formulaga tushib qolardi.
+    const itemRows =
+      plants.length > 0 ? [items] : splitImportItemsIntoRows(items);
+
+    console.info("import-parse hajmi:", {
+      plants: plants.length,
+      items: items.length,
+      formulalar: plants.length > 0 ? plants.length : itemRows.length,
+    });
+
+    itemRows.forEach((rowItems, rowIndex) => {
+      rowItems.forEach((item) => {
+        setValue(String(item.column), String(item.value ?? ""), rowIndex);
+      });
+    });
+
+    dispatch({ type: "SET_FORM_GROUPS", payload: nextGroups });
+
+    if (unmatched.length > 0) {
+      console.warn(
+        "import-parse: bu ustun UUID lari formada topilmadi",
+        unmatched,
+        "formadagi ustunlar:",
+        Array.from(columnById.keys()),
+      );
+    }
+
+    // 3. Tashkilot ustuni bo'lsa — nomni ID ga aylantiramiz
+    if (organizationValue) {
+      const organizations = await fetchOrganizations();
+      const matchedOrg =
+        organizations.find((org) => String(org.id) === organizationValue) ||
+        findByName(organizations, organizationValue, (org) => org.name);
+
+      if (matchedOrg) {
+        dispatch({ type: "SET_ORGANIZATION", payload: matchedOrg.id });
+      } else {
+        // Tashkilot doim qo'lda tanlanadi — foydalanuvchini bezovta qilmaymiz
+        console.info("import-parse: tashkilot topilmadi", organizationValue);
+      }
+    }
+
+    if (filledCount === 0) {
+      toast.error(t("excelImportNoMatch"));
+      return;
+    }
+
+    if (!state.selectedDeadlineId) {
+      toast.info(t("excelImportSelectDeadline"));
+    }
+  };
+
+  useEffect(() => {
+    if (allEmptyColumnsByStepMemo.length === 0) return;
+
+    // Import bir marta qo'llaniladi: ustunlar qayta yuklanganda (refetch) yoki
+    // sahifa qayta chizilganda foydalanuvchi kiritgan qiymatlar ustidan yozilmasin
+    if (appliedImportStateRef.current === location.state) return;
+
+    // Backend parse qilgan payload ustunroq — UUID aniq keladi
+    const payload = (location.state as any)?.importedPayload as
+      | ImportParseResponse
+      | undefined;
+    const imported = (location.state as any)?.importedExcelData as
+      | ParsedExcelReport
+      | undefined;
+
+    if (!payload && !imported) return;
+
+    appliedImportStateRef.current = location.state;
+
+    // Backend faylning hamma qatorini o'qimasligi mumkin (masalan 4 qatordan 1 tasi).
+    // Shunday holatda faylning o'zidan o'qigan natijamiz to'liqroq bo'ladi.
+    const payloadRowCount = payload
+      ? payload.plants?.length ||
+        splitImportItemsIntoRows(payload.items).length ||
+        0
+      : 0;
+    const excelRowCount = countExcelDataRows(imported);
+    // Har bir ilova alohida varaqda bo'lsa, backend odatda faqat birinchisini o'qiydi
+    const sheetCount = getExcelSheets(imported).length;
+
+    if (imported && (sheetCount > 1 || excelRowCount > payloadRowCount)) {
+      console.info(
+        `import: backend ${payloadRowCount} ta formula qaytardi, faylda ${sheetCount} ta varaq / ${excelRowCount} ta qator bor — fayl bo'yicha to'ldiramiz`,
+      );
+      handleExcelImport(imported);
+      return;
+    }
+
+    if (payload) {
+      applyImportPayload(payload);
+      return;
+    }
+
+    if (imported) {
+      handleExcelImport(imported);
+    }
+  }, [location.state, allEmptyColumnsByStepMemo]);
 
   // Reja ma'lumotlari (per-plant per-column)
   const [planByColumnAndPlant, setPlanByColumnAndPlant] = useState<
@@ -691,20 +1268,26 @@ function PlantCreate() {
     (group) => group.step === state.currentStep,
   );
 
-  // Deadline matnini formatlash funksiyasi
-  const formatDeadlineText = (submitAt: string) => {
-    if (!submitAt) return t("unknown");
+  // Reja qiymatlari muddat va tashkilotga bog'liq — import shulardan keyin bo'lishi kerak
+  const formHasOrganizationColumn = state.allEmptyColumnsByStep
+    .flat()
+    .some((col) => col.is_organization === true);
 
-    if (submitAt.includes("CHORAK")) {
-      return submitAt.replace("CHORAK_", " yil ").replace("_", "-chorak");
-    }
-
-    return submitAt;
-  };
+  // Import tartibi: avval muddat, keyin tashkilot — undan so'nggina Excel fayl
+  const orgStillNeeded =
+    formHasOrganizationColumn && !state.selectedOrganizationId;
+  const importDisabledReason =
+    !state.selectedDeadlineId && orgStillNeeded
+      ? t("excelImportOrderHint")
+      : !state.selectedDeadlineId
+        ? t("excelImportSelectDeadlineFirst")
+        : orgStillNeeded
+          ? t("excelImportSelectOrgFirst")
+          : "";
 
   return (
     <>
-      <div className="p-6">
+      <div className="p-6 flex items-center justify-between gap-3">
         <Button
           className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
           onClick={() => navigate(-1)}
@@ -712,6 +1295,15 @@ function PlantCreate() {
           <ChevronLeft size={18} />
           <span className="text-sm">{t("back")}</span>
         </Button>
+        {/* Excel import — faqat tashkilot hodimi uchun */}
+        {user_role === "tashkilot_hodimi" && (
+          <ImportExcelButton
+            statementId={reportIds ?? undefined}
+            onParsed={applyImportPayload}
+            onImportSuccess={handleExcelImport}
+            disabledReason={importDisabledReason}
+          />
+        )}
       </div>
       <form
         onSubmit={handleSubmit}
@@ -754,15 +1346,23 @@ function PlantCreate() {
               }}
             >
               <SelectTrigger className="w-[300px]">
-                <SelectValue
-                  placeholder={
-                    deadlineLoading
-                      ? t("loading")
-                      : deadlineError
-                        ? t("loading_error")
-                        : t("selectDeadline")
-                  }
-                />
+                {/* Tanlangan muddat boshqa sahifada bo'lsa ham nomi ko'rinishi uchun */}
+                <SelectValue asChild>
+                  <span
+                    className={
+                      !state.selectedDeadlineId ? "text-muted-foreground" : ""
+                    }
+                  >
+                    {state.selectedDeadlineId
+                      ? deadlineMetaById[state.selectedDeadlineId] ||
+                        `ID: ${state.selectedDeadlineId}`
+                      : deadlineLoading
+                        ? t("loading")
+                        : deadlineError
+                          ? t("loading_error")
+                          : t("selectDeadline")}
+                  </span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {deadlineLoading ? (
