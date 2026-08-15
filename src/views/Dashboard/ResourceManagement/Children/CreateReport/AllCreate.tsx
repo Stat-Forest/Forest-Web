@@ -37,6 +37,7 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import ImportExcelButton from "@/components/ImportExcelButton/ImportExcelButton";
+import ImportTemplateButton from "@/components/ImportExcelButton/ImportTemplateButton";
 import { ParsedExcelReport } from "@/utils/parseExcelReport";
 import { ImportParseResponse } from "@/types/importReport";
 import {
@@ -825,14 +826,17 @@ function AllCreateReportItem() {
           <ChevronLeft size={18} />
           <span className="text-sm">{t("back")}</span>
         </Button>
-        {/* Excel import — faqat tashkilot hodimi uchun */}
+        {/* Shablon + Excel import — faqat tashkilot hodimi uchun */}
         {user_role === "tashkilot_hodimi" && (
-          <ImportExcelButton
-            statementId={reportIds ?? undefined}
-            onParsed={applyImportPayload}
-            onImportSuccess={handleExcelImport}
-            disabledReason={importDisabledReason}
-          />
+          <div className="flex items-start gap-3 flex-wrap justify-end">
+            <ImportTemplateButton statementId={reportIds ?? undefined} />
+            <ImportExcelButton
+              statementId={reportIds ?? undefined}
+              onParsed={applyImportPayload}
+              onImportSuccess={handleExcelImport}
+              disabledReason={importDisabledReason}
+            />
+          </div>
         )}
       </div>
       <form
