@@ -49,6 +49,7 @@ export const ImportTemplateButton: React.FC<ImportTemplateButtonProps> = ({
       type="button"
       disabled={isLoading}
       onClick={handleClick}
+      title={t("templateWarning")}
       className={
         className ||
         "bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold px-4 h-[40px] rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap flex items-center gap-2 disabled:opacity-50"
