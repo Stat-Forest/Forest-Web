@@ -1,10 +1,11 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import type { RootState } from "@/app/store";
 import {
   ChatConversation,
   ChatMessage,
-  ChatUser,
+  ChatStatus,
   useAssignConversationMutation,
   useCloseConversationMutation,
   useGetConversationMessagesQuery,
@@ -13,24 +14,55 @@ import {
   useMarkConversationReadMutation,
 } from "@/services/uniqeApi";
 import {
-  appendIncomingMessages,
+  MAX_MESSAGE_LENGTH,
   buildChatSocketUrl,
+  canCloseConversation,
+  canSendMessage,
   createPendingMessage,
+  describeChatError,
+  describeCloseCode,
+  formatChatDateTime,
   formatChatTime,
+  formatUserName,
+  isFatalCloseCode,
+  isSuperAdminRole,
   mergeChatMessages,
-  parseSocketMessages,
+  parseSocketEvent,
   resolveSenderId,
+  upsertMessage,
 } from "@/utils/chatUtils";
 
-const formatUserName = (user?: ChatUser | null) => {
-  if (!user) return "Foydalanuvchi";
-  const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-  return fullName || user.email || "Foydalanuvchi";
+const statusLabel = (status: ChatStatus) => {
+  switch (status) {
+    case "new":
+      return "Navbatda";
+    case "taken":
+      return "Olingan";
+    case "closed":
+      return "Yopilgan";
+    default:
+      return status;
+  }
+};
+
+const statusClass = (status: ChatStatus) => {
+  switch (status) {
+    case "new":
+      return "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300";
+    case "taken":
+      return "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300";
+    default:
+      return "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
+  }
 };
 
 function SupportAdmin() {
   const token = useSelector((state: RootState) => state.auth.token);
-  const userId = String(useSelector((state: RootState) => state.auth.user?.user_id ?? ""));
+  const userId = String(
+    useSelector((state: RootState) => state.auth.user?.user_id ?? "")
+  );
+  const role = useSelector((state: RootState) => state.auth.user?.role);
+  const isSuperAdmin = isSuperAdminRole(role);
 
   const [tab, setTab] = useState<"new" | "my">("new");
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -38,6 +70,8 @@ function SupportAdmin() {
   const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([]);
   const [queuedCount, setQueuedCount] = useState(0);
   const [wsConnected, setWsConnected] = useState(false);
+  const [socketError, setSocketError] = useState<string | null>(null);
+  const [liveConversation, setLiveConversation] = useState<ChatConversation | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
@@ -52,14 +86,16 @@ function SupportAdmin() {
     useGetSupportNewConversationsQuery(undefined, { pollingInterval: 10000 });
 
   const currentList = tab === "new" ? newConversations : myConversations;
-  const canReply = tab === "my";
 
-  const activeConversation = useMemo(
-    () => currentList.find((item) => item.id === activeConversationId) ?? null,
-    [activeConversationId, currentList]
-  );
+  const activeConversation = useMemo(() => {
+    const fromList = currentList.find((item) => item.id === activeConversationId) ?? null;
+    if (liveConversation && liveConversation.id === activeConversationId) {
+      return { ...(fromList ?? {}), ...liveConversation } as ChatConversation;
+    }
+    return fromList;
+  }, [activeConversationId, currentList, liveConversation]);
 
-  const { data: messages = [], isFetching: messagesLoading, refetch: refetchMessages } =
+  const { data: messages = [], isFetching: messagesLoading } =
     useGetConversationMessagesQuery(activeConversationId ?? "", {
       skip: !activeConversationId,
       refetchOnMountOrArgChange: true,
@@ -74,6 +110,17 @@ function SupportAdmin() {
     [messages, liveMessages]
   );
 
+  // Yozish huquqi tab bilan emas, chat holati bilan aniqlanadi:
+  // faqat AYNAN shu chatga biriktirilgan admin yoza oladi (guide 4-bo'lim).
+  const canReply = canSendMessage(activeConversation, userId);
+  const canAssign = activeConversation?.status === "new";
+  const canClose =
+    canCloseConversation(activeConversation, userId, role) && !closeLoading;
+  const isClosed = activeConversation?.status === "closed";
+  const shouldConnect = Boolean(
+    activeConversationId && token && activeConversation && !isClosed
+  );
+
   useEffect(() => {
     setActiveConversationId(null);
   }, [tab]);
@@ -86,6 +133,8 @@ function SupportAdmin() {
 
   useEffect(() => {
     setLiveMessages([]);
+    setLiveConversation(null);
+    setSocketError(null);
     queuedMessagesRef.current = [];
     setQueuedCount(0);
     markedConversationRef.current = null;
@@ -102,6 +151,46 @@ function SupportAdmin() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mergedMessages]);
 
+  const handleSocketEvent = useCallback(
+    (raw: unknown) => {
+      const event = parseSocketEvent(raw);
+      if (!event) return;
+
+      switch (event.type) {
+        case "chat_message": {
+          setLiveMessages((prev) => upsertMessage(prev, event.message));
+          if (
+            resolveSenderId(event.message.sender) !== userId &&
+            activeConversationId
+          ) {
+            markConversationRead(activeConversationId);
+          }
+          refetchMy();
+          refetchNew();
+          break;
+        }
+        case "conversation_assigned": {
+          setLiveConversation(event.conversation);
+          refetchMy();
+          refetchNew();
+          break;
+        }
+        case "conversation_closed": {
+          setLiveConversation(event.conversation);
+          refetchMy();
+          refetchNew();
+          toast.info("Suhbat yopildi.");
+          break;
+        }
+        case "chat_error": {
+          toast.error(event.message);
+          break;
+        }
+      }
+    },
+    [activeConversationId, markConversationRead, refetchMy, refetchNew, userId]
+  );
+
   useEffect(() => {
     const clearReconnectTimer = () => {
       if (reconnectTimerRef.current) {
@@ -110,8 +199,9 @@ function SupportAdmin() {
       }
     };
 
-    if (!activeConversationId || !token) {
+    if (!shouldConnect || !activeConversationId || !token) {
       wsRef.current?.close();
+      wsRef.current = null;
       setWsConnected(false);
       clearReconnectTimer();
       return;
@@ -129,6 +219,7 @@ function SupportAdmin() {
         clearReconnectTimer();
         reconnectAttemptRef.current = 0;
         setWsConnected(true);
+        setSocketError(null);
         if (queuedMessagesRef.current.length > 0) {
           queuedMessagesRef.current.forEach((text) => {
             ws.send(JSON.stringify({ text }));
@@ -139,28 +230,28 @@ function SupportAdmin() {
       };
       ws.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data);
-          const next = parseSocketMessages(payload);
-
-          if (next.length > 0) {
-            setLiveMessages((prev) => appendIncomingMessages(prev, next));
-            refetchMy();
-            refetchNew();
-          }
+          handleSocketEvent(JSON.parse(event.data));
         } catch {
-          // Invalid socket payload is ignored.
+          // Buzuq payload — ulanish davom etadi.
         }
       };
       ws.onerror = () => {
         setWsConnected(false);
       };
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         setWsConnected(false);
-        if (!closedByCleanup) {
-          reconnectAttemptRef.current += 1;
-          const delay = Math.min(15000, 1000 * reconnectAttemptRef.current);
-          reconnectTimerRef.current = window.setTimeout(() => openSocket(), delay);
+        if (closedByCleanup) return;
+
+        if (isFatalCloseCode(event.code)) {
+          setSocketError(describeCloseCode(event.code));
+          queuedMessagesRef.current = [];
+          setQueuedCount(0);
+          return;
         }
+
+        reconnectAttemptRef.current += 1;
+        const delay = Math.min(15000, 1000 * reconnectAttemptRef.current);
+        reconnectTimerRef.current = window.setTimeout(() => openSocket(), delay);
       };
     };
 
@@ -171,18 +262,23 @@ function SupportAdmin() {
       closedByCleanup = true;
       clearReconnectTimer();
       wsRef.current?.close();
+      wsRef.current = null;
     };
-  }, [activeConversationId, token, refetchMessages, refetchMy, refetchNew]);
+  }, [shouldConnect, activeConversationId, token, handleSocketEvent]);
 
   const handleAssign = async () => {
     if (!activeConversationId) return;
     try {
-      await assignConversation(activeConversationId).unwrap();
+      const assigned = await assignConversation(activeConversationId).unwrap();
+      setLiveConversation(assigned);
+      await Promise.all([refetchMy(), refetchNew()]);
       setTab("my");
-      refetchMy();
-      refetchNew();
-    } catch {
-      alert("Suhbatni biriktirish mumkin bo'lmadi. Support admin huquqi kerak.");
+      setActiveConversationId(assigned.id);
+      toast.success("Suhbat sizga biriktirildi.");
+    } catch (error) {
+      toast.error(
+        describeChatError(error, false, "Suhbatni biriktirib bo'lmadi.")
+      );
     }
   };
 
@@ -190,16 +286,13 @@ function SupportAdmin() {
     if (!activeConversationId) return;
     try {
       await closeConversation(activeConversationId).unwrap();
+      toast.success("Suhbat yopildi.");
       setActiveConversationId(null);
       refetchMy();
       refetchNew();
-    } catch {
-      alert("Suhbatni yopish mumkin bo'lmadi.");
+    } catch (error) {
+      toast.error(describeChatError(error, false, "Suhbatni yopib bo'lmadi."));
     }
-  };
-
-  const appendOptimisticMessage = (text: string) => {
-    setLiveMessages((prev) => [...prev, createPendingMessage(userId, text)]);
   };
 
   const handleSend = (event: FormEvent<HTMLFormElement>) => {
@@ -207,18 +300,29 @@ function SupportAdmin() {
     const text = draft.trim();
     if (!text || !activeConversationId || !canReply) return;
 
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      queuedMessagesRef.current.push(text);
-      setQueuedCount(queuedMessagesRef.current.length);
-      appendOptimisticMessage(text);
-      setDraft("");
+    if (text.length > MAX_MESSAGE_LENGTH) {
+      toast.error(`Xabar juda uzun (maksimal ${MAX_MESSAGE_LENGTH} belgi).`);
       return;
     }
 
-    wsRef.current.send(JSON.stringify({ text }));
-    appendOptimisticMessage(text);
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      queuedMessagesRef.current.push(text);
+      setQueuedCount(queuedMessagesRef.current.length);
+    } else {
+      wsRef.current.send(JSON.stringify({ text }));
+    }
+
+    setLiveMessages((prev) => [...prev, createPendingMessage(userId, text)]);
     setDraft("");
   };
+
+  const replyHint = !activeConversationId
+    ? null
+    : isClosed
+      ? "Suhbat yopilgan — faqat tarixni o'qish mumkin."
+      : !canReply
+        ? 'Javob berish uchun avval suhbatni "Qabul qilish" tugmasi orqali oling.'
+        : null;
 
   return (
     <div className="p-4 h-[calc(100vh-88px)]">
@@ -270,13 +374,25 @@ function SupportAdmin() {
                       {formatUserName(conversation.user)}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      #{conversation.id.slice(0, 8)} · {conversation.created_at}
+                      #{conversation.id.slice(0, 8)} ·{" "}
+                      {formatChatDateTime(
+                        conversation.last_message_at || conversation.created_at
+                      )}
                     </p>
-                    {!!conversation.unread_count && (
-                      <span className="mt-1 inline-block rounded-full bg-rose-500 px-2 py-0.5 text-xs text-white">
-                        {conversation.unread_count}
+                    <div className="mt-1 flex items-center gap-2">
+                      <span
+                        className={`text-[11px] px-2 py-0.5 rounded-full ${statusClass(
+                          conversation.status
+                        )}`}
+                      >
+                        {statusLabel(conversation.status)}
                       </span>
-                    )}
+                      {!!conversation.unread_count && (
+                        <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs text-white">
+                          {conversation.unread_count}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })
@@ -287,7 +403,9 @@ function SupportAdmin() {
         <section className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900">
           <header className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
             <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Support Administrator</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {isSuperAdmin ? "Super administrator" : "Support Administrator"}
+              </p>
               <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {activeConversation
                   ? formatUserName(activeConversation.user)
@@ -296,28 +414,39 @@ function SupportAdmin() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span
-                className={`text-xs font-medium px-3 py-1 rounded-full ${
-                  wsConnected
-                    ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300"
-                    : "bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300"
-                }`}
-              >
-                {wsConnected ? "Onlayn" : queuedCount > 0 ? `Navbatda ${queuedCount}` : "Ulanmoqda"}
-              </span>
-              {tab === "new" && (
+              {activeConversation && (
+                <span
+                  className={`text-xs font-medium px-3 py-1 rounded-full ${statusClass(
+                    activeConversation.status
+                  )}`}
+                >
+                  {statusLabel(activeConversation.status)}
+                </span>
+              )}
+              {activeConversation && !isClosed && (
+                <span
+                  className={`text-xs font-medium px-3 py-1 rounded-full ${
+                    wsConnected
+                      ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300"
+                      : "bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300"
+                  }`}
+                >
+                  {wsConnected ? "Onlayn" : queuedCount > 0 ? `Navbatda ${queuedCount}` : "Ulanmoqda"}
+                </span>
+              )}
+              {canAssign && (
                 <button
                   onClick={handleAssign}
-                  disabled={!activeConversationId || assignLoading}
+                  disabled={assignLoading}
                   className="px-3 py-2 rounded-md bg-blue-600 text-white text-sm disabled:opacity-60 transition hover:bg-blue-700"
                 >
                   Qabul qilish
                 </button>
               )}
-              {tab === "my" && (
+              {canClose && (
                 <button
                   onClick={handleClose}
-                  disabled={!activeConversationId || closeLoading}
+                  disabled={closeLoading}
                   className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm disabled:opacity-60 transition hover:bg-rose-700"
                 >
                   Yopish
@@ -358,9 +487,14 @@ function SupportAdmin() {
           </div>
 
           <form onSubmit={handleSend} className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            {!canReply && activeConversationId && (
+            {socketError && (
+              <p className="mb-3 text-sm text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 rounded-lg px-3 py-2">
+                {socketError}
+              </p>
+            )}
+            {replyHint && (
               <p className="mb-3 text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-lg px-3 py-2">
-                Javob berish uchun avval suhbatni "Qabul qilish" tugmasi orqali oling.
+                {replyHint}
               </p>
             )}
             <div className="flex items-center gap-3">
@@ -369,17 +503,23 @@ function SupportAdmin() {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={canReply ? "Javob yozing..." : "Avval suhbatni qabul qiling..."}
-                disabled={!activeConversationId || !canReply}
+                maxLength={MAX_MESSAGE_LENGTH}
+                disabled={!canReply}
                 className="flex-1 h-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50"
               />
               <button
                 type="submit"
-                disabled={!activeConversationId || !canReply || !draft.trim()}
+                disabled={!canReply || !draft.trim()}
                 className="h-12 rounded-xl bg-emerald-600 px-6 font-medium text-white hover:bg-emerald-700 disabled:opacity-60 transition"
               >
                 Yuborish
               </button>
             </div>
+            {draft.length > MAX_MESSAGE_LENGTH - 200 && (
+              <p className="mt-2 text-right text-xs text-slate-500 dark:text-slate-400">
+                {draft.length} / {MAX_MESSAGE_LENGTH}
+              </p>
+            )}
           </form>
         </section>
       </div>
