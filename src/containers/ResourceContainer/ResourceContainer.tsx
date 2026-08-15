@@ -15,6 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import ImportTemplateButton from "@/components/ImportExcelButton/ImportTemplateButton";
 
 // Custom Components
 // import EmployeeAnalysisSum from "@/components/Sum/EmployeeAnalysis";
@@ -660,7 +661,7 @@ function ResourceContainer({
                   {/* Action Button */}
                   <div className="flex items-center gap-3 mt-3 md:mt-0 w-full md:w-auto justify-start">
                     {user_role === "tashkilot_hodimi" && (
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         {/* Excel import — "Yangi hisobot yaratish" sahifasining ichida */}
                         <button
                           className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-4 h-[40px] rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
@@ -672,6 +673,8 @@ function ResourceContainer({
                         >
                           {t("createNewReport")}
                         </button>
+                        {/* Import uchun bo'sh Excel shabloni */}
+                        <ImportTemplateButton statementId={id || undefined} />
                       </div>
                     )}
                   </div>
