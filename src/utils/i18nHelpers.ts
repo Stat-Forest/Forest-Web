@@ -43,3 +43,66 @@ export const translateStatementName = (
   }
   return name;
 };
+
+export const normalizeReportString = (name?: string): string => {
+  if (!name) return "";
+  return name
+    .toLowerCase()
+    .replace(/[\s\-_'`ʻʼ‘’“”«»]/g, "")
+    .trim();
+};
+
+export const isPlantReportName = (name?: string): boolean => {
+  if (!name) return false;
+  const n = normalizeReportString(name);
+  return (
+    n.includes("kochatvanihol") ||
+    n.includes("саженцы") ||
+    n.includes("росткиисаженцы") ||
+    n.includes("urugxarakati") ||
+    n.includes("urugharakati") ||
+    n.includes("посевнойматериал") ||
+    n.includes("движениесемян") ||
+    n.includes("kochatxona") ||
+    n.includes("niholxona") ||
+    n.includes("питомник") ||
+    n.includes("shakl8") ||
+    n.includes("форма8") ||
+    n.includes("shakl9") ||
+    n.includes("форма9") ||
+    n.includes("shakl10") ||
+    n.includes("форма10") ||
+    n.includes("shakl11") ||
+    n.includes("форма11") ||
+    n.includes("daromad") ||
+    n.includes("доход")
+  );
+};
+
+export const isInnersReportName = (name?: string): boolean => {
+  if (!name) return false;
+  const n = normalizeReportString(name);
+  return (
+    n.includes("xuquqbuzarlik") ||
+    n.includes("ogirmahalla") ||
+    n.includes("трудныйрайон") ||
+    n.includes("mexanizatsiya") ||
+    n.includes("механизаци")
+  );
+};
+
+export const isLandDocumentsReportName = (
+  name?: string,
+  id?: string,
+): boolean => {
+  if (id === "05ec4fd3-6193-4211-9850-f3991be60a62") return true;
+  if (!name) return false;
+  const n = normalizeReportString(name);
+  return n.includes("yerhujjat") || n.includes("земельн");
+};
+
+export const isForestAnalysisReportName = (name?: string): boolean => {
+  if (!name) return false;
+  const n = normalizeReportString(name);
+  return n.includes("ormonlarkesimida") || n.includes("разрезелесов");
+};
