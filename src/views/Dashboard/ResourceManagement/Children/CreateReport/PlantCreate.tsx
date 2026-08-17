@@ -1036,18 +1036,21 @@ function PlantCreate() {
     dispatch({ type: "REMOVE_FORM", payload: { stepIndex, formIndex } });
   };
 
-  // Tanlangan barcha o'simlik ID larni hisoblash
-  const getAllUsedPlantIds = useMemo(() => {
+  // Tanlangan o'simlik ID larni joriy qadam (step) uchun hisoblash
+  const getUsedPlantIdsForCurrentStep = useMemo(() => {
     const usedIds = new Set<string>();
-    state.formGroups.forEach((group) => {
-      group.forms.forEach((form) => {
+    const currentGroup = state.formGroups.find(
+      (group) => group.step === state.currentStep,
+    );
+    if (currentGroup) {
+      currentGroup.forms.forEach((form) => {
         if (form.plantId) {
           usedIds.add(form.plantId);
         }
       });
-    });
+    }
     return usedIds;
-  }, [state.formGroups]);
+  }, [state.formGroups, state.currentStep]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1073,20 +1076,22 @@ function PlantCreate() {
       errors.push(t("select_organization_required"));
     }
 
-    // O'simlik duplikatsiyasi va majburiyligini tekshiramiz
-    const plantIds: string[] = [];
+    // O'simlik duplikatsiyasini har bir qadam (step) ichida alohida tekshiramiz
     state.formGroups.forEach((group) => {
       const skipPlantForStep = isKoChatVaNiholIlova1Step(group.step);
       if (skipPlantForStep) {
         return;
       }
 
+      const stepPlantIds: string[] = [];
       group.forms.forEach((form) => {
         if (form.plantId) {
-          if (plantIds.includes(form.plantId)) {
-            errors.push(t("duplicate_plant"));
+          if (stepPlantIds.includes(form.plantId)) {
+            errors.push(
+              `${group.step + 1}-${t("step")}: ${t("duplicate_plant")}`,
+            );
           }
-          plantIds.push(form.plantId);
+          stepPlantIds.push(form.plantId);
         }
       });
     });
@@ -1549,7 +1554,7 @@ function PlantCreate() {
                                   {category.name}
                                 </SelectItem>,
                                 ...category.children.map((child: Plant) => {
-                                  const isUsed = getAllUsedPlantIds.has(
+                                  const isUsed = getUsedPlantIdsForCurrentStep.has(
                                     child.id.toString(),
                                   );
                                   const isCurrentFormPlant =
