@@ -11,8 +11,15 @@ import ForestAnalysisContainer from "@/containers/ResourceContainer/ForestAnalys
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import {
+  isPlantReportName,
+  isLandDocumentsReportName,
+  isForestAnalysisReportName,
+} from "@/utils/i18nHelpers";
+
 function ResourceManagement() {
   const { id, reportName } = useParams<{ id: string; reportName: string }>();
+  const decodedReportName = reportName ? decodeURIComponent(reportName) : "";
   const lang = useSelector((state: RootState) => state.language.lang);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,9 +40,11 @@ function ResourceManagement() {
     (child: any) => child.id === id,
   )?.name;
 
+  const effectiveReportName = childTitle || decodedReportName || "";
+
   useEffect(() => {
-    dispatch(setReportName(reportName));
-  }, [childTitle]);
+    dispatch(setReportName(effectiveReportName));
+  }, [effectiveReportName, dispatch]);
 
   const handleBack = () => {
     if (currentItem?.id) {
@@ -58,7 +67,9 @@ function ResourceManagement() {
     parentTitle?.toLowerCase().includes("бухгалтер") ||
     currentItem?.id === "ae359de0-328d-4c85-8da5-67731a2ec65b" ||
     childTitle === "Daromad" ||
-    childTitle === "Доход";
+    childTitle === "Доход" ||
+    decodedReportName === "Daromad" ||
+    decodedReportName === "Доход";
 
   return (
     <div className="px-3 py-2 space-y-4">
@@ -84,38 +95,20 @@ function ResourceManagement() {
               </span>
             )}
             <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">
-              {!isLoading && !isError && childTitle}
+              {!isLoading && !isError && (childTitle || decodedReportName)}
             </span>
           </div>
         </div>
       </div>
 
-      {childTitle == "Yer hujjatlarini kiritish" ||
-      id == "05ec4fd3-6193-4211-9850-f3991be60a62" ||
-      childTitle == "Ввод земельных документов" ? (
+      {isLandDocumentsReportName(childTitle || decodedReportName, id) ? (
         <LandDocumentsContainers />
-      ) : childTitle == "Ko‘chat va Nihol" ||
-        childTitle == "Urug' xarakati Reja" ||
-        childTitle == "Посевной материал План" ||
-        childTitle == "Саженцы и саженцы" ||
-        childTitle == "Urug' harakati" ||
-        childTitle == "Питомник и Саженец Всего" ||
-        childTitle == "Движение семян" ||
-        childTitle == "Ko'chatxona va Niholxona Jami" ||
-        childTitle == "Shakl 8-O‘X" ||
-        childTitle == "Форма 8-Ох" ||
-        childTitle == "Shakl 9-O‘X" ||
-        childTitle == "Форма 9-Ох" ||
-        childTitle == "Shakl 10-O‘X" ||
-        childTitle == "Форма 10-Ох" ||
-        childTitle == "Shakl 11-O‘X" ||
-        childTitle == "Форма 11-Ох" ||
-        childTitle == "Daromad" ? (
-        <ResourcePlantContainer reportName={childTitle} isFinance={isFinance} />
-      ) : childTitle == "O'rmonlar kesimida" ? (
-        <ForestAnalysisContainer reportName={childTitle} />
+      ) : isPlantReportName(childTitle) || isPlantReportName(decodedReportName) ? (
+        <ResourcePlantContainer reportName={effectiveReportName} isFinance={isFinance} />
+      ) : isForestAnalysisReportName(childTitle || decodedReportName) ? (
+        <ForestAnalysisContainer reportName={effectiveReportName} />
       ) : (
-        <ResourceContainer reportName={childTitle} isFinance={isFinance} />
+        <ResourceContainer reportName={effectiveReportName} isFinance={isFinance} />
       )}
     </div>
   );

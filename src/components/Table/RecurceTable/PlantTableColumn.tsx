@@ -305,15 +305,54 @@ const PlantTableColumn = forwardRef(
     };
 
     const isOrganizationColumn = (col: any) => {
+      if (col?.is_organization === true) return true;
       const name = (
         col?.statement_column_name ??
         col?.statement_column_title ??
+        col?.title ??
         ""
       )
         .toString()
         .toLowerCase();
-      // API example: "... – Tashkilot nomi"
-      return name.includes("tashkilot") && name.includes("nomi");
+      return (
+        name.includes("tashkilot") ||
+        name.includes("организаци") ||
+        name.includes("ташкилот")
+      );
+    };
+
+    const isPlantColumn = (col: any) => {
+      if (
+        col?.is_virtual === true ||
+        col?.statement_column_id === "plant_name_virtual" ||
+        col?.id === "plant_name_virtual"
+      ) {
+        return true;
+      }
+      const name = (
+        col?.statement_column_name ??
+        col?.statement_column_title ??
+        col?.title ??
+        ""
+      )
+        .toString()
+        .toLowerCase();
+      return (
+        name === "o'simlik nomi" ||
+        name === "osimlik nomi" ||
+        name === "o‘simlik nomi" ||
+        name === "o`simlik nomi" ||
+        name === "название растения" ||
+        name === "наименование растения" ||
+        name === "ўсимлик номи" ||
+        name === "plant_name" ||
+        (name.includes("o'simlik") && name.includes("nomi")) ||
+        (name.includes("osimlik") && name.includes("nomi")) ||
+        (name.includes("o‘simlik") && name.includes("nomi")) ||
+        (name.includes("o`simlik") && name.includes("nomi")) ||
+        (name.includes("растени") &&
+          (name.includes("назван") || name.includes("наименов")))
+      );
     };
 
     const formatCellValue = (val: any) => {
@@ -410,6 +449,83 @@ const PlantTableColumn = forwardRef(
       return html;
     };
 
+    // 🔹 Metrik ustunlar (Tashkilot nomi va O'simlik nomi faqat eng birinchi ustunlar sifatida chiqariladi, ichki ustunlardan tozalanadi)
+    const filterMetricColumns = (items: any[]): any[] => {
+      if (!items || !Array.isArray(items)) return [];
+      return items
+        .filter((item: any) => !isOrganizationColumn(item) && !isPlantColumn(item))
+        .map((item: any) => ({
+          ...item,
+          children: item.children ? filterMetricColumns(item.children) : [],
+        }));
+    };
+
+    const metricColumns = filterMetricColumns(data || []);
+
+    const getMaxDepth = (items: any[]): number => {
+      if (!items || items.length === 0) return 1;
+      return items.reduce((max: number, item: any) => {
+        if (item.children && item.children.length > 0) {
+          return Math.max(max, 1 + getMaxDepth(item.children));
+        }
+        return Math.max(max, 1);
+      }, 1);
+    };
+
+    const maxDepth = Math.max(1, getMaxDepth(metricColumns));
+
+    const getColSpan = (item: any): number => {
+      if (!item.children || item.children.length === 0) return 1;
+      return item.children.reduce(
+        (sum: number, child: any) => sum + getColSpan(child),
+        0,
+      );
+    };
+
+    const renderHeaderRows = () => {
+      const rows: any[] = [];
+
+      const traverse = (items: any[], depth: number, rowIndex: number) => {
+        if (!rows[rowIndex]) rows[rowIndex] = [];
+
+        items.forEach((item: any) => {
+          const hasChildren = item.children && item.children.length > 0;
+
+          rows[rowIndex].push({
+            title: item.title ?? item.statement_column_name ?? "",
+            colSpan: hasChildren ? getColSpan(item) : 1,
+            rowSpan: hasChildren ? 1 : maxDepth - depth + 1,
+          });
+
+          if (hasChildren) {
+            traverse(item.children, depth + 1, rowIndex + 1);
+          }
+        });
+      };
+
+      traverse(metricColumns, 1, 0);
+
+      if (!rows[0]) rows[0] = [];
+
+      // Har doim 1-qator boshiga Tashkilot nomi va O'simlik nomi ustunlarini qo'shamiz
+      rows[0].unshift(
+        {
+          title: t("organization_name_header"),
+          colSpan: 1,
+          rowSpan: maxDepth,
+          isOrg: true,
+        },
+        {
+          title: t("plant_name_header"),
+          colSpan: 1,
+          rowSpan: maxDepth,
+          isPlant: true,
+        },
+      );
+
+      return rows;
+    };
+
     // 🔹 Yangi: Header qatorlarini olish
     const getHeaderRows = () => {
       const headerRows = renderHeaderRows();
@@ -417,12 +533,19 @@ const PlantTableColumn = forwardRef(
       // Header ma'lumotlarini tekis massivga aylantiramiz
       const flatHeaders: string[][] = [];
 
-      headerRows.forEach((row) => {
+      headerRows.forEach((row, rIdx) => {
         const flatRow: string[] = [];
+        if (rIdx === 0) {
+          flatRow.push("№");
+        }
         row.forEach((cell: any) => {
+          let title = cell.title;
+          if (cell.isOrg) title = t("organization_name_header");
+          else if (cell.isPlant) title = t("plant_name_header");
+
           // Har bir cellni uning colspan miqdorida takrorlaymiz
           for (let i = 0; i < cell.colSpan; i++) {
-            flatRow.push(cell.title);
+            flatRow.push(title);
           }
         });
         flatHeaders.push(flatRow);
@@ -436,51 +559,6 @@ const PlantTableColumn = forwardRef(
       getPrintableTable,
       getHeaderRows,
     }));
-
-    const getMaxDepth = (items: any[]): number => {
-      return items.reduce((max: number, item: any) => {
-        if (item.children && item.children.length > 0) {
-          return Math.max(max, 1 + getMaxDepth(item.children));
-        }
-        return Math.max(max, 1);
-      }, 0);
-    };
-
-    const maxDepth = getMaxDepth(data);
-
-    const renderHeaderRows = () => {
-      const rows: any[] = [];
-
-      const traverse = (items: any[], depth: number, rowIndex: number) => {
-        if (!rows[rowIndex]) rows[rowIndex] = [];
-
-        items.forEach((item: any) => {
-          const hasChildren = item.children && item.children.length > 0;
-
-          rows[rowIndex].push({
-            title: item.title,
-            colSpan: hasChildren ? getColSpan(item) : 1,
-            rowSpan: hasChildren ? 1 : maxDepth - depth + 1,
-          });
-
-          if (hasChildren) {
-            traverse(item.children, depth + 1, rowIndex + 1);
-          }
-        });
-      };
-
-      traverse(data, 1, 0);
-
-      return rows;
-    };
-
-    const getColSpan = (item: any): number => {
-      if (!item.children || item.children.length === 0) return 1;
-      return item.children.reduce(
-        (sum: number, child: any) => sum + getColSpan(child),
-        0,
-      );
-    };
 
     const headerRows = renderHeaderRows();
 
@@ -507,9 +585,23 @@ const PlantTableColumn = forwardRef(
                     const titleLower = (cell.title || "").toLowerCase();
                     let displayTitle = cell.title;
 
-                    if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
+                    if (
+                      cell.isOrg ||
+                      (titleLower.includes("tashkilot") &&
+                        (titleLower.includes("nomi") ||
+                          titleLower.includes("организаци") ||
+                          titleLower.includes("ташкилот")))
+                    ) {
                       displayTitle = t("organization_name_header");
-                    } else if (titleLower.includes("o'simlik") || titleLower.includes("osimlik")) {
+                    } else if (
+                      cell.isPlant ||
+                      titleLower.includes("o'simlik") ||
+                      titleLower.includes("osimlik") ||
+                      titleLower.includes("o‘simlik") ||
+                      titleLower.includes("o`simlik") ||
+                      titleLower.includes("растени") ||
+                      titleLower.includes("ўсимлик")
+                    ) {
                       displayTitle = t("plant_name_header");
                     }
 
@@ -589,13 +681,13 @@ const PlantTableColumn = forwardRef(
                           {row.report_items?.map((reportItem: any) =>
                             reportItem.statement_columns?.map(
                               (col: any, colIdx: number) => {
-                                if (isOrganizationColumn(col)) {
+                                if (isOrganizationColumn(col) || isPlantColumn(col)) {
                                   return null;
                                 }
                                 const inner = col.inners?.[innerIndex];
                                 return (
                                   <td
-                                    key={`inner-${col.id || colIdx}-${innerIndex}`}
+                                    key={`inner-${col.id || col.statement_column_id || colIdx}-${innerIndex}`}
                                     className="border min-w-[120px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
                                   >
                                     {formatCellValue(inner?.value)}
@@ -624,12 +716,12 @@ const PlantTableColumn = forwardRef(
                       {row.report_items?.map((reportItem: any) =>
                         reportItem.statement_columns?.map(
                           (col: any, colIdx: number) => {
-                            if (isOrganizationColumn(col)) {
+                            if (isOrganizationColumn(col) || isPlantColumn(col)) {
                               return null;
                             }
                             return (
                               <td
-                                key={`tot-${col.id || colIdx}`}
+                                key={`tot-${col.id || col.statement_column_id || colIdx}`}
                                 className="border min-w-[120px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold"
                               >
                                 {calculateColumnTotal(col)}
@@ -703,13 +795,13 @@ const PlantTableColumn = forwardRef(
                                         (reportItem: any) =>
                                           reportItem.statement_columns?.map(
                                             (col: any, colIdx: number) => {
-                                              if (isOrganizationColumn(col)) {
+                                              if (isOrganizationColumn(col) || isPlantColumn(col)) {
                                                 return null;
                                               }
                                               const inner = col.inners?.[innerIndex];
                                               return (
                                                 <td
-                                                  key={`cinner-${col.id || colIdx}-${innerIndex}`}
+                                                  key={`cinner-${col.id || col.statement_column_id || colIdx}-${innerIndex}`}
                                                   className="border min-w-[120px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
                                                 >
                                                   {formatCellValue(inner?.value)}
@@ -743,12 +835,12 @@ const PlantTableColumn = forwardRef(
                                   (reportItem: any) =>
                                     reportItem.statement_columns?.map(
                                       (col: any, colIdx: number) => {
-                                        if (isOrganizationColumn(col)) {
+                                        if (isOrganizationColumn(col) || isPlantColumn(col)) {
                                           return null;
                                         }
                                         return (
                                           <td
-                                            key={`ctot-${col.id || colIdx}`}
+                                            key={`ctot-${col.id || col.statement_column_id || colIdx}`}
                                             className="border min-w-[120px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold"
                                           >
                                             {calculateColumnTotal(col)}
@@ -1158,9 +1250,23 @@ const PlantTableColumn = forwardRef(
                         const titleLower = (cell.title || "").toLowerCase();
                         let displayTitle = cell.title;
 
-                        if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
+                        if (
+                          cell.isOrg ||
+                          (titleLower.includes("tashkilot") &&
+                            (titleLower.includes("nomi") ||
+                              titleLower.includes("организаци") ||
+                              titleLower.includes("ташкилот")))
+                        ) {
                           displayTitle = t("organization_name_header");
-                        } else if (titleLower.includes("o'simlik") || titleLower.includes("osimlik")) {
+                        } else if (
+                          cell.isPlant ||
+                          titleLower.includes("o'simlik") ||
+                          titleLower.includes("osimlik") ||
+                          titleLower.includes("o‘simlik") ||
+                          titleLower.includes("o`simlik") ||
+                          titleLower.includes("растени") ||
+                          titleLower.includes("ўсимлик")
+                        ) {
                           displayTitle = t("plant_name_header");
                         }
 
@@ -1285,7 +1391,7 @@ const PlantTableColumn = forwardRef(
                                       {/* Qiymat ustunlari */}
                                       {reportItem.statement_columns?.map(
                                         (col: any) => {
-                                          if (isOrganizationColumn(col)) {
+                                          if (isOrganizationColumn(col) || isPlantColumn(col)) {
                                             return null;
                                           }
                                           const colData = rowData.columns.find(
@@ -1382,7 +1488,7 @@ const PlantTableColumn = forwardRef(
                                   {/* Qiymat ustunlari - jami */}
                                   {reportItem.statement_columns?.map(
                                     (col: any) => {
-                                      if (isOrganizationColumn(col)) {
+                                      if (isOrganizationColumn(col) || isPlantColumn(col)) {
                                         return null;
                                       }
                                       return (
