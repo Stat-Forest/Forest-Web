@@ -19,6 +19,9 @@ interface ImportExcelButtonProps {
   reportName?: string;
   /** Statement (jadval) UUID — import-parse API uchun majburiy */
   statementId?: string;
+  /** Ixtiyoriy: reja validatsiyasi uchun tashkilot va yil */
+  organizationId?: string;
+  year?: string | number;
   /** Backend qaytargan ustun UUID + qiymatlar */
   onParsed?: (payload: ImportParseResponse) => void;
   /** API mavjud bo'lmasa — faylning o'zidan o'qilgan ma'lumot (zaxira yo'l) */
@@ -40,6 +43,8 @@ const isEndpointMissing = (error: unknown) => {
 export const ImportExcelButton: React.FC<ImportExcelButtonProps> = ({
   reportName,
   statementId,
+  organizationId,
+  year,
   onParsed,
   onImportSuccess,
   className,
@@ -131,12 +136,16 @@ export const ImportExcelButton: React.FC<ImportExcelButtonProps> = ({
         file: selectedFile,
         statementId,
         lang,
+        organizationId: organizationId || undefined,
+        year: year || undefined,
       }).unwrap();
 
       reportIssues(payload);
 
       const hasData =
-        (payload.items?.length ?? 0) > 0 || (payload.plants?.length ?? 0) > 0;
+        (payload.rows?.length ?? 0) > 0 ||
+        (payload.items?.length ?? 0) > 0 ||
+        (payload.plants?.length ?? 0) > 0;
 
       // Backend hech narsa topmadi (masalan ilovalar alohida varaqlarda) —
       // faylni o'zimiz o'qib to'ldiramiz

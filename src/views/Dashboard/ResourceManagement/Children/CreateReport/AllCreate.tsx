@@ -232,8 +232,14 @@ function AllCreateReportItem() {
 
     const columnById = new Map(allCols.map((col) => [String(col.id), col]));
 
-    // Plant-based javob kelsa ham qiymatlarni tekislab olamiz
+    // Yangi formatdagi rows yoki items/plants bo'yicha qiymatlarni yig'amiz
+    const rows = payload.rows || [];
+    let payloadOrg = "";
     const items = [
+      ...rows.flatMap((r) => {
+        if (r.organization && !payloadOrg) payloadOrg = r.organization;
+        return r.items || [];
+      }),
       ...(payload.items || []),
       ...(payload.plants || []).flatMap((plant) => plant.items || []),
     ];
@@ -334,7 +340,7 @@ function AllCreateReportItem() {
     }
 
     const newValues: Record<string, string> = {};
-    let organizationValue = "";
+    let organizationValue = payloadOrg || "";
 
     allCols.forEach((column) => {
       const value = receivedById.get(String(column.id));
@@ -832,6 +838,8 @@ function AllCreateReportItem() {
             <ImportTemplateButton statementId={reportIds ?? undefined} />
             <ImportExcelButton
               statementId={reportIds ?? undefined}
+              organizationId={selectedOrganizationId || undefined}
+              year={yearPlan || undefined}
               onParsed={applyImportPayload}
               onImportSuccess={handleExcelImport}
               disabledReason={importDisabledReason}

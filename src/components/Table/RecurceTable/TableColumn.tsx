@@ -315,6 +315,23 @@ const TableColumn = forwardRef(
 
     const headerRows = renderHeaderRows();
 
+    const isOrganizationColumn = (col: any) => {
+      if (col?.is_organization === true) return true;
+      const name = (
+        col?.statement_column_name ??
+        col?.statement_column_title ??
+        col?.title ??
+        ""
+      )
+        .toString()
+        .toLowerCase();
+      return (
+        name.includes("tashkilot") ||
+        name.includes("организаци") ||
+        name.includes("ташкилот")
+      );
+    };
+
     return (
       <>
         <div
@@ -336,13 +353,16 @@ const TableColumn = forwardRef(
                   )}
                   {row.map((cell: any, cellIndex: number) => {
                     const titleLower = (cell.title || "").toLowerCase();
-                    let displayTitle = cell.title;
+                    const isOrg =
+                      cell.isOrg ||
+                      (titleLower.includes("tashkilot") &&
+                        (titleLower.includes("nomi") ||
+                          titleLower.includes("организаци") ||
+                          titleLower.includes("ташкилот")));
 
-                    if (titleLower.includes("tashkilot") && titleLower.includes("nomi")) {
-                      displayTitle = t("organization_name_header");
-                    } else if (titleLower.includes("o'simlik") || titleLower.includes("osimlik")) {
-                      displayTitle = t("plant_name_header");
-                    }
+                    const displayTitle = isOrg
+                      ? t("organization_name_header")
+                      : cell.title;
 
                     return (
                       <th
@@ -381,7 +401,7 @@ const TableColumn = forwardRef(
                         {/* TR faqat birinchi qatorda chiqadi */}
                         {innerIndex === 0 && (
                           <td
-                            className="border border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
+                            className="border border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold align-middle"
                             rowSpan={maxInners}
                           >
                             {rowIndex + 1}
@@ -389,14 +409,31 @@ const TableColumn = forwardRef(
                         )}
 
                         {row.report_items?.map((reportItem: any) =>
-                          reportItem.statement_columns?.map((col: any) => (
-                            <td
-                              key={col.id}
-                              className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold"
-                            >
-                              {col.inners?.[innerIndex]?.value || ""}
-                            </td>
-                          )),
+                          reportItem.statement_columns?.map((col: any) => {
+                            const isOrg = isOrganizationColumn(col);
+                            if (isOrg) {
+                              if (innerIndex === 0) {
+                                return (
+                                  <td
+                                    key={col.id}
+                                    className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold align-middle"
+                                    rowSpan={maxInners}
+                                  >
+                                    {col.inners?.[0]?.value || row.organization_name || row.region_name || row.name || ""}
+                                  </td>
+                                );
+                              }
+                              return null;
+                            }
+                            return (
+                              <td
+                                key={col.id}
+                                className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold align-middle"
+                              >
+                                {col.inners?.[innerIndex]?.value || ""}
+                              </td>
+                            );
+                          }),
                         )}
                       </tr>
                     ))}
@@ -427,7 +464,7 @@ const TableColumn = forwardRef(
                                     {/* Child TR faqat birinchi qatorda chiqadi */}
                                     {innerIndex === 0 && (
                                       <td
-                                        className="border border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
+                                        className="border border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold align-middle"
                                         rowSpan={childMaxInners}
                                       >
                                         {rowIndex + 1}.{childIndex + 1}
@@ -437,15 +474,31 @@ const TableColumn = forwardRef(
                                     {child.report_items?.map(
                                       (reportItem: any) =>
                                         reportItem.statement_columns?.map(
-                                          (col: any) => (
-                                            <td
-                                              key={col.id}
-                                              className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center"
-                                            >
-                                              {col.inners?.[innerIndex]
-                                                ?.value || ""}
-                                            </td>
-                                          ),
+                                          (col: any) => {
+                                            const isOrg = isOrganizationColumn(col);
+                                            if (isOrg) {
+                                              if (innerIndex === 0) {
+                                                return (
+                                                  <td
+                                                    key={col.id}
+                                                    className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center font-bold align-middle"
+                                                    rowSpan={childMaxInners}
+                                                  >
+                                                    {col.inners?.[0]?.value || child.organization_name || child.region_name || child.name || ""}
+                                                  </td>
+                                                );
+                                              }
+                                              return null;
+                                            }
+                                            return (
+                                              <td
+                                                key={col.id}
+                                                className="border min-w-[380px] border-slate-300 dark:border-slate-700 px-2 py-1 text-center align-middle"
+                                              >
+                                                {col.inners?.[innerIndex]?.value || ""}
+                                              </td>
+                                            );
+                                          },
                                         ),
                                     )}
                                   </tr>
@@ -460,7 +513,9 @@ const TableColumn = forwardRef(
               })}
             </tbody>
           </table>
-            <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors mt-6">
+        </div>
+
+        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs backdrop-blur-md transition-colors mt-6">
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div>
               <Input
@@ -607,7 +662,7 @@ const TableColumn = forwardRef(
               </TableBody>
             </Table>
           </div>
-        </div>        </div>
+        </div>
 
         {/* Detal ko'rinish */}
         {selectedRow && (() => {
@@ -844,14 +899,31 @@ const TableColumn = forwardRef(
                                 )}
 
                                 {reportItem.statement_columns?.map(
-                                  (col: any) => (
-                                    <td
-                                      key={col.id}
-                                      className="border min-w-[350px] border-black px-2 py-1 text-center"
-                                    >
-                                      {col.inners?.[innerIndex]?.value || ""}
-                                    </td>
-                                  ),
+                                  (col: any) => {
+                                    const isOrg = isOrganizationColumn(col);
+                                    if (isOrg) {
+                                      if (innerIndex === 0) {
+                                        return (
+                                          <td
+                                            key={col.id}
+                                            className="border min-w-[350px] border-black px-2 py-1 text-center font-bold align-middle"
+                                            rowSpan={maxInners}
+                                          >
+                                            {col.inners?.[0]?.value || selectedRow.organization_name || selectedRow.region_name || selectedRow.name || ""}
+                                          </td>
+                                        );
+                                      }
+                                      return null;
+                                    }
+                                    return (
+                                      <td
+                                        key={col.id}
+                                        className="border min-w-[350px] border-black px-2 py-1 text-center align-middle"
+                                      >
+                                        {col.inners?.[innerIndex]?.value || ""}
+                                      </td>
+                                    );
+                                  },
                                 )}
 
                                 {/* Amallar faqat birinchi qatorda chiqsin */}
@@ -860,7 +932,7 @@ const TableColumn = forwardRef(
                                     selectedRow.status == "cancelled") &&
                                   user_role == "tashkilot_hodimi" && (
                                     <td
-                                      className="border border-black px-2 py-1 text-center"
+                                      className="border border-black px-2 py-1 text-center align-middle"
                                       rowSpan={maxInners}
                                     >
                                       <div className="flex items-center justify-center gap-2">
@@ -927,7 +999,7 @@ const TableColumn = forwardRef(
                                     {/* T/R bo'ish, faqat birinchi qatorda chiqsin */}
                                     {innerIndex === 0 && (
                                       <td
-                                        className="border border-black px-2 py-1 text-center"
+                                        className="border border-black px-2 py-1 text-center font-bold align-middle"
                                         rowSpan={maxInners}
                                       >
                                         {innerIndex + 1}
@@ -935,15 +1007,31 @@ const TableColumn = forwardRef(
                                     )}
 
                                     {reportItem.statement_columns?.map(
-                                      (col: any) => (
-                                        <td
-                                          key={col.id}
-                                          className="border min-w-[120px] border-black px-2 py-1 text-center"
-                                        >
-                                          {col.inners?.[innerIndex]?.value ||
-                                            ""}
-                                        </td>
-                                      ),
+                                      (col: any) => {
+                                        const isOrg = isOrganizationColumn(col);
+                                        if (isOrg) {
+                                          if (innerIndex === 0) {
+                                            return (
+                                              <td
+                                                key={col.id}
+                                                className="border min-w-[120px] border-black px-2 py-1 text-center font-bold align-middle"
+                                                rowSpan={maxInners}
+                                              >
+                                                {col.inners?.[0]?.value || indRow.organization_name || indRow.region_name || indRow.name || ""}
+                                              </td>
+                                            );
+                                          }
+                                          return null;
+                                        }
+                                        return (
+                                          <td
+                                            key={col.id}
+                                            className="border min-w-[120px] border-black px-2 py-1 text-center align-middle"
+                                          >
+                                            {col.inners?.[innerIndex]?.value || ""}
+                                          </td>
+                                        );
+                                      },
                                     )}
 
                                     {/* Amallar faqat birinchi qatorda chiqsin */}
@@ -988,11 +1076,10 @@ const TableColumn = forwardRef(
               reportId={selectedRow?.id}
             />
           </div>
-          );
-        })()}
-      </>
-    );
-  },
-);
+        );
+      })()}
+    </>
+  );
+});
 
 export default TableColumn;
