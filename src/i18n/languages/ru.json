@@ -417,5 +417,7 @@
   "quarter_4": "4-й квартал",
   "organization_name_header": "Название организации",
   "plant_name_header": "Название растения",
+  "income_sources_header": "Источники дохода",
+  "income_sources": "Источники дохода",
   "organization_total": "Итого по организации"
 }

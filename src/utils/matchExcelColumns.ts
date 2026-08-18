@@ -277,7 +277,7 @@ const wordsMatch = (w1: string, w2: string): boolean => {
   return false;
 };
 
-/** "O'simlik nomi" / "Nihol turi" / "Название растения" ustuni */
+/** "O'simlik nomi" / "Nihol turi" / "Daromad manbalari" / "Название растения" ustuni */
 const isPlantHeader = (chain: string[]) => {
   const text = leafOf(chain);
   const clean = cleanTextForSearch(text);
@@ -286,6 +286,10 @@ const isPlantHeader = (chain: string[]) => {
     clean.includes("nihol") ||
     clean.includes("kochat") ||
     clean.includes("rasten") ||
+    clean.includes("daromad") ||
+    clean.includes("manba") ||
+    clean.includes("доход") ||
+    clean.includes("источник") ||
     clean === "nomi" ||
     clean === "naimenovanie"
   );
