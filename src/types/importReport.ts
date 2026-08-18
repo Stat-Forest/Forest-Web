@@ -4,12 +4,20 @@ export interface ImportParseItem {
   /** statement_column UUID */
   column: string;
   value: string;
+  row?: number;
+  organization?: string;
 }
 
 export interface ImportParsePlant {
   /** o'simlik UUID */
   plant: string;
   plant_name?: string;
+  items: ImportParseItem[];
+}
+
+export interface ImportParseRow {
+  row: number;
+  organization?: string;
   items: ImportParseItem[];
 }
 
@@ -27,10 +35,13 @@ export type ImportParseIssue = string | ImportParseIssueObject;
 
 export interface ImportParseResponse {
   status: string;
+  is_plant_based?: boolean;
   /** Oddiy (flat) hisobotlar uchun */
   items?: ImportParseItem[];
   /** O'simlik kesimidagi hisobotlar uchun */
   plants?: ImportParsePlant[];
+  /** Yangi format: barcha qatorlar bo'yicha guruhlangan */
+  rows?: ImportParseRow[];
   warnings?: ImportParseIssue[];
   errors?: ImportParseIssue[];
 }
