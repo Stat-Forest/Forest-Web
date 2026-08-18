@@ -312,14 +312,25 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
         statementId: string;
         sheetName?: string;
         lang?: string;
+        organizationId?: string;
+        year?: string | number;
       }
     >({
-      query: ({ file, statementId, sheetName, lang }) => {
+      query: ({ file, statementId, sheetName, lang, organizationId, year }) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("statement_id", statementId);
         if (sheetName) formData.append("sheet_name", sheetName);
         if (lang) formData.append("lang", lang);
+        if (organizationId && String(organizationId).trim()) {
+          formData.append("organization_id", String(organizationId).trim());
+        }
+        if (year != null && String(year).trim()) {
+          const match = String(year).match(/\b(19\d\d|20\d\d)\b/) || String(year).match(/\d+/);
+          if (match) {
+            formData.append("year", match[0]);
+          }
+        }
 
         return {
           url: `/import-parse/`,

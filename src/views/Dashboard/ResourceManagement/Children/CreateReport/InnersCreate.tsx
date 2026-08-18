@@ -235,14 +235,24 @@ function InnersCreateReportItem() {
     };
 
     const plants = payload.plants || [];
-    // `plants` kelmagan bo'lsa ham fayl bir nechta qatordan iborat bo'lishi mumkin —
-    // takrorlangan ustun UUID lari bo'yicha alohida formulalarga ajratamiz
-    const groups =
-      plants.length > 0
-        ? plants.map((plant) => toValues(plant.items))
-        : splitImportItemsIntoRows(payload.items).map((rowItems) =>
-            toValues(rowItems),
-          );
+    const rows = payload.rows || [];
+
+    // Yangi `rows` massivi, `plants` yoki takrorlangan ustun UUID lari bo'yicha formulalarga ajratamiz
+    let groups: Record<string, string>[] = [];
+    if (rows.length > 0) {
+      groups = rows.map((rowEntry) => {
+        if (rowEntry.organization && !organizationValue) {
+          organizationValue = rowEntry.organization;
+        }
+        return toValues(rowEntry.items);
+      });
+    } else if (plants.length > 0) {
+      groups = plants.map((plant) => toValues(plant.items));
+    } else {
+      groups = splitImportItemsIntoRows(payload.items).map((rowItems) =>
+        toValues(rowItems),
+      );
+    }
 
     const filledGroups = groups.filter(
       (group) => Object.keys(group).length > 0,
@@ -608,6 +618,8 @@ function InnersCreateReportItem() {
             <ImportTemplateButton statementId={reportIds ?? undefined} />
             <ImportExcelButton
               statementId={reportIds ?? undefined}
+              organizationId={selectedOrganizationId || undefined}
+              year={yearPlan || undefined}
               onParsed={applyImportPayload}
               onImportSuccess={handleExcelImport}
               disabledReason={importDisabledReason}

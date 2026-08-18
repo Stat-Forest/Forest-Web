@@ -640,6 +640,41 @@ function PlantCreate() {
     }
   };
 
+  const isPlantColumn = (col: any): boolean => {
+    if (
+      col?.is_virtual === true ||
+      col?.statement_column_id === "plant_name_virtual" ||
+      col?.id === "plant_name_virtual"
+    ) {
+      return true;
+    }
+    const name = (
+      col?.statement_column_name ??
+      col?.statement_column_title ??
+      col?.title ??
+      col?.fullParentChain ??
+      ""
+    )
+      .toString()
+      .toLowerCase();
+    return (
+      name === "o'simlik nomi" ||
+      name === "osimlik nomi" ||
+      name === "o‘simlik nomi" ||
+      name === "o`simlik nomi" ||
+      name === "название растения" ||
+      name === "наименование растения" ||
+      name === "ўсимлик номи" ||
+      name === "plant_name" ||
+      (name.includes("o'simlik") && name.includes("nomi")) ||
+      (name.includes("osimlik") && name.includes("nomi")) ||
+      (name.includes("o‘simlik") && name.includes("nomi")) ||
+      (name.includes("o`simlik") && name.includes("nomi")) ||
+      (name.includes("растени") &&
+        (name.includes("назван") || name.includes("наименов")))
+    );
+  };
+
   /**
    * Backend `/reports/import-parse/` javobini formaga qo'llash.
    * Bu yerda ustunlar UUID bo'yicha keladi — nom bo'yicha taxmin qilish shart emas.
@@ -650,6 +685,37 @@ function PlantCreate() {
 
     const items = payload.items || [];
     const plants = payload.plants || [];
+    const rows = payload.rows || [];
+
+    // Barcha o'simliklar ro'yxatini yuklaymiz (ID yoki nom bo'yicha avtomatik bog'lash uchun)
+    const allPlants = await fetchAllPlants();
+    if (allPlants.length > 0) {
+      setPlantMetaById((prev) => {
+        const next = { ...prev };
+        allPlants.forEach((p) => {
+          next[p.id] = { name: p.name, categoryName: p.categoryName };
+        });
+        return next;
+      });
+    }
+
+    const findMatchingPlant = (plantIdentifier: string) => {
+      if (!plantIdentifier) return undefined;
+      const clean = plantIdentifier.trim();
+      if (!clean) return undefined;
+      // 1. To'g'ridan-to'g'ri ID bo'yicha
+      const byId = allPlants.find((p) => String(p.id) === clean);
+      if (byId) return byId;
+      // 2. Nom bo'yicha
+      const byName = findByName(allPlants, clean, (p) => p.name);
+      if (byName) return byName;
+      // 3. Qisman moslik
+      const cleanLower = clean.toLowerCase();
+      return allPlants.find((p) => {
+        const pName = p.name.toLowerCase();
+        return pName.includes(cleanLower) || cleanLower.includes(pName);
+      });
+    };
 
     // Ustun UUID -> qaysi qadamda ekani va ustun ma'lumoti
     const columnById = new Map<string, { step: number; column: EmptyColumn }>();
@@ -694,6 +760,20 @@ function PlantCreate() {
         return;
       }
 
+      // O'simlik nomi ustuni bo'lsa — plantId ni topib biriktiramiz
+      if (isPlantColumn(found.column)) {
+        const matched = findMatchingPlant(value);
+        if (matched) {
+          nextGroups.forEach((group) => {
+            while (group.forms.length <= formIndex) {
+              group.forms.push({ values: {}, plantId: "" });
+            }
+            group.forms[formIndex].plantId = String(matched.id);
+          });
+        }
+        return;
+      }
+
       const group = nextGroups.find((item) => item.step === found.step);
       if (!group) return;
 
@@ -705,49 +785,118 @@ function PlantCreate() {
       filledCount += 1;
     };
 
-    // 1. O'simlik kesimidagi hisobot — har bir o'simlik alohida formula
+    // 1. O'simlik kesimidagi hisobot — har bir o'simlik alohida formula (payload.plants)
     if (plants.length > 0) {
-      setPlantMetaById((prev) => {
-        const next = { ...prev };
-        plants.forEach((plant) => {
-          if (plant.plant && plant.plant_name) {
-            next[String(plant.plant)] = { name: plant.plant_name };
-          }
-        });
-        return next;
-      });
-
       plants.forEach((plant, plantIndex) => {
         (plant.items || []).forEach((item) => {
           setValue(String(item.column), String(item.value ?? ""), plantIndex);
         });
 
+        const plantIdent = plant.plant ? String(plant.plant) : plant.plant_name || "";
+        const matched = findMatchingPlant(plantIdent);
+        const resolvedPlantId = matched ? String(matched.id) : plantIdent;
+
+        if (resolvedPlantId && plant.plant_name) {
+          setPlantMetaById((prev) => ({
+            ...prev,
+            [resolvedPlantId]: { name: plant.plant_name || (matched?.name ?? resolvedPlantId) },
+          }));
+        }
+
         // Qaysi qadamda o'simlik ustunlari bo'lsa, o'sha formulaga plantId yozamiz
         nextGroups.forEach((group) => {
-          if (group.forms[plantIndex]) {
-            group.forms[plantIndex].plantId = String(plant.plant);
+          while (group.forms.length <= plantIndex) {
+            group.forms.push({ values: {}, plantId: "" });
           }
+          if (group.forms[plantIndex]) {
+            group.forms[plantIndex].plantId = resolvedPlantId;
+          }
+        });
+      });
+    } else if (rows.length > 0) {
+      // 2. Yangi format: barcha qatorlar bo'yicha guruhlangan (rows)
+      rows.forEach((rowEntry, rowIndex) => {
+        if (rowEntry.organization && !organizationValue) {
+          organizationValue = rowEntry.organization;
+        }
+
+        const rowPlantIdent = (rowEntry as any).plant || (rowEntry as any).plant_name || "";
+        if (rowPlantIdent) {
+          const matched = findMatchingPlant(String(rowPlantIdent));
+          if (matched) {
+            nextGroups.forEach((group) => {
+              while (group.forms.length <= rowIndex) {
+                group.forms.push({ values: {}, plantId: "" });
+              }
+              group.forms[rowIndex].plantId = String(matched.id);
+            });
+          }
+        }
+
+        (rowEntry.items || []).forEach((item) => {
+          const rawVal = String(item.value ?? "").trim();
+          const found = columnById.get(String(item.column));
+          if (found && isPlantColumn(found.column)) {
+            const matched = findMatchingPlant(rawVal);
+            if (matched) {
+              nextGroups.forEach((group) => {
+                while (group.forms.length <= rowIndex) {
+                  group.forms.push({ values: {}, plantId: "" });
+                }
+                group.forms[rowIndex].plantId = String(matched.id);
+              });
+            }
+          } else if (rawVal) {
+            const matched = findMatchingPlant(rawVal);
+            if (matched && found && !found.column.is_organization && found.column.status_plan == null) {
+              const colName = (found.column.title || found.column.fullParentChain || "").toLowerCase();
+              if (colName.includes("o'simlik") || colName.includes("osimlik") || colName.includes("nomi") || colName.includes("растени")) {
+                nextGroups.forEach((group) => {
+                  while (group.forms.length <= rowIndex) {
+                    group.forms.push({ values: {}, plantId: "" });
+                  }
+                  group.forms[rowIndex].plantId = String(matched.id);
+                });
+              }
+            }
+          }
+
+          setValue(String(item.column), rawVal, rowIndex);
+        });
+      });
+    } else {
+      // 3. Oddiy (flat) hisobot (takrorlangan ustun UUID lari bo'yicha qatorlarga bo'lamiz)
+      const itemRows = splitImportItemsIntoRows(items);
+      itemRows.forEach((rowItems, rowIndex) => {
+        rowItems.forEach((item) => {
+          const rawVal = String(item.value ?? "").trim();
+          const found = columnById.get(String(item.column));
+          if (found && isPlantColumn(found.column)) {
+            const matched = findMatchingPlant(rawVal);
+            if (matched) {
+              nextGroups.forEach((group) => {
+                while (group.forms.length <= rowIndex) {
+                  group.forms.push({ values: {}, plantId: "" });
+                }
+                group.forms[rowIndex].plantId = String(matched.id);
+              });
+            }
+          }
+          setValue(String(item.column), rawVal, rowIndex);
         });
       });
     }
 
-    // 2. Oddiy (flat) hisobot.
-    // Backend `plants` yubormagan bo'lsa ham fayl bir nechta qatordan iborat
-    // bo'lishi mumkin — takrorlangan ustun UUID lari bo'yicha qatorlarga bo'lamiz,
-    // aks holda hamma qator bitta formulaga tushib qolardi.
-    const itemRows =
-      plants.length > 0 ? [items] : splitImportItemsIntoRows(items);
-
     console.info("import-parse hajmi:", {
       plants: plants.length,
+      rows: rows.length,
       items: items.length,
-      formulalar: plants.length > 0 ? plants.length : itemRows.length,
-    });
-
-    itemRows.forEach((rowItems, rowIndex) => {
-      rowItems.forEach((item) => {
-        setValue(String(item.column), String(item.value ?? ""), rowIndex);
-      });
+      formulalar:
+        plants.length > 0
+          ? plants.length
+          : rows.length > 0
+            ? rows.length
+            : splitImportItemsIntoRows(items).length,
     });
 
     dispatch({ type: "SET_FORM_GROUPS", payload: nextGroups });
@@ -1307,6 +1456,7 @@ function PlantCreate() {
             <ImportTemplateButton statementId={reportIds ?? undefined} />
             <ImportExcelButton
               statementId={reportIds ?? undefined}
+              year={yearPlan || undefined}
               onParsed={applyImportPayload}
               onImportSuccess={handleExcelImport}
               disabledReason={importDisabledReason}

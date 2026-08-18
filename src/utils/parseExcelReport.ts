@@ -57,6 +57,45 @@ const isNumericValue = (val: string) => {
 
 const TOTAL_ROW_KEYWORDS = ["jami", "итого", "всего", "jamí"];
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const isUuidString = (val: string): boolean => {
+  if (!val) return false;
+  return UUID_REGEX.test(val.trim());
+};
+
+const isHiddenOrUuidRow = (
+  worksheet: XLSX.WorkSheet,
+  rowIndex: number,
+  cells: ExcelGridCell[],
+): boolean => {
+  // 1. SheetJS row metadata (hidden=true yoki balandligi 1px dan kichik)
+  const rowMeta = (worksheet as any)["!rows"]?.[rowIndex];
+  if (rowMeta) {
+    if (rowMeta.hidden === true) return true;
+    if (typeof rowMeta.hpx === "number" && rowMeta.hpx < 1) return true;
+    if (typeof rowMeta.hpt === "number" && rowMeta.hpt < 1) return true;
+  }
+
+  // 2. Ustun UUID lari qatori tekshiruvi (backend shablonidagi yashirin qator)
+  const nonEmptyValues = cells
+    .map((c) => c.value.trim())
+    .filter((v) => v.length > 0);
+
+  if (nonEmptyValues.length > 0) {
+    const uuidCount = nonEmptyValues.filter((v) => isUuidString(v)).length;
+    if (
+      uuidCount === nonEmptyValues.length ||
+      (uuidCount >= 2 && uuidCount / nonEmptyValues.length >= 0.5)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 /**
  * Varaqni merge (birlashtirilgan kataklar) ma'lumoti bilan birga 2 o'lchamli
  * jadvalga aylantiradi — HTML jadvalda rowSpan/colSpan orqali aynan Exceldagidek
@@ -159,9 +198,13 @@ const buildGrid = (
         else if (!firstText) firstText = value;
       }
 
+      const isDataRow = firstNumericRowIndex !== -1;
+      const effectiveRowSpan =
+        isDataRow && c === range.s.c ? 1 : span?.rowSpan ?? 1;
+
       cells.push({
         value,
-        rowSpan: span?.rowSpan ?? 1,
+        rowSpan: effectiveRowSpan,
         colSpan: span?.colSpan ?? 1,
         isNumeric: numeric,
       });
@@ -169,6 +212,14 @@ const buildGrid = (
 
     // Butunlay bo'sh qatorlarni tashlab yuboramiz (merge davomi bo'lganlaridan tashqari)
     if (!hasValue && !hasCovered) continue;
+
+    // Data qatorlarida tashkilot ustuni (birinchi ustun) merge davomi bo'lgan ortiqcha qatorlarni tashlab yuboramiz
+    if (firstNumericRowIndex !== -1 && coveredCells.has(`${r}:${range.s.c}`)) {
+      continue;
+    }
+
+    // Yashirin (hidden=true, height < 1) yoki ustun UUID lari qatorini tashlab yuboramiz
+    if (isHiddenOrUuidRow(worksheet, r, cells)) continue;
 
     const isColIndexRow = (() => {
       const nonCountable = cells.filter((c) => c.value !== "");
@@ -266,7 +317,15 @@ export const parseExcelBuffer = (
           (c: any) => typeof c === "string" && c.trim().length > 0,
         )
       ) {
-        headerRowIndex = r;
+        const nonEmpties = (rawRows[r] as any[])
+          .map((c: any) => String(c || "").trim())
+          .filter(Boolean);
+        const isUuidRow =
+          nonEmpties.length > 0 &&
+          nonEmpties.every((v: string) => isUuidString(v));
+        if (!isUuidRow) {
+          headerRowIndex = r;
+        }
       }
     }
 
