@@ -717,6 +717,7 @@ function ResourcePlantContainer({
                   ) : (
                     <PlantTableColumn
                       reportName={reportName}
+                      isFinance={isFinance}
                       ref={tableRef}
                       data={col?.children}
                       rows={filteredRows}
