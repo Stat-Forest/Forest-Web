@@ -115,9 +115,20 @@ const PlantTableColumn = forwardRef(
       selectedStatusReport,
       searchTermReport,
       reportName,
+      isFinance = false,
     }: any,
     ref,
   ) => {
+    const isDaromad = Boolean(
+      isFinance ||
+      reportName?.toLowerCase()?.includes("daromad") ||
+      reportName?.toLowerCase()?.includes("доход") ||
+      (typeof window !== "undefined" && (
+        window.location.pathname.toLowerCase().includes("daromad") ||
+        window.location.pathname.toLowerCase().includes("доход")
+      ))
+    );
+
     const tableRef = useRef<HTMLDivElement>(null);
     const detailRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -345,11 +356,17 @@ const PlantTableColumn = forwardRef(
         name === "название растения" ||
         name === "наименование растения" ||
         name === "ўсимлик номи" ||
+        name === "daromad manbalari" ||
+        name === "daromad manbai" ||
+        name === "источники дохода" ||
+        name === "источник дохода" ||
         name === "plant_name" ||
         (name.includes("o'simlik") && name.includes("nomi")) ||
         (name.includes("osimlik") && name.includes("nomi")) ||
         (name.includes("o‘simlik") && name.includes("nomi")) ||
         (name.includes("o`simlik") && name.includes("nomi")) ||
+        (name.includes("daromad") && name.includes("manba")) ||
+        (name.includes("доход") && name.includes("источник")) ||
         (name.includes("растени") &&
           (name.includes("назван") || name.includes("наименов")))
       );
@@ -507,7 +524,7 @@ const PlantTableColumn = forwardRef(
 
       if (!rows[0]) rows[0] = [];
 
-      // Har doim 1-qator boshiga Tashkilot nomi va O'simlik nomi ustunlarini qo'shamiz
+      // Har doim 1-qator boshiga Tashkilot nomi va O'simlik nomi / Daromad manbalari ustunlarini qo'shamiz
       rows[0].unshift(
         {
           title: t("organization_name_header"),
@@ -516,7 +533,9 @@ const PlantTableColumn = forwardRef(
           isOrg: true,
         },
         {
-          title: t("plant_name_header"),
+          title: isDaromad
+            ? t("income_sources_header")
+            : t("plant_name_header"),
           colSpan: 1,
           rowSpan: maxDepth,
           isPlant: true,
@@ -541,7 +560,10 @@ const PlantTableColumn = forwardRef(
         row.forEach((cell: any) => {
           let title = cell.title;
           if (cell.isOrg) title = t("organization_name_header");
-          else if (cell.isPlant) title = t("plant_name_header");
+          else if (cell.isPlant)
+            title = isDaromad
+              ? t("income_sources_header")
+              : t("plant_name_header");
 
           // Har bir cellni uning colspan miqdorida takrorlaymiz
           for (let i = 0; i < cell.colSpan; i++) {
@@ -600,9 +622,15 @@ const PlantTableColumn = forwardRef(
                       titleLower.includes("o‘simlik") ||
                       titleLower.includes("o`simlik") ||
                       titleLower.includes("растени") ||
-                      titleLower.includes("ўсимлик")
+                      titleLower.includes("ўсимлик") ||
+                      titleLower.includes("daromad") ||
+                      titleLower.includes("доход") ||
+                      titleLower.includes("manba") ||
+                      titleLower.includes("источник")
                     ) {
-                      displayTitle = t("plant_name_header");
+                      displayTitle = isDaromad
+                        ? t("income_sources_header")
+                        : t("plant_name_header");
                     }
 
                     return (
@@ -1265,9 +1293,15 @@ const PlantTableColumn = forwardRef(
                           titleLower.includes("o‘simlik") ||
                           titleLower.includes("o`simlik") ||
                           titleLower.includes("растени") ||
-                          titleLower.includes("ўсимлик")
+                          titleLower.includes("ўсимлик") ||
+                          titleLower.includes("daromad") ||
+                          titleLower.includes("доход") ||
+                          titleLower.includes("manba") ||
+                          titleLower.includes("источник")
                         ) {
-                          displayTitle = t("plant_name_header");
+                          displayTitle = isDaromad
+                            ? t("income_sources_header")
+                            : t("plant_name_header");
                         }
 
                         return (
