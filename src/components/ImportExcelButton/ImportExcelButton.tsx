@@ -21,6 +21,7 @@ interface ImportExcelButtonProps {
   statementId?: string;
   /** Ixtiyoriy: reja validatsiyasi uchun tashkilot va yil */
   organizationId?: string;
+  organizationName?: string;
   year?: string | number;
   /** Backend qaytargan ustun UUID + qiymatlar */
   onParsed?: (payload: ImportParseResponse) => void;
@@ -44,6 +45,7 @@ export const ImportExcelButton: React.FC<ImportExcelButtonProps> = ({
   reportName,
   statementId,
   organizationId,
+  organizationName,
   year,
   onParsed,
   onImportSuccess,
@@ -255,6 +257,7 @@ export const ImportExcelButton: React.FC<ImportExcelButtonProps> = ({
           if (!isOpen) closePreview();
         }}
         data={previewData}
+        organizationName={organizationName}
         onConfirm={handleConfirm}
         confirmLoading={isParsing}
       />
