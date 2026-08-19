@@ -47,6 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { extractYearFromDeadline } from "@/utils/i18nHelpers";
 
 function findEmptyChildrenColumnIds(
   children: any[],
@@ -401,8 +402,12 @@ function InnersCreateReportItem() {
         .flat()
         .filter((col) => col.title.toLowerCase().includes("reja"));
 
-      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
+      const targetYear = extractYearFromDeadline(yearPlan);
+
+      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId || !targetYear) {
+        setPlanItems([]);
         return;
+      }
 
       // Agar season select mavjud bo'lsa (bu reportIds uchun), season tanlangandan keyin reja olinadi
       const hasSeasonSelect =
@@ -422,7 +427,7 @@ function InnersCreateReportItem() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: selectedOrganizationId,
                 statement_id: reportIds as string,
-                year: yearPlan,
+                year: targetYear,
                 column: col.id,
                 ...(selectedSeason && { season: selectedSeason }),
               }),
@@ -458,6 +463,7 @@ function InnersCreateReportItem() {
     selectedOrganizationId,
     reportIds,
     selectedSeason,
+    yearPlan,
     dispatch,
   ]);
 
@@ -656,7 +662,7 @@ function InnersCreateReportItem() {
                 (item: any) => item.id.toString() === val,
               );
               setYearPlan(
-                selectedItem ? formatDeadlineText(selectedItem.submit_at) : "",
+                selectedItem ? extractYearFromDeadline(selectedItem) : "",
               );
             }}
           >

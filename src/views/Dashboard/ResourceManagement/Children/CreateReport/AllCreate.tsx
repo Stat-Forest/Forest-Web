@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify";
+import { extractYearFromDeadline } from "@/utils/i18nHelpers";
 import ImportExcelButton from "@/components/ImportExcelButton/ImportExcelButton";
 import ImportTemplateButton from "@/components/ImportExcelButton/ImportTemplateButton";
 import { ParsedExcelReport } from "@/utils/parseExcelReport";
@@ -577,7 +578,9 @@ function AllCreateReportItem() {
         .flat()
         .filter((col) => col.status_plan != null);
 
-      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId) {
+      const targetYear = extractYearFromDeadline(yearPlan);
+
+      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId || !targetYear) {
         setPlanItems([]);
         return;
       }
@@ -598,7 +601,7 @@ function AllCreateReportItem() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: selectedOrganizationId,
                 statement_id: reportIds as string,
-                year: yearPlan,
+                year: targetYear,
                 column: col.id,
                 ...(selectedSeason && { season: selectedSeason }),
               }),
@@ -909,7 +912,7 @@ function AllCreateReportItem() {
                   (item: any) => item.id.toString() === val,
                 );
                 setYearPlan(
-                  selectedItem ? formatDeadlineText(selectedItem.year) : "",
+                  selectedItem ? extractYearFromDeadline(selectedItem) : "",
                 );
               }}
             >
