@@ -59,6 +59,7 @@ import {
   plantCreateInitialState,
 } from "@/reducers/plantCreateReducer";
 import { FormGroup, EmptyColumn } from "@/types/plantCreateTypes";
+import { extractYearFromDeadline } from "@/utils/i18nHelpers";
 
 // Interface for API response data
 interface Category {
@@ -615,7 +616,7 @@ function PlantCreate() {
         type: "SET_DEADLINE",
         payload: matchedDeadline.id.toString(),
       });
-      setYearPlan(formatDeadlineText((matchedDeadline as any).year));
+      setYearPlan(extractYearFromDeadline(matchedDeadline));
     }
 
     // 5. Natijani foydalanuvchiga aytamiz
@@ -1018,6 +1019,9 @@ function PlantCreate() {
       return;
     }
 
+    const targetYear = extractYearFromDeadline(yearPlan);
+    if (!targetYear || !state.selectedOrganizationId) return;
+
     const tasks: Promise<void>[] = [];
 
     rejaColumns.forEach((col) => {
@@ -1030,7 +1034,7 @@ function PlantCreate() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: state.selectedOrganizationId,
                 statement_id: reportIds,
-                year: yearPlan,
+                year: targetYear,
                 column: col.id,
                 plant_id: pId,
               }),
@@ -1500,7 +1504,7 @@ function PlantCreate() {
                 dispatch({ type: "SET_DEADLINE", payload: val });
 
                 setYearPlan(
-                  selectedItem ? formatDeadlineText(selectedItem.year) : "",
+                  selectedItem ? extractYearFromDeadline(selectedItem) : "",
                 );
               }}
             >

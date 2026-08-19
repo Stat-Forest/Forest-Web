@@ -113,3 +113,18 @@ export const isForestAnalysisReportName = (name?: string): boolean => {
   const n = normalizeReportString(name);
   return n.includes("ormonlarkesimida") || n.includes("разрезелесов");
 };
+
+export const extractYearFromDeadline = (deadlineObjOrStr?: any): string => {
+  if (!deadlineObjOrStr) return "";
+  if (typeof deadlineObjOrStr === "object") {
+    if (deadlineObjOrStr.year && !isNaN(Number(deadlineObjOrStr.year))) {
+      return String(deadlineObjOrStr.year);
+    }
+    if (deadlineObjOrStr.submit_at) {
+      const match = String(deadlineObjOrStr.submit_at).match(/\d{4}/);
+      if (match) return match[0];
+    }
+  }
+  const match = String(deadlineObjOrStr).match(/\d{4}/);
+  return match ? match[0] : "";
+};
