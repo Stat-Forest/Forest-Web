@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "react-toastify";
+import { extractYearFromDeadline } from "@/utils/i18nHelpers";
 
 interface ColumnItem {
   id: string;
@@ -214,7 +215,7 @@ function InnersUpdateReportItem() {
             item.id.toString() === existingReport.deadline.toString(),
         );
         if (selectedDeadline) {
-          setPlanYear(formatDeadlineText(selectedDeadline.submit_at));
+          setPlanYear(extractYearFromDeadline(selectedDeadline));
         }
       }
 
@@ -234,7 +235,9 @@ function InnersUpdateReportItem() {
         .flat()
         .filter((col) => col.status_plan != null);
 
-      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId) {
+      const targetYear = extractYearFromDeadline(planYear);
+
+      if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId || !targetYear) {
         setPlanItems([]);
         return;
       }
@@ -255,7 +258,7 @@ function InnersUpdateReportItem() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: selectedOrganizationId,
                 statement_id: reportIds as string,
-                year: planYear,
+                year: targetYear,
                 column: col.id,
                 ...(selectedSeason && { season: selectedSeason }),
               }),
