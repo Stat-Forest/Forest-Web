@@ -20,6 +20,8 @@ export const statementTranslationsRu: Record<string, string> = {
   "Ko'chat va Nihol": "Ростки и саженцы",
   "Ko'chat va Nihol Yetishtirish Jami":
     "Всего выращивание ростков и саженцев",
+  "Bryusanetta": "Брюсанетта",
+  "Golofit": "Голофит",
 };
 
 export const translateDepartmentName = (
@@ -87,7 +89,12 @@ export const isInnersReportName = (name?: string): boolean => {
     n.includes("ogirmahalla") ||
     n.includes("трудныйрайон") ||
     n.includes("mexanizatsiya") ||
-    n.includes("механизаци")
+    n.includes("механизаци") ||
+    n.includes("bryusanetta") ||
+    n.includes("брюсанетта") ||
+    n.includes("golofit") ||
+    n.includes("голофит") ||
+    n.includes("галофит")
   );
 };
 
