@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "react-toastify";
+import { extractYearFromDeadline } from "@/utils/i18nHelpers";
 
 function findEmptyChildrenColumnIds(
   children: any[]
@@ -186,6 +187,14 @@ function AllUpdateReportItem() {
         .flat()
         .filter((col) => col.title.toLowerCase().includes("reja"));
 
+      const matchedDeadline = deadlineData?.results?.find(
+        (item: any) => item.id.toString() === selectedDeadlineId.toString(),
+      );
+      const targetYear =
+        extractYearFromDeadline(matchedDeadline) ||
+        extractYearFromDeadline(existingReport?.deadline) ||
+        "2025";
+
       if (rejaColumns.length === 0 || !reportIds || !selectedOrganizationId)
         return;
 
@@ -196,7 +205,7 @@ function AllUpdateReportItem() {
               reportApi.endpoints.getPlanItemsReport.initiate({
                 organization_id: selectedOrganizationId,
                 statement_id: reportIds,
-                year: "2025",
+                year: targetYear,
                 column: col.id,
               })
             ).unwrap()
