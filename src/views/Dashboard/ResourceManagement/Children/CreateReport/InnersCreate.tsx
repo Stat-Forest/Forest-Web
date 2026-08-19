@@ -181,6 +181,12 @@ function InnersCreateReportItem() {
             values[col.id] = matchedOrg.id;
           }
         });
+      } else if (selectedOrganizationId) {
+        allCols.forEach((col) => {
+          if (col.title.toLowerCase().includes("tashkilot")) {
+            values[col.id] = selectedOrganizationId;
+          }
+        });
       }
 
       return values;
@@ -607,6 +613,11 @@ function InnersCreateReportItem() {
           ? t("excelImportSelectOrgFirst")
           : "";
 
+  const selectedOrg = (organizationsData as { id: string; name: string }[])?.find(
+    (org) => String(org.id) === String(selectedOrganizationId),
+  );
+  const selectedOrgName = selectedOrg?.name || "";
+
   return (
     <>
       <div className="px-6 pt-6 flex items-center justify-between gap-3">
@@ -625,6 +636,7 @@ function InnersCreateReportItem() {
             <ImportExcelButton
               statementId={reportIds ?? undefined}
               organizationId={selectedOrganizationId || undefined}
+              organizationName={selectedOrgName || undefined}
               year={yearPlan || undefined}
               onParsed={applyImportPayload}
               onImportSuccess={handleExcelImport}

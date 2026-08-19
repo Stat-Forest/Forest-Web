@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ParsedExcelReport } from "@/utils/parseExcelReport";
+import { findSpecialExcelColumns } from "@/utils/matchExcelColumns";
 import ExcelGridTable from "./ExcelGridTable";
 
 interface ExcelPreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data: ParsedExcelReport | null;
+  organizationName?: string;
   onConfirm?: () => void;
   confirmLabel?: string;
   confirmLoading?: boolean;
@@ -28,6 +30,7 @@ export const ExcelPreviewModal: React.FC<ExcelPreviewModalProps> = ({
   open,
   onOpenChange,
   data,
+  organizationName: propOrganizationName,
   onConfirm,
   confirmLabel,
   confirmLoading,
@@ -66,19 +69,17 @@ export const ExcelPreviewModal: React.FC<ExcelPreviewModalProps> = ({
     [sheets, activeSheet],
   );
 
-  // Tashkilot nomi: ma'lumot qatorlaridagi eng uzun matnli katak (jami qatoridan tashqari)
+  // Tashkilot nomi: avval prop orqali uzatilgan tashkilot nomi, aks holda Excelda "Tashkilot" ustuni bo'lsa o'sha ustundan
   const organizationName = useMemo(() => {
-    let found = "";
-    for (const row of grid) {
-      if (row.isHeader || row.isTotal) continue;
-      for (const cell of row.cells) {
-        if (cell.isNumeric || !cell.value) continue;
-        if (cell.value.length > found.length) found = cell.value;
-      }
-      if (found) break;
+    if (propOrganizationName) return propOrganizationName;
+    const currentSheet = sheets[activeSheet];
+    if (!currentSheet?.headerChains || !currentSheet?.dataRows?.length) return "";
+    const special = findSpecialExcelColumns(currentSheet.headerChains);
+    if (special.organizationIndex >= 0) {
+      return currentSheet.dataRows[0]?.cells[special.organizationIndex]?.trim() || "";
     }
-    return found;
-  }, [grid]);
+    return "";
+  }, [propOrganizationName, sheets, activeSheet]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
