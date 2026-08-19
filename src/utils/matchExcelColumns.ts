@@ -281,17 +281,51 @@ const wordsMatch = (w1: string, w2: string): boolean => {
 const isPlantHeader = (chain: string[]) => {
   const text = leafOf(chain);
   const clean = cleanTextForSearch(text);
+
+  // Agar ustun soni, miqdori, hajmi, maydoni yoki narx kabi o'lchov ko'rsatkichi bo'lsa — bu ma'lumot ustuni, o'simlik selecti emas!
+  if (
+    clean.includes("soni") ||
+    clean.includes("miqdor") ||
+    clean.includes("hajm") ||
+    clean.includes("maydon") ||
+    clean.includes("gektar") ||
+    clean.includes("dona") ||
+    clean.includes("summa") ||
+    clean.includes("qiymat") ||
+    clean.includes("narx") ||
+    clean.includes("foiz") ||
+    clean.includes("reja") ||
+    clean.includes("amal") ||
+    clean.includes("bajaril") ||
+    clean.includes("количеств") ||
+    clean.includes("штук") ||
+    clean.includes("сумм") ||
+    clean.includes("объем") ||
+    clean.includes("площад")
+  ) {
+    return false;
+  }
+
   return (
-    clean.includes("osimlik") ||
-    clean.includes("nihol") ||
-    clean.includes("kochat") ||
+    clean.includes("osimliknomi") ||
+    clean.includes("osimlikturi") ||
+    clean.includes("kochatturi") ||
+    clean.includes("niholturi") ||
+    clean.includes("daraxtturi") ||
+    clean.includes("daromadmanba") ||
+    clean.includes("istochikdoxod") ||
     clean.includes("rasten") ||
-    clean.includes("daromad") ||
-    clean.includes("manba") ||
-    clean.includes("доход") ||
-    clean.includes("источник") ||
+    clean === "osimlik" ||
+    clean === "kochat" ||
+    clean === "nihol" ||
+    clean === "daraxt" ||
     clean === "nomi" ||
-    clean === "naimenovanie"
+    clean === "naimenovanie" ||
+    clean === "turi" ||
+    clean === "daromad" ||
+    clean === "manba" ||
+    clean === "доход" ||
+    clean === "источник"
   );
 };
 

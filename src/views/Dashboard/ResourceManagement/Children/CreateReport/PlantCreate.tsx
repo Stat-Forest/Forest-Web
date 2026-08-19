@@ -543,7 +543,11 @@ function PlantCreate() {
           stepColumns.forEach((col) => {
             // Tashkilot ustuni qiymati — tashkilot ID si
             if (col.is_organization === true) {
-              if (matchedOrg) values[col.id] = matchedOrg.id;
+              if (matchedOrg) {
+                values[col.id] = matchedOrg.id;
+              } else if (state.selectedOrganizationId) {
+                values[col.id] = state.selectedOrganizationId;
+              }
               return;
             }
 
@@ -1444,6 +1448,11 @@ function PlantCreate() {
           ? t("excelImportSelectOrgFirst")
           : "";
 
+  const selectedOrg = (organizationsData as Organization[])?.find(
+    (org) => String(org.id) === String(state.selectedOrganizationId),
+  );
+  const selectedOrgName = selectedOrg?.name || "";
+
   return (
     <>
       <div className="p-6 flex items-center justify-between gap-3">
@@ -1460,6 +1469,8 @@ function PlantCreate() {
             <ImportTemplateButton statementId={reportIds ?? undefined} />
             <ImportExcelButton
               statementId={reportIds ?? undefined}
+              organizationId={state.selectedOrganizationId || undefined}
+              organizationName={selectedOrgName || undefined}
               year={yearPlan || undefined}
               onParsed={applyImportPayload}
               onImportSuccess={handleExcelImport}

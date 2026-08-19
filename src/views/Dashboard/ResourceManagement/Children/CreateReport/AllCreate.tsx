@@ -209,9 +209,12 @@ function AllCreateReportItem() {
       allCols.forEach((col) => {
         if (col.is_organization === true) newValues[col.id] = matchedOrg.id;
       });
+      setSelectedOrganizationId(matchedOrg.id);
+    } else if (selectedOrganizationId) {
+      allCols.forEach((col) => {
+        if (col.is_organization === true) newValues[col.id] = selectedOrganizationId;
+      });
     }
-
-    if (matchedOrg) setSelectedOrganizationId(matchedOrg.id);
 
     if (Object.keys(newValues).length === 0) {
       toast.error(t("excelImportNoMatch"));
@@ -825,6 +828,11 @@ function AllCreateReportItem() {
     return submitAt;
   };
 
+  const selectedOrg = (organizationsData as { id: string; name: string }[])?.find(
+    (org) => String(org.id) === String(selectedOrganizationId),
+  );
+  const selectedOrgName = selectedOrg?.name || "";
+
   return (
     <>
       <div className="p-6 flex items-center justify-between gap-3">
@@ -842,6 +850,7 @@ function AllCreateReportItem() {
             <ImportExcelButton
               statementId={reportIds ?? undefined}
               organizationId={selectedOrganizationId || undefined}
+              organizationName={selectedOrgName || undefined}
               year={yearPlan || undefined}
               onParsed={applyImportPayload}
               onImportSuccess={handleExcelImport}
