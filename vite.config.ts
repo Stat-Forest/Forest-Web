@@ -107,7 +107,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
       },
       "/ws": {
-        target: "wss://forest.yutori.uz",
+        target: "https://forest.yutori.uz",
         ws: true,
         changeOrigin: true,
         secure: true,
