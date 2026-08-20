@@ -85,6 +85,8 @@ function SupportChatWidget() {
   const queuedMessagesRef = useRef<string[]>([]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const markedConversationRef = useRef<string | null>(null);
+  // Chat ochilganda avtomatik conversation yaratish bir marta bo'lishi uchun
+  const autoCreateAttemptedRef = useRef(false);
 
   const {
     data: conversations = [],
@@ -128,16 +130,54 @@ function SupportChatWidget() {
   );
 
   useEffect(() => {
-    if (!isOpen) return;
-    if (!activeConversationId && conversations.length > 0) {
-      setActiveConversationId(conversations[0].id);
+    if (!isOpen || conversationsLoading) return;
+    if (activeConversationId) return;
+
+    // Ochiq (yopilmagan) conversation bo'lsa — uni tanlash
+    const openConversation = conversations.find((c) => c.status !== "closed");
+    if (openConversation) {
+      setActiveConversationId(openConversation.id);
+      return;
     }
-  }, [isOpen, activeConversationId, conversations]);
+
+    // Ochiq conversation yo'q — bir marta avtomatik yangi chat yaratish
+    if (!autoCreateAttemptedRef.current && !creatingConversation) {
+      autoCreateAttemptedRef.current = true;
+      createConversation()
+        .unwrap()
+        .then((created) => {
+          setActiveConversationId(created.id);
+          refetchConversations();
+        })
+        .catch((error) => {
+          autoCreateAttemptedRef.current = false;
+          toast.error(
+            describeChatError(
+              error,
+              isRu,
+              isRu
+                ? "Не удалось создать чат. Попробуйте еще раз."
+                : "Chat yaratib bo'lmadi. Qaytadan urinib ko'ring."
+            )
+          );
+        });
+    }
+  }, [
+    isOpen,
+    activeConversationId,
+    conversations,
+    conversationsLoading,
+    creatingConversation,
+    createConversation,
+    refetchConversations,
+    isRu,
+  ]);
 
   useEffect(() => {
     if (isOpen) return;
     setActiveConversationId(null);
     setDraft("");
+    autoCreateAttemptedRef.current = false;
   }, [isOpen]);
 
   useEffect(() => {
@@ -377,7 +417,6 @@ function SupportChatWidget() {
               ) : (
                 conversations.map((conversation: ChatConversation) => {
                   const isActive = conversation.id === activeConversationId;
-                  const cancellable = canCancelConversation(conversation, userId);
 
                   return (
                     <div
@@ -388,9 +427,12 @@ function SupportChatWidget() {
                           : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                       }`}
                     >
-                      <button
+                      <div
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setActiveConversationId(conversation.id)}
-                        className="w-full text-left px-4 pt-3"
+                        onKeyDown={(e) => e.key === "Enter" && setActiveConversationId(conversation.id)}
+                        className="w-full text-left px-4 pt-3 pb-3 cursor-pointer"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
@@ -418,20 +460,10 @@ function SupportChatWidget() {
                             )}
                           </span>
                         </div>
-                      </button>
-                      <div className="px-4 pb-3 pt-2">
-                        {cancellable && (
-                          <button
-                            onClick={() => handleCancelConversation(conversation.id)}
-                            disabled={cancellingConversation}
-                            className="text-xs text-rose-600 dark:text-rose-400 hover:underline disabled:opacity-60"
-                          >
-                            {isRu ? "Отменить" : "Bekor qilish"}
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
+
                 })
               )}
             </div>
@@ -454,6 +486,22 @@ function SupportChatWidget() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {activeConversation && canCancelConversation(activeConversation, userId) && (
+                  <button
+                    type="button"
+                    onClick={() => handleCancelConversation(activeConversation.id)}
+                    disabled={cancellingConversation}
+                    className="text-xs font-medium px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/50 disabled:opacity-60 transition cursor-pointer"
+                  >
+                    {cancellingConversation
+                      ? isRu
+                        ? "Отмена..."
+                        : "Bekor qilinmoqda..."
+                      : isRu
+                        ? "Отменить"
+                        : "Bekor qilish"}
+                  </button>
+                )}
                 {activeConversation && (
                   <span
                     className={`text-xs font-medium px-3 py-1 rounded-full ${statusClass(
@@ -485,6 +533,7 @@ function SupportChatWidget() {
                   </span>
                 )}
                 <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
                   className="h-8 w-8 grid place-items-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                   aria-label={isRu ? "Закрыть чат" : "Chatni yopish"}

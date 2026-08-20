@@ -321,12 +321,12 @@ export const canCloseConversation = (
   return conversation.status === "taken" && assignedId === String(userId);
 };
 
-/** Userning o'z chatini bekor qilishi — faqat `new` holatida. */
+/** Userning o'z chatini bekor qilishi — `new` va `taken` holatida. */
 export const canCancelConversation = (
   conversation: ChatConversation | null | undefined,
   userId: string
 ): boolean => {
-  if (!conversation || conversation.status !== "new") return false;
+  if (!conversation || conversation.status === "closed") return false;
   return resolveSenderId(conversation.user) === String(userId);
 };
 
