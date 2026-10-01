@@ -5,6 +5,7 @@ capiws/keys/*.jks
 # Node/Vite defaults
 node_modules/
 dist/
+.env
 .env.local
 .env.*.local
 /.vite

@@ -23,6 +23,9 @@ jobs:
       - name: Paketlarni o‘rnatish
         run: npm install --legacy-peer-deps
 
+      - name: .env faylini Secret'dan tiklash
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: Projectni build qilish
         run: npm run build
 
