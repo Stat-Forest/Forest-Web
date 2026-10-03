@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/utils/useDebounce";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 function LandDocumentsContainers() {
   const { t, i18n } = useTranslation();
@@ -25,6 +27,7 @@ function LandDocumentsContainers() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const navigate = useNavigate();
+  const token = useSelector((state: RootState) => state.auth.token);
 
   const {
     data: landDocumentsData,
@@ -91,8 +94,6 @@ function LandDocumentsContainers() {
     }
 
     try {
-      const token = localStorage.getItem("access_token");
-
       // 🔹 Agar URL http bo'lsa, avtomatik https ga o'zgartirish
       let fileUrl = doc.file_url;
       if (fileUrl.startsWith("http://")) {
