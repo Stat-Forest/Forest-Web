@@ -47,8 +47,9 @@ export default function SignAndSendDialog({ reportId, onSent }: Props) {
     setBusy(true);
     try {
       const challenge = await signChallenge({ id: reportId }).unwrap();
-      const pkcs7 = await signer.sign(challenge.document, method);
-      await sendReport({ id: reportId, pkcs7 }).unwrap();
+      // VPN'siz rejimda backend hujjat o'rniga e-imzo challenge'ini imzolatadi
+      const pkcs7 = await signer.sign(challenge.sign_text ?? challenge.document, method);
+      await sendReport({ id: reportId, pkcs7, nonce: challenge.nonce }).unwrap();
       toast.success(t("report_signed_sent"));
       setOpen(false);
       onSent?.();

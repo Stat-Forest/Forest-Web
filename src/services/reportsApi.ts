@@ -487,16 +487,16 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
       invalidatesTags: ["Reports"],
     }),
     // Yuborish faqat E-imzo imzosi bilan (pkcs7 — /send/challenge/ hujjatining imzosi)
-    sendReport: builder.mutation<any, { id: string; pkcs7: string }>({
-      query: ({ id, pkcs7 }) => ({
+    sendReport: builder.mutation<any, { id: string; pkcs7: string; nonce?: string }>({
+      query: ({ id, pkcs7, nonce }) => ({
         url: `/send/`,
         method: "POST",
-        body: { id, pkcs7 },
+        body: { id, pkcs7, nonce },
       }),
       invalidatesTags: ["Reports"],
     }),
     signChallenge: builder.mutation<
-      { document: string; nonce: string; expires_in: number },
+      { document: string; sign_text?: string; mode?: "document" | "challenge"; nonce: string; expires_in: number },
       { id: string }
     >({
       query: ({ id }) => ({
