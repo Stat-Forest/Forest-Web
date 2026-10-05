@@ -36,8 +36,8 @@ import { useEffect, useMemo, useState } from "react";
 import ChangePasswordModal from "../Modals/ChangePasswordModal";
 import LogoutConfirmModal from "../Modals/LogoutConfirmModal";
 import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
-import backimg1 from "@/assets/img/backimg1.png";
-import backimg2 from "@/assets/img/backimg2.png";
+import backimg1 from "@/assets/img/backimg1.webp";
+import backimg2 from "@/assets/img/backimg2.webp";
 
 // RTK Query APIs
 import { authApi } from "@/services/authApi";

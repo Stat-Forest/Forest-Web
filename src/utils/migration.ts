@@ -1,6 +1,7 @@
 import { encryptData } from "./crypto";
 import { getCookie } from "./cookie";
-import CryptoJS from "crypto-js";
+import AES from "crypto-js/aes";
+import Utf8 from "crypto-js/enc-utf8";
 
 /**
  * Eski localStorage'dan ma'lumotlarni cookie'ga ko'chiradi
@@ -22,8 +23,8 @@ export const migrateLocalStorageToCookies = (): void => {
     if (oldToken && !cookieToken) {
       try {
         // Eski token shifrlangan bo'lishi mumkin, deshifrlaymiz
-        const decrypted = CryptoJS.AES.decrypt(oldToken, "token").toString(
-          CryptoJS.enc.Utf8
+        const decrypted = AES.decrypt(oldToken, "token").toString(
+          Utf8
         );
         if (decrypted) {
           const tokenValue = JSON.parse(decrypted);
@@ -46,8 +47,8 @@ export const migrateLocalStorageToCookies = (): void => {
     if (oldUser && !cookieUser) {
       try {
         // Eski user shifrlangan bo'lishi mumkin, deshifrlaymiz
-        const decrypted = CryptoJS.AES.decrypt(oldUser, "user").toString(
-          CryptoJS.enc.Utf8
+        const decrypted = AES.decrypt(oldUser, "user").toString(
+          Utf8
         );
         if (decrypted) {
           const userValue = JSON.parse(decrypted);
@@ -70,8 +71,8 @@ export const migrateLocalStorageToCookies = (): void => {
     if (oldRefresh && !cookieRefresh) {
       try {
         // Eski refresh shifrlangan bo'lishi mumkin, deshifrlaymiz
-        const decrypted = CryptoJS.AES.decrypt(oldRefresh, "refresh").toString(
-          CryptoJS.enc.Utf8
+        const decrypted = AES.decrypt(oldRefresh, "refresh").toString(
+          Utf8
         );
         if (decrypted) {
           const refreshValue = JSON.parse(decrypted);
