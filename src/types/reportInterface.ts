@@ -13,6 +13,14 @@ interface ReportItem {
   }>;
 }
 
+export interface ReportSignatureInfo {
+  id: string;
+  signer_full_name: string;
+  signer_tin: string;
+  signed_at: string;
+  verify_path: string;
+}
+
 export interface ReportRow {
   id: string;
   organization_name: string;
@@ -25,6 +33,7 @@ export interface ReportRow {
   sent_by_full_name?: string;
   sent_by_org_name?: string;
   sent_by_role?: string;
+  signature?: ReportSignatureInfo | null;
   deadline: string;
   organization: string;
 }
