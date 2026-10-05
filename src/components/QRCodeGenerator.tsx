@@ -3,28 +3,14 @@ import React from "react";
 import QRCode from "react-qr-code";
 
 interface QRCodeGeneratorProps {
-    sentBy: string;
-    sentByOrg: string;
-    sentByRole: string;
+  value: string;
+  size?: number;
 }
 
-const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
-    sentBy,
-    sentByOrg,
-    sentByRole,
-}) => {
-    
-    const qrValue = JSON.stringify({
-        sent_by: sentBy,
-        sent_by_org: sentByOrg,
-        sent_by_role: sentByRole,
-    });
-
-    return (
-        <div className="p-2 bg-ice inline-block">
-            <QRCode value={qrValue} size={100} />
-        </div>
-    );
-};
+const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ value, size = 100 }) => (
+  <div className="p-2 bg-white inline-block rounded-md">
+    <QRCode value={value} size={size} />
+  </div>
+);
 
 export default QRCodeGenerator;
