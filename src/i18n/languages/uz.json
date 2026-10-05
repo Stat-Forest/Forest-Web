@@ -455,5 +455,9 @@
   "report_status": "Hisobot holati",
   "back_home": "Bosh sahifaga",
   "yes": "Ha",
-  "no": "Yo'q"
+  "no": "Yo'q",
+  "sign_mode": "Imzo rejimi",
+  "sign_mode_document": "To'liq: hisobot hujjati imzolangan",
+  "sign_mode_challenge": "Tasdiqlash: sertifikat tekshirilgan, hujjat serverda imzoga bog'langan (E-imzo VPN vaqtincha ishlamagan)",
+  "timestamp_tsa": "Vaqt tamg'asi (TSA)"
 }
