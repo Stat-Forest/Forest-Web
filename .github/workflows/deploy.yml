@@ -23,8 +23,12 @@ jobs:
       - name: Paketlarni o‘rnatish
         run: npm install --legacy-peer-deps
 
+      # Secret env orqali uzatiladi: `echo "${{ ... }}"` ichidagi qo'shtirnoqlarni
+      # bash o'chirib yuborardi va VITE_EIMZO_API_KEYS JSON bo'lmay qolardi.
       - name: .env faylini Secret'dan tiklash
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: printf '%s\n' "$ENV_FILE" > .env
 
       - name: Projectni build qilish
         run: npm run build

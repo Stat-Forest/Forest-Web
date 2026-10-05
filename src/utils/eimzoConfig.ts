@@ -22,8 +22,13 @@ export const getEimzoApiKeys = (): string[] => {
             return parsed;
           }
         } catch {
-          // Agar parse qilib bo'lmasa, to'g'ridan-to'g'ri qaytaramiz
-          return envKeys.split(",").map((k) => k.trim());
+          // Agar parse qilib bo'lmasa (masalan qo'shtirnoqlar yo'qolgan bo'lsa),
+          // [ ] va " belgilarini olib tashlab vergul bo'yicha bo'lamiz
+          return envKeys
+            .replace(/^\s*\[|\]\s*$/g, "")
+            .split(",")
+            .map((k) => k.trim().replace(/^["']|["']$/g, ""))
+            .filter(Boolean);
         }
       }
 
