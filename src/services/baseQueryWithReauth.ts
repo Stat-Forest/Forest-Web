@@ -10,7 +10,19 @@ import { logout } from "@/features/authSlice";
 
 interface RefreshResponse {
   access: string;
+  // Backend ROTATE_REFRESH_TOKENS=True: har refresh'da yangi refresh token
+  // qaytaradi, eskisi esa blacklist'ga tushadi.
+  refresh?: string;
 }
+
+type RefreshOutcome =
+  | { ok: true; access: string; refresh: string }
+  | { ok: false; status?: number | string };
+
+// Bir vaqtda kelgan bir nechta 401 bitta refresh so'rovini kutadi.
+// Aks holda ikkinchi so'rov allaqachon blacklist qilingan refresh token
+// bilan boradi va foydalanuvchi tizimdan chiqarib yuboriladi.
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
 
 // User interface - circular dependency'ni oldini olish uchun
 interface User {
@@ -45,47 +57,67 @@ export function createBaseQueryWithReauth(
 
       if (refreshToken) {
         try {
-          // Create a separate baseQuery for refresh endpoint
-          const refreshBaseQuery = fetchBaseQuery({
-            baseUrl: `${base_url}/authentications`,
-            prepareHeaders,
-          });
+          if (!refreshInFlight) {
+            refreshInFlight = (async (): Promise<RefreshOutcome> => {
+              // Create a separate baseQuery for refresh endpoint
+              const refreshBaseQuery = fetchBaseQuery({
+                baseUrl: `${base_url}/authentications`,
+                prepareHeaders,
+              });
 
-          // Try to refresh the token
-          const refreshResult = await refreshBaseQuery(
-            {
-              url: "/token/refresh/",
-              method: "POST",
-              body: { refresh: refreshToken },
-            },
-            api,
-            extraOptions
-          );
+              const refreshResult = await refreshBaseQuery(
+                {
+                  url: "/token/refresh/",
+                  method: "POST",
+                  body: { refresh: refreshToken },
+                },
+                api,
+                extraOptions
+              );
 
-          // Refresh token response'ni tekshirish
-          if (refreshResult.data) {
-            const newAccess = (refreshResult.data as RefreshResponse).access;
+              if (!refreshResult.data) {
+                return {
+                  ok: false,
+                  status: (refreshResult.error as FetchBaseQueryError | undefined)?.status,
+                };
+              }
 
-            // Update stored tokens in secure cookies (30 kun muddat)
-            const updatedUser: User = { ...(user as User), access: newAccess };
-            encryptData("token", newAccess, "token", 30);
-            encryptData("user", updatedUser, "user", 30);
+              const data = refreshResult.data as RefreshResponse;
+              const newAccess = data.access;
+              const newRefresh = data.refresh ?? refreshToken;
 
-            // Update Redux state
-            api.dispatch({
-              type: "auth/setToken",
-              payload: { token: newAccess, user: updatedUser },
+              // Update stored tokens in secure cookies (30 kun muddat)
+              const updatedUser: User = {
+                ...(user as User),
+                access: newAccess,
+                refresh: newRefresh,
+              };
+              encryptData("token", newAccess, "token", 30);
+              encryptData("user", updatedUser, "user", 30);
+
+              // Update Redux state
+              api.dispatch({
+                type: "auth/setToken",
+                payload: { token: newAccess, user: updatedUser },
+              });
+
+              // Token yangilangandan keyin barcha tag'larni invalidate qilish uchun
+              // event yuboramiz (AppWrapper'da qabul qilinadi)
+              window.dispatchEvent(new CustomEvent("tokenRefreshed"));
+
+              return { ok: true, access: newAccess, refresh: newRefresh };
+            })().finally(() => {
+              refreshInFlight = null;
             });
+          }
 
-            // Token yangilangandan keyin barcha tag'larni invalidate qilish uchun
-            // event yuboramiz (AppWrapper'da qabul qilinadi)
-            window.dispatchEvent(new CustomEvent("tokenRefreshed"));
+          const outcome = await refreshInFlight;
 
+          if (outcome.ok) {
             // Retry the original request with new token
             result = await rawBaseQuery(args, api, extraOptions);
-          } else if (refreshResult.error) {
-            const refreshError = refreshResult.error as FetchBaseQueryError;
-            if (refreshError.status === 401) {
+          } else if (outcome.status !== undefined) {
+            if (outcome.status === 401) {
               api.dispatch(logout());
               if (typeof window !== "undefined") {
                 window.location.href = "/auth";
