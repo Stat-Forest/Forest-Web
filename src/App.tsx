@@ -9,10 +9,10 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { setCookie } from "./utils/cookie";
 import AuthVideo from "./views/Video/AuthVideo";
-import Landing from "./views/Landing";
 import { USER_ROLE } from "./services/constants";
 
 // Lazy loading - code splitting uchun
+const Landing = lazy(() => import("./views/Landing"));
 const Auth = lazy(() => import("./views/Auth/Auth"));
 const Dashboard = lazy(() => import("./views/Dashboard/Dashboard"));
 const Login = lazy(() => import("./views/Auth/Login"));

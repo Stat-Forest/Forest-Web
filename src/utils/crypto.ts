@@ -1,4 +1,6 @@
-import CryptoJS from "crypto-js";
+// Butun crypto-js (~230 KB) o'rniga faqat AES va Utf8 modullari
+import AES from "crypto-js/aes";
+import Utf8 from "crypto-js/enc-utf8";
 import { setCookie, getCookie, removeCookie } from "./cookie";
 
 /**
@@ -20,7 +22,7 @@ export const encryptData = (
   }
 
   try {
-    const encrypted = CryptoJS.AES.encrypt(
+    const encrypted = AES.encrypt(
       JSON.stringify(data),
       key
     ).toString();
@@ -52,8 +54,8 @@ export const decryptData = (name: string, key: string): unknown => {
   }
 
   try {
-    const decrypted = CryptoJS.AES.decrypt(encrypted, key).toString(
-      CryptoJS.enc.Utf8
+    const decrypted = AES.decrypt(encrypted, key).toString(
+      Utf8
     );
 
     if (!decrypted) {
