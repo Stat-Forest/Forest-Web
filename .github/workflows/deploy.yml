@@ -20,8 +20,9 @@ jobs:
           node-version: "18"
           cache: "npm"
 
+      # npm ci: package-lock.json dan to'g'ridan-to'g'ri o'rnatadi (npm install'dan tezroq)
       - name: Paketlarni o‘rnatish
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
 
       # Secret env orqali uzatiladi: `echo "${{ ... }}"` ichidagi qo'shtirnoqlarni
       # bash o'chirib yuborardi va VITE_EIMZO_API_KEYS JSON bo'lmay qolardi.
@@ -33,26 +34,23 @@ jobs:
       - name: Projectni build qilish
         run: npm run build
 
-      - name: Serverdagi eski fayllarni o‘chirish
-        uses: appleboy/ssh-action@v0.1.10
+      - name: SSH sozlash
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            echo "Eski build fayllarni o‘chiryapman..."
-            rm -rf /var/www/stat-ormon/*
+          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
+      # rsync faqat o'zgargan fayllarni yuboradi: hash'li nomli assets (shu jumladan
+      # ~180 MB video) o'zgarmasa qayta yuklanmaydi. Avval yangi assets, keyin
+      # index.html, oxirida eski fayllar o'chiriladi — deploy paytida sayt bo'sh qolmaydi.
       - name: Build qilingan fayllarni serverga yuborish
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "dist/**"
-          target: "/var/www/stat-ormon/"
-          strip_components: 1
-          debug: true
+        env:
+          TARGET: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/stat-ormon/
+          RSYNC_RSH: ssh -o StrictHostKeyChecking=no
+        run: |
+          set -euo pipefail
+          rsync -az --exclude 'index.html' dist/ "$TARGET"
+          rsync -az dist/index.html "$TARGET"
+          rsync -az --delete dist/ "$TARGET"
 
       - name: Nginx reload qilish
         uses: appleboy/ssh-action@v0.1.10
