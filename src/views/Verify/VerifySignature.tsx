@@ -10,6 +10,9 @@ interface VerifyResponse {
   valid: boolean;
   report_unchanged: boolean;
   signed_at: string;
+  mode?: "document" | "challenge";
+  timestamped?: boolean;
+  ocsp_checked?: boolean;
   timestamp_tsa?: string | null;
   signer: {
     full_name: string;
@@ -96,6 +99,11 @@ export default function VerifySignature() {
             <Row label={t("cert_valid_until")} value={data.signer.cert_valid_to} />
             <Row label={t("report_status")} value={t(data.report.status) || data.report.status} />
             <Row label={t("report_unchanged")} value={data.report_unchanged ? t("yes") : t("no")} />
+            <Row
+              label={t("sign_mode")}
+              value={data.mode === "challenge" ? t("sign_mode_challenge") : t("sign_mode_document")}
+            />
+            <Row label={t("timestamp_tsa")} value={data.timestamped ? t("yes") : t("no")} />
             <div className="mt-4">
               <span className="text-xs text-slate-400 font-mono break-all">{data.document_hash}</span>
             </div>
