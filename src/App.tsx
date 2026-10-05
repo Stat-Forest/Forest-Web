@@ -13,6 +13,7 @@ import { USER_ROLE } from "./services/constants";
 
 // Lazy loading - code splitting uchun
 const Landing = lazy(() => import("./views/Landing"));
+const VerifySignature = lazy(() => import("./views/Verify/VerifySignature"));
 const Auth = lazy(() => import("./views/Auth/Auth"));
 const Dashboard = lazy(() => import("./views/Dashboard/Dashboard"));
 const Login = lazy(() => import("./views/Auth/Login"));
@@ -107,6 +108,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/landing" element={<Landing />} />
+          {/* Hisobot imzosini tekshirish — QR koddan, login'siz */}
+          <Route path="/verify/:id" element={<VerifySignature />} />
 
           <Route path="/auth" element={<Auth />}>
             <Route index element={<Login />} />

@@ -18,14 +18,14 @@ import { base_url } from "@/services/baseUrl";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
-  useSendReportMutation,
   useExportExcelMutation,
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { decryptData } from "@/utils/crypto";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
-import QRCodeGenerator from "@/components/QRCodeGenerator";
+import SignAndSendDialog from "@/components/Reports/SignAndSendDialog";
+import SignatureBadge from "@/components/Reports/SignatureBadge";
 import {
   Table,
   TableBody,
@@ -85,7 +85,6 @@ const TableColumn = forwardRef(
       }
     }, [selectedRow]);
     const { t, i18n } = useTranslation();
-    const [sendReport, { isLoading: isSending }] = useSendReportMutation();
     const user_role = useSelector((state: RootState) => state.auth.user?.role);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [deleteReport] = useDeleteReportMutation();
@@ -722,47 +721,10 @@ const TableColumn = forwardRef(
                         </Button>
                       )}
 
-                    {/* 🔹 Yuborish (Send) button */}
-                    {(user_role === "tashkilot_rahbari" ||
-                      user_role === "super_admin") &&
-                      effectiveStatus !== "accepted" &&
-                      (effectiveStatus == "saved" ||
-                        effectiveStatus == "cancelled") && (
-                        <Button
-                          onClick={async () => {
-                            if (!selectedRow?.id) {
-                              alert("Hisobot ID topilmadi");
-                              return;
-                            }
-
-                            try {
-                              await sendReport({
-                                id: selectedRow.id,
-                              }).unwrap();
-                              alert("Hisobot muvaffaqiyatli yuborildi!");
-                            } catch (error: any) {
-                              console.error("sendReport error:", error);
-                              const isForbidden =
-                                error?.status === 403 ||
-                                error?.originalStatus === 403 ||
-                                error?.status === 401;
-                              const msg = isForbidden
-                                ? "Buyruq bajarish uchun sizda ruxsat yo'q"
-                                : error?.data?.detail ||
-                                  error?.data?.message ||
-                                  (typeof error?.data === "string"
-                                    ? error.data
-                                    : null) ||
-                                  "Hisobot yuborishda xatolik yuz berdi";
-                              alert(msg);
-                            }
-                          }}
-                          disabled={isSending}
-                          className="h-[40px] px-4 font-semibold rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
-                        >
-                          {isSending ? t("sending") : t("send2")}
-                        </Button>
-                      )}
+                    {/* 🔹 Yuborish — faqat tashkilot rahbari, E-imzo imzosi bilan */}
+                    {user_role === "tashkilot_rahbari" && effectiveStatus == "saved" && (
+                      <SignAndSendDialog reportId={selectedRow.id} />
+                    )}
 
                     {/* 🔹 Qabul qilish (Accept) button - faqat bolim_admin va sent status'da */}
                     {(user_role === "bolim_admin" ||
@@ -1049,26 +1011,12 @@ const TableColumn = forwardRef(
                 </tbody>
               </table>
 
-              {/* QR Code pastga qo'shiladi (printda ham chiqadi) */}
-              {selectedRow.sent_by_full_name &&
-                selectedRow.sent_by_org_name &&
-                selectedRow.sent_by_role && (
-                  <div className="mt-8 flex items-center gap-4 justify-start print:mt-12">
-                    <QRCodeGenerator
-                      sentBy={selectedRow.sent_by_full_name}
-                      sentByOrg={selectedRow.sent_by_org_name}
-                      sentByRole={selectedRow.sent_by_role}
-                    />
-                    <div>
-                      <h2 className="text-lg font-semibold">
-                        {selectedRow.sent_by_full_name}
-                      </h2>
-                      <h2 className="text-md">
-                        {selectedRow.sent_by_org_name}
-                      </h2>
-                    </div>
-                  </div>
-                )}
+              {/* E-imzo imzosi + QR (tekshirish sahifasiga havola), printda ham chiqadi */}
+                <SignatureBadge
+                  signature={selectedRow.signature}
+                  fallbackName={selectedRow.sent_by_full_name}
+                  orgName={selectedRow.sent_by_org_name}
+                />
             </div>
             <CancelReportModal
               open={isCancelModalOpen}

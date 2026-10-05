@@ -486,13 +486,24 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
       }),
       invalidatesTags: ["Reports"],
     }),
-    sendReport: builder.mutation({
-      query: ({ id }) => ({
+    // Yuborish faqat E-imzo imzosi bilan (pkcs7 — /send/challenge/ hujjatining imzosi)
+    sendReport: builder.mutation<any, { id: string; pkcs7: string }>({
+      query: ({ id, pkcs7 }) => ({
         url: `/send/`,
+        method: "POST",
+        body: { id, pkcs7 },
+      }),
+      invalidatesTags: ["Reports"],
+    }),
+    signChallenge: builder.mutation<
+      { document: string; nonce: string; expires_in: number },
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/send/challenge/`,
         method: "POST",
         body: { id },
       }),
-      invalidatesTags: ["Reports"],
     }),
     acceptReport: builder.mutation({
       query: ({ id }) => ({
@@ -700,6 +711,7 @@ export const {
   useCreateReportMutation,
   usePlanCreateMutation,
   useSendReportMutation,
+  useSignChallengeMutation,
   useCancelReportMutation,
   useAcceptReportMutation,
   usePlantCreateMutation,

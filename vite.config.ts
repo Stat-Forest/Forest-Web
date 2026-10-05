@@ -101,13 +101,13 @@ export default defineConfig({
     // Dev server proxy: local requests to /api will be forwarded to the remote API
     proxy: {
       "/api": {
-        target: "https://forest.yutori.uz",
+        target: "https://api.stat-urmon.uz",
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
       },
       "/ws": {
-        target: "https://forest.yutori.uz",
+        target: "https://api.stat-urmon.uz",
         ws: true,
         changeOrigin: true,
         secure: true,
