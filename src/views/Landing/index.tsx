@@ -1,12 +1,11 @@
 "use client";
 
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useGetLoginStatsQuery } from "@/services/statistikApi";
 import { useGetLoginStatDeadlineQuery } from "@/services/reportsApi";
-import PieChartLanding from "@/components/Charts/PieChart";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import {
@@ -41,8 +40,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import heroBg from "@/assets/img/image.png";
+import heroBg from "@/assets/img/image.webp";
 import logo from "@/assets/logo.png";
+
+// recharts (~500 KB) asosiy bundle'ga tushmasligi uchun diagramma alohida yuklanadi
+const PieChartLanding = lazy(() => import("@/components/Charts/PieChart"));
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StatCardItem = {
@@ -282,7 +284,9 @@ export default function ModernLanding() {
             }`}
           >
             <div className="h-full w-full">
-              <PieChartLanding />
+              <Suspense fallback={null}>
+                <PieChartLanding />
+              </Suspense>
             </div>
           </div>
         </div>
