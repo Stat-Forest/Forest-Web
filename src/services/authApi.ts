@@ -62,6 +62,10 @@ export const authApi = createApi({
     ),
 
     // ✅ Refresh token
+    // Backend: access token darhol bekor qilinadi, refresh blacklist'ga tushadi
+    logout: builder.mutation<void, { refresh?: string | null }>({
+      query: (body) => ({ url: "/logout/", method: "POST", body }),
+    }),
     refreshToken: builder.mutation<RefreshResponse, { refresh: string }>({
       query: (data) => ({
         url: "/token/refresh/",
@@ -142,6 +146,7 @@ export const authApi = createApi({
 });
 
 export const {
+  useLogoutMutation,
   useLoginMutation,
   useRefreshTokenMutation,
   useEimzoLoginMutation,

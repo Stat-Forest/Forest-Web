@@ -207,12 +207,12 @@ function SupportAdmin() {
       return;
     }
 
-    const socketUrl = buildChatSocketUrl(activeConversationId, token);
+    const socketUrl = buildChatSocketUrl(activeConversationId);
     let closedByCleanup = false;
 
     const openSocket = () => {
       if (closedByCleanup) return;
-      const ws = new WebSocket(socketUrl);
+      const ws = new WebSocket(socketUrl, ["jwt", token]);
       wsRef.current = ws;
 
       ws.onopen = () => {
