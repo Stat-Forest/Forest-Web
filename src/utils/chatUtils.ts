@@ -371,10 +371,9 @@ export const describeChatError = (
 /*  WebSocket manzili                                                          */
 /* -------------------------------------------------------------------------- */
 
-export const buildChatSocketUrl = (
-  conversationId: string,
-  token: string
-): string => {
+// Token URL'ga qo'shilmaydi (CWE-598): u WebSocket subprotocol header'ida
+// yuboriladi — openChatSocket() ga qarang.
+export const buildChatSocketUrl = (conversationId: string): string => {
   const rawWsBase = String(import.meta.env.VITE_WS_URL || "").trim();
   const envWsBase = (/^wss?:\/\//i.test(rawWsBase) ? rawWsBase : `ws://${rawWsBase}`)
     .replace(/\/$/, "")
@@ -384,5 +383,10 @@ export const buildChatSocketUrl = (
     ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`
     : envWsBase;
 
-  return `${wsBase}/ws/chat/${conversationId}/?token=${encodeURIComponent(token)}`;
+  return `${wsBase}/ws/chat/${conversationId}/`;
 };
+
+// Access token `Sec-WebSocket-Protocol: jwt, <token>` orqali ketadi;
+// backend "jwt" subprotocol'ini qabul qiladi.
+export const openChatSocket = (conversationId: string, token: string): WebSocket =>
+  new WebSocket(buildChatSocketUrl(conversationId), ["jwt", token]);
