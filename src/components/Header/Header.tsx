@@ -27,6 +27,8 @@ import {
 } from "../ui/dropdown-menu";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/features/authSlice";
+import { useLogoutMutation } from "@/services/authApi";
+import { decryptData } from "@/utils/crypto";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -77,6 +79,7 @@ function Header({ onLogout }: HeaderProps) {
   const { t } = useTranslation();
   const isOpen = useSelector((state: RootState) => state.sidebar.isOpen);
   const [aiOpen, setAiOpen] = useState(false);
+  const [logoutRequest] = useLogoutMutation();
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { changePasswordOpen, notificationOpen, unreadCount } = useSelector(
     (state: RootState) => state.ui.header,
@@ -227,6 +230,12 @@ function Header({ onLogout }: HeaderProps) {
   };
 
   const handleLogout = () => {
+    // Serverda tokenlarni bekor qilamiz (access darhol, refresh blacklist).
+    // Javobni kutmaymiz — tarmoq bo'lmasa ham lokal chiqish davom etadi.
+    const storedUser = decryptData("user", "user") as { refresh?: string } | null;
+    const refresh = storedUser?.refresh || (decryptData("refresh", "refresh") as string | null);
+    logoutRequest({ refresh }).catch(() => undefined);
+
     // 🔐 Logout paytida notification count ni ham tozalaymiz
     removeCookie("unreadNotificationCount");
 
