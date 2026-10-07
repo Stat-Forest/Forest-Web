@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
-import { FileText, User2, Search, X } from "lucide-react";
+import { FileText, User2, Search, X, Landmark } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -17,7 +17,12 @@ import { useTranslation } from "react-i18next";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useSidebarMenu } from "@/services/sidebarMenu";
+import {
+  useSidebarMenu,
+  withBillingGroup,
+  type SidebarMenuItem,
+} from "@/services/sidebarMenu";
+import { BILLING_ROUTES } from "@/features/billing/constants";
 import {
   Accordion,
   AccordionContent,
@@ -25,12 +30,30 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 
+const matchesQuery = (
+  t: (key: string) => string,
+  name: string | undefined,
+  query: string,
+) => {
+  const translatedName = String(t(name || "") || name || "").toLowerCase();
+  const rawName = String(name || "").toLowerCase();
+  return translatedName.includes(query) || rawName.includes(query);
+};
+
+const childPathActive = (pathname: string, child: SidebarMenuItem): boolean => {
+  if (child.path && pathname.startsWith(child.path)) return true;
+  if (pathname.includes(`/resource-management/${child.id}/`)) return true;
+  return (child.children || []).some((g) => childPathActive(pathname, g));
+};
+
 function Sidebar() {
   const { t, i18n } = useTranslation();
-  const { sidebar_menu, sidebar_3 } = useSidebarMenu();
+  const { sidebar_menu, sidebar_3, billingGroup, isBillingUser } = useSidebarMenu();
   const location = useLocation();
   const userRole = useSelector((state: RootState) => state.auth.user?.role);
   const isSupportAdmin = userRole === "support_admin";
+  // support_admin va billing_user uchun statements/users so'rovlari kerak emas
+  const skipUserQueries = isSupportAdmin || isBillingUser;
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const authUser = useSelector((state: RootState) => state.auth.user);
@@ -57,14 +80,14 @@ function Sidebar() {
     data: sidebarData = [],
     isLoading: sidebarLoading,
     error: sidebarError,
-  } = useGetStatementsReportQuery(isSupportAdmin ? skipToken : { lang });
+  } = useGetStatementsReportQuery(skipUserQueries ? skipToken : { lang });
 
   const {
     data: user,
     isLoading: userLoading,
     error: userError,
   } = useGetUsersReportQuery(
-    isSupportAdmin || !user_id
+    skipUserQueries || !user_id
       ? skipToken
       : {
           user_id: String(user_id),
@@ -76,7 +99,20 @@ function Sidebar() {
         },
   );
 
-  if (!isSupportAdmin && (sidebarLoading || userLoading)) {
+  // "Ijara billing" guruhi: billing_user uchun yagona top-level element;
+  // boshqa rollar uchun "O'rmon kadastri va monitoringi" parent'ining oxirgi
+  // bolasi (RTK cache mutatsiya qilinmaydi — yangi obyektlar yasaladi).
+  const menuItems = useMemo<SidebarMenuItem[]>(() => {
+    if (isSupportAdmin) return [...sidebar_menu, ...sidebar_3].flat();
+    if (isBillingUser) return [billingGroup, ...sidebar_3.flat()];
+    return [
+      ...sidebar_menu.flat(),
+      ...withBillingGroup(sidebarData as SidebarMenuItem[], billingGroup),
+      ...sidebar_3.flat(),
+    ];
+  }, [isSupportAdmin, isBillingUser, sidebar_menu, sidebar_3, sidebarData, billingGroup]);
+
+  if (!skipUserQueries && (sidebarLoading || userLoading)) {
     return (
       <div className="w-[320px] h-screen flex justify-center items-center bg-[#ffffff] dark:bg-gray-900">
         <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">{t("loading")}...</h2>
@@ -84,7 +120,7 @@ function Sidebar() {
     );
   }
 
-  if (!isSupportAdmin && (sidebarError || userError)) {
+  if (!skipUserQueries && (sidebarError || userError)) {
     return (
       <div className="w-[320px] h-screen flex justify-center items-center bg-[#ffffff] dark:bg-gray-900">
         <h2 className="text-lg font-bold text-red-500">{t("error")}</h2>
@@ -92,59 +128,161 @@ function Sidebar() {
     );
   }
 
-  const renderNavItem = (item: any) => {
-    const isParentActive =
-      item.children?.some((child: any) =>
-        location.pathname.includes(`/resource-management/${child.id}/`),
-      ) || false;
+  const renderIconBox = (active: boolean, content: ReactNode) => (
+    <div
+      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+        active
+          ? "bg-white/20 text-white"
+          : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+      }`}
+    >
+      {content}
+    </div>
+  );
 
-    if (item.children?.length > 0) {
-      const filteredChildren = item.children.filter((child: any) => {
-        if (!searchQuery.trim()) return true;
-        const translatedName = String(t(child.name) || child.name || "").toLowerCase();
-        const rawName = String(child.name || "").toLowerCase();
-        const query = searchQuery.trim().toLowerCase();
-        return translatedName.includes(query) || rawName.includes(query);
-      });
+  const sheetLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `group flex items-center gap-3.5 transition-all duration-200 p-3.5 rounded-xl border font-sans ${
+      isActive
+        ? "bg-gradient-to-r from-blue-600 to-indigo-600 !text-white border-transparent shadow-md shadow-blue-500/25 font-semibold [&_svg]:text-white [&_.indicator]:opacity-100"
+        : "text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300/80 shadow-xs [&_svg]:text-blue-500 dark:[&_svg]:text-blue-400 [&_.indicator]:opacity-0 [&_.indicator]:group-hover:opacity-100"
+    }`;
+
+  const renderSheetLink = (child: SidebarMenuItem, key: string | number) => (
+    <NavLink
+      key={key}
+      to={
+        child.path ||
+        `/resource-management/${child.id}/${encodeURIComponent(child.name)}`
+      }
+      onClick={() => setOpenSheetId(null)}
+      className={sheetLinkClass}
+    >
+      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
+        <FileText size={18} className="transition-transform group-hover:scale-110" />
+      </div>
+      <span className="text-sm font-medium flex-1 leading-snug transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold">
+        {t(child.name)}
+      </span>
+      <div className="indicator w-2 h-2 rounded-full bg-emerald-400 transition-opacity shrink-0"></div>
+    </NavLink>
+  );
+
+  // Sheet ichidagi ichki guruh (masalan "Ijara billing") — Accordion, ichida
+  // grandchild NavLink'lar.
+  const renderSheetGroup = (child: SidebarMenuItem, grandchildren: SidebarMenuItem[], key: string | number) => {
+    const groupActive = childPathActive(location.pathname, child);
+    return (
+      <Accordion
+        key={key}
+        type="single"
+        collapsible
+        defaultValue={groupActive || searchQuery.trim() ? String(child.id) : undefined}
+        className="w-full"
+      >
+        <AccordionItem
+          value={String(child.id)}
+          className={`rounded-xl border bg-white dark:bg-slate-900 shadow-xs px-3.5 ${
+            groupActive
+              ? "border-blue-300 dark:border-blue-700"
+              : "border-slate-200/80 dark:border-slate-800"
+          }`}
+        >
+          <AccordionTrigger className="py-3 hover:no-underline cursor-pointer [&>svg]:text-slate-400">
+            <div className="flex items-center gap-3.5 flex-1 text-left">
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  groupActive
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                    : "bg-blue-50 dark:bg-slate-800 text-blue-500 dark:text-blue-400"
+                }`}
+              >
+                {child.iconNode ?? <Landmark size={18} />}
+              </div>
+              <span
+                className={`text-sm font-semibold leading-snug ${
+                  groupActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-700 dark:text-slate-200"
+                }`}
+              >
+                {t(child.name)}
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-3">
+            <div className="flex flex-col gap-2 pl-1">
+              {grandchildren.map((g, gi) => renderSheetLink(g, `${child.id}-${g.id}-${gi}`))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    );
+  };
+
+  const renderNavItem = (item: SidebarMenuItem) => {
+    const isParentActive =
+      item.children?.some((child) => childPathActive(location.pathname, child)) || false;
+
+    if (item.children && item.children.length > 0) {
+      const query = searchQuery.trim().toLowerCase();
+      // Qidiruv: bolalar va ichki guruhlarning nevaralari ham ko'riladi
+      const filteredChildren = item.children
+        .map((child) => {
+          if (!query) return child;
+          if (matchesQuery(t, child.name, query)) return child;
+          if (child.children?.length) {
+            const grandchildren = child.children.filter((g) => matchesQuery(t, g.name, query));
+            return grandchildren.length ? { ...child, children: grandchildren } : null;
+          }
+          return null;
+        })
+        .filter((c): c is SidebarMenuItem => c !== null);
 
       return (
         <Sheet
           key={item.id}
-          open={openSheetId === item.id}
-          onOpenChange={(open) => setOpenSheetId(open ? item.id : null)}
+          open={openSheetId === String(item.id)}
+          onOpenChange={(open) => setOpenSheetId(open ? String(item.id) : null)}
         >
           <SheetTrigger asChild>
             <div
-              onClick={() => setOpenSheetId(openSheetId === item.id ? null : item.id)}
+              onClick={() => setOpenSheetId(openSheetId === String(item.id) ? null : String(item.id))}
               className={`sidebar-menu-item cursor-pointer px-3.5 py-3 rounded-xl flex items-center gap-3 border transition-all duration-200 group font-sans ${
                 isParentActive
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 !text-white border-transparent shadow-md shadow-blue-500/25 font-semibold"
                   : "text-slate-700 dark:text-slate-200 border-transparent hover:bg-blue-50/80 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 font-medium"
               }`}
             >
-              {item.icon && (
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                  isParentActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40"
-                }`}>
-                  <img
-                    src={
-                      item.icon.startsWith("http://")
-                        ? item.icon.replace("http://", "https://")
-                        : item.icon
-                    }
-                    alt=""
-                    className={`w-4.5 h-4.5 transition-transform duration-200 group-hover:scale-110 ${
-                      isParentActive ? "brightness-0 invert" : ""
-                    }`}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      if (target.src.startsWith("http://")) {
-                        target.src = target.src.replace("http://", "https://");
-                      }
-                    }}
-                  />
-                </div>
-              )}
+              {item.iconNode
+                ? renderIconBox(
+                    isParentActive,
+                    <span className="transition-transform duration-200 group-hover:scale-110 flex">
+                      {item.iconNode}
+                    </span>,
+                  )
+                : item.icon && (
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                      isParentActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40"
+                    }`}>
+                      <img
+                        src={
+                          item.icon.startsWith("http://")
+                            ? item.icon.replace("http://", "https://")
+                            : item.icon
+                        }
+                        alt=""
+                        className={`w-4.5 h-4.5 transition-transform duration-200 group-hover:scale-110 ${
+                          isParentActive ? "brightness-0 invert" : ""
+                        }`}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (target.src.startsWith("http://")) {
+                            target.src = target.src.replace("http://", "https://");
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
 
               <span className={`text-sm font-medium flex-1 leading-tight transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold ${isParentActive ? "!text-white" : ""}`}>{t(item.name)}</span>
 
@@ -197,30 +335,11 @@ function Sidebar() {
                   {i18n.language === "ru" ? "Ничего не найдено" : "Bo'limlar topilmadi"}
                 </div>
               ) : (
-                filteredChildren.map((child: any, index: number) => (
-                  <NavLink
-                    key={index}
-                    to={`/resource-management/${child.id}/${encodeURIComponent(
-                      child.name,
-                    )}`}
-                    onClick={() => setOpenSheetId(null)}
-                    className={({ isActive }) =>
-                      `group flex items-center gap-3.5 transition-all duration-200 p-3.5 rounded-xl border font-sans ${
-                        isActive
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 !text-white border-transparent shadow-md shadow-blue-500/25 font-semibold [&_svg]:text-white [&_.indicator]:opacity-100"
-                          : "text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300/80 shadow-xs [&_svg]:text-blue-500 dark:[&_svg]:text-blue-400 [&_.indicator]:opacity-0 [&_.indicator]:group-hover:opacity-100"
-                      }`
-                    }
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
-                      <FileText size={18} className="transition-transform group-hover:scale-110" />
-                    </div>
-                    <span className="text-sm font-medium flex-1 leading-snug transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold">
-                      {t(child.name)}
-                    </span>
-                    <div className="indicator w-2 h-2 rounded-full bg-emerald-400 transition-opacity shrink-0"></div>
-                  </NavLink>
-                ))
+                filteredChildren.map((child, index) =>
+                  child.children && child.children.length > 0
+                    ? renderSheetGroup(child, child.children, `${child.id}-${index}-${query}`)
+                    : renderSheetLink(child, index),
+                )
               )}
             </div>
           </SheetContent>
@@ -230,7 +349,7 @@ function Sidebar() {
 
     return (
       <NavLink
-        to={item.path}
+        to={item.path || "/main"}
         key={item.id}
         className={({ isActive }) =>
           `sidebar-menu-item px-3.5 py-3 rounded-xl flex items-center gap-3 border transition-all duration-200 group font-sans ${
@@ -242,19 +361,26 @@ function Sidebar() {
       >
         {({ isActive }) => (
           <>
-            {item.default_icon && (
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                isActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40"
-              }`}>
-                <img
-                  src={item.default_icon}
-                  alt=""
-                  className={`w-4.5 h-4.5 transition-transform duration-200 group-hover:scale-110 ${
-                    isActive ? "brightness-0 invert" : ""
-                  }`}
-                />
-              </div>
-            )}
+            {item.iconNode
+              ? renderIconBox(
+                  isActive,
+                  <span className="transition-transform duration-200 group-hover:scale-110 flex">
+                    {item.iconNode}
+                  </span>,
+                )
+              : item.default_icon && (
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                    isActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40"
+                  }`}>
+                    <img
+                      src={item.default_icon}
+                      alt=""
+                      className={`w-4.5 h-4.5 transition-transform duration-200 group-hover:scale-110 ${
+                        isActive ? "brightness-0 invert" : ""
+                      }`}
+                    />
+                  </div>
+                )}
             <span className={`text-sm font-medium flex-1 leading-tight transition-transform duration-200 origin-left group-hover:scale-105 group-hover:font-semibold ${isActive ? "!text-white" : ""}`}>{t(item.name)}</span>
             <div className={`w-2 h-2 rounded-full transition-all ${
               isActive ? "bg-emerald-400 opacity-100 shadow-xs" : "bg-blue-500 opacity-0 group-hover:opacity-100"
@@ -265,11 +391,24 @@ function Sidebar() {
     );
   };
 
+  const profileName = skipUserQueries
+    ? authUser?.full_name || authUser?.email || ""
+    : `${user?.results[0]?.first_name || ""} ${user?.results[0]?.last_name || ""}`;
+
+  const profileRole = isSupportAdmin
+    ? t("roles.support_admin")
+    : isBillingUser
+      ? t("roles.billing_user")
+      : user?.results[0]?.role &&
+          t(`roles.${user.results[0].role}`) !== `roles.${user.results[0].role}`
+        ? t(`roles.${user.results[0].role}`)
+        : user?.results[0]?.role_display || "";
+
   return (
     <div className="w-[320px] h-screen overflow-y-auto p-4 bg-white dark:bg-slate-950 font-sans sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800 shadow-xl transition-colors duration-300 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
       <div>
         <Link
-          to="/main"
+          to={isBillingUser ? BILLING_ROUTES.gis : "/main"}
           className="w-full h-[52px] rounded-2xl flex items-center justify-center text-white mb-3.5 gap-3 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 shadow-lg shadow-blue-500/20 border border-white/20 hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-95 transition-all duration-200 cursor-pointer"
         >
           <img
@@ -291,27 +430,18 @@ function Sidebar() {
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-bold text-white text-base leading-snug truncate drop-shadow-xs font-sans">
-                {isSupportAdmin ? (
-                  authUser?.full_name || authUser?.email || ""
-                ) : (
-                  `${user?.results[0]?.first_name || ""} ${user?.results[0]?.last_name || ""}`
-                )}
+                {profileName}
               </h3>
               <div className="mt-1.5 flex flex-wrap">
                 <span className="inline-flex items-center bg-white/25 dark:bg-blue-600/40 backdrop-blur-md text-white text-sm font-bold px-3.5 py-1 rounded-xl border border-white/35 dark:border-blue-400/40 shadow-xs tracking-wide">
-                  {isSupportAdmin
-                    ? t("roles.support_admin")
-                    : user?.results[0]?.role &&
-                      t(`roles.${user.results[0].role}`) !== `roles.${user.results[0].role}`
-                    ? t(`roles.${user.results[0].role}`)
-                    : user?.results[0]?.role_display || ""}
+                  {profileRole}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            {!isSupportAdmin && user?.results[0]?.organization_name && (
+            {!skipUserQueries && user?.results[0]?.organization_name && (
               <>
                 <div className="h-px bg-white/20 w-full my-0.5" />
                 <p className="text-xs font-medium text-blue-50/90 dark:text-slate-300 leading-relaxed font-sans line-clamp-2">
@@ -333,7 +463,7 @@ function Sidebar() {
 
                   <AccordionContent>
                     <ul className="space-y-1.5">
-                      {user?.results[0]?.region_user_orgs?.map((org: any) => (
+                      {user?.results[0]?.region_user_orgs?.map((org: string) => (
                         <li
                           key={org}
                           className="bg-white/10 rounded-lg px-3 py-1.5 text-xs text-white/90 border border-white/15"
@@ -350,9 +480,7 @@ function Sidebar() {
         </div>
 
         <nav className="mt-4 flex flex-col gap-1.5">
-          {[...sidebar_menu, ...(sidebarData || []), ...sidebar_3]
-            .flat()
-            .map(renderNavItem)}
+          {menuItems.map(renderNavItem)}
         </nav>
       </div>
     </div>

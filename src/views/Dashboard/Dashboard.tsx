@@ -1,5 +1,5 @@
 import { Suspense, useEffect, lazy } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Header from "@/components/Header/Header";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import ScrollToTop from "@/routes/ScrollToTop";
@@ -10,6 +10,7 @@ import AnnouncementModal from "@/components/Modals/AnnouncementModal";
 import { setAnnouncementState } from "@/features/uiSlice";
 import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
 import SupportChatWidget from "@/components/SupportChatWidget";
+import BillingEditRoute from "./Billing/BillingEditRoute";
 
 // Lazy loading - Dashboard route'larini alohida chunk'larga ajratish
 const Main = lazy(() => import("./Main"));
@@ -33,6 +34,12 @@ const OnTime = lazy(() => import("./Main/Children/OnTime"));
 const Lated = lazy(() => import("./Main/Children/Lated"));
 const ExpiredDeadlines = lazy(() => import("./Main/Children/ExpiredDeadlines"));
 const SupportAdmin = lazy(() => import("./SupportAdmin"));
+// Ijara billing (O'rmon kadastri va monitoringi → Ijara billing)
+const GisMonitoring = lazy(() => import("./Billing/Gis/GisMonitoring"));
+const BillingContractsPage = lazy(() => import("./Billing/Contracts/ContractsPage"));
+const BillingContractCreatePage = lazy(() => import("./Billing/Contracts/ContractCreatePage"));
+const BillingImportExcelPage = lazy(() => import("./Billing/Contracts/ImportExcelPage"));
+const BillingContractDetailPage = lazy(() => import("./Billing/Contracts/ContractDetailPage"));
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -44,6 +51,14 @@ function Dashboard() {
   );
   const { data: announcements } = useGetAnnouncementsReportsQuery({ lang });
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // billing_user faqat Ijara billing bo'limi va yordam sahifalariga kira oladi
+  // (qolgan sahifalar backend'da 403 qaytaradi).
+  const isBillingUser = userRole === "billing_user";
+  const billingUserAllowed = ["/billing", "/support-information", "/video"].some(
+    (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
+  );
 
   // 🔹 Modalni boshqarish
   useEffect(() => {
@@ -111,6 +126,9 @@ function Dashboard() {
           <Suspense
             fallback={<div className="p-8 text-center">Yuklanmoqda...</div>}
           >
+            {isBillingUser && !billingUserAllowed ? (
+              <Navigate to="/billing/gis" replace />
+            ) : (
             <Routes>
               <Route path="main" element={<Main />}>
                 <Route path="send-report" element={<MainDetail />} />
@@ -160,11 +178,44 @@ function Dashboard() {
               />
               <Route path="/video" element={<Video />} />
 
+              {/* Ijara billing */}
+              <Route path="billing/gis" element={<GisMonitoring />} />
+              <Route path="billing/contracts" element={<BillingContractsPage />} />
+              <Route
+                path="billing/contracts/create"
+                element={
+                  <BillingEditRoute>
+                    <BillingContractCreatePage />
+                  </BillingEditRoute>
+                }
+              />
+              <Route
+                path="billing/contracts/upload-excel"
+                element={
+                  <BillingEditRoute>
+                    <BillingImportExcelPage />
+                  </BillingEditRoute>
+                }
+              />
+              <Route path="billing/contracts/:id" element={<BillingContractDetailPage />} />
+
               <Route
                 path="*"
-                element={<Navigate to={userRole === "support_admin" ? "/support" : "/main"} replace />}
+                element={
+                  <Navigate
+                    to={
+                      userRole === "support_admin"
+                        ? "/support"
+                        : userRole === "billing_user"
+                          ? "/billing/gis"
+                          : "/main"
+                    }
+                    replace
+                  />
+                }
               />
             </Routes>
+            )}
           </Suspense>
           {userRole !== "support_admin" && <SupportChatWidget />}
         </div>

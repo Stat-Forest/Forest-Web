@@ -101,13 +101,14 @@ export default defineConfig({
     // Dev server proxy: local requests to /api will be forwarded to the remote API
     proxy: {
       "/api": {
-        target: "https://api.stat-urmon.uz",
+        // DEV_API_PROXY=http://localhost:8010 bilan lokal backendga yo'naltirish mumkin
+        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
       },
       "/ws": {
-        target: "https://api.stat-urmon.uz",
+        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
         ws: true,
         changeOrigin: true,
         secure: true,
