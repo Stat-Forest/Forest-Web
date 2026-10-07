@@ -9,6 +9,7 @@ import { reportApi } from "@/services/reportsApi";
 import { generalApi } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
+import { billingApi } from "@/services/billingApi";
 import SelectionVoiceButton from "@/components/common/SelectionVoiceButton";
 
 const AppWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -36,6 +37,7 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
       dispatch(generalApi.util.invalidateTags(["Reports"]));
       dispatch(statistikApi.util.invalidateTags(["Reports"]));
       dispatch(sumApi.util.invalidateTags(["Reports"]));
+      dispatch(billingApi.util.invalidateTags(["BillingContracts", "BillingFiles"]));
     };
 
     window.addEventListener("tokenRefreshed", handleTokenRefreshed);
@@ -69,6 +71,7 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
           dispatch(generalApi.util.invalidateTags(["Reports"]));
           dispatch(statistikApi.util.invalidateTags(["Reports"]));
           dispatch(sumApi.util.invalidateTags(["Reports"]));
+          dispatch(billingApi.util.invalidateTags(["BillingContracts", "BillingFiles"]));
         } else {
           dispatch(logout());
         }

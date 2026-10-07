@@ -34,6 +34,10 @@ declare global {
   }
 }
 
+// Login'dan keyingi sahifa: billing_user faqat Ijara billing bo'limini ko'radi.
+const getPostLoginPath = (role?: string | null) =>
+  role === "billing_user" ? "/billing/gis" : "/main";
+
 function Login() {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
@@ -366,7 +370,7 @@ function Login() {
         }
         dispatch(setToken({ token: access, user: response }));
         showToast(t("loginSuccess"), "success");
-        navigate("/main");
+        navigate(getPostLoginPath(response?.role));
       })
       .catch((error: any) => {
         uiHideProgress();
@@ -512,9 +516,11 @@ function Login() {
     const credentials: Credentials = { email, password };
 
     try {
-      await dispatch(authApi.endpoints.login.initiate(credentials)).unwrap();
+      const loggedIn = await dispatch(
+        authApi.endpoints.login.initiate(credentials),
+      ).unwrap();
       showToast("Muvaffaqiyatli kirish", "success");
-      navigate("/main");
+      navigate(getPostLoginPath(loggedIn?.role));
     } catch (error: any) {
       if (process.env.NODE_ENV === "development") {
         console.error("Login failed:", error);
