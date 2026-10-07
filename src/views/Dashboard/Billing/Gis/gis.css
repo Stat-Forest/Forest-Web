@@ -1,0 +1,185 @@
+/* Ijara billing — Leaflet popup / marker / control uslublari (billing main.css'dan
+   ko'chirilgan, stat dark rejimi uchun .dark qoidalar qo'shilgan). Bir marta
+   GisMonitoring.tsx'da import qilinadi; BoundaryMap ham shu faylni import qilishi mumkin. */
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+.leaflet-popup-tip {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1) !important;
+}
+.leaflet-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  font-size: 20px !important;
+  color: #999 !important;
+}
+.leaflet-popup-close-button:hover {
+  color: #333 !important;
+}
+
+.gis-popup {
+  min-width: 230px;
+  padding: 16px 18px;
+  font-size: 13px;
+}
+.gis-popup__header {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef0f2;
+}
+.gis-popup__badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 13px;
+}
+.gis-popup__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.gis-popup__row:last-of-type {
+  margin-bottom: 12px;
+}
+.gis-popup__icon {
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.gis-popup__label {
+  font-size: 11px;
+  color: #8a8f98;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 1px;
+}
+.gis-popup__value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.35;
+}
+.gis-popup__debt {
+  font-weight: 700;
+}
+.gis-popup__debt--negative {
+  color: #ff0000;
+}
+.gis-popup__debt--positive {
+  color: #4caf50;
+}
+.gis-popup__link {
+  display: block;
+  text-align: center;
+  padding: 9px 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.15s ease-out;
+}
+.gis-popup__link:hover {
+  background: #1d4ed8;
+}
+
+.gis-contract-marker,
+.xojalik-marker {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+.gis-contract-marker svg,
+.xojalik-marker svg {
+  display: block;
+}
+
+.xojalik-popup {
+  min-width: 180px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+.xojalik-popup__title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #222;
+  margin-bottom: 4px;
+}
+.xojalik-popup__row {
+  color: #555;
+  line-height: 1.4;
+}
+
+/* ---------- Dark rejim ---------- */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.dark .leaflet-popup-close-button {
+  color: #94a3b8 !important;
+}
+.dark .leaflet-popup-close-button:hover {
+  color: #f1f5f9 !important;
+}
+.dark .gis-popup__header {
+  border-bottom-color: #1e293b;
+}
+.dark .gis-popup__badge {
+  background: rgba(96, 165, 250, 0.15);
+  color: #93c5fd;
+}
+.dark .gis-popup__label {
+  color: #94a3b8;
+}
+.dark .gis-popup__value,
+.dark .xojalik-popup__title {
+  color: #f1f5f9;
+}
+.dark .xojalik-popup__row {
+  color: #cbd5e1;
+}
+.dark .gis-popup__debt--negative {
+  color: #f87171;
+}
+.dark .gis-popup__debt--positive {
+  color: #4ade80;
+}
+
+.dark .leaflet-control-layers,
+.dark .leaflet-bar a,
+.dark .leaflet-bar a:hover {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+.dark .leaflet-bar a.leaflet-disabled {
+  background: #1e293b;
+  color: #64748b;
+}
+.dark .leaflet-control-layers-expanded {
+  color: #e2e8f0;
+}
+.dark .leaflet-control-layers-separator {
+  border-top-color: #334155;
+}
+.dark .leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.8);
+  color: #94a3b8;
+}
+.dark .leaflet-control-attribution a {
+  color: #93c5fd;
+}
