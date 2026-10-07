@@ -17,6 +17,7 @@ import { combineReducers } from "redux";
 import { eimzoApi } from "@/services/eimzoApi";
 import { informationAnalyticalApi } from "@/services/informationAnalyticalApi";
 import { uniqeApi } from "@/services/uniqeApi";
+import { billingApi } from "@/services/billingApi";
 
 // Redux Persist optimizatsiyasi
 const persistConfig = {
@@ -31,6 +32,7 @@ const persistConfig = {
     sumApi.reducerPath,
     eimzoApi.reducerPath,
     informationAnalyticalApi.reducerPath,
+    billingApi.reducerPath,
     "report",
     "sidebar",
     "ui",
@@ -46,6 +48,7 @@ const rootReducer = combineReducers({
   [eimzoApi.reducerPath]: eimzoApi.reducer,
   [informationAnalyticalApi.reducerPath]: informationAnalyticalApi.reducer,
   [uniqeApi.reducerPath]: uniqeApi.reducer,
+  [billingApi.reducerPath]: billingApi.reducer,
 
   auth: authReducer,
   report: reportReducer,
@@ -71,7 +74,8 @@ export const store = configureStore({
       sumApi.middleware,
       eimzoApi.middleware,
       informationAnalyticalApi.middleware,
-      uniqeApi.middleware
+      uniqeApi.middleware,
+      billingApi.middleware
     ),
 });
 

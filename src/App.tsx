@@ -32,20 +32,25 @@ const loadAOS = async () => {
   return AOS;
 };
 
+// Env ro'yxati USER_ROLE konstantasi bilan BIRLASHTIRILADI (union) — GitHub
+// secret yangilanmasa ham yangi rollar (masalan billing_user) ishlaydi.
 const parseAllowedRoles = (): string[] => {
   const raw =
     import.meta.env.VITE_USER_ROLE ?? import.meta.env.USER_ROLE ?? "";
+  const fromEnv: string[] = [];
   if (typeof raw === "string" && raw.trim()) {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+      if (Array.isArray(parsed)) {
+        parsed.forEach((r) => {
+          if (typeof r === "string" && r.trim()) fromEnv.push(r.trim());
+        });
       }
     } catch {
-      // Fallback to constants when env is malformed.
+      // Env noto'g'ri bo'lsa faqat konstantadan foydalanamiz.
     }
   }
-  return USER_ROLE;
+  return Array.from(new Set([...USER_ROLE, ...fromEnv]));
 };
 
 export const user_role = parseAllowedRoles();
