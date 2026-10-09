@@ -24,6 +24,7 @@ import {
   VideoIcon,
 } from "lucide-react";
 import { useEimzoLoginMutation } from "@/services/eimzoApi";
+import { isBillingRole } from "@/features/billing/permissions";
 
 declare global {
   interface Window {
@@ -34,9 +35,10 @@ declare global {
   }
 }
 
-// Login'dan keyingi sahifa: billing_user faqat Ijara billing bo'limini ko'radi.
+// Login'dan keyingi sahifa: billing rollari (billing_user/billing_super) uchun
+// "Asosiy" sahifa yopiq — Ijara billing GIS'ga o'tadi.
 const getPostLoginPath = (role?: string | null) =>
-  role === "billing_user" ? "/billing/gis" : "/main";
+  isBillingRole(role) ? "/billing/gis" : "/main";
 
 function Login() {
   const dispatch = useDispatch<any>();

@@ -159,7 +159,7 @@ function ContractDetailPage() {
           {t("billing.contracts_detail_edit")}
         </Button>
       )}
-      <ContractActionsMenu contract={contract} canEdit={canEdit} onOpen={(kind) => open(kind)} hideView />
+      <ContractActionsMenu contract={contract} canEdit={canEdit} onOpen={(kind) => open(kind)} hideView placement="header" />
     </>
   ) : undefined;
 

@@ -1,5 +1,5 @@
 import { Suspense, useEffect, lazy } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, matchPath, useLocation, useNavigate } from "react-router-dom";
 import Header from "@/components/Header/Header";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import ScrollToTop from "@/routes/ScrollToTop";
@@ -11,6 +11,7 @@ import { setAnnouncementState } from "@/features/uiSlice";
 import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import BillingEditRoute from "./Billing/BillingEditRoute";
+import { isBillingRole } from "@/features/billing/permissions";
 
 // Lazy loading - Dashboard route'larini alohida chunk'larga ajratish
 const Main = lazy(() => import("./Main"));
@@ -41,6 +42,22 @@ const BillingContractCreatePage = lazy(() => import("./Billing/Contracts/Contrac
 const BillingImportExcelPage = lazy(() => import("./Billing/Contracts/ImportExcelPage"));
 const BillingContractDetailPage = lazy(() => import("./Billing/Contracts/ContractDetailPage"));
 
+const BILLING_ALLOWED_PREFIXES = ["/billing", "/support-information", "/video"];
+
+/** Billing rollari uchun ruxsat etilgan marshrutmi (faqat ko'rish sahifalari). */
+const isBillingPathAllowed = (pathname: string): boolean => {
+  if (
+    BILLING_ALLOWED_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
+    return true;
+  }
+  // `resource-management/:id/:reportName` — ko'rish; create/update — yo'q.
+  const view = matchPath("/resource-management/:id/:reportName", pathname);
+  return !!view && view.params.id !== "create" && view.params.id !== "update";
+};
+
 function Dashboard() {
   const dispatch = useDispatch();
   const lang = useSelector((state: RootState) => state.language.lang);
@@ -53,12 +70,11 @@ function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // billing_user faqat Ijara billing bo'limi va yordam sahifalariga kira oladi
-  // (qolgan sahifalar backend'da 403 qaytaradi).
-  const isBillingUser = userRole === "billing_user";
-  const billingUserAllowed = ["/billing", "/support-information", "/video"].some(
-    (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
-  );
+  // Billing rollari (billing_user/billing_super) faqat Ijara billing, kadastr
+  // hisobotlarini ko'rish (read-only) va yordam sahifalariga kira oladi
+  // (qolgan API'lar backend'da 403 qaytaradi).
+  const isBillingUser = isBillingRole(userRole);
+  const billingUserAllowed = isBillingUser && isBillingPathAllowed(location.pathname);
 
   // 🔹 Modalni boshqarish
   useEffect(() => {
@@ -206,7 +222,7 @@ function Dashboard() {
                     to={
                       userRole === "support_admin"
                         ? "/support"
-                        : userRole === "billing_user"
+                        : isBillingUser
                           ? "/billing/gis"
                           : "/main"
                     }

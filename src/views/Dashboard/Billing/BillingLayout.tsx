@@ -2,12 +2,10 @@ import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { skipToken } from "@reduxjs/toolkit/query";
 import { ArrowLeft } from "lucide-react";
 import type { RootState } from "@/app/store";
 import { useGetStatementsReportQuery } from "@/services/reportsApi";
 import { findKadastrParent } from "@/services/sidebarMenu";
-import { useBillingAccess } from "@/features/billing/permissions";
 import { BILLING_SIDEBAR_GROUP_ID } from "@/features/billing/constants";
 
 interface BillingLayoutProps {
@@ -26,28 +24,23 @@ interface BillingLayoutProps {
 /**
  * Ijara billing sahifalari uchun umumiy sarlavha kartasi:
  * Ortga / "O'rmon kadastri va monitoringi / Ijara billing / <sahifa>".
- * Ortga tugmasi sidebar'dagi tegishli submenu'ni (sheet) ochadi —
- * billing_user uchun "ijara-billing", boshqalar uchun kadastr parent id.
+ * Ortga tugmasi sidebar'dagi kadastr parent submenu'sini (sheet) ochadi;
+ * parent topilmasa (statements xatosi) — top-level "ijara-billing" guruhini.
  */
 function BillingLayout({ title, section, actions, backTo, children, className = "" }: BillingLayoutProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const lang = useSelector((state: RootState) => state.language.lang);
-  const { isBillingUser } = useBillingAccess();
-
-  const { data: statementData } = useGetStatementsReportQuery(
-    isBillingUser ? skipToken : { lang },
-  );
+  const { data: statementData } = useGetStatementsReportQuery({ lang });
 
   const handleBack = () => {
     if (backTo) {
       navigate(backTo);
       return;
     }
-    const parentId = isBillingUser
-      ? BILLING_SIDEBAR_GROUP_ID
-      : findKadastrParent(statementData as Array<{ id?: string; name?: string }> | undefined)?.id ||
-        BILLING_SIDEBAR_GROUP_ID;
+    const parentId =
+      findKadastrParent(statementData as Array<{ id?: string; name?: string }> | undefined)?.id ||
+      BILLING_SIDEBAR_GROUP_ID;
     window.dispatchEvent(
       new CustomEvent("open-sidebar-submenu", { detail: { parentId } }),
     );
