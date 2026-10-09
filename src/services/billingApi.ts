@@ -1,4 +1,5 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { BaseQueryApi, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { base_url } from "./baseUrl";
 import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { fileTimestamp } from "@/features/billing/format";
@@ -29,7 +30,10 @@ import type {
   PageParams,
   Paginated,
   PrivilegeType,
+  PublicXojalik,
   RenterListItem,
+  RentStats,
+  RentStatsParams,
   UUID,
   Xojalik,
   XojalikKontur,
@@ -91,6 +95,23 @@ const blobResponseHandler =
     );
     return { blob, filename };
   };
+
+/**
+ * Ochiq (`AllowAny`) endpointlar uchun: `Authorization` yuborilmaydi va 401'da
+ * token yangilash/logout ishlamaydi — landing sahifasida eskirgan token
+ * foydalanuvchini /auth'ga otib yubormasligi kerak.
+ */
+const publicBaseQuery = fetchBaseQuery({ baseUrl: `${base_url}/billing` });
+
+const publicQuery = async <T>(
+  url: string,
+  api: BaseQueryApi,
+  extraOptions: object,
+): Promise<{ data: T } | { error: FetchBaseQueryError }> => {
+  const result = await publicBaseQuery(url, api, extraOptions);
+  if (result.error) return { error: result.error };
+  return { data: result.data as T };
+};
 
 const REF = "BillingRef" as const;
 const CONTRACTS = "BillingContracts" as const;
@@ -260,6 +281,26 @@ export const billingApi = createApi({
     }),
 
     // =====================================================================
+    // Ijara tushumi statistikasi
+    // =====================================================================
+    /** Landing uchun (autentifikatsiyasiz, barcha xo'jaliklar). */
+    getPublicRentStats: builder.query<RentStats, RentStatsParams>({
+      queryFn: (params, api, extraOptions) =>
+        publicQuery<RentStats>(`/public/rent-stats/${buildBillingQuery(params)}`, api, extraOptions),
+      keepUnusedDataFor: 300,
+    }),
+    getPublicXojaliklar: builder.query<PublicXojalik[], void>({
+      queryFn: (_arg, api, extraOptions) =>
+        publicQuery<PublicXojalik[]>("/public/xojaliklar/", api, extraOptions),
+      keepUnusedDataFor: 600,
+    }),
+    /** Shartnomalar sahifasi uchun (autentifikatsiyali, foydalanuvchi ko'lamida). */
+    getContractsRentStats: builder.query<RentStats, RentStatsParams>({
+      query: (params) => `/contracts/rent-stats/${buildBillingQuery(params)}`,
+      providesTags: [{ type: CONTRACTS, id: "LIST" }],
+    }),
+
+    // =====================================================================
     // GIS
     // =====================================================================
     getXojalikLocations: builder.query<XojalikLocation[], { region?: UUID | "" } | void>({
@@ -320,6 +361,10 @@ export const {
   useGetContractFilesQuery,
   useUploadContractFileMutation,
   useDeleteContractFileMutation,
+  // Ijara tushumi statistikasi
+  useGetPublicRentStatsQuery,
+  useGetPublicXojaliklarQuery,
+  useGetContractsRentStatsQuery,
   // GIS
   useGetXojalikLocationsQuery,
   useGetXojalikLocationQuery,

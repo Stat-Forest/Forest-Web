@@ -4,7 +4,7 @@ import { useBillingAccess } from "@/features/billing/permissions";
 import { BILLING_ROUTES } from "@/features/billing/constants";
 
 /**
- * Faqat yozish huquqi bor rollar (`billing_user`, `super_admin`) kiradigan
+ * Faqat yozish huquqi bor rollar (`billing_user`, `billing_super`, `super_admin`) kiradigan
  * marshrutlar (yaratish, Excel import). Qolganlar shartnomalar ro'yxatiga
  * qaytariladi.
  */

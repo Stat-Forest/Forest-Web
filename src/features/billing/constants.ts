@@ -47,7 +47,7 @@ export const BILLING_ROUTES = {
 /** Sidebar'dagi "Ijara billing" guruhi id'si (open-sidebar-submenu uchun). */
 export const BILLING_SIDEBAR_GROUP_ID = "ijara-billing";
 
-export const BILLING_WRITER_ROLES = ["billing_user", "super_admin"] as const;
+export const BILLING_WRITER_ROLES = ["billing_user", "billing_super", "super_admin"] as const;
 
 export const CONTRACT_FILE_ACCEPT = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx";
 export const CONTRACT_FILE_MAX_MB = 20;
