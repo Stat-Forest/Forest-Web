@@ -304,7 +304,8 @@
     "tashkilot_rahbari": "Руководитель организации",
     "hududiy_boshqarma": "Территориальное управление",
     "support_admin": "Support администратор",
-    "billing_user": "Пользователь биллинга аренды"
+    "billing_user": "Пользователь биллинга аренды",
+    "billing_super": "Суперпользователь биллинга аренды"
   },
   "support_panel": "Support",
   "landing_1": "Показатели мероприятий, проведенных Лесным агентством",
@@ -346,6 +347,7 @@
   "landing_nav_home": "Главная страница",
   "landing_nav_strategic": "Статистические показатели",
   "landing_nav_operational": "Операционный анализ",
+  "landing_nav_rent": "Доходы от аренды",
   "landing_nav_login": "Вход в систему",
   "landing_contact": "Контакты",
   "landing_committee": "Агентство по увеличению лесов и зелёных территорий, борьбе с опустыниванием",
@@ -894,5 +896,27 @@
     "contracts_detail_product_amount": "Количество",
     "contracts_detail_export_amount": "Объём экспорта",
     "contracts_detail_no_data": "Нет данных"
+  },
+  "rent_stats": {
+    "title": "Доходы от аренды",
+    "subtitle": "Арендованная площадь и начисленные арендные доходы по годам",
+    "from_year": "С года",
+    "to_year": "По год",
+    "xojalik": "Хозяйство",
+    "all": "Все",
+    "price_per_hectare": "Цена 1 гектара",
+    "total_area": "Всего гектаров",
+    "total_calculated": "Общая стоимость гектаров",
+    "average_annual": "Среднегодовой доход",
+    "growth": "Рост за {{from}}-{{to}}",
+    "max": "Наивысший показатель",
+    "max_value": "{{value}} ({{year}} г.)",
+    "year_label": "{{year}} г.",
+    "empty": "За выбранный период данных нет",
+    "error": "Не удалось загрузить статистику",
+    "retry": "Повторить",
+    "currency": "сум",
+    "area_unit": "га",
+    "per_hectare_unit": "сум/га"
   }
 }

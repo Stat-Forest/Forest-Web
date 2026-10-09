@@ -28,10 +28,16 @@ interface ContractActionsMenuProps {
   onOpen: OpenContractDialog;
   /** Detail sahifada "Ko'rish" bandi ko'rsatilmaydi. */
   hideView?: boolean;
+  /**
+   * `row` (standart) — jadval qatori: menyu trigger'ning O'NG tomoniga ochiladi
+   * (joy bo'lmasa Radix avtomatik chapga o'tkazadi).
+   * `header` — sahifa sarlavhasining o'ng chetida: pastga, o'ng chetga tekislanadi.
+   */
+  placement?: "row" | "header";
 }
 
-/** ⋮ amallar menyusi (o'ngga tekislangan). */
-function ContractActionsMenu({ contract, canEdit, onOpen, hideView }: ContractActionsMenuProps) {
+/** ⋮ amallar menyusi. */
+function ContractActionsMenu({ contract, canEdit, onOpen, hideView, placement = "row" }: ContractActionsMenuProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isActive = contract.status === "active";
@@ -52,7 +58,10 @@ function ContractActionsMenu({ contract, canEdit, onOpen, hideView }: ContractAc
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        align="end"
+        {...(placement === "row"
+          ? { side: "right" as const, align: "start" as const }
+          : { side: "bottom" as const, align: "end" as const })}
+        collisionPadding={12}
         className="min-w-[220px] rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >

@@ -557,3 +557,36 @@ export interface ViloyatOption {
   id: UUID;
   name: string;
 }
+
+// =====================================================================
+// Ijara tushumi statistikasi (rent-stats)
+// =====================================================================
+
+export interface RentStatsParams {
+  from_year: number;
+  to_year: number;
+  xojalik?: UUID | "";
+}
+
+export interface RentStatsYear {
+  year: number;
+  total_area: number;
+  total_calculated: number;
+  price_per_hectare: number;
+}
+
+export interface RentStats {
+  from_year: number;
+  to_year: number;
+  years: RentStatsYear[];
+  average_annual: number;
+  growth: { diff: number; percent: number };
+  /** Ma'lumot bo'lmasa backend `null` qaytarishi mumkin. */
+  max: { year: number; total_calculated: number } | null;
+}
+
+/** `GET public/xojaliklar/` (autentifikatsiyasiz). */
+export interface PublicXojalik {
+  id: UUID;
+  name: string;
+}
