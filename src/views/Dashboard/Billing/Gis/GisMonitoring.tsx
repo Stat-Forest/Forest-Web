@@ -260,20 +260,28 @@ function GisMonitoring() {
     clearKonturHighlight();
   };
 
+  /** Xo'jalikka uchish + chegarasini chizish + marker popup'ini ochish. */
+  const focusXojalik = useCallback(
+    (xojalik: XojalikLocation) => {
+      const map = mapRef.current;
+      if (!map) return;
+      flyToXojalik(map, xojalik);
+      void showXojalikBoundary(xojalik);
+      const marker = findXojalikMarker(xojalikMarkersLayerRef.current, xojalik.id);
+      if (marker) {
+        window.setTimeout(() => marker.openPopup(), 900);
+      }
+    },
+    [showXojalikBoundary],
+  );
+
   const handleXojalikChange = (id: string) => {
     setSelectedXojalikId(id);
     setSelectedKonturId("");
     setKonturSearch("");
     clearKonturHighlight();
-    const map = mapRef.current;
     const xojalik = xojalikLocations.find((x) => String(x.id) === String(id));
-    if (!xojalik || !map) return;
-    flyToXojalik(map, xojalik);
-    void showXojalikBoundary(xojalik);
-    const marker = findXojalikMarker(xojalikMarkersLayerRef.current, xojalik.id);
-    if (marker) {
-      window.setTimeout(() => marker.openPopup(), 900);
-    }
+    if (xojalik) focusXojalik(xojalik);
   };
 
   const handleKonturChange = async (id: string) => {
@@ -395,6 +403,22 @@ function GisMonitoring() {
       }
     }
   }, [mapReady, contracts, popupLabels]);
+
+  // Foydalanuvchiga bitta xo'jalik biriktirilgan bo'lsa (billing Inspektor):
+  // yuklanganda viloyat + xo'jalik avtomatik tanlanadi va xaritada unga uchadi.
+  // Shartnomalar chizish effekti'dan KEYIN e'lon qilingan: bir commit'da ikkalasi
+  // ishlasa ham uchish ularning fitBounds'i ustidan bo'ladi. Faqat bir marta.
+  const autoFocusedRef = useRef(false);
+  const contractsSettled = geoData !== undefined || contractsError;
+  useEffect(() => {
+    if (autoFocusedRef.current || !mapReady || !contractsSettled) return;
+    if (xojalikLocations.length !== 1) return;
+    autoFocusedRef.current = true;
+    const only = xojalikLocations[0];
+    setSelectedViloyatId(String(only.region));
+    setSelectedXojalikId(String(only.id));
+    focusXojalik(only);
+  }, [mapReady, contractsSettled, xojalikLocations, focusXojalik]);
 
   // =====================================================================
   // Filtrlar

@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import { BILLING_ROUTES, BILLING_SIDEBAR_GROUP_ID } from "@/features/billing/constants";
+import { isBillingRole } from "@/features/billing/permissions";
 
 export interface SidebarMenuItem {
   id: string | number;
@@ -123,8 +124,9 @@ export function useSidebarMenu(): {
     arrow_icon: "",
   };
 
-  // billing_user: faqat "Ijara billing" (2 bola) + Yordam
-  if (role === "billing_user") {
+  // billing_user / billing_super: "Asosiy" yo'q — Sidebar statements'dan faqat
+  // kadastr parent'ini (+ Ijara billing guruhi) va Yordamni ko'rsatadi.
+  if (isBillingRole(role)) {
     return {
       sidebar_menu: [],
       sidebar_3: [[helpItem]],

@@ -18,6 +18,7 @@ import { useDebounce } from "@/utils/useDebounce";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import { isBillingRole } from "@/features/billing/permissions";
 
 function LandDocumentsContainers() {
   const { t, i18n } = useTranslation();
@@ -28,6 +29,9 @@ function LandDocumentsContainers() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
+  // Billing rollari kadastr bo'limini faqat ko'radi (read-only).
+  const userRole = useSelector((state: RootState) => state.auth.user?.role);
+  const readOnly = isBillingRole(userRole);
 
   const {
     data: landDocumentsData,
@@ -218,14 +222,16 @@ function LandDocumentsContainers() {
           </Button>
         )}
 
-        <div className="ml-auto">
-          <Button
-            onClick={() => navigate("/land-documents-create")}
-            className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
-          >
-            {t("new_document")}
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="ml-auto">
+            <Button
+              onClick={() => navigate("/land-documents-create")}
+              className="h-[40px] px-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95"
+            >
+              {t("new_document")}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* 📄 Table */}

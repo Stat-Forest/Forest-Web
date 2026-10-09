@@ -18,6 +18,7 @@ import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
 import {
+  findKadastrParent,
   useSidebarMenu,
   withBillingGroup,
   type SidebarMenuItem,
@@ -52,8 +53,10 @@ function Sidebar() {
   const location = useLocation();
   const userRole = useSelector((state: RootState) => state.auth.user?.role);
   const isSupportAdmin = userRole === "support_admin";
-  // support_admin va billing_user uchun statements/users so'rovlari kerak emas
-  const skipUserQueries = isSupportAdmin || isBillingUser;
+  // support_admin uchun statements/users so'rovlari kerak emas. Billing rollari
+  // (billing_user/billing_super) uchun backend statements'dan faqat kadastr
+  // parent'ini, users'dan esa faqat o'zini qaytaradi.
+  const skipUserQueries = isSupportAdmin;
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const authUser = useSelector((state: RootState) => state.auth.user);
@@ -99,18 +102,24 @@ function Sidebar() {
         },
   );
 
-  // "Ijara billing" guruhi: billing_user uchun yagona top-level element;
-  // boshqa rollar uchun "O'rmon kadastri va monitoringi" parent'ining oxirgi
+  // "Ijara billing" guruhi "O'rmon kadastri va monitoringi" parent'ining oxirgi
   // bolasi (RTK cache mutatsiya qilinmaydi — yangi obyektlar yasaladi).
+  // Billing rollari: faqat kadastr parent (+ Ijara billing) va Yordam;
+  // statements xato bersa ham Ijara billing guruhi top-level ko'rinadi.
   const menuItems = useMemo<SidebarMenuItem[]>(() => {
     if (isSupportAdmin) return [...sidebar_menu, ...sidebar_3].flat();
-    if (isBillingUser) return [billingGroup, ...sidebar_3.flat()];
+    if (isBillingUser) {
+      const parent = sidebarError
+        ? undefined
+        : findKadastrParent(sidebarData as SidebarMenuItem[]);
+      return [...withBillingGroup(parent ? [parent] : [], billingGroup), ...sidebar_3.flat()];
+    }
     return [
       ...sidebar_menu.flat(),
       ...withBillingGroup(sidebarData as SidebarMenuItem[], billingGroup),
       ...sidebar_3.flat(),
     ];
-  }, [isSupportAdmin, isBillingUser, sidebar_menu, sidebar_3, sidebarData, billingGroup]);
+  }, [isSupportAdmin, isBillingUser, sidebar_menu, sidebar_3, sidebarData, sidebarError, billingGroup]);
 
   if (!skipUserQueries && (sidebarLoading || userLoading)) {
     return (
@@ -120,7 +129,8 @@ function Sidebar() {
     );
   }
 
-  if (!skipUserQueries && (sidebarError || userError)) {
+  // Billing rollari uchun xato butun sidebar'ni to'smaydi (yuqoridagi fallback).
+  if (!skipUserQueries && !isBillingUser && (sidebarError || userError)) {
     return (
       <div className="w-[320px] h-screen flex justify-center items-center bg-[#ffffff] dark:bg-gray-900">
         <h2 className="text-lg font-bold text-red-500">{t("error")}</h2>
@@ -391,14 +401,16 @@ function Sidebar() {
     );
   };
 
-  const profileName = skipUserQueries
-    ? authUser?.full_name || authUser?.email || ""
-    : `${user?.results[0]?.first_name || ""} ${user?.results[0]?.last_name || ""}`;
+  const profileUser = userError ? undefined : user?.results[0];
+  const profileName =
+    skipUserQueries || (isBillingUser && !profileUser)
+      ? authUser?.full_name || authUser?.email || ""
+      : `${profileUser?.first_name || ""} ${profileUser?.last_name || ""}`;
 
   const profileRole = isSupportAdmin
     ? t("roles.support_admin")
     : isBillingUser
-      ? t("roles.billing_user")
+      ? t(`roles.${userRole}`)
       : user?.results[0]?.role &&
           t(`roles.${user.results[0].role}`) !== `roles.${user.results[0].role}`
         ? t(`roles.${user.results[0].role}`)
@@ -441,7 +453,7 @@ function Sidebar() {
           </div>
 
           <div className="flex flex-col gap-2">
-            {!skipUserQueries && user?.results[0]?.organization_name && (
+            {!skipUserQueries && profileUser?.organization_name && (
               <>
                 <div className="h-px bg-white/20 w-full my-0.5" />
                 <p className="text-xs font-medium text-blue-50/90 dark:text-slate-300 leading-relaxed font-sans line-clamp-2">

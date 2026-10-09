@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -39,6 +39,9 @@ import {
 import type { ContractDialogKind, ContractDialogTarget } from "./components/contractDialogTypes";
 import FilterDialog from "./modals/FilterDialog";
 import ContractDialogs from "./modals/ContractDialogs";
+
+// recharts alohida chunk'da — jadval statistikani kutmasdan chiziladi
+const RentRevenueStats = lazy(() => import("@/components/Charts/RentRevenueStats"));
 
 /** /billing/contracts — Shartnomalar monitoring (spec §4.5). Filtrlar/sahifa URL'da. */
 function ContractsPage() {
@@ -148,6 +151,13 @@ function ContractsPage() {
 
   return (
     <BillingLayout title={t("billing.contracts_title")}>
+      <Suspense
+        fallback={
+          <div className="h-[420px] w-full animate-pulse rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90" />
+        }
+      >
+        <RentRevenueStats mode="contracts" title={t("rent_stats.title")} />
+      </Suspense>
       <StatusCards counts={counts} loading={countsLoading} status={status} onChange={changeStatus} />
       <SummaryCards summary={summary} loading={summaryLoading} year={year} onYearChange={changeYear} />
       <ContractsToolbar

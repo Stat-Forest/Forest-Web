@@ -316,7 +316,8 @@
     "tashkilot_rahbari": "Tashkilot rahbari",
     "hududiy_boshqarma": "Hududiy boshqarma",
     "support_admin": "Support administratori",
-    "billing_user": "Ijara billing foydalanuvchisi"
+    "billing_user": "Ijara billing foydalanuvchisi",
+    "billing_super": "Ijara billing super foydalanuvchisi"
   },
   "support_panel": "Support",
   "landing_1": "O‘rmon xo‘jaligi agentligi tomonidan o‘tkazilgan tadbirlar ko‘rsatkichlari",
@@ -358,6 +359,7 @@
   "landing_nav_home": "Bosh sahifa",
   "landing_nav_strategic": "Statistik ko'rsatkichlar",
   "landing_nav_operational": "Operatsion tahlil",
+  "landing_nav_rent": "Ijara tushumi",
   "landing_nav_login": "Tizimga kirish",
   "landing_contact": "Aloqa",
   "landing_committee": "O'rmon va yashil hududlarni ko'paytirish, cho'llanishga qarshi kurashish agentligi",
@@ -906,5 +908,27 @@
     "contracts_detail_product_amount": "Miqdori",
     "contracts_detail_export_amount": "Eksport miqdori",
     "contracts_detail_no_data": "Ma'lumot yo'q"
+  },
+  "rent_stats": {
+    "title": "Ijara tushumi",
+    "subtitle": "Yillar kesimida ijaraga berilgan maydon va hisoblangan ijara tushumi",
+    "from_year": "Yildan",
+    "to_year": "Yilgacha",
+    "xojalik": "Xo'jalik",
+    "all": "Barchasi",
+    "price_per_hectare": "1 gektar narxi",
+    "total_area": "Jami gektar",
+    "total_calculated": "Jami gektar narxi",
+    "average_annual": "O'rtacha yillik tushum",
+    "growth": "{{from}}-{{to}} o'sish",
+    "max": "Eng yuqori ko'rsatkich",
+    "max_value": "{{value}} ({{year}}-yil)",
+    "year_label": "{{year}}-yil",
+    "empty": "Tanlangan davr uchun ma'lumot topilmadi",
+    "error": "Statistikani yuklab bo'lmadi",
+    "retry": "Qayta urinish",
+    "currency": "so'm",
+    "area_unit": "ga",
+    "per_hectare_unit": "so'm/ga"
   }
 }

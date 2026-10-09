@@ -31,6 +31,7 @@ import {
   BarChart3,
   TrendingUp,
   Globe,
+  Coins,
 } from "lucide-react";
 
 import {
@@ -45,6 +46,7 @@ import logo from "@/assets/logo.png";
 
 // recharts (~500 KB) asosiy bundle'ga tushmasligi uchun diagramma alohida yuklanadi
 const PieChartLanding = lazy(() => import("@/components/Charts/PieChart"));
+const RentRevenueStats = lazy(() => import("@/components/Charts/RentRevenueStats"));
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StatCardItem = {
@@ -198,6 +200,8 @@ export default function ModernLanding() {
       scrollToSection("strategik-korsatkichlar");
     } else if (key === "operational") {
       scrollToSection("operatsion-tahlil");
+    } else if (key === "rent") {
+      scrollToSection("ijara-tushumi");
     } else if (key === "login") {
       navigate("/auth");
     }
@@ -328,6 +332,17 @@ export default function ModernLanding() {
                   ))}
             </div>
           </SectionLayout>
+
+          <SectionLayout
+            id="ijara-tushumi"
+            title={t("rent_stats.title")}
+            subtitle={t("rent_stats.subtitle")}
+            icon={<Coins className="text-[#00BC7D]" />}
+          >
+            <Suspense fallback={<div className="h-[420px] w-full animate-pulse rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900" />}>
+              <RentRevenueStats mode="public" />
+            </Suspense>
+          </SectionLayout>
         </div>
       </main>
 
@@ -359,6 +374,7 @@ export default function ModernLanding() {
                   { key: "home", label: t("landing_nav_home") },
                   { key: "strategic", label: t("landing_nav_strategic") },
                   { key: "operational", label: t("landing_nav_operational") },
+                  { key: "rent", label: t("landing_nav_rent") },
                   { key: "login", label: t("landing_nav_login") },
                 ].map(({ key, label }) => (
                   <li key={key}>
@@ -438,9 +454,10 @@ type SectionLayoutProps = {
   title: string;
   subtitle: string;
   icon: ReactNode;
-  value: string;
-  onChange: (value: string) => void;
-  options: DeadlineOption[];
+  /** Davr select'i — berilmasa (masalan "Ijara tushumi") ko'rsatilmaydi. */
+  value?: string;
+  onChange?: (value: string) => void;
+  options?: DeadlineOption[];
   children: ReactNode;
 };
 
@@ -470,24 +487,26 @@ function SectionLayout({ id, title, subtitle, icon, value, onChange, options, ch
           </div>
         </div>
 
-        <div className="group relative w-full md:w-auto">
-          <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-[#00BC7D]/20 to-[#00BC7D]/5 opacity-0 blur-lg transition group-hover:opacity-100" />
-          <Select onValueChange={onChange} value={value}>
-            <SelectTrigger className="relative h-12 w-full rounded-xl border-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-4 font-bold shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 focus:ring-2 focus:ring-[#00BC7D] sm:h-14 sm:px-6 md:w-[280px]">
-              <div className="flex items-center gap-2">
-                <Filter size={16} className="text-slate-400" />
-                <SelectValue placeholder={t("landing_select_period")} />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-2xl">
-              {options.map((opt, i) => (
-                <SelectItem key={`${opt.submit_at}-${i}`} value={opt.submit_at} className="py-3 font-medium">
-                  {opt.submit_at}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {options && onChange && (
+          <div className="group relative w-full md:w-auto">
+            <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-[#00BC7D]/20 to-[#00BC7D]/5 opacity-0 blur-lg transition group-hover:opacity-100" />
+            <Select onValueChange={onChange} value={value}>
+              <SelectTrigger className="relative h-12 w-full rounded-xl border-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-4 font-bold shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 focus:ring-2 focus:ring-[#00BC7D] sm:h-14 sm:px-6 md:w-[280px]">
+                <div className="flex items-center gap-2">
+                  <Filter size={16} className="text-slate-400" />
+                  <SelectValue placeholder={t("landing_select_period")} />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-2xl">
+                {options.map((opt, i) => (
+                  <SelectItem key={`${opt.submit_at}-${i}`} value={opt.submit_at} className="py-3 font-medium">
+                    {opt.submit_at}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
       {children}
     </div>

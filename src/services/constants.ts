@@ -88,6 +88,7 @@ export const USER_ROLE = [
   "hududiy_boshqarma",
   "support_admin",
   "billing_user",
+  "billing_super",
 ]
 
 export const regions_information = [
