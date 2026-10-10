@@ -45,12 +45,13 @@
     Note: Local scripts are used instead of CDN to match the working demo behavior.
     CDN scripts may have different API or version, causing compatibility issues.
   -->
-    <script src="/e-imzo.js" type="text/javascript"></script>
-    <script src="/e-imzo-client.js?v=1.2" type="text/javascript"></script>
-    <script src="/micro-ajax.js" type="text/javascript"></script>
-    <script src="/e-imzo-init.js?v=1.0" type="text/javascript"></script>
+    <script src="/e-imzo.js" type="text/javascript" defer></script>
+    <script src="/e-imzo-client.js?v=1.2" type="text/javascript" defer></script>
+    <script src="/micro-ajax.js" type="text/javascript" defer></script>
+    <script src="/e-imzo-init.js?v=1.0" type="text/javascript" defer></script>
 
-    <!-- Use local E-IMZO scripts in /public to avoid CDN/version conflicts -->
+    <!-- Use local E-IMZO scripts in /public to avoid CDN/version conflicts.
+         defer: sahifa render'ini bloklamaydi, tartib saqlanadi, React (module) dan oldin ishga tushadi -->
 
     <script type="text/javascript">
       (function (c, l, a, r, i, t, y) {
