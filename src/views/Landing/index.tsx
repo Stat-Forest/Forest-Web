@@ -45,7 +45,8 @@ import logo from "@/assets/logo.png";
 
 // recharts (~500 KB) asosiy bundle'ga tushmasligi uchun diagramma alohida yuklanadi
 const PieChartLanding = lazy(() => import("@/components/Charts/PieChart"));
-const RentRevenueStats = lazy(() => import("@/components/Charts/RentRevenueStats"));
+// Leaflet + xarita ham alohida chunk'da
+const PublicGisMap = lazy(() => import("@/components/Landing/PublicGisMap"));
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StatCardItem = {
@@ -199,8 +200,8 @@ export default function ModernLanding() {
       scrollToSection("strategik-korsatkichlar");
     } else if (key === "operational") {
       scrollToSection("operatsion-tahlil");
-    } else if (key === "rent") {
-      scrollToSection("ijara-tushumi");
+    } else if (key === "gis") {
+      scrollToSection("gis-monitoring");
     } else if (key === "login") {
       navigate("/auth");
     }
@@ -294,16 +295,23 @@ export default function ModernLanding() {
           </div>
         </div>
 
-        {/* ── IJARA TUSHUMI (billing) — hero'dan keyin, birinchi statistika ── */}
-        <div id="ijara-tushumi" className="mb-12 scroll-mt-24 sm:mb-14 lg:mb-16">
-          <Suspense
-            fallback={
-              <div className="h-[560px] w-full animate-pulse rounded-2xl border border-emerald-500/20 bg-slate-900 lg:rounded-3xl" />
-            }
-          >
-            <RentRevenueStats mode="public" variant="featured" subtitle={t("rent_stats.subtitle")} />
-          </Suspense>
-        </div>
+        {/* ── GIS MONITORING (ochiq xarita) — hero'dan keyin ─────────────── */}
+        <section
+          id="gis-monitoring"
+          aria-label={t("public_gis.brand_title")}
+          className="mb-12 scroll-mt-24 sm:mb-14 lg:mb-16"
+        >
+          {/* Leaflet z-index'lari header/dialoglarga chiqmasligi uchun: relative isolate z-0 */}
+          <div className="relative isolate z-0 h-[520px] w-full overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-950 shadow-xl md:h-[min(78vh,760px)] md:min-h-[480px] lg:rounded-3xl">
+            <Suspense
+              fallback={
+                <div className="h-full w-full animate-pulse bg-gradient-to-br from-slate-950 via-emerald-950/70 to-slate-900" />
+              }
+            >
+              <PublicGisMap />
+            </Suspense>
+          </div>
+        </section>
 
         {/* ── SECTIONS ───────────────────────────────────────────────────── */}
         <div className="space-y-12 sm:space-y-14 lg:space-y-16">
@@ -372,7 +380,7 @@ export default function ModernLanding() {
               <ul className="space-y-3">
                 {[
                   { key: "home", label: t("landing_nav_home") },
-                  { key: "rent", label: t("landing_nav_rent") },
+                  { key: "gis", label: t("landing_nav_gis") },
                   { key: "strategic", label: t("landing_nav_strategic") },
                   { key: "operational", label: t("landing_nav_operational") },
                   { key: "login", label: t("landing_nav_login") },
