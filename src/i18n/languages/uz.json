@@ -952,15 +952,15 @@
     },
     "kpi": {
       "total": "Jami hisobotlar",
-      "accepted": "Qabul qilingan",
-      "sent": "Ko'rib chiqilmoqda",
-      "saved": "Qoralamalar",
-      "cancelled": "Qaytarilgan"
+      "accepted": "Qabul qilingan hisobotlar",
+      "sent": "Jo‘natilgan hisobotlar",
+      "saved": "Qoralama",
+      "cancelled": "Qaytarilgan hisobotlar"
     },
     "status": {
       "accepted": "Qabul qilingan",
-      "sent": "Yuborilgan",
-      "saved": "Saqlangan",
+      "sent": "Jo‘natilgan",
+      "saved": "Qoralama",
       "cancelled": "Qaytarilgan"
     },
     "share": "ulushi {{value}}%",
@@ -970,14 +970,13 @@
     "monthly_title": "Oylik dinamika",
     "monthly_subtitle": "So'nggi 12 oyda yaratilgan hisobotlar, holat bo'yicha",
     "discipline_title": "Muddat intizomi",
-    "discipline_subtitle": "Muddati o'tgan topshiriqlar (tashkilot × muddat)",
+    "discipline_subtitle": "Bajarilgan, kech bajarilgan va bajarilmagan hisobotlar",
     "discipline": {
-      "on_time": "Muddatida",
-      "late": "Kechikib",
-      "in_review": "Ko'rib chiqilmoqda",
-      "missing": "Topshirilmagan"
+      "on_time": "Bajarilgan",
+      "late": "Muddatidan kech bajarilgan",
+      "missing": "Bajarilmagan"
     },
-    "on_time_rate": "muddatida",
+    "on_time_rate": "o‘z vaqtida",
     "completion_rate": "Bajarilish: {{value}}%",
     "top_forms_title": "Eng faol hisobot shakllari",
     "top_forms_subtitle": "Hisobotlar soni va qabul darajasi",

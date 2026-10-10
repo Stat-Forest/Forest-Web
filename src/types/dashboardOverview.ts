@@ -19,7 +19,6 @@ export interface OverviewDiscipline {
   total: number;
   on_time: number;
   late: number;
-  in_review: number;
   missing: number;
   on_time_rate: number;
   completion_rate: number;
