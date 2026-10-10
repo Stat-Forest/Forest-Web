@@ -930,5 +930,76 @@
     "currency": "so'm",
     "area_unit": "ga",
     "per_hectare_unit": "so'm/ga"
+  },
+  "report_stats": {
+    "title": "Hisobotlar statistikasi",
+    "subtitle": "Sizning doirangizdagi hisobotlar holati va dinamikasi",
+    "period_range": "{{from}} — {{to}}",
+    "period_all_range": "Barcha davr, {{to}} gacha",
+    "periods": {
+      "month": "30 kun",
+      "quarter": "90 kun",
+      "year": "12 oy",
+      "all": "Barchasi"
+    },
+    "scope": {
+      "all": "Respublika bo'yicha",
+      "organization": "Tashkilotingiz bo'yicha",
+      "department": "Bo'limingiz bo'yicha",
+      "region": "Hududingiz bo'yicha",
+      "kadastr": "Kadastr bo'limi",
+      "none": "Doira belgilanmagan"
+    },
+    "kpi": {
+      "total": "Jami hisobotlar",
+      "accepted": "Qabul qilingan",
+      "sent": "Ko'rib chiqilmoqda",
+      "saved": "Qoralamalar",
+      "cancelled": "Qaytarilgan"
+    },
+    "status": {
+      "accepted": "Qabul qilingan",
+      "sent": "Yuborilgan",
+      "saved": "Saqlangan",
+      "cancelled": "Qaytarilgan"
+    },
+    "share": "ulushi {{value}}%",
+    "vs_previous": "oldingi davrga nisbatan",
+    "no_previous": "taqqoslash yo'q",
+    "acceptance_rate": "Qabul darajasi",
+    "monthly_title": "Oylik dinamika",
+    "monthly_subtitle": "So'nggi 12 oyda yaratilgan hisobotlar, holat bo'yicha",
+    "discipline_title": "Muddat intizomi",
+    "discipline_subtitle": "Muddati o'tgan topshiriqlar (tashkilot × muddat)",
+    "discipline": {
+      "on_time": "Muddatida",
+      "late": "Kechikib",
+      "in_review": "Ko'rib chiqilmoqda",
+      "missing": "Topshirilmagan"
+    },
+    "on_time_rate": "muddatida",
+    "completion_rate": "Bajarilish: {{value}}%",
+    "top_forms_title": "Eng faol hisobot shakllari",
+    "top_forms_subtitle": "Hisobotlar soni va qabul darajasi",
+    "regions_title": "Hududlar kesimida",
+    "regions_subtitle": "Tanlangan davrdagi hisobotlar, holat bo'yicha",
+    "upcoming_title": "Yaqinlashayotgan muddatlar",
+    "upcoming_subtitle": "Keyingi 14 kun",
+    "upcoming_empty": "Keyingi 14 kunda muddat yo'q",
+    "days_left": "{{count}} kun qoldi",
+    "today": "Bugun",
+    "tomorrow": "Ertaga",
+    "submitted_of": "{{submitted}} / {{total}} topshirgan",
+    "reports_count": "{{count}} ta hisobot",
+    "count_unit": "ta",
+    "empty": "Tanlangan davrda hisobotlar yo'q",
+    "error": "Statistikani yuklab bo'lmadi",
+    "retry": "Qayta urinish",
+    "view_all": "Barchasi",
+    "table_view": "Jadval",
+    "chart_view": "Grafik",
+    "month_col": "Oy",
+    "total_col": "Jami",
+    "updated": "Yangilangan: {{time}}"
   }
 }

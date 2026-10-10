@@ -918,5 +918,76 @@
     "currency": "сум",
     "area_unit": "га",
     "per_hectare_unit": "сум/га"
+  },
+  "report_stats": {
+    "title": "Статистика отчётов",
+    "subtitle": "Состояние и динамика отчётов в вашей зоне ответственности",
+    "period_range": "{{from}} — {{to}}",
+    "period_all_range": "За всё время, по {{to}}",
+    "periods": {
+      "month": "30 дней",
+      "quarter": "90 дней",
+      "year": "12 мес.",
+      "all": "Всё время"
+    },
+    "scope": {
+      "all": "По республике",
+      "organization": "По вашей организации",
+      "department": "По вашему отделу",
+      "region": "По вашему региону",
+      "kadastr": "Раздел кадастра",
+      "none": "Зона не назначена"
+    },
+    "kpi": {
+      "total": "Всего отчётов",
+      "accepted": "Принято",
+      "sent": "На рассмотрении",
+      "saved": "Черновики",
+      "cancelled": "Возвращено"
+    },
+    "status": {
+      "accepted": "Принято",
+      "sent": "Отправлено",
+      "saved": "Сохранено",
+      "cancelled": "Возвращено"
+    },
+    "share": "доля {{value}}%",
+    "vs_previous": "к предыдущему периоду",
+    "no_previous": "нет сравнения",
+    "acceptance_rate": "Уровень приёма",
+    "monthly_title": "Динамика по месяцам",
+    "monthly_subtitle": "Отчёты, созданные за последние 12 месяцев, по статусам",
+    "discipline_title": "Соблюдение сроков",
+    "discipline_subtitle": "Истёкшие обязательства (организация × срок)",
+    "discipline": {
+      "on_time": "В срок",
+      "late": "С опозданием",
+      "in_review": "На рассмотрении",
+      "missing": "Не сдано"
+    },
+    "on_time_rate": "в срок",
+    "completion_rate": "Выполнение: {{value}}%",
+    "top_forms_title": "Самые активные формы",
+    "top_forms_subtitle": "Количество отчётов и уровень приёма",
+    "regions_title": "В разрезе регионов",
+    "regions_subtitle": "Отчёты за выбранный период, по статусам",
+    "upcoming_title": "Ближайшие сроки",
+    "upcoming_subtitle": "Следующие 14 дней",
+    "upcoming_empty": "В ближайшие 14 дней сроков нет",
+    "days_left": "Осталось {{count}} дн.",
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "submitted_of": "Сдали {{submitted}} из {{total}}",
+    "reports_count": "{{count}} отчётов",
+    "count_unit": "шт.",
+    "empty": "За выбранный период отчётов нет",
+    "error": "Не удалось загрузить статистику",
+    "retry": "Повторить",
+    "view_all": "Все",
+    "table_view": "Таблица",
+    "chart_view": "График",
+    "month_col": "Месяц",
+    "total_col": "Всего",
+    "updated": "Обновлено: {{time}}"
   }
 }
