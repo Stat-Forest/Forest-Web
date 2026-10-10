@@ -16,17 +16,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-// AOS lazy loading - faqat kerak bo'lganda yuklash
-let AOS: any = null;
-const loadAOS = async () => {
-  if (!AOS) {
-    const aosModule = await import("aos");
-    AOS = aosModule.default;
-    await import("aos/dist/aos.css");
-  }
-  return AOS;
-};
 
 function MainContainer() {
   const {
@@ -37,26 +26,6 @@ function MainContainer() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
-
-  // AOS'ni lazy load qilamiz - blocking operatsiyalarni oldini olish uchun
-  useEffect(() => {
-    const initAOS = async () => {
-      try {
-        const aos = await loadAOS();
-        aos.init({
-          duration: 700,
-          once: true,
-          easing: "ease-out-cubic",
-        });
-      } catch (error) {
-        console.warn("AOS yuklanmadi:", error);
-      }
-    };
-
-    // Defer AOS initialization - sahifa render bo'lgandan keyin
-    const timeoutId = setTimeout(initAOS, 100);
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   if (isLoading) {
     return (
@@ -70,15 +39,16 @@ function MainContainer() {
     return <div className="p-4 text-lg text-red-500">Xatolik yuz berdi!</div>;
   }
 
+  // AOS o'rniga CSS animatsiya: AOS sahifa tuzilishi o'zgarganda (statistika
+  // bloki yashirilganda) kartalarni ko'rinmas holda qoldirib, bo'sh joy hosil qilardi.
   const cardClasses =
-    "w-full min-h-[90px] rounded-2xl flex items-center gap-4 px-4 py-3 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs backdrop-blur-md";
+    "animate-in fade-in-0 slide-in-from-bottom-2 duration-500 w-full min-h-[90px] rounded-2xl flex items-center gap-4 px-4 py-3 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs backdrop-blur-md";
 
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-4 px-2">
         {/* Sent Reports */}
         <div
-          data-aos="fade-up"
           onClick={() => navigate("/main/send-report")}
           className={cardClasses}
         >
@@ -97,8 +67,6 @@ function MainContainer() {
 
         {/* Returned Reports */}
         <div
-          data-aos="fade-up"
-          data-aos-delay="80"
           onClick={() => navigate("/main/returned-report")}
           className={cardClasses}
         >
@@ -117,8 +85,6 @@ function MainContainer() {
 
         {/* Accepted Reports */}
         <div
-          data-aos="fade-up"
-          data-aos-delay="160"
           onClick={() => navigate("/main/received-report")}
           className={cardClasses}
         >
@@ -137,8 +103,6 @@ function MainContainer() {
 
         {/* Responsible Users */}
         <div
-          data-aos="fade-up"
-          data-aos-delay="240"
           onClick={() => navigate("/main/responsible-representative")}
           className={cardClasses}
         >
@@ -157,8 +121,6 @@ function MainContainer() {
 
         {/* Draft reports */}
         <div
-          data-aos="fade-up"
-          data-aos-delay="320"
           onClick={() => navigate("/main/draft")}
           className={cardClasses}
         >
@@ -177,8 +139,6 @@ function MainContainer() {
 
         {/* Deadlines */}
         <div
-          data-aos="fade-up"
-          data-aos-delay="400"
           onClick={() => navigate("/main/newsletter")}
           className={cardClasses}
         >
@@ -198,8 +158,6 @@ function MainContainer() {
         {/* REJA YARATISH – faqat adminlar */}
         {(user_role === "bolim_admin" || user_role === "super_admin") && (
           <div
-            data-aos="fade-up"
-            data-aos-delay="480"
             onClick={() => navigate("/plan/create-report")}
             className={cardClasses}
           >
@@ -216,8 +174,6 @@ function MainContainer() {
 
         {/* Yaratilgan Reja */}
         <div
-          data-aos="fade-up"
-          data-aos-delay="560"
           onClick={() => navigate("/main/created-plans")}
           className={cardClasses}
         >
@@ -239,8 +195,6 @@ function MainContainer() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-4 px-2">
         <div
-          data-aos="fade-up"
-          data-aos-delay="560"
           onClick={() => navigate("/main/on-time")}
           className={cardClasses}
         >
@@ -258,8 +212,6 @@ function MainContainer() {
         </div>
 
         <div
-          data-aos="fade-up"
-          data-aos-delay="560"
           onClick={() => navigate("/main/late")}
           className={cardClasses}
         >
@@ -277,8 +229,6 @@ function MainContainer() {
         </div>
 
         <div
-          data-aos="fade-up"
-          data-aos-delay="560"
           onClick={() => navigate("/main/expired-deadlines")}
           className={cardClasses}
         >

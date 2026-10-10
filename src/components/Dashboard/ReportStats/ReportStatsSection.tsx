@@ -37,13 +37,12 @@ const MonthlyTrendChart = lazy(() => import("./StatsCharts").then((m) => ({ defa
 const DisciplineDonut = lazy(() => import("./StatsCharts").then((m) => ({ default: m.DisciplineDonut })));
 const RegionChart = lazy(() => import("./StatsCharts").then((m) => ({ default: m.RegionChart })));
 
-const PERIODS: OverviewPeriod[] = ["month", "quarter", "year", "all"];
+const PERIODS: OverviewPeriod[] = ["all", "year", "quarter", "month"];
 
 /** Muddat intizomi bo'laklari → mavjud ro'yxat sahifalari. */
 const DISCIPLINE_LINKS: Record<DisciplineKey, string> = {
   on_time: "/main/on-time",
   late: "/main/late",
-  in_review: "/main/send-report",
   missing: "/main/expired-deadlines",
 };
 
@@ -163,7 +162,7 @@ function DisciplinePanel({ data, fmt }: { data: DashboardOverview["discipline"];
 export default function ReportStatsSection() {
   const { t } = useTranslation();
   const lang = useSelector((state: RootState) => state.language.lang);
-  const [period, setPeriod] = useState<OverviewPeriod>("year");
+  const [period, setPeriod] = useState<OverviewPeriod>("all");
   const fmt = useFormatters();
   const { data, isLoading, isFetching, isError, refetch } = useGetDashboardOverviewQuery({ lang, period });
 

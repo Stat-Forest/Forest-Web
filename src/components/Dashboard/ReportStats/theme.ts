@@ -15,11 +15,12 @@ const STATUS_COLORS: Record<"light" | "dark", Record<ReportStatusKey, string>> =
 /** Stack tartibi (pastdan yuqoriga) va legend tartibi. */
 export const STATUS_ORDER: ReportStatusKey[] = ["accepted", "sent", "saved", "cancelled"];
 
-export const DISCIPLINE_KEYS = ["on_time", "late", "in_review", "missing"] as const;
+/** Stat bosh sahifasi kartalari bilan bir xil: Bajarilgan, Muddatidan kech bajarilgan, Bajarilmagan. */
+export const DISCIPLINE_KEYS = ["on_time", "late", "missing"] as const;
 export type DisciplineKey = (typeof DISCIPLINE_KEYS)[number];
 
 export function disciplineColors(status: Record<ReportStatusKey, string>): Record<DisciplineKey, string> {
-  return { on_time: status.accepted, late: status.sent, in_review: status.saved, missing: status.cancelled };
+  return { on_time: status.accepted, late: status.sent, missing: status.cancelled };
 }
 
 export interface ChartTheme {
