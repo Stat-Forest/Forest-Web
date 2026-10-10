@@ -101,10 +101,6 @@ export function createBaseQueryWithReauth(
                 payload: { token: newAccess, user: updatedUser },
               });
 
-              // Token yangilangandan keyin barcha tag'larni invalidate qilish uchun
-              // event yuboramiz (AppWrapper'da qabul qilinadi)
-              window.dispatchEvent(new CustomEvent("tokenRefreshed"));
-
               return { ok: true, access: newAccess, refresh: newRefresh };
             })().finally(() => {
               refreshInFlight = null;

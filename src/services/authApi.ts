@@ -21,6 +21,8 @@ interface LoginResponse extends User {}
 // ✅ Refresh response
 interface RefreshResponse {
   access: string;
+  // ROTATE_REFRESH_TOKENS=True: backend yangi refresh token ham qaytaradi
+  refresh?: string;
 }
 
 // ✅ VerifyCode response
