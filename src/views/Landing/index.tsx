@@ -223,6 +223,8 @@ export default function ModernLanding() {
 
   // Hero reveal
   const { ref: heroRef, inView: heroInView } = useInView(0.1);
+  // GIS xarita (Leaflet + 3 ta so'rov) faqat ko'rinish maydoniga yaqinlashganda yuklanadi
+  const { ref: mapRef, inView: mapInView } = useInView(0.05);
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] dark:bg-[#0B132B] text-slate-900 dark:text-slate-100 selection:bg-emerald-100 selection:text-emerald-900 transition-colors duration-300">
@@ -302,14 +304,21 @@ export default function ModernLanding() {
           className="mb-12 scroll-mt-24 sm:mb-14 lg:mb-16"
         >
           {/* Leaflet z-index'lari header/dialoglarga chiqmasligi uchun: relative isolate z-0 */}
-          <div className="relative isolate z-0 h-[520px] w-full overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-950 shadow-xl md:h-[min(78vh,760px)] md:min-h-[480px] lg:rounded-3xl">
-            <Suspense
-              fallback={
-                <div className="h-full w-full animate-pulse bg-gradient-to-br from-slate-950 via-emerald-950/70 to-slate-900" />
-              }
-            >
-              <PublicGisMap />
-            </Suspense>
+          <div
+            ref={mapRef}
+            className="relative isolate z-0 h-[520px] w-full overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-950 shadow-xl md:h-[min(78vh,760px)] md:min-h-[480px] lg:rounded-3xl"
+          >
+            {mapInView ? (
+              <Suspense
+                fallback={
+                  <div className="h-full w-full animate-pulse bg-gradient-to-br from-slate-950 via-emerald-950/70 to-slate-900" />
+                }
+              >
+                <PublicGisMap />
+              </Suspense>
+            ) : (
+              <div className="h-full w-full bg-gradient-to-br from-slate-950 via-emerald-950/70 to-slate-900" />
+            )}
           </div>
         </section>
 

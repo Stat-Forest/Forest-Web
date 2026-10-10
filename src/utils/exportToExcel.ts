@@ -1,11 +1,12 @@
-import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-export const exportReportsToExcel = (
+export const exportReportsToExcel = async (
   data: any[],
   t: (key: string) => string,
   deadline_at: boolean,
 ) => {
+  // SheetJS (~420 KB) faqat eksport bosilganda yuklanadi
+  const XLSX = await import("xlsx");
   const formattedData = data.map((item, index) => ({
     "№": index + 1,
     [t("item_12")]: item.organization_name,

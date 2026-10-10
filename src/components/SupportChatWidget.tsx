@@ -93,7 +93,8 @@ function SupportChatWidget() {
     isLoading: conversationsLoading,
     refetch: refetchConversations,
   } = useGetConversationsListQuery(undefined, {
-    pollingInterval: 15000,
+    // Widget yopiq bo'lsa har 15 s so'rov yuborilmaydi
+    pollingInterval: isOpen ? 15000 : 0,
   });
 
   const { data: historyMessages = [], isFetching: messagesLoading } =

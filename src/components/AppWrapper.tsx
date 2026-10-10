@@ -5,11 +5,6 @@ import { logout, setToken } from "@/features/authSlice";
 import { RootState } from "@/app/store";
 import { useRefreshTokenMutation } from "@/services/authApi";
 import { migrateLocalStorageToCookies } from "@/utils/migration";
-import { reportApi } from "@/services/reportsApi";
-import { generalApi } from "@/services/generalApi";
-import { statistikApi } from "@/services/statistikApi";
-import { sumApi } from "@/services/sumApi";
-import { billingApi } from "@/services/billingApi";
 import SelectionVoiceButton from "@/components/common/SelectionVoiceButton";
 
 const AppWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -28,24 +23,6 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Token yangilangandan keyin barcha endpoint'larni yangilash
-  useEffect(() => {
-    const handleTokenRefreshed = () => {
-      // Token yangilangandan keyin barcha tag'larni invalidate qilamiz
-      // Bu barcha active query'larni yangilaydi va yangi ma'lumotlarni olib keladi
-      dispatch(reportApi.util.invalidateTags(["Reports"]));
-      dispatch(generalApi.util.invalidateTags(["Reports"]));
-      dispatch(statistikApi.util.invalidateTags(["Reports"]));
-      dispatch(sumApi.util.invalidateTags(["Reports"]));
-      dispatch(billingApi.util.invalidateTags(["BillingContracts", "BillingFiles"]));
-    };
-
-    window.addEventListener("tokenRefreshed", handleTokenRefreshed);
-    return () => {
-      window.removeEventListener("tokenRefreshed", handleTokenRefreshed);
-    };
-  }, [dispatch]);
-
   useEffect(() => {
     if (!user?.refresh) return;
 
@@ -56,22 +33,17 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
 
         if (res?.access) {
           const newAccess = res.access;
-          const updatedUser = { ...user, access: newAccess };
+          // ROTATE_REFRESH_TOKENS: yangi refresh ham saqlanadi, aks holda
+          // keyingi refresh blacklist'dagi eski token bilan ketib logout bo'lardi
+          const updatedUser = { ...user, access: newAccess, refresh: res.refresh ?? user.refresh };
           
           // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
           encryptData("token", newAccess, "token", 30);
           encryptData("user", updatedUser, "user", 30);
           
-          // Update Redux state
+          // Update Redux state. Token yangilangani ma'lumotlarni o'zgartirmaydi —
+          // ilgari shu yerda barcha so'rovlar qayta yuborilardi (2000 qatorlisi ham).
           dispatch(setToken({ token: newAccess, user: updatedUser }));
-          
-          // Token yangilangandan keyin barcha endpoint'larni yangilaymiz
-          // Bu yangi ma'lumotlarni avtomatik olib keladi
-          dispatch(reportApi.util.invalidateTags(["Reports"]));
-          dispatch(generalApi.util.invalidateTags(["Reports"]));
-          dispatch(statistikApi.util.invalidateTags(["Reports"]));
-          dispatch(sumApi.util.invalidateTags(["Reports"]));
-          dispatch(billingApi.util.invalidateTags(["BillingContracts", "BillingFiles"]));
         } else {
           dispatch(logout());
         }

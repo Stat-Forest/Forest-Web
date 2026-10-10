@@ -9,8 +9,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { data } from "@/services/chartData";
 
 import {
@@ -59,6 +57,11 @@ const StaffChart = () => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   const exportAs = async (type: "pdf" | "png" | "svg" | "print") => {
+    // jsPDF va html2canvas (~300 KB) faqat eksport bosilganda yuklanadi
+    const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
+      import("jspdf"),
+      import("html2canvas"),
+    ]);
     if (!chartRef.current) return;
 
     const node = chartRef.current;

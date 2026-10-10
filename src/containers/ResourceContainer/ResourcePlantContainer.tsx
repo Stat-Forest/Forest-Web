@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useDebounce } from "@/utils/useDebounce";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { RootState } from "@/app/store";
@@ -66,6 +67,8 @@ function ResourcePlantContainer({
   const [selectedPeriodReport, setSelectedPeriodReport] = useState("");
   const [selectedStatusReport, setSelectedStatusReport] = useState("");
   const [searchTermReport, setSearchTermReport] = useState("");
+  // Har harfda emas, yozish to'xtagach 300 ms dan keyin so'rov ketadi
+  const debouncedSearchTermReport = useDebounce(searchTermReport, 300);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [selectedQuarter, setSelectedQuarter] = useState<string>("");
   const [deadlinePage, setDeadlinePage] = useState(1);
@@ -144,7 +147,7 @@ function ResourcePlantContainer({
           status: `status=${selectedStatusReport}`,
           organization__region: selectedOrganizationReport,
           statement__period: selectedPeriodReport,
-          search: searchTermReport,
+          search: debouncedSearchTermReport,
           page: 1,
           per_page: 2000,
           lang,
