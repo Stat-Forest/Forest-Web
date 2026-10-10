@@ -590,3 +590,35 @@ export interface PublicXojalik {
   id: UUID;
   name: string;
 }
+
+// =====================================================================
+// Ochiq GIS (landing, autentifikatsiyasiz) — `GET public/geo-list/`
+// =====================================================================
+
+export interface PublicGeoListParams {
+  xojalik?: UUID | "";
+  number?: string;
+}
+
+/**
+ * Faqat faol shartnomalar. Maxfiylik: ijarachi nomi va pul/qarzdorlik
+ * ma'lumotlari backend'dan umuman kelmaydi.
+ */
+export interface PublicGeoItem {
+  id: UUID;
+  number: string;
+  contract_number: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  boundary_geojson: BoundaryGeoJson | null;
+  rent_area: number | null;
+  xojalik_name: string | null;
+  activity_name: string | null;
+}
+
+export interface PublicGeoList {
+  count: number;
+  total_area: number;
+  /** Ko'pi bilan 2000 ta. */
+  results: PublicGeoItem[];
+}

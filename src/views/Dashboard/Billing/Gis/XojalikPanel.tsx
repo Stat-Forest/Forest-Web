@@ -27,6 +27,11 @@ export interface XojalikPanelProps {
   onXojalikChange: (id: string) => void;
   onKonturChange: (id: string) => void;
   onKonturSearchChange: (value: string) => void;
+  /**
+   * `true` — suzuvchi karta/sarlavha/yig'ish tugmasisiz, faqat maydonlar
+   * (masalan landing xaritasidagi "Xaritani filterlash" paneli ichida).
+   */
+  embedded?: boolean;
 }
 
 /**
@@ -46,6 +51,7 @@ function XojalikPanel({
   onXojalikChange,
   onKonturChange,
   onKonturSearchChange,
+  embedded = false,
 }: XojalikPanelProps) {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState<boolean>(
@@ -60,6 +66,92 @@ function XojalikPanel({
 
   const selectClass =
     "h-9 w-full rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-800 dark:text-slate-100 shadow-xs";
+
+  const fields = (
+    <>
+      <Select
+        value={selectedViloyatId}
+        onValueChange={onViloyatChange}
+      >
+        <SelectTrigger className={selectClass} aria-label={t("billing.select_region")}>
+          <SelectValue placeholder={t("billing.select_region")} />
+        </SelectTrigger>
+        <SelectContent className="z-[1100] max-h-72">
+          {viloyatlar.map((v) => (
+            <SelectItem key={v.id} value={v.id}>
+              {v.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedXojalikId}
+        onValueChange={onXojalikChange}
+        disabled={!selectedViloyatId}
+      >
+        <SelectTrigger className={selectClass} aria-label={t("billing.select_xojalik")}>
+          <SelectValue placeholder={t("billing.select_xojalik")} />
+        </SelectTrigger>
+        <SelectContent className="z-[1100] max-h-72">
+          {xojaliklar.map((x) => (
+            <SelectItem key={x.id} value={x.id}>
+              {x.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Input
+        type="text"
+        value={konturSearch}
+        onChange={(e) => onKonturSearchChange(e.target.value)}
+        placeholder={t("billing.kontur_search_ph")}
+        disabled={!selectedXojalikId}
+        className="h-9 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs sm:text-sm shadow-xs"
+      />
+
+      <Select
+        value={selectedKonturId}
+        onValueChange={onKonturChange}
+        disabled={!selectedXojalikId || konturLoading}
+      >
+        <SelectTrigger className={selectClass} aria-label={t("billing.select_kontur")}>
+          {konturLoading ? (
+            <span className="flex items-center gap-2 text-slate-500">
+              <Loader2 size={14} className="animate-spin" />
+              {t("billing.loading")}
+            </span>
+          ) : (
+            <SelectValue placeholder={t("billing.select_kontur")} />
+          )}
+        </SelectTrigger>
+        <SelectContent className="z-[1100] max-h-72">
+          {filteredKonturlar.visible.length === 0 ? (
+            <div className="px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400">
+              {t("billing.no_konturs")}
+            </div>
+          ) : (
+            filteredKonturlar.visible.map((k) => (
+              <SelectItem key={k.id} value={k.id}>
+                №{k.kontur_raqami}
+                {k.area_ga ? ` — ${k.area_ga} ga` : ""}
+              </SelectItem>
+            ))
+          )}
+          {filteredKonturlar.hidden > 0 && (
+            <div className="px-2 py-1.5 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700">
+              {t("billing.kontur_more", { count: filteredKonturlar.hidden })}
+            </div>
+          )}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="flex flex-col gap-2">{fields}</div>;
+  }
 
   return (
     <div
@@ -77,87 +169,7 @@ function XojalikPanel({
         {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
 
-      {!collapsed && (
-        <div className="flex flex-col gap-2 px-3 pb-3">
-          <Select
-            value={selectedViloyatId}
-            onValueChange={onViloyatChange}
-          >
-            <SelectTrigger className={selectClass} aria-label={t("billing.select_region")}>
-              <SelectValue placeholder={t("billing.select_region")} />
-            </SelectTrigger>
-            <SelectContent className="z-[1100] max-h-72">
-              {viloyatlar.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={selectedXojalikId}
-            onValueChange={onXojalikChange}
-            disabled={!selectedViloyatId}
-          >
-            <SelectTrigger className={selectClass} aria-label={t("billing.select_xojalik")}>
-              <SelectValue placeholder={t("billing.select_xojalik")} />
-            </SelectTrigger>
-            <SelectContent className="z-[1100] max-h-72">
-              {xojaliklar.map((x) => (
-                <SelectItem key={x.id} value={x.id}>
-                  {x.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="text"
-            value={konturSearch}
-            onChange={(e) => onKonturSearchChange(e.target.value)}
-            placeholder={t("billing.kontur_search_ph")}
-            disabled={!selectedXojalikId}
-            className="h-9 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs sm:text-sm shadow-xs"
-          />
-
-          <Select
-            value={selectedKonturId}
-            onValueChange={onKonturChange}
-            disabled={!selectedXojalikId || konturLoading}
-          >
-            <SelectTrigger className={selectClass} aria-label={t("billing.select_kontur")}>
-              {konturLoading ? (
-                <span className="flex items-center gap-2 text-slate-500">
-                  <Loader2 size={14} className="animate-spin" />
-                  {t("billing.loading")}
-                </span>
-              ) : (
-                <SelectValue placeholder={t("billing.select_kontur")} />
-              )}
-            </SelectTrigger>
-            <SelectContent className="z-[1100] max-h-72">
-              {filteredKonturlar.visible.length === 0 ? (
-                <div className="px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400">
-                  {t("billing.no_konturs")}
-                </div>
-              ) : (
-                filteredKonturlar.visible.map((k) => (
-                  <SelectItem key={k.id} value={k.id}>
-                    №{k.kontur_raqami}
-                    {k.area_ga ? ` — ${k.area_ga} ga` : ""}
-                  </SelectItem>
-                ))
-              )}
-              {filteredKonturlar.hidden > 0 && (
-                <div className="px-2 py-1.5 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700">
-                  {t("billing.kontur_more", { count: filteredKonturlar.hidden })}
-                </div>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      {!collapsed && <div className="flex flex-col gap-2 px-3 pb-3">{fields}</div>}
     </div>
   );
 }

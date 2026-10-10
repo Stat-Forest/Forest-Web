@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -9,7 +9,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, BarChart3, Coins, RefreshCw, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import {
+  AlertTriangle,
+  BarChart3,
+  ChevronDown,
+  Coins,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -35,20 +44,46 @@ import {
  * - `public`    — landing (autentifikatsiyasiz `public/rent-stats/`, `public/xojaliklar/`)
  * - `contracts` — shartnomalar sahifasi (`contracts/rent-stats/`, foydalanuvchi ko'lamida)
  *
+ * Ko'rinishlar (`variant`): `default` — oddiy karta; `featured` — landing'ning to'q
+ * gradientli bloki; `compact` — ixcham (shartnomalar sahifasi): xulosa chiplari
+ * diagrammalar ustida, past diagrammalar, yig'ib qo'yish tugmasi (holat localStorage'da).
+ *
  * recharts og'ir — chaqiruvchi `lazy()` + `Suspense` bilan yuklashi kerak.
  */
 export interface RentRevenueStatsProps {
   mode: "public" | "contracts";
   /** Berilsa sarlavha (`{title} ({from}-{to})`) filtrlar yonida ko'rsatiladi. */
   title?: string;
-  /** `featured` — landing uchun to'q gradientli ko'rinish (sarlavha, katta KPI'lar, gradient bar'lar). */
-  variant?: "default" | "featured";
+  /**
+   * `featured` — landing uchun to'q gradientli ko'rinish (sarlavha, katta KPI'lar, gradient bar'lar).
+   * `compact` — ixcham: kichik sarlavha, xulosa chiplari diagrammalar ustida, 140px diagrammalar,
+   * yig'ish/yoyish tugmasi (holati localStorage'da saqlanadi, boshida yoyilgan).
+   */
+  variant?: "default" | "featured" | "compact";
   /** `featured` sarlavhasi ostidagi izoh. */
   subtitle?: string;
   className?: string;
 }
 
 const ALL = "all";
+
+const COLLAPSED_STORAGE_KEY = "rent-stats-compact-collapsed";
+
+const readCollapsed = (): boolean => {
+  try {
+    return window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeCollapsed = (value: boolean) => {
+  try {
+    window.localStorage.setItem(COLLAPSED_STORAGE_KEY, value ? "1" : "0");
+  } catch {
+    // localStorage yopiq (private rejim va h.k.) — holat faqat shu sessiyada
+  }
+};
 
 const CHART_COLORS = {
   price: "#1b5e20",
@@ -78,6 +113,14 @@ const hasData = (stats: RentStats | undefined): stats is RentStats =>
 
 function RentRevenueStats({ mode, title, subtitle, variant = "default", className = "" }: RentRevenueStatsProps) {
   const featured = variant === "featured";
+  const isCompact = variant === "compact";
+  const bodyId = useId();
+  const [collapsed, setCollapsed] = useState<boolean>(() => isCompact && readCollapsed());
+  const toggleCollapsed = () =>
+    setCollapsed((prev) => {
+      writeCollapsed(!prev);
+      return !prev;
+    });
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "uz-UZ";
   const isPublic = mode === "public";
@@ -151,13 +194,16 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
 
   const triggerClass = featured
     ? "h-9 rounded-lg bg-white/10 border-white/15 text-white backdrop-blur-md hover:bg-white/15 [&_svg]:text-emerald-200"
-    : "h-9 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100";
+    : isCompact
+      ? "h-8 data-[size=default]:h-8 rounded-lg px-2.5 py-1 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100"
+      : "h-9 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100";
+  const yearWidth = isCompact ? "w-[84px]" : "w-[96px]";
 
   const filters = (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <FilterField label={t("rent_stats.from_year")} featured={featured}>
+    <div className={`flex flex-wrap items-center ${isCompact ? "gap-x-3 gap-y-2" : "gap-x-4 gap-y-2"}`}>
+      <FilterField label={t("rent_stats.from_year")} featured={featured} compact={isCompact}>
         <Select value={String(fromYear)} onValueChange={changeFrom}>
-          <SelectTrigger className={`${triggerClass} w-[96px]`} aria-label={t("rent_stats.from_year")}>
+          <SelectTrigger className={`${triggerClass} ${yearWidth}`} aria-label={t("rent_stats.from_year")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -169,9 +215,9 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
           </SelectContent>
         </Select>
       </FilterField>
-      <FilterField label={t("rent_stats.to_year")} featured={featured}>
+      <FilterField label={t("rent_stats.to_year")} featured={featured} compact={isCompact}>
         <Select value={String(toYear)} onValueChange={changeTo}>
-          <SelectTrigger className={`${triggerClass} w-[96px]`} aria-label={t("rent_stats.to_year")}>
+          <SelectTrigger className={`${triggerClass} ${yearWidth}`} aria-label={t("rent_stats.to_year")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -183,9 +229,12 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
           </SelectContent>
         </Select>
       </FilterField>
-      <FilterField label={t("rent_stats.xojalik")} featured={featured}>
+      <FilterField label={t("rent_stats.xojalik")} featured={featured} compact={isCompact}>
         <Select value={xojalik} onValueChange={setXojalik}>
-          <SelectTrigger className={`${triggerClass} w-[220px] max-w-[70vw]`} aria-label={t("rent_stats.xojalik")}>
+          <SelectTrigger
+            className={`${triggerClass} ${isCompact ? "w-[200px]" : "w-[220px]"} max-w-[70vw]`}
+            aria-label={t("rent_stats.xojalik")}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="max-h-[320px]">
@@ -203,10 +252,14 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
 
   let body: ReactNode;
   if (isLoading) {
-    body = <StatsSkeleton featured={featured} />;
+    body = isCompact ? <CompactSkeleton collapsed={collapsed} /> : <StatsSkeleton featured={featured} />;
   } else if (isError) {
     body = (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-10 text-center">
+      <div
+        className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 text-center ${
+          isCompact ? "py-5" : "py-10"
+        }`}
+      >
         <AlertTriangle size={22} className="text-red-500 dark:text-red-400" />
         <p className="text-sm font-medium text-red-700 dark:text-red-300">{t("rent_stats.error")}</p>
         <button
@@ -222,7 +275,9 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
   } else if (!hasData(stats)) {
     body = (
       <div
-        className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-12 text-center ${
+        className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 text-center ${
+          isCompact ? "py-6" : "py-12"
+        } ${
           featured
             ? "border-white/15 bg-white/5"
             : "border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40"
@@ -241,16 +296,17 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
     const sign = diff > 0 ? "+" : negative ? "−" : "";
     const growthText = `${sign}${formatMoney(Math.abs(diff), currency)} (${sign}${Math.abs(percent).toFixed(1)}%)`;
     const max = stats.max;
+    const iconSize = featured ? 22 : isCompact ? 16 : 20;
 
     const summaries: SummaryCardProps[] = [
       {
-        icon: <Coins size={featured ? 22 : 20} />,
+        icon: <Coins size={iconSize} />,
         tone: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
         label: t("rent_stats.average_annual"),
         value: formatMoney(stats.average_annual, currency),
       },
       {
-        icon: negative ? <TrendingDown size={featured ? 22 : 20} /> : <TrendingUp size={featured ? 22 : 20} />,
+        icon: negative ? <TrendingDown size={iconSize} /> : <TrendingUp size={iconSize} />,
         tone: negative
           ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300"
           : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
@@ -259,7 +315,7 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
         negative,
       },
       {
-        icon: <Trophy size={featured ? 22 : 20} />,
+        icon: <Trophy size={iconSize} />,
         tone: "bg-lime-50 text-lime-700 dark:bg-lime-500/15 dark:text-lime-300",
         label: t("rent_stats.max"),
         value: max
@@ -269,25 +325,38 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
     ];
 
     const chartGrid = (
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className={`grid grid-cols-1 lg:grid-cols-3 ${isCompact ? "gap-3" : "gap-4"}`}>
         {charts.map((chart) => (
           <div
             key={chart.key}
             className={
               featured
                 ? "rounded-2xl border border-white/10 bg-white/[0.06] p-3 sm:p-4 backdrop-blur-md"
-                : "rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3 sm:p-4"
+                : isCompact
+                  ? "rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 px-2.5 pt-2 pb-1.5"
+                  : "rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3 sm:p-4"
             }
           >
-            <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: featured ? FEATURED_COLORS[chart.key].from : chart.color }} />
-              <p className={`text-sm font-semibold ${featured ? "text-slate-100" : "text-slate-700 dark:text-slate-200"}`}>
+            <div className={`flex items-center justify-center gap-2 ${isCompact ? "mb-1" : "mb-2"}`}>
+              <span
+                className={`${isCompact ? "h-2 w-2" : "h-2.5 w-2.5"} rounded-full`}
+                style={{ backgroundColor: featured ? FEATURED_COLORS[chart.key].from : chart.color }}
+              />
+              <p
+                className={`${isCompact ? "text-xs" : "text-sm"} font-semibold ${
+                  featured ? "text-slate-100" : "text-slate-700 dark:text-slate-200"
+                }`}
+              >
                 {chart.label}
               </p>
             </div>
-            <div className={`h-[220px] w-full ${featured ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>
+            <div
+              className={`${isCompact ? "h-[140px]" : "h-[220px]"} w-full ${
+                featured ? "text-slate-300" : "text-slate-500 dark:text-slate-400"
+              }`}
+            >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.years} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
+                <BarChart data={stats.years} margin={{ top: isCompact ? 4 : 8, right: 4, bottom: 0, left: 0 }}>
                   {featured && (
                     <defs>
                       <linearGradient id={`rent-grad-${chart.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -299,13 +368,13 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
                   <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={featured ? 0.12 : 0.15} />
                   <XAxis
                     dataKey="year"
-                    tick={{ fill: "currentColor", fontSize: 12 }}
+                    tick={{ fill: "currentColor", fontSize: isCompact ? 10 : 12 }}
                     tickLine={false}
                     axisLine={{ stroke: "currentColor", strokeOpacity: 0.3 }}
                   />
                   <YAxis
-                    width={52}
-                    tick={{ fill: "currentColor", fontSize: 11 }}
+                    width={isCompact ? 44 : 52}
+                    tick={{ fill: "currentColor", fontSize: isCompact ? 10 : 11 }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={compactTick}
@@ -319,8 +388,8 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
                     dataKey={chart.key}
                     name={chart.label}
                     fill={featured ? `url(#rent-grad-${chart.key})` : chart.color}
-                    radius={[6, 6, 0, 0]}
-                    maxBarSize={44}
+                    radius={isCompact ? [4, 4, 0, 0] : [6, 6, 0, 0]}
+                    maxBarSize={isCompact ? 30 : 44}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -330,7 +399,13 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
       </div>
     );
 
-    const summaryGrid = (
+    const summaryGrid = isCompact ? (
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {summaries.map((card) => (
+          <CompactChip key={card.label} {...card} />
+        ))}
+      </div>
+    ) : (
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {summaries.map((card) =>
           featured ? <FeaturedKpi key={card.label} {...card} /> : <SummaryCard key={card.label} {...card} />,
@@ -339,8 +414,17 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
     );
 
     body = (
-      <div className={`space-y-4 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
-        {featured ? (
+      <div
+        className={`${isCompact ? "space-y-3" : "space-y-4"} transition-opacity ${
+          isFetching ? "opacity-60" : "opacity-100"
+        }`}
+      >
+        {isCompact ? (
+          <>
+            {summaryGrid}
+            {!collapsed && chartGrid}
+          </>
+        ) : featured ? (
           <>
             {summaryGrid}
             {chartGrid}
@@ -392,6 +476,45 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
     );
   }
 
+  if (isCompact) {
+    const heading = title ?? t("rent_stats.title");
+    return (
+      <section
+        className={`rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-3 sm:p-4 shadow-xs backdrop-blur-md transition-colors space-y-3 ${className}`}
+      >
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-controls={bodyId}
+            title={collapsed ? t("rent_stats.expand") : t("rent_stats.collapse")}
+            className="group mr-auto flex min-w-0 items-center gap-2 rounded-lg text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <Coins size={15} />
+            </span>
+            <h3 className="truncate text-sm sm:text-[15px] font-bold text-slate-800 dark:text-slate-100">
+              {heading}{" "}
+              <span className="font-medium text-slate-400 dark:text-slate-500">
+                ({shownFrom}–{shownTo})
+              </span>
+            </h3>
+            <ChevronDown
+              size={16}
+              className={`shrink-0 text-slate-400 transition-transform group-hover:text-emerald-600 dark:group-hover:text-emerald-400 ${
+                collapsed ? "" : "rotate-180"
+              }`}
+            />
+            <span className="sr-only">{collapsed ? t("rent_stats.expand") : t("rent_stats.collapse")}</span>
+          </button>
+          {!collapsed && filters}
+        </div>
+        <div id={bodyId}>{body}</div>
+      </section>
+    );
+  }
+
   return (
     <section
       className={`rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-4 sm:p-5 shadow-xs backdrop-blur-md transition-colors space-y-4 ${className}`}
@@ -409,11 +532,21 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
   );
 }
 
-function FilterField({ label, children, featured = false }: { label: string; children: ReactNode; featured?: boolean }) {
+function FilterField({
+  label,
+  children,
+  featured = false,
+  compact = false,
+}: {
+  label: string;
+  children: ReactNode;
+  featured?: boolean;
+  compact?: boolean;
+}) {
   return (
-    <label className="flex items-center gap-2">
+    <label className={`flex items-center ${compact ? "gap-1.5" : "gap-2"}`}>
       <span
-        className={`text-xs sm:text-sm font-medium whitespace-nowrap ${
+        className={`${compact ? "text-xs" : "text-xs sm:text-sm"} font-medium whitespace-nowrap ${
           featured ? "text-emerald-100/80" : "text-slate-500 dark:text-slate-400"
         }`}
       >
@@ -441,6 +574,27 @@ function SummaryCard({ icon, tone, label, value, negative }: SummaryCardProps) {
         <p className="truncate text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
         <p
           className={`text-base sm:text-lg font-bold tabular-nums break-words text-emerald-700 dark:text-emerald-400 ${valueClass}`}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CompactChip({ icon, tone, label, value, negative }: SummaryCardProps) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 px-3 py-2">
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone}`}>{icon}</div>
+      <div className="min-w-0">
+        <p className="truncate text-[11px] font-medium leading-tight text-slate-500 dark:text-slate-400" title={label}>
+          {label}
+        </p>
+        <p
+          className={`truncate text-sm font-bold leading-snug tabular-nums ${
+            negative ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"
+          }`}
+          title={value}
         >
           {value}
         </p>
@@ -501,6 +655,31 @@ function ChartTooltip({ spec, t, active, payload }: ChartTooltipProps) {
           {spec.format(Number(item.value) || 0)}
         </span>
       </div>
+    </div>
+  );
+}
+
+function CompactSkeleton({ collapsed }: { collapsed: boolean }) {
+  return (
+    <div className="space-y-3" aria-busy="true">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-[50px] animate-pulse rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40"
+          />
+        ))}
+      </div>
+      {!collapsed && (
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[172px] animate-pulse rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40"
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

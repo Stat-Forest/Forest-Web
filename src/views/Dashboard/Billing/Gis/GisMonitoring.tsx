@@ -27,25 +27,19 @@ import {
 import { setupBaseMap, type BaseLayerLabels } from "@/features/billing/mapLayers";
 import {
   buildContractPopupHtml,
-  createContractPinIcon,
   createKonturHighlightLayer,
   createXojalikBoundaryLayer,
   createXojalikMarkersLayer,
+  drawContractsOnLayer,
   findXojalikMarker,
+  fitMapToContracts,
   flyToKontur,
   flyToXojalik,
   statusColor,
   type ContractPopupLabels,
 } from "@/features/billing/markers";
-import { getPolygonLocations } from "@/features/billing/contractPolygons";
 import { UZ_MAP_CENTER, UZ_MAP_ZOOM } from "@/features/billing/constants";
 import type { ContractGeoItem, ViloyatOption, XojalikLocation } from "@/features/billing/types";
-
-const num = (v: number | string | null | undefined): number | null => {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-};
 
 function GisMonitoring() {
   const { t, i18n } = useTranslation();
@@ -314,94 +308,11 @@ function GisMonitoring() {
     markersLayer.clearLayers();
     if (!contracts) return;
 
-    const allBounds: Array<L.LatLngBounds | L.LatLng> = [];
-    const iconCache = new Map<string, L.DivIcon>();
-    const iconFor = (color: string) => {
-      let icon = iconCache.get(color);
-      if (!icon) {
-        icon = createContractPinIcon(color);
-        iconCache.set(color, icon);
-      }
-      return icon;
-    };
-
-    contracts.forEach((c: ContractGeoItem) => {
-      const color = statusColor(c.status);
-      let boundaryLayer: L.GeoJSON | null = null;
-      let markerLatLng: L.LatLng | null = null;
-
-      // 1) Chegara (bo'lsa) — har doim ko'rinadi
-      if (c.boundary_geojson) {
-        try {
-          boundaryLayer = L.geoJSON(c.boundary_geojson as GeoJSON.GeoJsonObject, {
-            style: { color, weight: 2, fillColor: color, fillOpacity: 0.3, opacity: 1 },
-          });
-          boundaryLayer.addTo(markersLayer);
-          const b = boundaryLayer.getBounds();
-          if (b.isValid()) {
-            allBounds.push(b);
-            markerLatLng = b.getCenter();
-          }
-        } catch {
-          boundaryLayer = null;
-        }
-      }
-
-      // Bir nechta poligonli chegara: har bir poligonga o'z nuqtasida alohida pin
-      const polygonLocations = getPolygonLocations(c.boundary_geojson);
-      if (polygonLocations.length > 1) {
-        polygonLocations.forEach((location) => {
-          const polygonMarker = L.marker(L.latLng(location.lat, location.lng), {
-            icon: iconFor(color),
-          });
-          polygonMarker.bindPopup(buildContractPopupHtml(c, location, popupLabels));
-          polygonMarker.on("click", () => polygonMarker.openPopup());
-          polygonMarker.on("dblclick", () => {
-            const polygonBounds = L.geoJSON(location.polygon).getBounds();
-            if (polygonBounds.isValid()) {
-              map.fitBounds(polygonBounds, { maxZoom: 17, padding: [20, 20] });
-            }
-          });
-          polygonMarker.addTo(markersLayer);
-        });
-        return;
-      }
-
-      // 2) Joylashuv nuqtasi (lat/lng bo'lsa shu, aks holda chegara markazi)
-      const lat = num(c.latitude);
-      const lng = num(c.longitude);
-      if (lat !== null && lng !== null) {
-        markerLatLng = L.latLng(lat, lng);
-        allBounds.push(markerLatLng);
-      }
-      if (!markerLatLng) return;
-
-      const point = markerLatLng;
-      const marker = L.marker(point, { icon: iconFor(color) });
-      marker.bindPopup(buildContractPopupHtml(c, null, popupLabels));
-      marker.on("click", () => marker.openPopup());
-      marker.on("dblclick", () => {
-        const b = boundaryLayer?.getBounds();
-        if (b && b.isValid()) {
-          map.fitBounds(b, { maxZoom: 17, padding: [20, 20] });
-        } else {
-          map.setView(point, 16);
-        }
-      });
-      marker.addTo(markersLayer);
+    const allBounds = drawContractsOnLayer<ContractGeoItem>(map, markersLayer, contracts, {
+      color: (c) => statusColor(c.status),
+      popupHtml: (c, location) => buildContractPopupHtml(c, location, popupLabels),
     });
-
-    if (allBounds.length > 0) {
-      try {
-        const bounds = L.latLngBounds([]);
-        allBounds.forEach((b) => bounds.extend(b));
-        if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [30, 30] });
-        }
-      } catch {
-        // noto'g'ri koordinatalar — e'tiborsiz
-      }
-    }
+    fitMapToContracts(map, allBounds);
   }, [mapReady, contracts, popupLabels]);
 
   // Foydalanuvchiga bitta xo'jalik biriktirilgan bo'lsa (billing Inspektor):
