@@ -30,6 +30,8 @@ import type {
   PageParams,
   Paginated,
   PrivilegeType,
+  PublicGeoList,
+  PublicGeoListParams,
   PublicXojalik,
   RenterListItem,
   RentStats,
@@ -301,6 +303,39 @@ export const billingApi = createApi({
     }),
 
     // =====================================================================
+    // Ochiq GIS (landing — autentifikatsiyasiz, faqat faol shartnomalar)
+    // =====================================================================
+    getPublicGeoList: builder.query<PublicGeoList, PublicGeoListParams | void>({
+      queryFn: (params, api, extraOptions) =>
+        publicQuery<PublicGeoList>(`/public/geo-list/${buildBillingQuery(params ?? undefined)}`, api, extraOptions),
+      keepUnusedDataFor: 300,
+    }),
+    getPublicXojalikLocations: builder.query<XojalikLocation[], void>({
+      queryFn: (_arg, api, extraOptions) =>
+        publicQuery<XojalikLocation[]>("/public/xojalik-locations/", api, extraOptions),
+      keepUnusedDataFor: 600,
+    }),
+    getPublicXojalikLocation: builder.query<XojalikLocationDetail, UUID>({
+      queryFn: (id, api, extraOptions) =>
+        publicQuery<XojalikLocationDetail>(`/public/xojalik-locations/${id}/`, api, extraOptions),
+      keepUnusedDataFor: 600,
+    }),
+    getPublicXojalikKonturs: builder.query<XojalikKontur[], UUID>({
+      queryFn: (xojalikLocationId, api, extraOptions) =>
+        publicQuery<XojalikKontur[]>(
+          `/public/xojalik-konturs/${buildBillingQuery({ xojalik_location: xojalikLocationId })}`,
+          api,
+          extraOptions,
+        ),
+      keepUnusedDataFor: 600,
+    }),
+    getPublicXojalikKontur: builder.query<XojalikKonturDetail, UUID>({
+      queryFn: (id, api, extraOptions) =>
+        publicQuery<XojalikKonturDetail>(`/public/xojalik-konturs/${id}/`, api, extraOptions),
+      keepUnusedDataFor: 600,
+    }),
+
+    // =====================================================================
     // GIS
     // =====================================================================
     getXojalikLocations: builder.query<XojalikLocation[], { region?: UUID | "" } | void>({
@@ -365,6 +400,12 @@ export const {
   useGetPublicRentStatsQuery,
   useGetPublicXojaliklarQuery,
   useGetContractsRentStatsQuery,
+  // Ochiq GIS (landing)
+  useGetPublicGeoListQuery,
+  useGetPublicXojalikLocationsQuery,
+  useLazyGetPublicXojalikLocationQuery,
+  useGetPublicXojalikKontursQuery,
+  useLazyGetPublicXojalikKonturQuery,
   // GIS
   useGetXojalikLocationsQuery,
   useGetXojalikLocationQuery,

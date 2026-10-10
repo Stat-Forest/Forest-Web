@@ -153,10 +153,10 @@ function ContractsPage() {
     <BillingLayout title={t("billing.contracts_title")}>
       <Suspense
         fallback={
-          <div className="h-[420px] w-full animate-pulse rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90" />
+          <div className="h-[290px] w-full animate-pulse rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90" />
         }
       >
-        <RentRevenueStats mode="contracts" title={t("rent_stats.title")} />
+        <RentRevenueStats mode="contracts" variant="compact" title={t("rent_stats.title")} />
       </Suspense>
       <StatusCards counts={counts} loading={countsLoading} status={status} onChange={changeStatus} />
       <SummaryCards summary={summary} loading={summaryLoading} year={year} onYearChange={changeYear} />
