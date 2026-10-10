@@ -9,8 +9,6 @@ import { useTranslation } from "react-i18next";
 import { useExportExcelMutation } from "@/services/reportsApi";
 import { base_url } from "@/services/baseUrl";
 import { decryptData } from "@/utils/crypto";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 
 interface ExportDropdownProps {
   onExportExcel?: () => void;
@@ -337,6 +335,13 @@ export default function ExportDropdown({
 
       // HTML yuklanishini kutish
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // jsPDF va html2canvas (~300 KB) faqat shu yerda kerak — sahifa bilan emas,
+      // bosilganda yuklanadi
+      const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
+        import("jspdf"),
+        import("html2canvas"),
+      ]);
 
       // HTML dan canvas yaratish
       const canvas = await html2canvas(printWindow.document.body, {

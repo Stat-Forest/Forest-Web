@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { read, utils, writeFileXLSX } from "xlsx";
 
 function RecurceTable() {
   const [htmlContent, setHtmlContent] = useState("");
@@ -15,6 +14,7 @@ function RecurceTable() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const { read, utils } = await import("xlsx");
     const data = await file.arrayBuffer();
     const workbook = read(data);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -26,10 +26,11 @@ function RecurceTable() {
   };
 
   // ✅ Export qilish (xlsx faylga)
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     const tableElement = tableRef.current?.getElementsByTagName("TABLE")[0];
     if (!tableElement) return;
 
+    const { utils, writeFileXLSX } = await import("xlsx");
     const workbook = utils.table_to_book(tableElement);
     writeFileXLSX(workbook, "ExportedData.xlsx");
   }, []);

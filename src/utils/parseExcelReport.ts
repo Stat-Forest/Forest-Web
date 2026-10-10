@@ -1,4 +1,7 @@
-import * as XLSX from "xlsx";
+import type { WorkSheet } from "xlsx";
+
+// SheetJS (~420 KB) faqat fayl o'qilganda yuklanadi (parseExcelBuffer ichida)
+let XLSX: typeof import("xlsx");
 
 /** Excel jadvalidagi bitta katak (merge ma'lumoti bilan) */
 export interface ExcelGridCell {
@@ -66,7 +69,7 @@ export const isUuidString = (val: string): boolean => {
 };
 
 const isHiddenOrUuidRow = (
-  worksheet: XLSX.WorkSheet,
+  worksheet: WorkSheet,
   rowIndex: number,
   cells: ExcelGridCell[],
 ): boolean => {
@@ -102,7 +105,7 @@ const isHiddenOrUuidRow = (
  * chizish uchun.
  */
 const buildGrid = (
-  worksheet: XLSX.WorkSheet,
+  worksheet: WorkSheet,
 ): {
   grid: ExcelGridRow[];
   columnCount: number;
@@ -283,10 +286,11 @@ const buildGrid = (
 /**
  * Parses an already-read Excel buffer into a structured object.
  */
-export const parseExcelBuffer = (
+export const parseExcelBuffer = async (
   data: Uint8Array,
   fileName: string,
-): ParsedExcelReport => {
+): Promise<ParsedExcelReport> => {
+  XLSX = await import("xlsx");
   const workbook = XLSX.read(data, { type: "array" });
 
   const firstSheetName = workbook.SheetNames[0];
