@@ -1,9 +1,14 @@
 import MainContainer from "@/containers/MainContainer/MainContainer";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import ReportStatsSection from "@/components/Dashboard/ReportStats/ReportStatsSection";
 
 function MainPage() {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  // Statistika faqat bosh sahifaning o'zida (ichki /main/* ro'yxatlarida emas)
+  const isHome = pathname.replace(/\/+$/, "") === "/main";
   return (
     <div className="px-3 py-4 space-y-4">
       {/* Modern Glassmorphism Header */}
@@ -22,6 +27,8 @@ function MainPage() {
           </div>
         </div>
       </div>
+
+      {isHome && <ReportStatsSection />}
 
       {/* container */}
       <MainContainer />

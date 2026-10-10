@@ -41,6 +41,10 @@ export interface RentRevenueStatsProps {
   mode: "public" | "contracts";
   /** Berilsa sarlavha (`{title} ({from}-{to})`) filtrlar yonida ko'rsatiladi. */
   title?: string;
+  /** `featured` — landing uchun to'q gradientli ko'rinish (sarlavha, katta KPI'lar, gradient bar'lar). */
+  variant?: "default" | "featured";
+  /** `featured` sarlavhasi ostidagi izoh. */
+  subtitle?: string;
   className?: string;
 }
 
@@ -54,6 +58,13 @@ const CHART_COLORS = {
 
 type MetricKey = "price_per_hectare" | "total_area" | "total_calculated";
 
+/** `featured` ko'rinishdagi gradient bar ranglari (to'q fonda yaxshi ko'rinadi). */
+const FEATURED_COLORS: Record<MetricKey, { from: string; to: string }> = {
+  price_per_hectare: { from: "#34d399", to: "#065f46" },
+  total_area: { from: "#4ade80", to: "#166534" },
+  total_calculated: { from: "#bef264", to: "#3f6212" },
+};
+
 interface ChartSpec {
   key: MetricKey;
   label: string;
@@ -65,7 +76,8 @@ const hasData = (stats: RentStats | undefined): stats is RentStats =>
   !!stats?.years?.length &&
   stats.years.some((y) => Number(y.total_calculated) > 0 || Number(y.total_area) > 0);
 
-function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps) {
+function RentRevenueStats({ mode, title, subtitle, variant = "default", className = "" }: RentRevenueStatsProps) {
+  const featured = variant === "featured";
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "uz-UZ";
   const isPublic = mode === "public";
@@ -137,12 +149,13 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
   const shownFrom = stats?.from_year ?? fromYear;
   const shownTo = stats?.to_year ?? toYear;
 
-  const triggerClass =
-    "h-9 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100";
+  const triggerClass = featured
+    ? "h-9 rounded-lg bg-white/10 border-white/15 text-white backdrop-blur-md hover:bg-white/15 [&_svg]:text-emerald-200"
+    : "h-9 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100";
 
   const filters = (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <FilterField label={t("rent_stats.from_year")}>
+      <FilterField label={t("rent_stats.from_year")} featured={featured}>
         <Select value={String(fromYear)} onValueChange={changeFrom}>
           <SelectTrigger className={`${triggerClass} w-[96px]`} aria-label={t("rent_stats.from_year")}>
             <SelectValue />
@@ -156,7 +169,7 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
           </SelectContent>
         </Select>
       </FilterField>
-      <FilterField label={t("rent_stats.to_year")}>
+      <FilterField label={t("rent_stats.to_year")} featured={featured}>
         <Select value={String(toYear)} onValueChange={changeTo}>
           <SelectTrigger className={`${triggerClass} w-[96px]`} aria-label={t("rent_stats.to_year")}>
             <SelectValue />
@@ -170,7 +183,7 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
           </SelectContent>
         </Select>
       </FilterField>
-      <FilterField label={t("rent_stats.xojalik")}>
+      <FilterField label={t("rent_stats.xojalik")} featured={featured}>
         <Select value={xojalik} onValueChange={setXojalik}>
           <SelectTrigger className={`${triggerClass} w-[220px] max-w-[70vw]`} aria-label={t("rent_stats.xojalik")}>
             <SelectValue />
@@ -190,7 +203,7 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
 
   let body: ReactNode;
   if (isLoading) {
-    body = <StatsSkeleton />;
+    body = <StatsSkeleton featured={featured} />;
   } else if (isError) {
     body = (
       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-10 text-center">
@@ -208,9 +221,17 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
     );
   } else if (!hasData(stats)) {
     body = (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 px-4 py-12 text-center">
-        <BarChart3 size={24} className="text-slate-400 dark:text-slate-500" />
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t("rent_stats.empty")}</p>
+      <div
+        className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-12 text-center ${
+          featured
+            ? "border-white/15 bg-white/5"
+            : "border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40"
+        }`}
+      >
+        <BarChart3 size={24} className={featured ? "text-emerald-200/70" : "text-slate-400 dark:text-slate-500"} />
+        <p className={`text-sm font-medium ${featured ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>
+          {t("rent_stats.empty")}
+        </p>
       </div>
     );
   } else {
@@ -221,86 +242,153 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
     const growthText = `${sign}${formatMoney(Math.abs(diff), currency)} (${sign}${Math.abs(percent).toFixed(1)}%)`;
     const max = stats.max;
 
-    body = (
-      <div className={`space-y-4 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {charts.map((chart) => (
-            <div
-              key={chart.key}
-              className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3 sm:p-4"
-            >
-              <p className="mb-2 text-center text-sm font-semibold text-slate-700 dark:text-slate-200">
+    const summaries: SummaryCardProps[] = [
+      {
+        icon: <Coins size={featured ? 22 : 20} />,
+        tone: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+        label: t("rent_stats.average_annual"),
+        value: formatMoney(stats.average_annual, currency),
+      },
+      {
+        icon: negative ? <TrendingDown size={featured ? 22 : 20} /> : <TrendingUp size={featured ? 22 : 20} />,
+        tone: negative
+          ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300"
+          : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+        label: t("rent_stats.growth", { from: shownFrom, to: shownTo }),
+        value: growthText,
+        negative,
+      },
+      {
+        icon: <Trophy size={featured ? 22 : 20} />,
+        tone: "bg-lime-50 text-lime-700 dark:bg-lime-500/15 dark:text-lime-300",
+        label: t("rent_stats.max"),
+        value: max
+          ? t("rent_stats.max_value", { value: formatMoney(max.total_calculated, currency), year: max.year })
+          : "—",
+      },
+    ];
+
+    const chartGrid = (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {charts.map((chart) => (
+          <div
+            key={chart.key}
+            className={
+              featured
+                ? "rounded-2xl border border-white/10 bg-white/[0.06] p-3 sm:p-4 backdrop-blur-md"
+                : "rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3 sm:p-4"
+            }
+          >
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: featured ? FEATURED_COLORS[chart.key].from : chart.color }} />
+              <p className={`text-sm font-semibold ${featured ? "text-slate-100" : "text-slate-700 dark:text-slate-200"}`}>
                 {chart.label}
               </p>
-              <div className="h-[220px] w-full text-slate-500 dark:text-slate-400">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.years} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
-                    <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.15} />
-                    <XAxis
-                      dataKey="year"
-                      tick={{ fill: "currentColor", fontSize: 12 }}
-                      tickLine={false}
-                      axisLine={{ stroke: "currentColor", strokeOpacity: 0.3 }}
-                    />
-                    <YAxis
-                      width={52}
-                      tick={{ fill: "currentColor", fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={compactTick}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "currentColor", fillOpacity: 0.08 }}
-                      wrapperStyle={{ outline: "none", zIndex: 20 }}
-                      content={<ChartTooltip spec={chart} t={t} />}
-                    />
-                    <Bar
-                      dataKey={chart.key}
-                      name={chart.label}
-                      fill={chart.color}
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={44}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+            </div>
+            <div className={`h-[220px] w-full ${featured ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.years} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
+                  {featured && (
+                    <defs>
+                      <linearGradient id={`rent-grad-${chart.key}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={FEATURED_COLORS[chart.key].from} stopOpacity={1} />
+                        <stop offset="100%" stopColor={FEATURED_COLORS[chart.key].to} stopOpacity={0.55} />
+                      </linearGradient>
+                    </defs>
+                  )}
+                  <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={featured ? 0.12 : 0.15} />
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fill: "currentColor", fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={{ stroke: "currentColor", strokeOpacity: 0.3 }}
+                  />
+                  <YAxis
+                    width={52}
+                    tick={{ fill: "currentColor", fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={compactTick}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "currentColor", fillOpacity: 0.08 }}
+                    wrapperStyle={{ outline: "none", zIndex: 20 }}
+                    content={<ChartTooltip spec={chart} t={t} />}
+                  />
+                  <Bar
+                    dataKey={chart.key}
+                    name={chart.label}
+                    fill={featured ? `url(#rent-grad-${chart.key})` : chart.color}
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={44}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+
+    const summaryGrid = (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {summaries.map((card) =>
+          featured ? <FeaturedKpi key={card.label} {...card} /> : <SummaryCard key={card.label} {...card} />,
+        )}
+      </div>
+    );
+
+    body = (
+      <div className={`space-y-4 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
+        {featured ? (
+          <>
+            {summaryGrid}
+            {chartGrid}
+          </>
+        ) : (
+          <>
+            {chartGrid}
+            {summaryGrid}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (featured) {
+    return (
+      <section
+        className={`relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-900 p-5 shadow-xl sm:p-7 lg:rounded-3xl lg:p-8 ${className}`}
+      >
+        {/* fon: chuqur yashil gradient + yumshoq nur */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950 via-emerald-950/90 to-slate-900" />
+        <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-10 h-80 w-80 rounded-full bg-lime-400/10 blur-3xl" />
+
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-500/15 text-emerald-300 sm:h-14 sm:w-14">
+                <Coins size={26} />
+              </div>
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-0.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">
+                    {shownFrom}–{shownTo}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+                  {title ?? t("rent_stats.title")}
+                </h2>
+                {subtitle && <p className="mt-1.5 max-w-2xl text-sm font-medium text-slate-300 sm:text-base">{subtitle}</p>}
               </div>
             </div>
-          ))}
+            {filters}
+          </div>
+          {body}
         </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <SummaryCard
-            icon={<Coins size={20} />}
-            tone="bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-            label={t("rent_stats.average_annual")}
-            value={formatMoney(stats.average_annual, currency)}
-          />
-          <SummaryCard
-            icon={negative ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
-            tone={
-              negative
-                ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300"
-                : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-            }
-            label={t("rent_stats.growth", { from: shownFrom, to: shownTo })}
-            value={growthText}
-            valueClass={negative ? "text-red-600 dark:text-red-400" : undefined}
-          />
-          <SummaryCard
-            icon={<Trophy size={20} />}
-            tone="bg-lime-50 text-lime-700 dark:bg-lime-500/15 dark:text-lime-300"
-            label={t("rent_stats.max")}
-            value={
-              max
-                ? t("rent_stats.max_value", {
-                    value: formatMoney(max.total_calculated, currency),
-                    year: max.year,
-                  })
-                : "—"
-            }
-          />
-        </div>
-      </div>
+      </section>
     );
   }
 
@@ -321,10 +409,14 @@ function RentRevenueStats({ mode, title, className = "" }: RentRevenueStatsProps
   );
 }
 
-function FilterField({ label, children }: { label: string; children: ReactNode }) {
+function FilterField({ label, children, featured = false }: { label: string; children: ReactNode; featured?: boolean }) {
   return (
     <label className="flex items-center gap-2">
-      <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+      <span
+        className={`text-xs sm:text-sm font-medium whitespace-nowrap ${
+          featured ? "text-emerald-100/80" : "text-slate-500 dark:text-slate-400"
+        }`}
+      >
         {label}
       </span>
       {children}
@@ -337,20 +429,48 @@ interface SummaryCardProps {
   tone: string;
   label: string;
   value: string;
-  valueClass?: string;
+  negative?: boolean;
 }
 
-function SummaryCard({ icon, tone, label, value, valueClass }: SummaryCardProps) {
+function SummaryCard({ icon, tone, label, value, negative }: SummaryCardProps) {
+  const valueClass = negative ? "text-red-600 dark:text-red-400" : "";
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-4">
       <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>{icon}</div>
       <div className="min-w-0">
         <p className="truncate text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
         <p
-          className={`text-base sm:text-lg font-bold tabular-nums break-words text-emerald-700 dark:text-emerald-400 ${valueClass ?? ""}`}
+          className={`text-base sm:text-lg font-bold tabular-nums break-words text-emerald-700 dark:text-emerald-400 ${valueClass}`}
         >
           {value}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function FeaturedKpi({ icon, label, value, negative }: SummaryCardProps) {
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-md transition-colors hover:bg-white/[0.09] sm:p-5">
+      <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-emerald-400/10 blur-2xl transition-opacity group-hover:opacity-100" />
+      <div className="relative flex items-start gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+            negative ? "bg-red-500/15 text-red-300" : "bg-emerald-500/15 text-emerald-300"
+          }`}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+          <p
+            className={`mt-1 text-lg font-black tabular-nums tracking-tight break-words sm:text-xl ${
+              negative ? "text-red-300" : "text-white"
+            }`}
+          >
+            {value}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -385,7 +505,23 @@ function ChartTooltip({ spec, t, active, payload }: ChartTooltipProps) {
   );
 }
 
-function StatsSkeleton() {
+function StatsSkeleton({ featured = false }: { featured?: boolean }) {
+  if (featured) {
+    return (
+      <div className="space-y-4" aria-busy="true">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-[88px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.06]" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-[268px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.06]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4" aria-busy="true">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
