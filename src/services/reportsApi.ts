@@ -4,6 +4,7 @@ import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { decryptData } from "@/utils/crypto";
 import { DeadlineMonthResponse } from "@/types/reportInterface";
 import { ImportParseResponse } from "@/types/importReport";
+import type { DashboardOverview, OverviewPeriod } from "@/types/dashboardOverview";
 
 /**
  * Fayl (blob) qaytaradigan endpointlar uchun javob ishlovchisi.
@@ -93,6 +94,14 @@ export const reportApi = createApi({
     }),
     getDashboardReport: builder.query<any, void>({
       query: () => ({ url: `/dashboard/`, method: "GET" }),
+      providesTags: ["Reports"],
+    }),
+    getDashboardOverview: builder.query<DashboardOverview, { lang: string; period: OverviewPeriod }>({
+      query: ({ lang, period }) => ({
+        url: `/dashboard/overview/`,
+        method: "GET",
+        params: { lang, period },
+      }),
       providesTags: ["Reports"],
     }),
     getStatementStatsReport: builder.query<any, { lang?: string } | void>({
@@ -705,6 +714,7 @@ export const {
   useGetLoginStatDeadlineQuery,
   useGetReportSourceReportsQuery,
   useGetStatementStatsReportQuery,
+  useGetDashboardOverviewQuery,
   useGetStatsExportReportMutation,
 
   // POST

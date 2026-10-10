@@ -31,7 +31,6 @@ import {
   BarChart3,
   TrendingUp,
   Globe,
-  Coins,
 } from "lucide-react";
 
 import {
@@ -295,6 +294,17 @@ export default function ModernLanding() {
           </div>
         </div>
 
+        {/* ── IJARA TUSHUMI (billing) — hero'dan keyin, birinchi statistika ── */}
+        <div id="ijara-tushumi" className="mb-12 scroll-mt-24 sm:mb-14 lg:mb-16">
+          <Suspense
+            fallback={
+              <div className="h-[560px] w-full animate-pulse rounded-2xl border border-emerald-500/20 bg-slate-900 lg:rounded-3xl" />
+            }
+          >
+            <RentRevenueStats mode="public" variant="featured" subtitle={t("rent_stats.subtitle")} />
+          </Suspense>
+        </div>
+
         {/* ── SECTIONS ───────────────────────────────────────────────────── */}
         <div className="space-y-12 sm:space-y-14 lg:space-y-16">
           <SectionLayout
@@ -333,16 +343,6 @@ export default function ModernLanding() {
             </div>
           </SectionLayout>
 
-          <SectionLayout
-            id="ijara-tushumi"
-            title={t("rent_stats.title")}
-            subtitle={t("rent_stats.subtitle")}
-            icon={<Coins className="text-[#00BC7D]" />}
-          >
-            <Suspense fallback={<div className="h-[420px] w-full animate-pulse rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900" />}>
-              <RentRevenueStats mode="public" />
-            </Suspense>
-          </SectionLayout>
         </div>
       </main>
 
@@ -372,9 +372,9 @@ export default function ModernLanding() {
               <ul className="space-y-3">
                 {[
                   { key: "home", label: t("landing_nav_home") },
+                  { key: "rent", label: t("landing_nav_rent") },
                   { key: "strategic", label: t("landing_nav_strategic") },
                   { key: "operational", label: t("landing_nav_operational") },
-                  { key: "rent", label: t("landing_nav_rent") },
                   { key: "login", label: t("landing_nav_login") },
                 ].map(({ key, label }) => (
                   <li key={key}>
