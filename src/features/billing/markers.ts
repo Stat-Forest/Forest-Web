@@ -1,8 +1,9 @@
 import * as L from "leaflet";
 import { escapeHtml } from "./escapeHtml";
-import { formatNumber, toNumber } from "./format";
+import { formatArea, formatNumber, toNumber } from "./format";
 import {
   buildPolygonPopupRowHtml,
+  getPolygonLocations,
   type PolygonLocation,
   type PolygonPopupLabels,
 } from "./contractPolygons";
@@ -16,6 +17,7 @@ import {
 import type {
   ContractGeoItem,
   ContractStatus,
+  PublicGeoItem,
   XojalikKonturDetail,
   XojalikLocation,
 } from "./types";
@@ -278,4 +280,171 @@ export const buildContractPopupHtml = (
       </a>
     </div>
   `;
+};
+
+// ---------------------------------------------------------------------------
+// Ochiq (landing) xarita popup'i — maxfiylik: ijarachi va pul ma'lumotlari YO'Q
+// ---------------------------------------------------------------------------
+
+export interface PublicContractPopupLabels extends PolygonPopupLabels {
+  xojalik: string;
+  purpose: string;
+  area: string;
+}
+
+const popupRowHtml = (icon: string, label: string, value: string) => `
+      <div class="gis-popup__row">
+        <span class="gis-popup__icon">${icon}</span>
+        <div>
+          <div class="gis-popup__label">${escapeHtml(label)}</div>
+          <div class="gis-popup__value">${value}</div>
+        </div>
+      </div>`;
+
+/** Faqat: № / xo'jalik / ijara maqsadi / yer maydoni (+ poligon qatori). Havola yo'q. */
+export const buildPublicContractPopupHtml = (
+  c: PublicGeoItem,
+  location: PolygonLocation | null,
+  labels: PublicContractPopupLabels,
+): string => `
+    <div class="gis-popup">
+      <div class="gis-popup__header">
+        <span class="gis-popup__badge">№ ${escapeHtml(c.contract_number || c.number)}</span>
+      </div>${popupRowHtml("🏢", labels.xojalik, escapeHtml(c.xojalik_name) || "-")}${popupRowHtml(
+        "🎯",
+        labels.purpose,
+        escapeHtml(c.activity_name) || "-",
+      )}${popupRowHtml(
+        "📐",
+        labels.area,
+        c.rent_area === null || c.rent_area === undefined ? "-" : escapeHtml(formatArea(c.rent_area)),
+      )}${buildPolygonPopupRowHtml(location, labels)}
+    </div>
+  `;
+
+// ---------------------------------------------------------------------------
+// Shartnomalarni xaritaga chizish (GIS monitoring va landing'dagi ochiq xarita)
+// ---------------------------------------------------------------------------
+
+interface ContractGeometry {
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  boundary_geojson?: unknown;
+}
+
+export interface DrawContractsOptions<T> {
+  color: (contract: T) => string;
+  popupHtml: (contract: T, location: PolygonLocation | null) => string;
+}
+
+export type ContractBoundsItem = L.LatLngBounds | L.LatLng;
+
+/**
+ * Shartnomalarni `layer`ga chizadi:
+ * - chegara (bo'lsa) — har doim ko'rinadi;
+ * - bir nechta poligonli chegara — har bir poligonga o'z nuqtasida alohida pin
+ *   (popup'da shu poligon raqami/maydoni), dblclick — o'sha poligonga;
+ * - aks holda bitta pin (lat/lng, bo'lmasa chegara markazi), dblclick — chegaraga.
+ * Qaytaradi: `fitMapToContracts` uchun chegaralar/nuqtalar.
+ */
+export const drawContractsOnLayer = <T extends ContractGeometry>(
+  map: L.Map,
+  layer: L.LayerGroup,
+  contracts: T[],
+  { color: colorFor, popupHtml }: DrawContractsOptions<T>,
+): ContractBoundsItem[] => {
+  const allBounds: ContractBoundsItem[] = [];
+  const iconCache = new Map<string, L.DivIcon>();
+  const iconFor = (color: string) => {
+    let icon = iconCache.get(color);
+    if (!icon) {
+      icon = createContractPinIcon(color);
+      iconCache.set(color, icon);
+    }
+    return icon;
+  };
+
+  contracts.forEach((c) => {
+    const color = colorFor(c);
+    let boundaryLayer: L.GeoJSON | null = null;
+    let markerLatLng: L.LatLng | null = null;
+
+    if (c.boundary_geojson) {
+      try {
+        boundaryLayer = L.geoJSON(c.boundary_geojson as GeoJSON.GeoJsonObject, {
+          style: { color, weight: 2, fillColor: color, fillOpacity: 0.3, opacity: 1 },
+        });
+        boundaryLayer.addTo(layer);
+        const b = boundaryLayer.getBounds();
+        if (b.isValid()) {
+          allBounds.push(b);
+          markerLatLng = b.getCenter();
+        }
+      } catch {
+        boundaryLayer = null;
+      }
+    }
+
+    const polygonLocations = getPolygonLocations(c.boundary_geojson);
+    if (polygonLocations.length > 1) {
+      polygonLocations.forEach((location) => {
+        const polygonMarker = L.marker(L.latLng(location.lat, location.lng), {
+          icon: iconFor(color),
+        });
+        polygonMarker.bindPopup(popupHtml(c, location));
+        polygonMarker.on("click", () => polygonMarker.openPopup());
+        polygonMarker.on("dblclick", () => {
+          const polygonBounds = L.geoJSON(location.polygon).getBounds();
+          if (polygonBounds.isValid()) {
+            map.fitBounds(polygonBounds, { maxZoom: 17, padding: [20, 20] });
+          }
+        });
+        polygonMarker.addTo(layer);
+      });
+      return;
+    }
+
+    const lat = num(c.latitude);
+    const lng = num(c.longitude);
+    if (lat !== null && lng !== null) {
+      markerLatLng = L.latLng(lat, lng);
+      allBounds.push(markerLatLng);
+    }
+    if (!markerLatLng) return;
+
+    const point = markerLatLng;
+    const marker = L.marker(point, { icon: iconFor(color) });
+    marker.bindPopup(popupHtml(c, null));
+    marker.on("click", () => marker.openPopup());
+    marker.on("dblclick", () => {
+      const b = boundaryLayer?.getBounds();
+      if (b && b.isValid()) {
+        map.fitBounds(b, { maxZoom: 17, padding: [20, 20] });
+      } else {
+        map.setView(point, 16);
+      }
+    });
+    marker.addTo(layer);
+  });
+
+  return allBounds;
+};
+
+/** `drawContractsOnLayer` natijasiga xaritani moslaydi (bo'sh bo'lsa — hech narsa). */
+export const fitMapToContracts = (
+  map: L.Map,
+  items: ContractBoundsItem[],
+  options: L.FitBoundsOptions = { padding: [30, 30] },
+): boolean => {
+  if (items.length === 0) return false;
+  try {
+    const bounds = L.latLngBounds([]);
+    items.forEach((b) => bounds.extend(b));
+    if (!bounds.isValid()) return false;
+    map.fitBounds(bounds, options);
+    return true;
+  } catch {
+    // noto'g'ri koordinatalar — e'tiborsiz
+    return false;
+  }
 };

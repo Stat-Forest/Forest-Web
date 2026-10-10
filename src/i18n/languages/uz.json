@@ -360,6 +360,7 @@
   "landing_nav_strategic": "Statistik ko'rsatkichlar",
   "landing_nav_operational": "Operatsion tahlil",
   "landing_nav_rent": "Ijara tushumi",
+  "landing_nav_gis": "GIS monitoring",
   "landing_nav_login": "Tizimga kirish",
   "landing_contact": "Aloqa",
   "landing_committee": "O'rmon va yashil hududlarni ko'paytirish, cho'llanishga qarshi kurashish agentligi",
@@ -929,7 +930,9 @@
     "retry": "Qayta urinish",
     "currency": "so'm",
     "area_unit": "ga",
-    "per_hectare_unit": "so'm/ga"
+    "per_hectare_unit": "so'm/ga",
+    "collapse": "Yig'ish",
+    "expand": "Yoyish"
   },
   "report_stats": {
     "title": "Hisobotlar statistikasi",
@@ -1000,5 +1003,26 @@
     "month_col": "Oy",
     "total_col": "Jami",
     "updated": "Yangilangan: {{time}}"
+  },
+  "public_gis": {
+    "brand_title": "GIS monitoring",
+    "brand_subtitle": "Ijaraga berilgan o'rmon yerlari xaritasi",
+    "map_aria": "Ijaraga berilgan o'rmon yerlari xaritasi",
+    "stat_contracts": "Ijara shartnomalari",
+    "stat_area": "Umumiy yer maydoni (ga)",
+    "map_filter": "Xaritani filterlash",
+    "contract_filter": "Shartnomalarni filterlash",
+    "filter_xojalik": "Xo'jalik nomi",
+    "all": "Barchasi",
+    "filter_number": "Shartnoma raqami",
+    "filter_number_ph": "Shartnoma raqamini kiriting...",
+    "apply": "Qo'llash",
+    "clear": "Tozalash",
+    "close": "Yopish",
+    "loading": "Yuklanmoqda...",
+    "error": "Ma'lumotlarni yuklab bo'lmadi — qayta urinish",
+    "empty": "Shartnoma topilmadi",
+    "shown_limit": "Xaritada {{shown}} / {{total}} ta ko'rsatilgan",
+    "wheel_hint": "Kattalashtirish uchun Ctrl (⌘) + g'ildirakdan foydalaning yoki xaritani bosing"
   }
 }
