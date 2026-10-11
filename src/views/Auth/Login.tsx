@@ -768,13 +768,13 @@ function Login() {
             <form onSubmit={checkAuthHandler} className="space-y-5">
               <div>
                 <Label htmlFor="email" className="mb-2 block text-slate-700 dark:text-slate-200 font-medium">
-                  {t("email")}
+                  {t("email_or_login")}
                 </Label>
                 <Input
                   id="email"
                   name="email"
-                  type="email"
-                  placeholder="email@example.com"
+                  type="text"
+                  placeholder="email@example.com / login"
                   required
                   className="h-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-[#00BC7D] focus:border-[#00BC7D]"
                   autoComplete="username"

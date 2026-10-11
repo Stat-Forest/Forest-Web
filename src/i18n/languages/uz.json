@@ -108,6 +108,7 @@
   "selectCertificatePlaceholder": "E-imzo yoki USB-token sertifikatini tanlang",
   "login": "Login orqali",
   "email": "Email",
+  "email_or_login": "Email yoki login",
   "password": "Parol",
   "forgotPassword": "Parolni unutdingizmi?",
   "enter": "Kirish",

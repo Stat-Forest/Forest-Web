@@ -105,6 +105,7 @@
   "selectCertificatePlaceholder": "Выберите сертификат E-имзо или USB-токена",
   "login": "Войти",
   "email": "Электронная почта",
+  "email_or_login": "Электронная почта или логин",
   "password": "Пароль",
   "forgotPassword": "Забыли пароль?",
   "enter": "Войти",
