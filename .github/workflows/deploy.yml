@@ -17,7 +17,7 @@ jobs:
       - name: NodeJS o‘rnatish
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
           cache: "npm"
 
       # npm ci: package-lock.json dan to'g'ridan-to'g'ri o'rnatadi (npm install'dan tezroq)
@@ -39,13 +39,29 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
+      # Server host kaliti pin'lanadi (audit C10): SSH_KNOWN_HOSTS secret'i
+      # (`ssh-keyscan -H <SERVER_HOST>` natijasi) bo'lsa shu, bo'lmasa keyscan (TOFU).
+      - name: Known hosts
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          else
+            echo "::warning::SSH_KNOWN_HOSTS secret yo'q — ssh-keyscan (TOFU) ishlatilmoqda"
+            ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts
+          fi
+
       # rsync faqat o'zgargan fayllarni yuboradi: hash'li nomli assets (shu jumladan
       # ~180 MB video) o'zgarmasa qayta yuklanmaydi. Avval yangi assets, keyin
       # index.html, oxirida eski fayllar o'chiriladi — deploy paytida sayt bo'sh qolmaydi.
       - name: Build qilingan fayllarni serverga yuborish
         env:
           TARGET: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/stat-ormon/
-          RSYNC_RSH: ssh -o StrictHostKeyChecking=no
+          RSYNC_RSH: ssh
         run: |
           set -euo pipefail
           rsync -az --exclude 'index.html' dist/ "$TARGET"
@@ -58,6 +74,8 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          # SSH_FINGERPRINT (ssh-keygen -lf <(ssh-keyscan HOST) ko'rinishida) bo'lsa host kaliti tekshiriladi
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           script: |
             echo "Nginx reload qilinyapti..."
             docker exec forest_nginx_prod nginx -s reload
