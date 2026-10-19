@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectTrigger, SelectItem, SelectValue, SelectContent } from "@/components/ui/select";
 import { regions_information } from "@/services/constants";
 import { useGetOrganizationReportsQuery } from "@/services/generalApi";
-import { decryptData } from "@/utils/crypto";
+import { getAccessToken } from "@/utils/accessToken";
 
 type AnalyticalNode = {
   level?: string;
@@ -210,7 +210,7 @@ function ForestAnalysisContainer({
       if (selectedOrganization) params.append("organization", selectedOrganization);
       if (period) params.append("period", period);
 
-      const token = decryptData("token", "token") as string | null;
+      const token = getAccessToken();
       const headers: HeadersInit = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;

@@ -50,7 +50,7 @@ export default function AnnouncementModal({
           <p className="text-gray-600">{data.desc}</p>
           <div className="flex justify-between items-center">
             <a
-              href={data.lnk}
+              href={/^https?:\/\//i.test(data.lnk || "") ? data.lnk : undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"

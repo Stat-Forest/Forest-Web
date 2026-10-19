@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { escapeHtml } from "@/features/billing/escapeHtml";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 import { useExportExcelMutation } from "@/services/reportsApi";
-import { base_url } from "@/services/baseUrl";
-import { decryptData } from "@/utils/crypto";
+import { getAccessToken } from "@/utils/accessToken";
+import { resolveExportUrl } from "@/utils/exportUrl";
 
 interface ExportDropdownProps {
   onExportExcel?: () => void;
@@ -107,20 +108,16 @@ export default function ExportDropdown({
 
       if (result?.download_url) {
         // Download URL'ni tekshirish va to'g'ri formatlash
-        let downloadUrl = result.download_url;
-
-        // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
-        if (downloadUrl.startsWith("/")) {
-          downloadUrl = `${base_url}${downloadUrl}`;
-        } else if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://")) {
-          // Agar protocol bo'lmasa, base_url qo'shish
-          downloadUrl = `${base_url}/${downloadUrl}`;
+        // API origin'idan tashqaridagi URL'ga token yuborilmaydi (audit C9)
+        const downloadUrl = resolveExportUrl(result.download_url);
+        if (!downloadUrl) {
+          alert("Yuklab olish havolasi noto'g'ri");
+          return;
         }
-
         console.log("Download URL:", downloadUrl);
 
         // Token bilan download URL'ni ochish
-        const token = decryptData("token", "token");
+        const token = getAccessToken();
         if (token) {
           // Token bilan fetch qilish
           try {
@@ -151,11 +148,11 @@ export default function ExportDropdown({
           } catch (downloadError: any) {
             console.error("Download xatolik:", downloadError);
             // Fallback: to'g'ridan-to'g'ri URL'ni ochish
-            window.open(downloadUrl, "_blank");
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
           }
         } else {
           // Token bo'lmasa, to'g'ridan-to'g'ri ochish
-          window.open(downloadUrl, "_blank");
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
         }
       } else {
         console.warn("Download URL topilmadi, response:", result);
@@ -211,7 +208,7 @@ export default function ExportDropdown({
         <!DOCTYPE html>
         <html>
           <head>
-            <title>${reportName} - Hisobot</title>
+            <title>${escapeHtml(reportName)} - Hisobot</title>
             <style>
               body { 
                 font-family: 'Arial', sans-serif; 
@@ -300,8 +297,8 @@ export default function ExportDropdown({
           </head>
           <body>
             <div class="print-header">
-              <div class="print-title">${reportName}</div>
-              ${activeTab ? `<div class="print-subtitle">${activeTab}</div>` : ""}
+              <div class="print-title">${escapeHtml(reportName)}</div>
+              ${activeTab ? `<div class="print-subtitle">${escapeHtml(activeTab)}</div>` : ""}
               <div class="print-date">${new Date().toLocaleDateString(
                 "uz-UZ",
                 {

@@ -11,33 +11,13 @@ import sidebarReducer from "@/features/sidebarSlice";
 import uiReducer from "@/features/uiSlice";
 
 // 🆕 persist qo'shiladi
-import { persistStore, persistReducer } from "redux-persist";
+import { persistStore, persistReducer, createTransform, PersistConfig } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // localStorage ishlatish uchun
 import { combineReducers } from "redux";
 import { eimzoApi } from "@/services/eimzoApi";
 import { informationAnalyticalApi } from "@/services/informationAnalyticalApi";
 import { uniqeApi } from "@/services/uniqeApi";
 import { billingApi } from "@/services/billingApi";
-
-// Redux Persist optimizatsiyasi
-const persistConfig = {
-  key: "root",
-  storage,
-  whitelist: ["auth", "language"], // faqat qaysi slice'lar saqlansin
-  // Performance optimizatsiyasi
-  blacklist: [
-    reportApi.reducerPath,
-    generalApi.reducerPath,
-    statistikApi.reducerPath,
-    sumApi.reducerPath,
-    eimzoApi.reducerPath,
-    informationAnalyticalApi.reducerPath,
-    billingApi.reducerPath,
-    "report",
-    "sidebar",
-    "ui",
-  ], // Bu slice'lar persist qilinmaydi - performance uchun
-};
 
 const rootReducer = combineReducers({
   [reportApi.reducerPath]: reportApi.reducer,
@@ -56,6 +36,42 @@ const rootReducer = combineReducers({
   sidebar: sidebarReducer,
   ui: uiReducer,
 });
+
+// auth: faqat profil (user) saqlanadi — access token xotirada, refresh token
+// HttpOnly cookie'da (audit A5). localStorage'da token bo'lmaydi.
+const authTransform = createTransform<any, any, any, any>(
+  (inbound: any) => {
+    const user = inbound?.user ? { ...inbound.user } : null;
+    if (user) {
+      delete user.access;
+      delete user.refresh;
+    }
+    return { user, token: null };
+  },
+  (outbound: any) => ({ user: outbound?.user ?? null, token: null }),
+  { whitelist: ["auth"] }
+);
+
+// Redux Persist optimizatsiyasi
+const persistConfig: PersistConfig<ReturnType<typeof rootReducer>> = {
+  key: "root",
+  storage,
+  whitelist: ["auth", "language"], // faqat qaysi slice'lar saqlansin
+  transforms: [authTransform],
+  // Performance optimizatsiyasi
+  blacklist: [
+    reportApi.reducerPath,
+    generalApi.reducerPath,
+    statistikApi.reducerPath,
+    sumApi.reducerPath,
+    eimzoApi.reducerPath,
+    informationAnalyticalApi.reducerPath,
+    billingApi.reducerPath,
+    "report",
+    "sidebar",
+    "ui",
+  ], // Bu slice'lar persist qilinmaydi - performance uchun
+};
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
