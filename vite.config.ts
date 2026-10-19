@@ -101,8 +101,9 @@ export default defineConfig({
     // Dev server proxy: local requests to /api will be forwarded to the remote API
     proxy: {
       "/api": {
-        // DEV_API_PROXY=http://localhost:8010 bilan lokal backendga yo'naltirish mumkin
-        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
+        // Default lokal backend (audit B13): ishlab chiquvchi prod ma'lumotida ishlamasin.
+        // Prod API kerak bo'lsa: DEV_API_PROXY=https://api.stat-urmon.uz npx vite
+        target: process.env.DEV_API_PROXY || "http://localhost:8010",
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
@@ -111,7 +112,7 @@ export default defineConfig({
         cookiePathRewrite: { "/api/v1/authentications/": "/api/authentications/" },
       },
       "/ws": {
-        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
+        target: process.env.DEV_API_PROXY || "http://localhost:8010",
         ws: true,
         changeOrigin: true,
         secure: true,
@@ -129,7 +130,7 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
+        target: process.env.DEV_API_PROXY || "http://localhost:8010",
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
@@ -138,7 +139,7 @@ export default defineConfig({
         cookiePathRewrite: { "/api/v1/authentications/": "/api/authentications/" },
       },
       "/ws": {
-        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
+        target: process.env.DEV_API_PROXY || "http://localhost:8010",
         ws: true,
         changeOrigin: true,
         secure: true,
