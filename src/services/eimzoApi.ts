@@ -11,7 +11,11 @@ export const eimzoApi = createApi({
     // ✅ E-imzo / USB-token login — both use e-imzo endpoint
     // E-imzo (pfx): { pkcs7, vo }
     // USB-token (ftjc): { pkcs7, vo }
-    eimzoLogin: builder.mutation<any, { pkcs7: string } >({
+    // Imzolanadigan matn — server bergan bir martalik challenge (audit B1)
+    getChallenge: builder.query<{ success: boolean; challenge: string }, void>({
+      query: () => ({ url: "/challenge/" }),
+    }),
+    eimzoLogin: builder.mutation<any, { pkcs7: string; challenge: string }>({
       query: (data) => ({
         url: "/login/",
         method: "POST",
@@ -21,4 +25,4 @@ export const eimzoApi = createApi({
   }),
 });
 
-export const { useEimzoLoginMutation } = eimzoApi;
+export const { useEimzoLoginMutation, useLazyGetChallengeQuery } = eimzoApi;

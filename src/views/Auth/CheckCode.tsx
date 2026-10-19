@@ -2,7 +2,8 @@ import {
   useSendEmailMutation,
   useVerifyCodeMutation,
 } from "@/services/authApi";
-import { encryptData } from "@/utils/crypto";
+import { useDispatch } from "react-redux";
+import { setAccessOnly } from "@/features/authSlice";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +20,7 @@ const CheckCode = () => {
   const [error, setError] = useState("");
   const [email, setEmail] = useState<string>(""); // null emas, string qilib
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { t } = useTranslation();
 
   const [verifyCode, { isLoading }] = useVerifyCodeMutation();
@@ -50,9 +52,8 @@ const CheckCode = () => {
       .then((res: VerifyCodeResponse) => {
         // Code ni cookie'ga saqlaymiz (1 soat muddat)
         setSimpleCookie("reset_code", code, 1/24);
-        // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
-        encryptData("token", res.access, "token", 30);
-        encryptData("refresh", res.refresh, "refresh", 30);
+        // Qisqa muddatli pwd_reset access token — faqat xotirada (audit A5)
+        dispatch(setAccessOnly(res.access));
         navigate("/auth/change-password");
       })
       .catch((err: any) => {

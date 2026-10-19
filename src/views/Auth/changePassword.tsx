@@ -1,5 +1,7 @@
 import { useSetNewPasswordMutation } from "@/services/authApi";
-import { decryptData, removeEncryptedData } from "@/utils/crypto";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "@/features/authSlice";
+import { RootState } from "@/app/store";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -8,14 +10,15 @@ import { ArrowLeft } from "lucide-react";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { t } = useTranslation();
+  const token = useSelector((state: RootState) => state.auth.token);
 
   useEffect(() => {
-    const token = decryptData("token", "token");
     if (!token) {
       navigate("/auth");
     }
-  }, [navigate]);
+  }, [navigate, token]);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -54,8 +57,7 @@ const ChangePassword = () => {
       // Cookie'lardan barcha ma'lumotlarni tozalaymiz
       removeCookie("reset_email");
       removeCookie("reset_code");
-      removeEncryptedData("token");
-      removeEncryptedData("refresh");
+      dispatch(logout());
 
       navigate("/auth", { replace: true });
     } catch (err: any) {

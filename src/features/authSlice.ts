@@ -1,16 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { authApi, User } from "@/services/authApi";
 import { eimzoApi } from "@/services/eimzoApi";
-import { encryptData, decryptData, removeEncryptedData } from "@/utils/crypto";
+import { setAccessToken } from "@/utils/accessToken";
+import { removeCookie } from "@/utils/cookie";
 
 interface AuthState {
+  // Tokenlarsiz profil (persist qilinadi). access/refresh bu yerda SAQLANMAYDI.
   user: User | null;
+  // Access token — faqat xotirada (persist qilinmaydi); sahifa qayta
+  // yuklanganda AppWrapper HttpOnly refresh cookie orqali yangisini oladi.
   token: string | null;
 }
 
-const initialState: AuthState = {
-  user: (decryptData("user", "user") as User) || null,
-  token: (decryptData("token", "token") as string) || null,
+const initialState: AuthState = { user: null, token: null };
+
+// Login javobidan tokenlarni olib tashlab, faqat profil ma'lumotini saqlaymiz
+export const stripTokens = (payload: User): User => {
+  const { access: _a, refresh: _r, ...rest } = payload;
+  return rest as User;
+};
+
+const applyLogin = (state: AuthState, payload: User) => {
+  state.token = payload.access ?? null;
+  state.user = stripTokens(payload);
+  setAccessToken(state.token);
+};
+
+// Eski versiya tokenlarni AES "shifrlab" oddiy cookie'ga yozardi — tozalaymiz
+const clearLegacyCookies = () => {
+  ["token", "user", "refresh"].forEach((name) => removeCookie(name));
 };
 
 const authSlice = createSlice({
@@ -20,61 +38,35 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      // Cookie'lardan ma'lumotlarni tozalaymiz
-      removeEncryptedData("token");
-      removeEncryptedData("user");
-      removeEncryptedData("refresh");
+      setAccessToken(null);
+      clearLegacyCookies();
     },
-    setToken: (
-      state,
-      action: PayloadAction<{ token: string; user: User }>
-    ) => {
+    setToken: (state, action: PayloadAction<{ token: string; user: User }>) => {
       state.token = action.payload.token;
-      state.user = action.payload.user;
+      state.user = stripTokens(action.payload.user);
+      setAccessToken(state.token);
+    },
+    // Parolni tiklash oqimi: qisqa muddatli pwd_reset access token, profil yo'q
+    setAccessOnly: (state, action: PayloadAction<string | null>) => {
+      state.token = action.payload;
+      setAccessToken(state.token);
     },
   },
   extraReducers: (builder) => {
-    // Oddiy login
-    builder.addMatcher(
-      authApi.endpoints.login.matchFulfilled,
-      (state, action: PayloadAction<User>) => {
-        const payload = action.payload;
-        state.token = payload.access;
-        state.user = payload;
-        // Xavfsiz cookie'ga saqlaymiz (30 kun muddat)
-        encryptData("token", payload.access, "token", 30);
-        encryptData("user", payload, "user", 30);
-      }
-    );
-
-    // EIMZO login (authApi - /authentications/login/eimzo/)
-    builder.addMatcher(
-      authApi.endpoints.eimzoLogin.matchFulfilled,
-      (state, action: PayloadAction<User>) => {
-        const payload = action.payload;
-        state.token = payload.access;
-        state.user = payload;
-        encryptData("token", payload.access, "token", 30);
-        encryptData("user", payload, "user", 30);
-      }
-    );
-
-    // EIMZO login (eimzoApi - /e_imzo/login/) — Login.tsx shuni ishlatadi
-    builder.addMatcher(
-      eimzoApi.endpoints.eimzoLogin.matchFulfilled,
-      (state, action: PayloadAction<User>) => {
-        const payload = action.payload;
-        state.token = payload.access;
-        state.user = payload;
-        encryptData("token", payload.access, "token", 30);
-        encryptData("user", payload, "user", 30);
-        if (payload.refresh) {
-          encryptData("refresh", payload.refresh, "refresh", 30);
-        }
-      }
-    );
+    builder.addMatcher(authApi.endpoints.login.matchFulfilled, (state, action: PayloadAction<User>) => {
+      applyLogin(state, action.payload);
+      clearLegacyCookies();
+    });
+    builder.addMatcher(authApi.endpoints.eimzoLogin.matchFulfilled, (state, action: PayloadAction<User>) => {
+      applyLogin(state, action.payload);
+      clearLegacyCookies();
+    });
+    builder.addMatcher(eimzoApi.endpoints.eimzoLogin.matchFulfilled, (state, action: PayloadAction<User>) => {
+      applyLogin(state, action.payload);
+      clearLegacyCookies();
+    });
   },
 });
 
-export const { logout, setToken } = authSlice.actions;
+export const { logout, setToken, setAccessOnly } = authSlice.actions;
 export default authSlice.reducer;

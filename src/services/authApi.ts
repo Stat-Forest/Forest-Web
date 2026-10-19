@@ -8,8 +8,9 @@ export interface User {
   email: string;
   user_id: number | string;
   role: string;
-  access: string;
-  refresh: string;
+  // Tokenlar faqat login javobida keladi; Redux/persist'da saqlanmaydi (audit A5)
+  access?: string;
+  refresh?: string;
   full_name?: string;
   organization?: string;
   is_new_user?: boolean;
@@ -21,8 +22,6 @@ interface LoginResponse extends User {}
 // ✅ Refresh response
 interface RefreshResponse {
   access: string;
-  // ROTATE_REFRESH_TOKENS=True: backend yangi refresh token ham qaytaradi
-  refresh?: string;
 }
 
 // ✅ VerifyCode response
@@ -65,14 +64,16 @@ export const authApi = createApi({
 
     // ✅ Refresh token
     // Backend: access token darhol bekor qilinadi, refresh blacklist'ga tushadi
-    logout: builder.mutation<void, { refresh?: string | null }>({
-      query: (body) => ({ url: "/logout/", method: "POST", body }),
+    // Refresh token HttpOnly cookie'da — brauzer o'zi yuboradi (credentials: include)
+    logout: builder.mutation<void, void>({
+      query: () => ({ url: "/logout/", method: "POST", body: {}, credentials: "include" }),
     }),
-    refreshToken: builder.mutation<RefreshResponse, { refresh: string }>({
-      query: (data) => ({
+    refreshToken: builder.mutation<RefreshResponse, void>({
+      query: () => ({
         url: "/token/refresh/",
         method: "POST",
-        body: data,
+        body: {},
+        credentials: "include",
       }),
     }),
 

@@ -28,7 +28,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/features/authSlice";
 import { useLogoutMutation } from "@/services/authApi";
-import { decryptData } from "@/utils/crypto";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -229,12 +228,15 @@ function Header({ onLogout }: HeaderProps) {
     }
   };
 
-  const handleLogout = () => {
-    // Serverda tokenlarni bekor qilamiz (access darhol, refresh blacklist).
-    // Javobni kutmaymiz — tarmoq bo'lmasa ham lokal chiqish davom etadi.
-    const storedUser = decryptData("user", "user") as { refresh?: string } | null;
-    const refresh = storedUser?.refresh || (decryptData("refresh", "refresh") as string | null);
-    logoutRequest({ refresh }).catch(() => undefined);
+  const handleLogout = async () => {
+    // Serverda tokenlarni bekor qilamiz (access darhol, refresh blacklist;
+    // refresh token HttpOnly cookie'da — backend uni o'zi o'qib tozalaydi).
+    // So'rov tugashini (ko'pi bilan 3 s) kutamiz: darhol resetApiState()
+    // qilinsa so'rov yuborilmay qolardi; tarmoq bo'lmasa ham lokal chiqish davom etadi.
+    await Promise.race([
+      logoutRequest().unwrap().catch(() => undefined),
+      new Promise<void>((resolve) => setTimeout(resolve, 3000)),
+    ]);
 
     // 🔐 Logout paytida notification count ni ham tozalaymiz
     removeCookie("unreadNotificationCount");

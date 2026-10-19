@@ -14,7 +14,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { base_url } from "@/services/baseUrl";
 import {
   useAcceptReportMutation,
   useDeleteReportMutation,
@@ -22,7 +21,8 @@ import {
 } from "@/services/reportsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
-import { decryptData } from "@/utils/crypto";
+import { getAccessToken } from "@/utils/accessToken";
+import { resolveExportUrl } from "@/utils/exportUrl";
 import CancelReportModal from "@/components/Modals/CancelReportModal";
 import SignAndSendDialog from "@/components/Reports/SignAndSendDialog";
 import SignatureBadge from "@/components/Reports/SignatureBadge";
@@ -119,23 +119,16 @@ const TableColumn = forwardRef(
 
         if (result?.download_url) {
           // Download URL'ni tekshirish va to'g'ri formatlash
-          let downloadUrl = result.download_url;
-
-          // Agar URL nisbiy bo'lsa (faqat path), base_url qo'shish
-          if (downloadUrl.startsWith("/")) {
-            downloadUrl = `${base_url}${downloadUrl}`;
-          } else if (
-            !downloadUrl.startsWith("http://") &&
-            !downloadUrl.startsWith("https://")
-          ) {
-            // Agar protocol bo'lmasa, base_url qo'shish
-            downloadUrl = `${base_url}/${downloadUrl}`;
+          // API origin'idan tashqaridagi URL'ga token yuborilmaydi (audit C9)
+          const downloadUrl = resolveExportUrl(result.download_url);
+          if (!downloadUrl) {
+            alert("Yuklab olish havolasi noto'g'ri");
+            return;
           }
-
           console.log("Download URL:", downloadUrl);
 
           // Token bilan download URL'ni ochish
-          const token = decryptData("token", "token");
+          const token = getAccessToken();
           if (token) {
             // Token bilan fetch qilish
             try {
@@ -168,11 +161,11 @@ const TableColumn = forwardRef(
             } catch (downloadError: any) {
               console.error("Download xatolik:", downloadError);
               // Fallback: to'g'ridan-to'g'ri URL'ni ochish
-              window.open(downloadUrl, "_blank");
+              window.open(downloadUrl, "_blank", "noopener,noreferrer");
             }
           } else {
             // Token bo'lmasa, to'g'ridan-to'g'ri ochish
-            window.open(downloadUrl, "_blank");
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
           }
         } else {
           console.warn("Download URL topilmadi, response:", result);

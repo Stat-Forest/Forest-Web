@@ -1,7 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { base_url } from "./baseUrl";
 import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
-import { decryptData } from "@/utils/crypto";
+import { getAccessToken } from "@/utils/accessToken";
 import { DeadlineMonthResponse } from "@/types/reportInterface";
 import { ImportParseResponse } from "@/types/importReport";
 import type { DashboardOverview, OverviewPeriod } from "@/types/dashboardOverview";
@@ -663,7 +663,7 @@ getStatsExportReport: builder.mutation<Blob, "csv" | "excel">({
 });
 
 export const fetchReportDeadlines = async (page: number, perPage: number) => {
-  const token = decryptData("token", "token");
+  const token = getAccessToken();
 
   if (!token) {
     throw new Error("No token found. Please log in.");
