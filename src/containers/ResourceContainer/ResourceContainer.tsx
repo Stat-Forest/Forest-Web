@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { escapeHtml } from "@/features/billing/escapeHtml";
 import { useDebounce } from "@/utils/useDebounce";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
@@ -318,7 +319,7 @@ function ResourceContainer({
           <!DOCTYPE html>
           <html>
             <head>
-              <title>${reportName} - Hisobot</title>
+              <title>${escapeHtml(reportName)} - Hisobot</title>
               <style>
                 body { 
                   font-family: 'Arial', sans-serif; 
@@ -463,8 +464,8 @@ function ResourceContainer({
             </head>
             <body>
               <div class="print-header">
-                <div class="print-title">${reportName}</div>
-                <div class="print-subtitle">${activeTab}</div>
+                <div class="print-title">${escapeHtml(reportName)}</div>
+                <div class="print-subtitle">${escapeHtml(activeTab)}</div>
                 <div class="print-date">${new Date().toLocaleDateString(
                   "uz-UZ",
                   {

@@ -23,7 +23,7 @@ import {
   LogIn,
   VideoIcon,
 } from "lucide-react";
-import { useEimzoLoginMutation } from "@/services/eimzoApi";
+import { useEimzoLoginMutation, useLazyGetChallengeQuery } from "@/services/eimzoApi";
 import { isBillingRole } from "@/features/billing/permissions";
 
 declare global {
@@ -57,6 +57,7 @@ function Login() {
   const [isEimzoInitialized, setIsEimzoInitialized] = useState(false);
 
   const [eimzoHandler] = useEimzoLoginMutation();
+  const [fetchChallenge] = useLazyGetChallengeQuery();
 
   // -------- TOAST NOTIFICATION HELPERS ---------------
   const showToast = (
@@ -354,14 +355,23 @@ function Login() {
   };
 
   // -------- AUTHENTICATION FUNCTIONS ---------------
+  // Imzolanadigan matn — server bergan bir martalik challenge (audit B1).
+  // Ilgari brauzer o'zi tasodifiy matn yasardi va backend uni tekshirmasdi.
   const getChallenge = (callback: (challenge: string) => void) => {
-    const challenge =
-      Math.random().toString(36).substring(2) + Date.now().toString(36);
-    callback(challenge);
+    fetchChallenge()
+      .unwrap()
+      .then((res) => {
+        if (!res?.challenge) throw new Error("challenge yo'q");
+        callback(res.challenge);
+      })
+      .catch(() => {
+        uiHideProgress();
+        uiShowMessage(t("eimzoServerUnavailable", "E-imzo serveri bilan bog'lanib bo'lmadi. Keyinroq urinib ko'ring."), "error");
+      });
   };
 
-  const handleEimzoLogin = (pkcs7: string) => {
-    eimzoHandler({ pkcs7 })
+  const handleEimzoLogin = (pkcs7: string, challenge: string) => {
+    eimzoHandler({ pkcs7, challenge })
       .unwrap()
       .then((response: any) => {
         uiHideProgress();
@@ -412,7 +422,7 @@ function Login() {
             return;
           }
 
-          handleEimzoLogin(pkcs7);
+          handleEimzoLogin(pkcs7, challenge);
         },
 
         (e: any, r: any) => {

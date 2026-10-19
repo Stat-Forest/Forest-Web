@@ -13,8 +13,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { token, user } = useSelector((state: any) => state.auth);
 
-  if (!token) {
+  if (!user) {
     return <Navigate to="/auth" />;
+  }
+
+  // Sahifa qayta yuklangan: profil persist'dan bor, access token esa faqat
+  // xotirada — AppWrapper HttpOnly refresh cookie orqali olguncha kutamiz
+  // (muvaffaqiyatsiz bo'lsa u logout qiladi va user null bo'ladi).
+  if (!token) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500" aria-busy="true">
+        Yuklanmoqda…
+      </div>
+    );
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role)) {

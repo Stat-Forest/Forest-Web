@@ -106,6 +106,9 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
+        // HttpOnly refresh cookie path'i backend'da /api/v1/authentications/ —
+        // lokal proxy'da brauzer /api/authentications/ ko'radi (audit A5)
+        cookiePathRewrite: { "/api/v1/authentications/": "/api/authentications/" },
       },
       "/ws": {
         target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
@@ -119,5 +122,27 @@ export default defineConfig({
   preview: {
     port: 4173,
     strictPort: true,
+    // Prod'dagi CSP (Forest-Back/docker/prod/nginx.conf) — build'ni lokal tekshirish uchun
+    headers: {
+      "Content-Security-Policy":
+        "default-src 'self'; script-src 'self' https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://api.stat-urmon.uz wss://api.stat-urmon.uz https://*.clarity.ms wss://127.0.0.1:64443 ws://127.0.0.1:64646; worker-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'",
+    },
+    proxy: {
+      "/api": {
+        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
+        // HttpOnly refresh cookie path'i backend'da /api/v1/authentications/ —
+        // lokal proxy'da brauzer /api/authentications/ ko'radi (audit A5)
+        cookiePathRewrite: { "/api/v1/authentications/": "/api/authentications/" },
+      },
+      "/ws": {
+        target: process.env.DEV_API_PROXY || "https://api.stat-urmon.uz",
+        ws: true,
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
 })

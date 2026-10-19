@@ -53,32 +53,10 @@
     <!-- Use local E-IMZO scripts in /public to avoid CDN/version conflicts.
          defer: sahifa render'ini bloklamaydi, tartib saqlanadi, React (module) dan oldin ishga tushadi -->
 
-    <script type="text/javascript">
-      (function (c, l, a, r, i, t, y) {
-        c[a] =
-          c[a] ||
-          function () {
-            (c[a].q = c[a].q || []).push(arguments);
-          };
-        t = l.createElement(r);
-        t.async = 1;
-        t.src = "https://www.clarity.ms/tag/" + i;
-        y = l.getElementsByTagName(r)[0];
-        y.parentNode.insertBefore(t, y);
-      })(window, document, "clarity", "script", "v6hcd4v83q");
-    </script>
-
-    <!-- Theme Initializer -->
-    <script>
-      (function() {
-        const theme = localStorage.getItem('theme');
-        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      })();
-    </script>
+    <!-- Clarity faqat landing sahifada (public/clarity.js), tema public/theme-init.js —
+         inline skript yo'q: CSP script-src 'self' (nginx.conf, audit A6) -->
+    <script src="/theme-init.js"></script>
+    <script src="/clarity.js" defer></script>
   </head>
 
   <body>
