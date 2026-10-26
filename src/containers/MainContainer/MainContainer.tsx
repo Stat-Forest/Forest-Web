@@ -39,10 +39,8 @@ function MainContainer() {
     return <div className="p-4 text-lg text-red-500">Xatolik yuz berdi!</div>;
   }
 
-  // AOS o'rniga CSS animatsiya: AOS sahifa tuzilishi o'zgarganda (statistika
-  // bloki yashirilganda) kartalarni ko'rinmas holda qoldirib, bo'sh joy hosil qilardi.
   const cardClasses =
-    "animate-in fade-in-0 slide-in-from-bottom-2 duration-500 w-full min-h-[90px] rounded-2xl flex items-center gap-4 px-4 py-3 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs backdrop-blur-md";
+    "w-full min-h-[90px] rounded-2xl flex items-center gap-4 px-4 py-3 cursor-pointer hover:shadow-lg bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-xs";
 
   return (
     <>

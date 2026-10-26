@@ -62,8 +62,6 @@ export default function FiltersSection({
   return (
     <div
       className="flex flex-wrap gap-2 w-full md:w-auto items-center"
-      data-aos="fade-left"
-      data-aos-delay="100"
     >
       <span className="font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-h-[40px] py-2 px-3.5 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2 shadow-xs transition-colors">
         {t("select_period_hint")} <ArrowRight size={16} />
@@ -72,8 +70,6 @@ export default function FiltersSection({
       <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
         <SelectTrigger
           className="w-full md:w-[200px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500 rounded-xl"
-          data-aos="fade-up"
-          data-aos-delay="160"
         >
           <SelectValue placeholder={`${t("report_type") || t("reportType")}`} />
         </SelectTrigger>
@@ -134,8 +130,6 @@ export default function FiltersSection({
         >
           <SelectTrigger
             className="w-full md:w-[150px] text-xs sm:text-sm h-[40px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-none focus:ring-1 focus:ring-blue-500 rounded-xl"
-            data-aos="fade-up"
-            data-aos-delay="180"
           >
             <SelectValue placeholder={t("quarter")} />
           </SelectTrigger>
@@ -151,8 +145,6 @@ export default function FiltersSection({
 
       <Button
         onClick={onSearch}
-        data-aos="zoom-in"
-        data-aos-delay="200"
         className="h-[40px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap"
       >
         {t("item_79")}

@@ -29,17 +29,6 @@ import { useTranslation } from "react-i18next";
 import ExportDropdown from "./Components/ExportDropdown";
 import FiltersSection from "./Components/FiltersSection";
 
-// AOS lazy loading - faqat kerak bo'lganda yuklash
-let AOS: any = null;
-const loadAOS = async () => {
-  if (!AOS) {
-    const aosModule = await import("aos");
-    AOS = aosModule.default;
-    await import("aos/dist/aos.css");
-  }
-  return AOS;
-};
-
 function ResourceContainer({
   reportName,
   isFinance = false,
@@ -84,45 +73,6 @@ function ResourceContainer({
     { skip: !id },
   );
 
-  // AOS'ni lazy load qilamiz - blocking operatsiyalarni oldini olish uchun
-  useEffect(() => {
-    const initAOS = async () => {
-      try {
-        const aos = await loadAOS();
-        aos.init({
-          duration: 400,
-          easing: "ease-in-out",
-          once: true,
-          offset: 30,
-        });
-        // Refresh AOS when data loads
-        aos.refresh();
-      } catch (error) {
-        console.warn("AOS yuklanmadi:", error);
-      }
-    };
-
-    // Defer AOS initialization - sahifa render bo'lgandan keyin
-    const timeoutId = setTimeout(initAOS, 100);
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  // ✅ AOS refresh'ni ham async qilamiz
-  useEffect(() => {
-    const refreshAOS = async () => {
-      try {
-        const aos = await loadAOS();
-        aos.refresh();
-      } catch (error) {
-        console.warn("AOS refresh xatolik:", error);
-      }
-    };
-
-    if (tableHeadersData.length > 0 || activeTab) {
-      const timeoutId = setTimeout(refreshAOS, 50);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [tableHeadersData, activeTab]);
 
   const { data: deadline, isLoading: deadlineLoading } =
     useGetDeadlinesReportQuery(
@@ -524,7 +474,7 @@ function ResourceContainer({
 
   // Skeleton Loading Components
   const TabSkeleton = () => (
-    <div className="flex space-x-2 overflow-x-auto pb-2" data-aos="fade-down">
+    <div className="flex space-x-2 overflow-x-auto pb-2">
       {Array.from({ length: 5 }).map((_, index) => (
         <Skeleton key={index} className="h-10 w-32 rounded-md" />
       ))}
@@ -532,7 +482,7 @@ function ResourceContainer({
   );
 
   const FilterSkeleton = () => (
-    <div className="flex flex-wrap gap-3 w-full md:w-auto" data-aos="fade-up">
+    <div className="flex flex-wrap gap-3 w-full md:w-auto">
       <Skeleton className="h-10 w-full md:w-[250px] rounded-md" />
       <Skeleton className="h-10 w-full md:w-[220px] rounded-md" />
       <Skeleton className="h-10 w-full md:w-[220px] rounded-md" />
@@ -542,7 +492,7 @@ function ResourceContainer({
   );
 
   const TableSkeleton = () => (
-    <div className="space-y-3" data-aos="fade-in">
+    <div className="space-y-3">
       {Array.from({ length: 10 }).map((_, index) => (
         <Skeleton key={index} className="h-12 w-full rounded-md" />
       ))}
@@ -556,13 +506,13 @@ function ResourceContainer({
         <TabSkeleton />
 
         {/* Chart Section Skeleton */}
-        <div className="space-y-2" data-aos="fade-up">
+        <div className="space-y-2">
           <Skeleton className="h-6 w-48 rounded-md" />
           <Skeleton className="h-64 w-full rounded-md" />
         </div>
 
         {/* Analysis Section Skeleton */}
-        <div className="space-y-2" data-aos="fade-up" data-aos-delay="100">
+        <div className="space-y-2">
           <Skeleton className="h-6 w-48 rounded-md" />
           <Skeleton className="h-32 w-full rounded-md" />
         </div>
@@ -570,7 +520,7 @@ function ResourceContainer({
         {/* Filters Skeleton */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center flex-wrap gap-3">
-            <div className="flex gap-3 w-full md:w-auto" data-aos="fade-right">
+            <div className="flex gap-3 w-full md:w-auto">
               <Skeleton className="h-10 w-full md:w-[220px] rounded-md" />
               <Skeleton className="h-10 w-full md:w-[150px] rounded-md" />
             </div>
@@ -587,7 +537,6 @@ function ResourceContainer({
     return (
       <div
         className="flex justify-center items-center h-[80vh]"
-        data-aos="zoom-in"
       >
         <Alert variant="destructive">
           <AlertTitle>Xatolik yuz berdi</AlertTitle>
@@ -612,15 +561,12 @@ function ResourceContainer({
         ) : (
           <TabsList
             className="w-full border border-slate-200 dark:border-slate-800 h-[52px] justify-start px-2 bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-xs gap-1.5 overflow-x-auto my-2 backdrop-blur-md transition-colors"
-            data-aos="fade-down"
           >
             {tableHeadersData.map((col: ReportColumn) => (
               <TabsTrigger
                 key={col.id}
                 value={col.title}
                 className="max-w-[400px] min-w-[120px] h-[38px] px-4 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white data-[state=active]:!bg-blue-600 dark:data-[state=active]:!bg-blue-600 data-[state=active]:!text-white dark:data-[state=active]:!text-white shadow-xs transition-all cursor-pointer whitespace-nowrap"
-                data-aos="fade-up"
-                data-aos-delay={20 * tableHeadersData.indexOf(col)}
               >
                 {col.title}
               </TabsTrigger>
@@ -632,7 +578,7 @@ function ResourceContainer({
           <TabsContent key={col.id} value={col.title}>
             {activeTab === col.title && (
               <>
-                <div data-aos="fade-up">
+                <div>
                   {isRowsLoading ? (
                     <div className="space-y-2">
                       <Skeleton className="h-6 w-48 rounded-md" />

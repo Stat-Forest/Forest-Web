@@ -223,7 +223,7 @@ const TerrasaChart = ({
             <YAxis />
             <Tooltip cursor={false} />
             <Legend />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Tog' hududlarida terrasa usulida o'rmon barpo etish ko'rsatkichlari - amalda"
               stackId="a"
               fill={colors.boshqaruv}

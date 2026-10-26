@@ -244,28 +244,28 @@ const EmployeeReportChart = ({
               <YAxis />
               <Tooltip cursor={false} />
               <Legend />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Boshqaruv xodimlari"
                 stackId="a"
                 fill={colors.boshqaruv}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Mutaxassislar"
                 stackId="a"
                 fill={colors.mutaxassis}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Ishlab chiqarish xodimlari"
                 stackId="a"
                 fill={colors.ishlab}
               />
-              <Bar dataKey="Texnik hodim" stackId="a" fill={colors.texnik} />
-              <Bar
+              <Bar isAnimationActive={false} dataKey="Texnik hodim" stackId="a" fill={colors.texnik} />
+              <Bar isAnimationActive={false}
                 dataKey="Xizmat korsatuvchi xodimlar"
                 stackId="a"
                 fill={colors.xizmat}
               />
-              <Bar dataKey="ishchilar" stackId="a" fill={colors.ishchi} />
+              <Bar isAnimationActive={false} dataKey="ishchilar" stackId="a" fill={colors.ishchi} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -295,9 +295,9 @@ const EmployeeReportChart = ({
               <Tooltip />
               <Legend />
 
-              <Bar dataKey="Oliy" stackId="a" fill={colors.ishlab} />
-              <Bar dataKey="O`rta-mahsus" stackId="a" fill={colors.xizmat} />
-              <Bar dataKey="O'rta-maxsus" stackId="a" fill={colors.boshqaruv} />
+              <Bar isAnimationActive={false} dataKey="Oliy" stackId="a" fill={colors.ishlab} />
+              <Bar isAnimationActive={false} dataKey="O`rta-mahsus" stackId="a" fill={colors.xizmat} />
+              <Bar isAnimationActive={false} dataKey="O'rta-maxsus" stackId="a" fill={colors.boshqaruv} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -326,8 +326,8 @@ const EmployeeReportChart = ({
               <Tooltip />
               <Legend />
 
-              <Bar dataKey="Doimiy" stackId="a" fill={colors.ishlab} />
-              <Bar dataKey="Mavsumiy" stackId="a" fill={colors.boshqaruv} />
+              <Bar isAnimationActive={false} dataKey="Doimiy" stackId="a" fill={colors.ishlab} />
+              <Bar isAnimationActive={false} dataKey="Mavsumiy" stackId="a" fill={colors.boshqaruv} />
             </BarChart>
           </ResponsiveContainer>
         )}

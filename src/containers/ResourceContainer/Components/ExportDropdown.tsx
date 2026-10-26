@@ -402,8 +402,6 @@ export default function ExportDropdown({
       <DropdownMenuTrigger asChild>
         <button
           className="h-[40px] px-4 font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-          data-aos="zoom-in"
-          data-aos-delay="50"
           disabled={isExporting}
         >
           {isExporting ? t("exporting") || "Export qilinmoqda..." : t("export")}

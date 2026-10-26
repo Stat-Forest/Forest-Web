@@ -126,7 +126,7 @@ function AiModal({ open, onOpenChange }: Props) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, isLoading]);
 
   const handleSend = async () => {

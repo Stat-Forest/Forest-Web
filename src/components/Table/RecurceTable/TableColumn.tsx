@@ -79,7 +79,7 @@ const TableColumn = forwardRef(
     useEffect(() => {
       if (selectedRow) {
         detailRef.current?.scrollIntoView({
-          behavior: "smooth",
+          behavior: "auto",
           block: "start",
         });
       }

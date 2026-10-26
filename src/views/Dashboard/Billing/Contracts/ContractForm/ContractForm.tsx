@@ -134,7 +134,7 @@ function ContractForm({ mode, contractId, layout = "page", onCreated, onUpdated,
 
   const goToTab = (tab: TabId) => {
     setActiveTab(tab);
-    contentRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    contentRef.current?.scrollIntoView({ block: "nearest", behavior: "auto" });
   };
 
   // ---- Yillik summalar (tahrirlash) — alohida PATCH

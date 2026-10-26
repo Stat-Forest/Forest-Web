@@ -117,7 +117,7 @@ function ContractsPage() {
   const changeYear = (next: YearParam) => updateUrl({ year: next });
   const changePage = (next: number) => {
     updateUrl({ page: next });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
 
   // ---- Excel eksport / na'muna ----

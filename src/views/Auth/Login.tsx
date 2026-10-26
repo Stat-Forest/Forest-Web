@@ -260,14 +260,21 @@ function Login() {
   };
 
   // -------- E-IMZO INITIALIZATION ---------------
+  // Faqat E-imzo / USB-token tanlanganda: login-parol bilan kiruvchilarda
+  // lokal E-IMZO'ga ulanish urinishi va uning xato xabari chiqmaydi.
   useEffect(() => {
+    if (activeTab === "login") {
+      setError(null);
+      return;
+    }
+    if (isEimzoInitialized) return;
     if (!window.EIMZOClient) {
       setError(t("eimzoClientNotLoaded"));
       return;
     }
 
     initializeEimzo();
-  }, [t]);
+  }, [activeTab, t]);
 
   useEffect(() => {
     if (activeTab === "usb-token" && isEimzoInitialized) {
@@ -554,7 +561,7 @@ function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors duration-200">
+    <div className="flex items-center justify-center bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800">
       <div className="w-full max-w-xl rounded-2xl px-8 py-8 flex flex-col gap-5">
         {/* Header */}
         <div className="text-center flex justify-between items-center mb-1">
@@ -576,7 +583,7 @@ function Login() {
             type="button"
             variant={activeTab === "login" ? "default" : "outline"}
             onClick={() => setActiveTab("login")}
-            className={`h-12 text-sm font-medium transition-all duration-200 ${
+            className={`h-12 text-sm font-medium ${
               activeTab === "login"
                 ? "bg-[#00BC7D] hover:bg-[#00a36c] text-white shadow-sm"
                 : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -589,7 +596,7 @@ function Login() {
             type="button"
             variant={activeTab === "eimzo" ? "default" : "outline"}
             onClick={() => setActiveTab("eimzo")}
-            className={`h-12 text-sm font-medium transition-all duration-200 ${
+            className={`h-12 text-sm font-medium ${
               activeTab === "eimzo"
                 ? "bg-[#00BC7D] hover:bg-[#00a36c] text-white shadow-sm"
                 : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -602,7 +609,7 @@ function Login() {
             type="button"
             variant={activeTab === "usb-token" ? "default" : "outline"}
             onClick={() => setActiveTab("usb-token")}
-            className={`h-12 text-sm font-medium transition-all duration-200 ${
+            className={`h-12 text-sm font-medium ${
               activeTab === "usb-token"
                 ? "bg-[#00BC7D] hover:bg-[#00a36c] text-white shadow-sm"
                 : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"

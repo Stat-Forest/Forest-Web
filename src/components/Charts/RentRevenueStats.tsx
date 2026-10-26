@@ -384,7 +384,7 @@ function RentRevenueStats({ mode, title, subtitle, variant = "default", classNam
                     wrapperStyle={{ outline: "none", zIndex: 20 }}
                     content={<ChartTooltip spec={chart} t={t} />}
                   />
-                  <Bar
+                  <Bar isAnimationActive={false}
                     dataKey={chart.key}
                     name={chart.label}
                     fill={featured ? `url(#rent-grad-${chart.key})` : chart.color}
