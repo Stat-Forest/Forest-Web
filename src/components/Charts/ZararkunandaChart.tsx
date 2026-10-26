@@ -223,27 +223,27 @@ const ZararkunandaChart = ({
             <YAxis />
             <Tooltip cursor={false} />
             <Legend />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Zararkunanda va kasalliklarni aniqlash bo'yicha o'rganiladigan maydon (gektar) - amalda"
               stackId="a"
               fill={colors.boshqaruv}
             />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Jami: Aniqlangan zararkunanda va kasallikka qarshi kurashish bo'yicha olib boriladigan tadbir (gektar) - amalda"
               stackId="a"
               fill={colors.mutaxassis}
             />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Biologik tadbir (oltinkoʻz, trixogramma, brokon) gektar - amalda"
               stackId="a"
               fill={colors.ishlab}
             />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Kimyoviy ishlov yordamida (gektar) - amalda"
               stackId="a"
               fill={colors.texnik}
             />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Mexanik, agrotexnik (qo'l kuchi yordamida zararlangan shoxlardan tozalash) gektar - amalda"
               stackId="a"
               fill={colors.xizmat}

@@ -177,7 +177,7 @@ export default function PieChartLanding() {
                   wrapperStyle={{ zIndex: 1000, outline: "none" }}
                 />
 
-                <Pie
+                <Pie isAnimationActive={false}
                   data={chartData}
                   dataKey="value"
                   nameKey="name"

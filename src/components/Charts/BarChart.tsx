@@ -197,12 +197,12 @@ const StaffChart = () => {
             <YAxis />
             <Tooltip cursor={false} />
             <Legend content={<CustomLegend />} />
-            <Bar dataKey="boshqaruv" stackId="a" fill={colors.boshqaruv} />
-            <Bar dataKey="mutaxassis" stackId="a" fill={colors.mutaxassis} />
-            <Bar dataKey="ishlab" stackId="a" fill={colors.ishlab} />
-            <Bar dataKey="texnik" stackId="a" fill={colors.texnik} />
-            <Bar dataKey="xizmat" stackId="a" fill={colors.xizmat} />
-            <Bar dataKey="ishchi" stackId="a" fill={colors.ishchi} />
+            <Bar isAnimationActive={false} dataKey="boshqaruv" stackId="a" fill={colors.boshqaruv} />
+            <Bar isAnimationActive={false} dataKey="mutaxassis" stackId="a" fill={colors.mutaxassis} />
+            <Bar isAnimationActive={false} dataKey="ishlab" stackId="a" fill={colors.ishlab} />
+            <Bar isAnimationActive={false} dataKey="texnik" stackId="a" fill={colors.texnik} />
+            <Bar isAnimationActive={false} dataKey="xizmat" stackId="a" fill={colors.xizmat} />
+            <Bar isAnimationActive={false} dataKey="ishchi" stackId="a" fill={colors.ishchi} />
           </BarChart>
         </ResponsiveContainer>
       </div>

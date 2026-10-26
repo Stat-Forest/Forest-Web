@@ -68,7 +68,7 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
 
   const handleLogoClick = () => {
     if (isLanding) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else {
       navigate("/landing");
     }
@@ -78,7 +78,7 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
     setMenuOpen(false);
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+      el.scrollIntoView({ behavior: "auto" });
     }
   };
 
@@ -194,7 +194,7 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
               <button
                 onClick={() => {
                   setMenuOpen(false);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  window.scrollTo({ top: 0, behavior: "auto" });
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
               >

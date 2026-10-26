@@ -223,7 +223,7 @@ const YerOzlashtirishChart = ({
             <YAxis />
             <Tooltip cursor={false} />
             <Legend />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Foydalanishga kiritiladigan o‘rmon fondi yerlari maydoni to‘g‘risida ma’lumot - amalda"
               stackId="a"
               fill={colors.boshqaruv}

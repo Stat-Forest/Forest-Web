@@ -1,6 +1,8 @@
 import { NavLink, Outlet } from "react-router-dom";
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useTranslation } from "react-i18next";
+// Bosh sahifa hero rasmi bilan bir xil — keshdan olinadi (avval tashqi saytdan ~1 s yuklanardi)
+import authBg from "@/assets/img/image.webp";
 
 function Auth() {
   const { t } = useTranslation();
@@ -8,10 +10,10 @@ function Auth() {
     <div
       className="w-full min-h-screen h-screen flex flex-col justify-between overflow-y-auto bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url(https://images.photowall.com/products/58341/foggy-forest-4.jpg?h=699&q=85)`,
+        backgroundImage: `url(${authBg})`,
       }}
     >
-      <div className="min-h-full w-full bg-black/40 backdrop-blur-[2px] flex flex-col justify-between flex-1">
+      <div className="min-h-full w-full bg-black/50 flex flex-col justify-between flex-1">
         <AuthHeader />
 
         <main className="flex-1 flex items-center justify-center p-4 my-auto">

@@ -774,3 +774,24 @@ html.dark [data-slot="select-item"][data-highlighted] {
   background-color: #334155 !important;
   color: #ffffff !important;
 }
+
+/*
+ * Animatsiyalar o'chirilgan — interfeys darhol ko'rinadi va javob beradi
+ * (sahifa bloklari, dialog/menyu ochilishi, hover effektlari).
+ * Faqat yuklanish ko'rsatkichlari (animate-spin, animate-pulse) va Leaflet
+ * xaritasining zoom/pan'i qoldirilgan. Radix dialoglari animation: none da
+ * darhol yopiladi (animationend kutmaydi).
+ */
+*:not(.leaflet-container *),
+*:not(.leaflet-container *)::before,
+*:not(.leaflet-container *)::after {
+  transition: none !important;
+}
+*:not(.animate-spin):not(.animate-pulse):not(.leaflet-container *),
+*::before,
+*::after {
+  animation: none !important;
+}
+html {
+  scroll-behavior: auto !important;
+}

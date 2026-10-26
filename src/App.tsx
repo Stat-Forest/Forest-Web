@@ -21,17 +21,6 @@ const ForgetPassword = lazy(() => import("./views/Auth/ForgetPassword"));
 const CheckCode = lazy(() => import("./views/Auth/CheckCode"));
 const ChangePassword = lazy(() => import("./views/Auth/changePassword"));
 
-// AOS lazy loading - faqat kerak bo'lganda yuklash
-let AOS: any = null;
-const loadAOS = async () => {
-  if (!AOS) {
-    const aosModule = await import("aos");
-    AOS = aosModule.default;
-    await import("aos/dist/aos.css");
-  }
-  return AOS;
-};
-
 // Env ro'yxati USER_ROLE konstantasi bilan BIRLASHTIRILADI (union) — GitHub
 // secret yangilanmasa ham yangi rollar (masalan billing_user) ishlaydi.
 const parseAllowedRoles = (): string[] => {
@@ -67,27 +56,6 @@ function App() {
       });
     }
   }, [reportIds]);
-
-  // AOS'ni lazy load qilamiz - blocking operatsiyalarni oldini olish uchun
-  useEffect(() => {
-    // AOS'ni keyingi event loop'da yuklash
-    const initAOS = async () => {
-      try {
-        const aos = await loadAOS();
-        aos.init({
-          duration: 700,
-          once: true,
-          easing: "ease-out-cubic",
-        });
-      } catch (error) {
-        console.warn("AOS yuklanmadi:", error);
-      }
-    };
-
-    // Defer AOS initialization - sahifa render bo'lgandan keyin
-    const timeoutId = setTimeout(initAOS, 100);
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   // Loading component
   const LoadingFallback = () => (

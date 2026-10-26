@@ -93,26 +93,7 @@ const getCardConfig = (name?: string) => {
   return { icon: Leaf, color: "#00BC7D", gradient: "from-emerald-500/20 to-emerald-500/5" };
 };
 
-// ─── Counter hook ─────────────────────────────────────────────────────────────
-function useCountUp(target: number, duration = 1400, start = false) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!start || target === 0) return;
-    let startTime: number | null = null;
-    const step = (ts: number) => {
-      if (!startTime) startTime = ts;
-      const progress = Math.min((ts - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-      else setCount(target);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return count;
-}
-
-// ─── Scroll reveal hook ───────────────────────────────────────────────────────
+// ─── Ko'rinish maydoni hook'i (GIS xaritani kech yuklash uchun) ─────────────────
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -163,9 +144,9 @@ function ScrollToTopButton() {
   if (!visible) return null;
   return (
     <button
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => window.scrollTo({ top: 0 })}
       aria-label={t("landing_scroll_top")}
-      className="fixed bottom-8 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/30 transition-all duration-300 hover:bg-[#00a36c] hover:scale-110 hover:shadow-xl active:scale-95"
+      className="fixed bottom-8 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#00BC7D] text-white shadow-lg shadow-[#00BC7D]/30 hover:bg-[#00a36c]"
     >
       <ArrowUp size={22} />
     </button>
@@ -189,13 +170,13 @@ export default function ModernLanding() {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+      el.scrollIntoView({ behavior: "auto" });
     }
   };
 
   const handleQuickLinkClick = (key: string) => {
     if (key === "home") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else if (key === "strategic") {
       scrollToSection("strategik-korsatkichlar");
     } else if (key === "operational") {
@@ -221,26 +202,20 @@ export default function ModernLanding() {
   const deadlineMonth = deadlineMonthData as DeadlineResponse | undefined;
   const deadlineYear = deadlineYearData as DeadlineResponse | undefined;
 
-  // Hero reveal
-  const { ref: heroRef, inView: heroInView } = useInView(0.1);
   // GIS xarita (Leaflet + 3 ta so'rov) faqat ko'rinish maydoniga yaqinlashganda yuklanadi
   const { ref: mapRef, inView: mapInView } = useInView(0.05);
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] dark:bg-[#0B132B] text-slate-900 dark:text-slate-100 selection:bg-emerald-100 selection:text-emerald-900 transition-colors duration-300">
+    <div className="min-h-screen bg-[#F1F5F9] dark:bg-[#0B132B] text-slate-900 dark:text-slate-100 selection:bg-emerald-100 selection:text-emerald-900">
       <AuthHeader />
 
       <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10 xl:px-12">
 
         {/* ── HERO ───────────────────────────────────────────────────────── */}
-        <div ref={heroRef} className="mb-10 grid grid-cols-1 gap-5 lg:grid-cols-12 xl:gap-6">
+        <div className="mb-10 grid grid-cols-1 gap-5 lg:grid-cols-12 xl:gap-6">
 
           {/* Hero left */}
-          <div
-            className={`relative col-span-1 overflow-hidden rounded-2xl border border-emerald-900/20 bg-slate-900 p-6 shadow-md sm:p-8 lg:col-span-7 lg:rounded-3xl lg:p-10 flex flex-col justify-between transition-all duration-700 ${
-              heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
+          <div className="relative col-span-1 overflow-hidden rounded-2xl border border-emerald-900/20 bg-slate-900 p-6 shadow-md sm:p-8 lg:col-span-7 lg:rounded-3xl lg:p-10 flex flex-col justify-between">
             <div
               className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 scale-105"
               style={{ backgroundImage: `url(${heroBg})` }}
@@ -249,7 +224,7 @@ export default function ModernLanding() {
 
             <div className="relative z-10">
               <div className="mb-5 inline-flex items-center gap-2.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 px-3.5 py-1 backdrop-blur-md">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 sm:text-xs">
                   {t("landing_hero_tag")}
                 </span>
@@ -284,11 +259,7 @@ export default function ModernLanding() {
           </div>
 
           {/* Pie chart right */}
-          <div
-            className={`relative col-span-1 flex min-h-[320px] flex-col justify-between rounded-2xl border border-white dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm sm:min-h-[360px] sm:p-6 lg:col-span-5 lg:rounded-3xl lg:p-8 transition-all duration-700 delay-150 ${
-              heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
+          <div className="relative col-span-1 flex min-h-[320px] flex-col justify-between rounded-2xl border border-white dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm sm:min-h-[360px] sm:p-6 lg:col-span-5 lg:rounded-3xl lg:p-8">
             <div className="h-full w-full">
               <Suspense fallback={null}>
                 <PieChartLanding />
@@ -337,7 +308,7 @@ export default function ModernLanding() {
               {yearLoading
                 ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
                 : year.map((item, idx) => (
-                    <ModernStatCard key={`${item.column_name ?? "year"}-${idx}`} item={item} delay={idx * 80} />
+                    <ModernStatCard key={`${item.column_name ?? "year"}-${idx}`} item={item} />
                   ))}
             </div>
           </SectionLayout>
@@ -355,7 +326,7 @@ export default function ModernLanding() {
               {monthLoading
                 ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
                 : month.map((item, idx) => (
-                    <ModernStatCard key={`${item.column_name ?? "month"}-${idx}`} item={item} delay={idx * 80} />
+                    <ModernStatCard key={`${item.column_name ?? "month"}-${idx}`} item={item} />
                   ))}
             </div>
           </SectionLayout>
@@ -378,7 +349,7 @@ export default function ModernLanding() {
                 {t("landing_footer_desc")}
               </p>
               <div className="flex items-center gap-2 rounded-full border border-[#00BC7D]/30 bg-[#00BC7D]/10 px-3 py-1.5 w-fit">
-                <span className="h-2 w-2 rounded-full bg-[#00BC7D] animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-[#00BC7D]" />
                 <span className="text-xs font-bold text-[#00BC7D]">{t("landing_system_active")}</span>
               </div>
             </div>
@@ -397,9 +368,9 @@ export default function ModernLanding() {
                   <li key={key}>
                     <span
                       onClick={() => handleQuickLinkClick(key)}
-                      className="group flex items-center gap-2 text-sm text-slate-400 cursor-pointer transition-colors hover:text-[#00BC7D]"
+                      className="group flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-[#00BC7D]"
                     >
-                      <span className="h-px w-4 bg-slate-600 transition-all group-hover:w-6 group-hover:bg-[#00BC7D]" />
+                      <span className="h-px w-4 bg-slate-600 group-hover:w-6 group-hover:bg-[#00BC7D]" />
                       {label}
                     </span>
                   </li>
@@ -426,7 +397,7 @@ export default function ModernLanding() {
                   </div>
                   <a
                     href="tel:+998712078877"
-                    className="text-sm text-slate-400 hover:text-[#00BC7D] transition-colors"
+                    className="text-sm text-slate-400 hover:text-[#00BC7D]"
                   >
                     +998 71 207 88 77
                   </a>
@@ -438,7 +409,7 @@ export default function ModernLanding() {
                   </div>
                   <a
                     href="mailto:urmoninfo@gmail.com"
-                    className="text-sm text-slate-400 hover:text-[#00BC7D] transition-colors"
+                    className="text-sm text-slate-400 hover:text-[#00BC7D]"
                   >
                     urmoninfo@gmail.com
                   </a>
@@ -480,15 +451,8 @@ type SectionLayoutProps = {
 
 function SectionLayout({ id, title, subtitle, icon, value, onChange, options, children }: SectionLayoutProps) {
   const { t } = useTranslation();
-  const { ref, inView } = useInView(0.1);
   return (
-    <div
-      id={id}
-      ref={ref}
-      className={`space-y-6 sm:space-y-8 transition-all duration-700 ${
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-      }`}
-    >
+    <div id={id} className="space-y-6 sm:space-y-8">
       <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end md:gap-6">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm sm:h-14 sm:w-14 sm:rounded-2xl">
@@ -506,7 +470,6 @@ function SectionLayout({ id, title, subtitle, icon, value, onChange, options, ch
 
         {options && onChange && (
           <div className="group relative w-full md:w-auto">
-            <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-[#00BC7D]/20 to-[#00BC7D]/5 opacity-0 blur-lg transition group-hover:opacity-100" />
             <Select onValueChange={onChange} value={value}>
               <SelectTrigger className="relative h-12 w-full rounded-xl border-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-4 font-bold shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 focus:ring-2 focus:ring-[#00BC7D] sm:h-14 sm:px-6 md:w-[280px]">
                 <div className="flex items-center gap-2">
@@ -533,41 +496,23 @@ function SectionLayout({ id, title, subtitle, icon, value, onChange, options, ch
 // ─── ModernStatCard ───────────────────────────────────────────────────────────
 type ModernStatCardProps = {
   item: StatCardItem;
-  delay?: number;
 };
 
-function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
+function ModernStatCard({ item }: ModernStatCardProps) {
   const { t } = useTranslation();
   const config = getCardConfig(item.column_name);
   const Icon = config.icon;
   const percent = item.percentage ? Math.round(item.percentage) : 0;
   const actual = item.actual ?? 0;
 
-  const { ref, inView } = useInView(0.1);
-  const countedActual = useCountUp(actual, 1200, inView);
-  const [barWidth, setBarWidth] = useState(0);
-
-  useEffect(() => {
-    if (inView) {
-      const t = setTimeout(() => setBarWidth(Math.min(percent, 100)), 200);
-      return () => clearTimeout(t);
-    }
-  }, [inView, percent]);
-
   return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl dark:hover:border-slate-700 sm:rounded-2xl sm:p-6 lg:p-8 ${
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      }`}
-    >
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 hover:shadow-xl dark:hover:border-slate-700 sm:rounded-2xl sm:p-6 lg:p-8">
       {/* Glow blob */}
-      <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${config.gradient} blur-2xl transition-transform group-hover:scale-150`} />
+      <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${config.gradient} blur-2xl`} />
 
       <div className="relative z-10">
         <div className="mb-6 flex items-start justify-between sm:mb-8">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors duration-300 group-hover:bg-[#00BC7D] group-hover:text-white sm:h-12 sm:w-12">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-[#00BC7D] group-hover:text-white sm:h-12 sm:w-12">
             <Icon size={22} />
           </div>
           <div className="flex flex-col items-end">
@@ -581,7 +526,7 @@ function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 sm:text-xs">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400 animate-pulse" />
+                <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />
                 {t("landing_in_progress")} · {percent}%
               </span>
             )}
@@ -597,7 +542,7 @@ function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
         <div className="mb-4 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <p className="text-2xl font-black leading-none tracking-tighter text-slate-900 dark:text-white sm:text-3xl">
-              {formatNumber(countedActual)}
+              {formatNumber(actual)}
             </p>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
               {t("landing_actual")} ({item.unit ?? "–"})
@@ -608,19 +553,15 @@ function ModernStatCard({ item, delay = 0 }: ModernStatCardProps) {
           </div>
         </div>
 
-        {/* Animated progress bar */}
         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-          <div
-            className="h-full rounded-full bg-[#00BC7D] transition-[width] duration-1000 ease-out"
-            style={{ width: `${barWidth}%` }}
-          />
+          <div className="h-full rounded-full bg-[#00BC7D]" style={{ width: `${Math.min(percent, 100)}%` }} />
         </div>
 
         <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase text-slate-400 sm:text-[11px]">
           <span>{t("landing_plan")}: {formatNumber(item.plan ?? 0)}</span>
           <ArrowUpRight
             size={14}
-            className="text-[#00BC7D] opacity-0 transition-opacity group-hover:opacity-100"
+            className="text-[#00BC7D] opacity-0 group-hover:opacity-100"
           />
         </div>
       </div>

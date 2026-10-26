@@ -222,7 +222,7 @@ const EmployeeFundChart = ({
             <YAxis />
             <Tooltip cursor={false} />
             <Legend />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Hisob raqamda yil boshiga qoldiq"
               stackId="a"
               fill={colors.boshqaruv}

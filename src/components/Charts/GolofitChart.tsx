@@ -214,7 +214,7 @@ const GolofitChart = ({
             <YAxis />
             <Tooltip cursor={false} />
             <Legend />
-            <Bar
+            <Bar isAnimationActive={false}
               dataKey="Galofit bog'lar barpo etish to'g'risida ma'lumot - amalda"
               stackId="a"
               fill={colors.boshqaruv}

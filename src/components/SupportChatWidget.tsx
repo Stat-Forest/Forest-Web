@@ -201,7 +201,7 @@ function SupportChatWidget() {
   }, [activeConversationId, isOpen, markConversationRead]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
   }, [mergedMessages]);
 
   const handleSocketEvent = useCallback(

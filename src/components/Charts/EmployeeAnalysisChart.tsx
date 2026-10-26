@@ -196,24 +196,24 @@ const EmployeeAnalysisChart = ({ activeTab, lang }: { activeTab: string; lang: s
               <YAxis />
               <Tooltip cursor={false} />
               <Legend />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Tasdiqlanagan shtat birligi boyicha xodimlar soni(faqat boshqaruv hodimlar soni)"
                 stackId="a"
                 fill={colors.boshqaruv}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Amaldagi xodimlar soni(faqat boshqaruv hodimlar soni)"
                 stackId="a"
                 fill={colors.mutaxassis}
               />
-              <Bar dataKey="2 yilgacha" stackId="a" fill={colors.ishlab} />
-              <Bar dataKey="2 yildan ortiq" stackId="a" fill={colors.texnik} />
-              <Bar
+              <Bar isAnimationActive={false} dataKey="2 yilgacha" stackId="a" fill={colors.ishlab} />
+              <Bar isAnimationActive={false} dataKey="2 yildan ortiq" stackId="a" fill={colors.texnik} />
+              <Bar isAnimationActive={false}
                 dataKey="PHD, fan nomzodi ilmiy darajasi ega xodimlar soni"
                 stackId="a"
                 fill={colors.xizmat}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Xalqaro sertifikatga ega xodimlar soni"
                 stackId="a"
                 fill={colors.ishchi}
@@ -238,27 +238,27 @@ const EmployeeAnalysisChart = ({ activeTab, lang }: { activeTab: string; lang: s
               <YAxis />
               <Tooltip cursor={false} />
               <Legend />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="30 yoshdan 50 yoshgacha bo‘lgan xodimlar soni"
                 stackId={"a"}
                 fill={colors?.ishlab}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="50 yoshdan yuqori bo‘lgan xodimlar soni"
                 stackId={"a"}
                 fill={colors?.boshqaruv}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Mablag‘ sarfi, mln. so‘mda"
                 stackId={"a"}
                 fill={colors?.ishchi}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Yuqori lavozimlarsoni"
                 stackId={"a"}
                 fill={colors?.mutaxassis}
               />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="Quyi lavozimlar"
                 stackId={"a"}
                 fill={colors?.xizmat}
@@ -282,7 +282,7 @@ const EmployeeAnalysisChart = ({ activeTab, lang }: { activeTab: string; lang: s
               <YAxis />
               <Tooltip cursor={false} />
               <Legend />
-              <Bar
+              <Bar isAnimationActive={false}
                 dataKey="O'rta malumotli"
                 stackId={"a"}
                 fill={colors?.ishlab}
