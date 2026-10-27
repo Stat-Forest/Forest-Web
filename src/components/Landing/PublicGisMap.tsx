@@ -28,13 +28,14 @@ import {
   flyToXojalik,
   type PublicContractPopupLabels,
 } from "@/features/billing/markers";
-import { CONTRACT_STATUS_COLOR, UZ_MAP_CENTER, UZ_MAP_ZOOM } from "@/features/billing/constants";
+import { CONTRACT_STATUS_COLOR, UZ_MAP_CENTER, UZ_MAP_ZOOM, XOJALIK_COLOR } from "@/features/billing/constants";
 import { formatNumber } from "@/features/billing/format";
 import {
   useGetPublicGeoListQuery,
   useGetPublicXojaliklarQuery,
   useGetPublicXojalikKontursQuery,
   useGetPublicXojalikLocationsQuery,
+  useGetPublicXojalikOutlinesQuery,
   useLazyGetPublicXojalikKonturQuery,
   useLazyGetPublicXojalikLocationQuery,
 } from "@/services/billingApi";
@@ -46,11 +47,12 @@ import type {
 } from "@/features/billing/types";
 
 /**
- * Landing (login'dan oldingi) sahifadagi ochiq GIS xaritasi — billing-urmon.uz
- * `LoginGisMap.vue` analogi: "kosmosdan uchib kelish" intro'si, faol ijara
- * shartnomalari (pin + poligon), xo'jalik bayroqchalari, "Xaritani filterlash"
- * (viloyat → xo'jalik → kontur) va "Shartnomalarni filterlash" (xo'jalik +
- * shartnoma raqami) panellari.
+ * Landing (login'dan oldingi) sahifadagi ochiq GIS xaritasi. Birinchi ochilganda
+ * faqat yerlar: xo'jaliklar ixcham chegaralari va bayroqchalari. Faol ijara
+ * shartnomalari (pin + poligon) faqat "Shartnomalarni filterlash"da qidirilganda
+ * (xo'jalik / shartnoma raqami) yoki "Barchasi" tanlanganda chiziladi; ungacha
+ * statistika uchun faqat soni va maydoni (`summary`) olinadi.
+ * "Xaritani filterlash" — viloyat → xo'jalik → kontur.
  *
  * Maxfiylik: popup'da faqat № / xo'jalik / ijara maqsadi / yer maydoni —
  * ijarachi nomi va pul ma'lumotlari yo'q (backend ham qaytarmaydi).
@@ -94,6 +96,7 @@ function PublicGisMap() {
   const baseLayersRef = useRef<BaseLayers | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const xojalikMarkersLayerRef = useRef<L.LayerGroup | null>(null);
+  const outlinesLayerRef = useRef<L.GeoJSON | null>(null);
   const xojalikBoundaryRef = useRef<L.GeoJSON | null>(null);
   const konturHighlightRef = useRef<L.GeoJSON | null>(null);
   const layerControlRef = useRef<L.Control.Layers | null>(null);
@@ -105,12 +108,17 @@ function PublicGisMap() {
   // ---- Panellar / filtrlar ----
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [applied, setApplied] = useState<PublicGeoListParams>({});
+  /** Shartnomalar faqat foydalanuvchi so'raganda (qidiruv yoki "Barchasi") */
+  const [showContracts, setShowContracts] = useState(false);
   const [draftXojalik, setDraftXojalik] = useState<string>(ALL);
   const [draftNumber, setDraftNumber] = useState("");
-  const hasAppliedFilters = !!(applied.xojalik || applied.number);
+  const hasAppliedFilters = showContracts && !!(applied.xojalik || applied.number);
 
   // ---- Ma'lumotlar ----
-  const { data: geo, isLoading, isFetching, isError, refetch } = useGetPublicGeoListQuery(applied);
+  const { data: geo, isLoading, isFetching, isError, refetch } = useGetPublicGeoListQuery(
+    showContracts ? applied : { summary: true },
+  );
+  const { data: outlines } = useGetPublicXojalikOutlinesQuery();
   const { data: publicXojaliklar = [] } = useGetPublicXojaliklarQuery();
   const { data: xojalikLocations = [] } = useGetPublicXojalikLocationsQuery();
   const [fetchXojalikLocation] = useLazyGetPublicXojalikLocationQuery();
@@ -166,6 +174,7 @@ function PublicGisMap() {
       esri: t("billing.layer_esri"),
       yandex: t("billing.layer_yandex"),
       xojaliklar: t("billing.layer_xojaliklar"),
+      outlines: t("public_gis.layer_outlines"),
     }),
     [t],
   );
@@ -189,6 +198,11 @@ function PublicGisMap() {
     const layers = createBaseLayers();
     layers.satellite.addTo(map);
     layers.boundaries.addTo(map);
+    // Xo'jalik chegaralari — shartnoma va bayroqchalar ostida
+    const outlinesLayer = L.geoJSON(undefined, {
+      renderer: L.canvas(),
+      style: { color: XOJALIK_COLOR, weight: 1.5, opacity: 0.9, fillColor: XOJALIK_COLOR, fillOpacity: 0.12 },
+    } as L.GeoJSONOptions).addTo(map);
     const markersLayer = L.layerGroup().addTo(map);
     const xojalikMarkersLayer = L.layerGroup().addTo(map);
 
@@ -196,6 +210,7 @@ function PublicGisMap() {
     baseLayersRef.current = layers;
     markersLayerRef.current = markersLayer;
     xojalikMarkersLayerRef.current = xojalikMarkersLayer;
+    outlinesLayerRef.current = outlinesLayer;
 
     const enableWheel = () => map.scrollWheelZoom.enable();
     const disableWheel = () => map.scrollWheelZoom.disable();
@@ -242,6 +257,7 @@ function PublicGisMap() {
       baseLayersRef.current = null;
       markersLayerRef.current = null;
       xojalikMarkersLayerRef.current = null;
+      outlinesLayerRef.current = null;
       xojalikBoundaryRef.current = null;
       konturHighlightRef.current = null;
       layerControlRef.current = null;
@@ -311,12 +327,13 @@ function PublicGisMap() {
     const map = mapRef.current;
     const layers = baseLayersRef.current;
     const xojalikMarkersLayer = xojalikMarkersLayerRef.current;
-    if (!mapReady || !map || !layers || !xojalikMarkersLayer) return;
+    const outlinesLayer = outlinesLayerRef.current;
+    if (!mapReady || !map || !layers || !xojalikMarkersLayer || !outlinesLayer) return;
     if (layerControlRef.current) map.removeControl(layerControlRef.current);
     layerControlRef.current = L.control
       .layers(
         { [layerLabels.esri]: layers.satellite, [layerLabels.yandex]: layers.yandex },
-        { [layerLabels.xojaliklar]: xojalikMarkersLayer },
+        { [layerLabels.outlines]: outlinesLayer, [layerLabels.xojaliklar]: xojalikMarkersLayer },
         { position: "bottomright" },
       )
       .addTo(map);
@@ -363,6 +380,19 @@ function PublicGisMap() {
       layer.addLayer(m);
     });
   }, [mapReady, xojalikLocations, showXojalikBoundary]);
+
+  // Xo'jalik chegaralari (birinchi ochilganda yerlar shular bilan ko'rinadi)
+  useEffect(() => {
+    const layer = outlinesLayerRef.current;
+    if (!mapReady || !layer) return;
+    layer.clearLayers();
+    if (!outlines?.features?.length) return;
+    layer.addData(outlines as unknown as GeoJSON.GeoJsonObject);
+    layer.eachLayer((feature) => {
+      const props = (feature as L.Layer & { feature?: { properties?: { name?: string } } }).feature?.properties;
+      if (props?.name) (feature as L.Path).bindTooltip(props.name, { sticky: true });
+    });
+  }, [mapReady, outlines]);
 
   const focusXojalik = useCallback(
     (xojalik: XojalikLocation) => {
@@ -447,8 +477,9 @@ function PublicGisMap() {
   // =====================================================================
   const applyContractFilters = (next: PublicGeoListParams) => {
     setOpenPanel(null);
-    if (sameParams(next, applied)) return;
+    if (showContracts && sameParams(next, applied)) return;
     fitRequestRef.current = true;
+    setShowContracts(true);
     setApplied(next);
   };
 
@@ -461,10 +492,19 @@ function PublicGisMap() {
     });
   };
 
-  const clearContractFilters = () => {
+  const showAllContracts = () => {
     setDraftXojalik(ALL);
     setDraftNumber("");
     applyContractFilters({});
+  };
+
+  // Tozalash — shartnomalar yashiriladi, xarita yana faqat yerlarni ko'rsatadi
+  const clearContractFilters = () => {
+    setDraftXojalik(ALL);
+    setDraftNumber("");
+    setOpenPanel(null);
+    setShowContracts(false);
+    setApplied({});
   };
 
   const togglePanel = (panel: Exclude<OpenPanel, null>) =>
@@ -554,7 +594,7 @@ function PublicGisMap() {
             {t("public_gis.empty")}
           </span>
         )}
-        {!isFetching && geo && shownCount > 0 && shownCount < totalCount && (
+        {showContracts && !isFetching && geo && shownCount > 0 && shownCount < totalCount && (
           <span className="pointer-events-auto self-center rounded-full border border-white/10 bg-slate-950/75 px-3 py-1.5 text-[11px] font-medium text-slate-300 shadow-lg backdrop-blur-md">
             {t("public_gis.shown_limit", {
               shown: formatNumber(shownCount),
@@ -591,7 +631,7 @@ function PublicGisMap() {
             icon={<Filter size={16} />}
             label={t("public_gis.contract_filter")}
             active={openPanel === "contracts"}
-            badge={hasAppliedFilters}
+            badge={showContracts}
             onClick={() => togglePanel("contracts")}
           />
         </div>
@@ -623,6 +663,7 @@ function PublicGisMap() {
             closeLabel={t("public_gis.close")}
           >
             <form onSubmit={handleContractFilterSubmit} className="flex flex-col gap-3">
+              <p className="text-xs leading-snug text-slate-500 dark:text-slate-400">{t("public_gis.contracts_hint")}</p>
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {t("public_gis.filter_xojalik")}
@@ -672,6 +713,13 @@ function PublicGisMap() {
                   {t("public_gis.clear")}
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={showAllContracts}
+                className="rounded-lg border border-emerald-500/40 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40 cursor-pointer"
+              >
+                {t("public_gis.show_all")}
+              </button>
             </form>
           </FilterPanel>
         )}

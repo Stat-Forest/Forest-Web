@@ -1024,6 +1024,9 @@
     "error": "Ma'lumotlarni yuklab bo'lmadi — qayta urinish",
     "empty": "Shartnoma topilmadi",
     "shown_limit": "Xaritada {{shown}} / {{total}} ta ko'rsatilgan",
+    "layer_outlines": "Xo'jalik chegaralari",
+    "show_all": "Barcha shartnomalarni ko'rsatish",
+    "contracts_hint": "Shartnomalar xaritada faqat qidirilganda yoki \"Barchasi\" tanlanganda ko'rinadi.",
     "wheel_hint": "Kattalashtirish uchun Ctrl (⌘) + g'ildirakdan foydalaning yoki xaritani bosing"
   }
 }
