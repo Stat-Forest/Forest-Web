@@ -804,3 +804,13 @@ html.dark [data-slot="select-item"][data-highlighted] {
 html {
   scroll-behavior: auto !important;
 }
+
+/*
+ * backdrop-blur o'chirilgan: katta jadval/panellar ustida scroll paytida har kadrda
+ * orqa fonni qayta xiralashtiradi (kuchsiz ofis kompyuterlarida sekin). Panellar
+ * baribir deyarli shaffof emas (bg-white/90 va h.k.), ko'rinish deyarli o'zgarmaydi.
+ */
+[class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}

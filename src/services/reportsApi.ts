@@ -2,7 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { base_url } from "./baseUrl";
 import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { getAccessToken } from "@/utils/accessToken";
-import { DeadlineMonthResponse } from "@/types/reportInterface";
+import { DeadlineMonthResponse, ReportRow } from "@/types/reportInterface";
 import { ImportParseResponse } from "@/types/importReport";
 import type { DashboardOverview, OverviewPeriod } from "@/types/dashboardOverview";
 
@@ -56,6 +56,8 @@ export const reportApi = createApi({
         page?: number;
         per_page?: number;
         lang?: string;
+        /** report_items'siz ro'yxat (jadval uchun) — ustun qiymatlari getReportFull bilan */
+        compact?: boolean;
       }
     >({
       query: ({
@@ -68,6 +70,7 @@ export const reportApi = createApi({
         page,
         per_page,
         lang,
+        compact,
       }) => {
         let url = `/?statement=${statement}&${status}&organization_region=${organization__region}&statement_period=${statement__period}&organization_name=${search}&page=${page}&per_page=${per_page}`;
         // Faqat late_reports va ontime_reports uchun time_status parametrini qo'shish
@@ -77,8 +80,19 @@ export const reportApi = createApi({
         if (lang) {
           url += `&lang=${lang}`;
         }
+        if (compact) {
+          url += `&compact=1`;
+        }
         return url;
       },
+      providesTags: ["Reports"],
+    }),
+
+    // Ro'yxatdagi bitta hisobot to'liq (report_items bilan) — getAllReports bilan bir xil format
+    getReportFull: builder.query<ReportRow | null, { id: string; statement: string; lang?: string }>({
+      query: ({ id, statement, lang }) =>
+        `/?id=${encodeURIComponent(id)}&statement=${statement}&page=1&per_page=1${lang ? `&lang=${lang}` : ""}`,
+      transformResponse: (response: { results?: ReportRow[] }) => response?.results?.[0] ?? null,
       providesTags: ["Reports"],
     }),
 
@@ -692,6 +706,7 @@ export const fetchReportDeadlines = async (page: number, perPage: number) => {
 export const {
   // GET
   useGetAllReportsQuery,
+  useGetReportFullQuery,
   useGetReportByIdQuery,
   useGetDashboardReportQuery,
   useGetDeadlinesReportQuery,
