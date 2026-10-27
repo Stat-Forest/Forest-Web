@@ -72,12 +72,11 @@ const PIN_COLOR = CONTRACT_STATUS_COLOR.active;
 type IntroPhase = "space" | "landing" | "done";
 type OpenPanel = "map" | "contracts" | null;
 
-/** Tor ekran (mobil, qisqa xarita bo'lagi) va reduced-motion'da intro'siz. */
-const shouldSkipIntro = (): boolean => {
-  if (typeof window === "undefined") return true;
-  const reducedMotion = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  return reducedMotion || window.innerWidth < 768;
-};
+/**
+ * Intro (kosmos -> globus -> O'zbekistonga 3.4 s uchish) o'chirilgan: xarita
+ * darhol O'zbekiston ustida ochiladi va ishlatishga tayyor bo'ladi.
+ */
+const shouldSkipIntro = (): boolean => true;
 
 const sameParams = (a: PublicGeoListParams, b: PublicGeoListParams) =>
   (a.xojalik || "") === (b.xojalik || "") && (a.number || "") === (b.number || "");
@@ -372,7 +371,7 @@ function PublicGisMap() {
       flyToXojalik(map, xojalik);
       void showXojalikBoundary(xojalik);
       const marker = findXojalikMarker(xojalikMarkersLayerRef.current, xojalik.id);
-      if (marker) window.setTimeout(() => marker.openPopup(), 900);
+      if (marker) marker.openPopup();
     },
     [showXojalikBoundary],
   );
@@ -410,7 +409,7 @@ function PublicGisMap() {
       if (layer) {
         layer.addTo(mapRef.current);
         konturHighlightRef.current = layer;
-        window.setTimeout(() => konturHighlightRef.current?.openPopup(), 900);
+        konturHighlightRef.current?.openPopup();
       }
     } catch {
       // kontur topilmadi
@@ -438,7 +437,7 @@ function PublicGisMap() {
     if (fitRequestRef.current) {
       fitRequestRef.current = false;
       if (!fitMapToContracts(map, bounds, { padding: [40, 40], maxZoom: 15 })) {
-        map.flyTo(UZ_MAP_CENTER, UZ_MAP_ZOOM, { duration: 1.2 });
+        map.setView(UZ_MAP_CENTER, UZ_MAP_ZOOM, { animate: false });
       }
     }
   }, [mapReady, geo, popupLabels]);

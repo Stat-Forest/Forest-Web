@@ -673,7 +673,7 @@ function BoundaryMap({
       if (layer) {
         layer.addTo(map);
         konturLayerRef.current = layer;
-        window.setTimeout(() => konturLayerRef.current?.openPopup(), 900);
+        konturLayerRef.current?.openPopup();
       }
       konturBoundaryRef.current = detail.geojson || null;
     } catch {
