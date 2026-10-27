@@ -107,8 +107,9 @@ export const findXojalikMarker = (
     | XojalikMarker
     | undefined;
 
-// flyToXojalik/flyToKontur uchun umumiy: bounds bo'lsa flyToBounds (tarqoq
-// hududni butunligicha ko'rsatadi), bo'lmasa markaz atrofiga flyTo.
+// flyToXojalik/flyToKontur uchun umumiy: bounds bo'lsa fitBounds (tarqoq
+// hududni butunligicha ko'rsatadi), bo'lmasa markaz atrofiga setView.
+// Animatsiyasiz — darhol o'tadi (avvalgi 1.2 s "uchish" o'rniga).
 const flyToTarget = (
   map: L.Map,
   target: {
@@ -122,18 +123,18 @@ const flyToTarget = (
     try {
       const bounds = L.latLngBounds(target.bounds);
       if (bounds.isValid()) {
-        map.flyToBounds(bounds, { maxZoom, padding: [40, 40], duration: 1.2 });
+        map.fitBounds(bounds, { maxZoom, padding: [40, 40], animate: false });
         return;
       }
     } catch {
-      // markaz bo'yicha flyTo'ga o'tamiz
+      // markaz bo'yicha setView'ga o'tamiz
     }
   }
 
   const lat = num(target.latitude);
   const lng = num(target.longitude);
   if (lat !== null && lng !== null) {
-    map.flyTo([lat, lng], maxZoom, { duration: 1.2 });
+    map.setView([lat, lng], maxZoom, { animate: false });
   }
 };
 

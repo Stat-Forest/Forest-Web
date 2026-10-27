@@ -778,19 +778,28 @@ html.dark [data-slot="select-item"][data-highlighted] {
 /*
  * Animatsiyalar o'chirilgan — interfeys darhol ko'rinadi va javob beradi
  * (sahifa bloklari, dialog/menyu ochilishi, hover effektlari).
- * Faqat yuklanish ko'rsatkichlari (animate-spin, animate-pulse) va Leaflet
+ * Faqat yuklanish ko'rsatkichlari (animate-spin, animate-pulse, .loader) va Leaflet
  * xaritasining zoom/pan'i qoldirilgan. Radix dialoglari animation: none da
  * darhol yopiladi (animationend kutmaydi).
+ *
+ * react-toastify bundan mustasno: u xabarni avtomatik yopish uchun progress
+ * bar animatsiyasi tugashini, ko'rsatish/yopish uchun esa animationend'ni
+ * kutadi — animation: none da xabar ekranda qotib qolardi. Uning kirish/chiqish
+ * animatsiyasi 1 ms ga qisqartirilgan (darhol), progress bar o'z vaqtida ishlaydi.
  */
-*:not(.leaflet-container *),
-*:not(.leaflet-container *)::before,
-*:not(.leaflet-container *)::after {
+*:not(.leaflet-container *):not(.Toastify *),
+*:not(.leaflet-container *):not(.Toastify *)::before,
+*:not(.leaflet-container *):not(.Toastify *)::after {
   transition: none !important;
 }
-*:not(.animate-spin):not(.animate-pulse):not(.leaflet-container *),
-*::before,
-*::after {
+*:not(.animate-spin):not(.animate-pulse):not(.loader):not(.leaflet-container *):not(.Toastify *),
+*:not(.Toastify *)::before,
+*:not(.Toastify *)::after {
   animation: none !important;
+}
+.Toastify--animate,
+.Toastify--animate-icon {
+  animation-duration: 1ms !important;
 }
 html {
   scroll-behavior: auto !important;

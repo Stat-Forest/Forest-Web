@@ -263,7 +263,7 @@ function GisMonitoring() {
       void showXojalikBoundary(xojalik);
       const marker = findXojalikMarker(xojalikMarkersLayerRef.current, xojalik.id);
       if (marker) {
-        window.setTimeout(() => marker.openPopup(), 900);
+        marker.openPopup();
       }
     },
     [showXojalikBoundary],
@@ -291,7 +291,7 @@ function GisMonitoring() {
       if (layer) {
         layer.addTo(mapRef.current);
         konturHighlightRef.current = layer;
-        window.setTimeout(() => konturHighlightRef.current?.openPopup(), 900);
+        konturHighlightRef.current?.openPopup();
       }
     } catch {
       // kontur topilmadi
