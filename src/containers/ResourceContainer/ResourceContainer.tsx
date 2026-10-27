@@ -25,6 +25,7 @@ import TableColumn from "@/components/Table/RecurceTable/TableColumn";
 import ReportChartItem from "@/components/Charts";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ReportColumn, ReportRow } from "@/types/reportInterface";
+import { normalizeSelectedRow, useSelectedReportRow } from "./useSelectedReportRow";
 import { useTranslation } from "react-i18next";
 import ExportDropdown from "./Components/ExportDropdown";
 import FiltersSection from "./Components/FiltersSection";
@@ -43,9 +44,9 @@ function ResourceContainer({
 
   const user_role = useSelector((state: RootState) => state.auth.user?.role);
   const lang = useSelector((state: RootState) => state.language.lang);
+  const { pickedRow, fullRow, setSelectedRow } = useSelectedReportRow(id, lang);
   const { t, i18n } = useTranslation();
 
-  const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
@@ -86,11 +87,7 @@ function ResourceContainer({
       { skip: !id },
     );
 
-  const {
-    data: allReports = [],
-    isLoading: isAllReportLoading,
-    error: isAllReportError,
-  } = useGetAllReportsQuery(
+  const { data: allReports = [], error: isAllReportError } = useGetAllReportsQuery(
     id
       ? {
           statement: id,
@@ -101,6 +98,7 @@ function ResourceContainer({
           page: 1,
           per_page: 2000,
           lang,
+          compact: true,
         }
       : skipToken,
   );
@@ -124,25 +122,18 @@ function ResourceContainer({
     });
   };
 
-  const {
-    data: individualReports,
-    isLoading: isIndividualLoading,
-    isError: isIndividualError,
-  } = useGetIndividualQuery(
+  const { data: individualReports, isError: isIndividualError } = useGetIndividualQuery(
     {
       statement: id || "",
-      deadline: selectedRow?.deadline || "",
-      organization: selectedRow?.organization || "",
+      deadline: pickedRow?.deadline || "",
+      organization: pickedRow?.organization || "",
     },
-    { skip: !id || !selectedRow?.deadline || !selectedRow?.organization },
+    { skip: !id || !pickedRow?.deadline || !pickedRow?.organization },
   );
 
-  const isLoading =
-    isHeadersLoading ||
-    isRowsLoading ||
-    isAllReportLoading ||
-    isIndividualLoading ||
-    deadlineLoading;
+  // Ro'yxat va tanlangan hisobot yuklanishi butun sahifani skeleton'ga o'tkazmaydi
+  // (avval birinchi qator bosilganda sahifa qayta skeleton bo'lib, jadval qayta chizilardi).
+  const isLoading = isHeadersLoading || isRowsLoading || deadlineLoading;
 
   const isError =
     isErrorHeaders ||
@@ -158,7 +149,7 @@ function ResourceContainer({
     setSelectedPeriod("");
     setSelectedYear("");
     setSelectedQuarter("");
-  }, [id]);
+  }, [id, setSelectedRow]);
 
   useEffect(() => {
     if (id) {
@@ -198,6 +189,11 @@ function ResourceContainer({
   const activeLeafIds = useMemo(() => {
     return tabLeafIdMap[activeTab] || [];
   }, [tabLeafIdMap, activeTab]);
+
+  const selectedRow = useMemo(
+    () => normalizeSelectedRow(pickedRow, fullRow, activeLeafIds),
+    [pickedRow, fullRow, activeLeafIds],
+  );
 
   // 🔹 filteredRows: faqat reganal + republic
   const filteredRows = useMemo(() => {
@@ -676,41 +672,7 @@ function ResourceContainer({
                       ref={tableRef}
                       data={col?.children}
                       rows={filteredRows}
-                      onRowClick={(row: ReportRow) => {
-                        // 🔹 Normalize qilamiz
-                        const normalizedReportItems = (
-                          row.report_items || []
-                        ).map((reportItem: any) => {
-                          const normalizedColumns = activeLeafIds.map(
-                            (colId) => {
-                              const found = (
-                                reportItem.statement_columns || []
-                              ).find(
-                                (c: any) => c.statement_column_id === colId,
-                              );
-                              return (
-                                found || {
-                                  statement_column_id: colId,
-                                  value: "-",
-                                  inners: [],
-                                }
-                              );
-                            },
-                          );
-
-                          return {
-                            ...reportItem,
-                            statement_columns: normalizedColumns,
-                          };
-                        });
-
-                        const normalizedRow = {
-                          ...row,
-                          report_items: normalizedReportItems,
-                        };
-
-                        setSelectedRow(normalizedRow);
-                      }}
+                      onRowClick={(row: ReportRow | null) => setSelectedRow(row)}
                       selectedRow={selectedRow}
                       individualRows={filteredIndividualRows}
                       setSelectedOrganizationReport={
