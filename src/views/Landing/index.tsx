@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode, useState, useEffect, useRef, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AuthHeader from "@/components/Header/AuthHeader";
 import { useGetLoginStatsQuery } from "@/services/statistikApi";
@@ -155,7 +154,6 @@ function ScrollToTopButton() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ModernLanding() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const lang = useSelector((state: RootState) => state.language.lang);
   const [monthly, setMonthly] = useState("");
@@ -184,7 +182,8 @@ export default function ModernLanding() {
     } else if (key === "gis") {
       scrollToSection("gis-monitoring");
     } else if (key === "login") {
-      navigate("/auth");
+      // To'liq reload: landing'dagi Clarity skripti tizim sahifalariga o'tmasin (audit A6/F7)
+      window.location.assign("/auth");
     }
   };
 

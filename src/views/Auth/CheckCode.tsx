@@ -7,7 +7,7 @@ import { setAccessOnly } from "@/features/authSlice";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { getSimpleCookie, setSimpleCookie } from "@/utils/cookie";
+import { getSimpleCookie } from "@/utils/cookie";
 import { ArrowLeft } from "lucide-react";
 
 interface VerifyCodeResponse {
@@ -50,11 +50,10 @@ const CheckCode = () => {
     verifyCode({ email, code })
       .unwrap()
       .then((res: VerifyCodeResponse) => {
-        // Code ni cookie'ga saqlaymiz (1 soat muddat)
-        setSimpleCookie("reset_code", code, 1/24);
-        // Qisqa muddatli pwd_reset access token — faqat xotirada (audit A5)
+        // Qisqa muddatli pwd_reset access token — faqat xotirada (audit A5);
+        // kod cookie'da emas, faqat navigatsiya holatida (audit F6)
         dispatch(setAccessOnly(res.access));
-        navigate("/auth/change-password");
+        navigate("/auth/change-password", { state: { code } });
       })
       .catch((err: any) => {
         setError(err?.data?.[0] || t("errorOccurred") || "Xatolik yuz berdi");

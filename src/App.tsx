@@ -25,7 +25,7 @@ const ChangePassword = lazy(() => import("./views/Auth/changePassword"));
 // secret yangilanmasa ham yangi rollar (masalan billing_user) ishlaydi.
 const parseAllowedRoles = (): string[] => {
   const raw =
-    import.meta.env.VITE_USER_ROLE ?? import.meta.env.USER_ROLE ?? "";
+    import.meta.env.VITE_USER_ROLE ?? "";
   const fromEnv: string[] = [];
   if (typeof raw === "string" && raw.trim()) {
     try {

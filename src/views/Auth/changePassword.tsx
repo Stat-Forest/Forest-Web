@@ -4,12 +4,15 @@ import { logout } from "@/features/authSlice";
 import { RootState } from "@/app/store";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getSimpleCookie, removeCookie } from "@/utils/cookie";
 import { ArrowLeft } from "lucide-react";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
+  // Tasdiqlash kodi CheckCode'dan navigatsiya holati orqali keladi (cookie emas, audit F6)
+  const location = useLocation();
+  const resetCode: string = (location.state as { code?: string } | null)?.code ?? "";
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const token = useSelector((state: RootState) => state.auth.token);
@@ -41,7 +44,7 @@ const ChangePassword = () => {
 
     try {
       const email = getSimpleCookie("reset_email") || "";
-      const code = getSimpleCookie("reset_code") || "";
+      const code = resetCode;
 
       await setnewpassword({
         email,
@@ -56,7 +59,6 @@ const ChangePassword = () => {
       setConfirmPassword("");
       // Cookie'lardan barcha ma'lumotlarni tozalaymiz
       removeCookie("reset_email");
-      removeCookie("reset_code");
       dispatch(logout());
 
       navigate("/auth", { replace: true });

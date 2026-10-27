@@ -14,7 +14,6 @@ import { useGetOrganizationReportsQuery } from "@/services/generalApi";
 import { t } from "i18next";
 import i18n from "@/i18n";
 import { USER_ROLE } from "@/services/constants";
-export const user_role = import.meta.env.USER_ROLE;
 
 function ResponsibleRepresentatives() {
   const [page, setPage] = useState(1);

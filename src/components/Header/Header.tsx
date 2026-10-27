@@ -49,6 +49,10 @@ import {
 } from "@/services/generalApi";
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
+import { billingApi } from "@/services/billingApi";
+import { eimzoApi } from "@/services/eimzoApi";
+import { informationAnalyticalApi } from "@/services/informationAnalyticalApi";
+import { uniqeApi } from "@/services/uniqeApi";
 
 // UI Components for notifications
 import {
@@ -242,14 +246,20 @@ function Header({ onLogout }: HeaderProps) {
     removeCookie("unreadNotificationCount");
 
     dispatch(logout());
+    // Barcha RTK keshlari (billing ijarachi PII ham) tozalanadi (audit F5)
     dispatch(authApi.util.resetApiState());
     dispatch(reportApi.util.resetApiState());
     dispatch(generalApi.util.resetApiState());
     dispatch(statistikApi.util.resetApiState());
     dispatch(sumApi.util.resetApiState());
+    dispatch(billingApi.util.resetApiState());
+    dispatch(eimzoApi.util.resetApiState());
+    dispatch(informationAnalyticalApi.util.resetApiState());
+    dispatch(uniqeApi.util.resetApiState());
 
-    persistor.purge();
-    navigate("/login");
+    await persistor.purge();
+    // To'liq reload: xotiradagi holat va uchinchi tomon skriptlari (Clarity) yo'qoladi
+    window.location.assign("/auth");
 
     if (onLogout) onLogout();
   };

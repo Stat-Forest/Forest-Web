@@ -6,16 +6,20 @@ on:
       - main
   workflow_dispatch:  # qo‘lda ham run qilsa bo‘ladi
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Action'lar commit SHA bilan pin'langan (tag qayta yozilishi mumkin — audit F11)
       - name: Kodni yuklash
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: NodeJS o‘rnatish
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -35,7 +39,7 @@ jobs:
         run: npm run build
 
       - name: SSH sozlash
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
@@ -69,7 +73,7 @@ jobs:
           rsync -az --delete dist/ "$TARGET"
 
       - name: Nginx reload qilish
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@334f9259f2f8eb3376d33fa4c684fff373f2c2a6 # v0.1.10
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}

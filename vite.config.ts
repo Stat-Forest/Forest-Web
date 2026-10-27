@@ -6,7 +6,7 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  envPrefix: ["VITE_", "USER_"],
+  envPrefix: ["VITE_"],  // faqat VITE_* bundle'ga tushadi (audit F9)
   base: "/",
   build: {
     // Bundle size optimizatsiyasi
