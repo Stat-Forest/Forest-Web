@@ -598,6 +598,19 @@ export interface PublicXojalik {
 export interface PublicGeoListParams {
   xojalik?: UUID | "";
   number?: string;
+  /** Faqat soni va umumiy maydon (results bo'sh) — shartnomalar so'ralmaganda */
+  summary?: boolean;
+}
+
+/** `GET public/xojalik-outlines/` — xo'jaliklarning ixcham tashqi chegarasi */
+export interface XojalikOutlineCollection {
+  type: "FeatureCollection";
+  features: Array<{
+    type: "Feature";
+    id: UUID;
+    properties: { id: UUID; name: string; area_ga: number | null };
+    geometry: GeoJSON.Geometry;
+  }>;
 }
 
 /**

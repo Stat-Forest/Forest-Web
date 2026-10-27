@@ -42,6 +42,7 @@ import type {
   XojalikKonturDetail,
   XojalikLocation,
   XojalikLocationDetail,
+  XojalikOutlineCollection,
   YearlyAmountsPayload,
   YearlyAmountsResponse,
 } from "@/features/billing/types";
@@ -310,6 +311,11 @@ export const billingApi = createApi({
         publicQuery<PublicGeoList>(`/public/geo-list/${buildBillingQuery(params ?? undefined)}`, api, extraOptions),
       keepUnusedDataFor: 300,
     }),
+    getPublicXojalikOutlines: builder.query<XojalikOutlineCollection, void>({
+      queryFn: (_arg, api, extraOptions) =>
+        publicQuery<XojalikOutlineCollection>("/public/xojalik-outlines/", api, extraOptions),
+      keepUnusedDataFor: 600,
+    }),
     getPublicXojalikLocations: builder.query<XojalikLocation[], void>({
       queryFn: (_arg, api, extraOptions) =>
         publicQuery<XojalikLocation[]>("/public/xojalik-locations/", api, extraOptions),
@@ -403,6 +409,7 @@ export const {
   // Ochiq GIS (landing)
   useGetPublicGeoListQuery,
   useGetPublicXojalikLocationsQuery,
+  useGetPublicXojalikOutlinesQuery,
   useLazyGetPublicXojalikLocationQuery,
   useGetPublicXojalikKontursQuery,
   useLazyGetPublicXojalikKonturQuery,
