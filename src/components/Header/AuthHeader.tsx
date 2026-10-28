@@ -123,7 +123,7 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
           {/* Landing da kirish button */}
           {!isAuthPage && (
             <Button
-              onClick={() => navigate("/auth")}
+              onClick={() => window.location.assign("/auth")}
               className="!h-[42px] py-0 bg-[#00BC7D] hover:bg-[#00a36c] text-white font-semibold rounded-lg px-5 border border-[#00BC7D] box-border flex items-center justify-center transition-colors"
             >
               {t("login") || "Kirish"}
@@ -239,7 +239,7 @@ function AuthHeader({ position: _position = false }: { position?: boolean } = {}
               <Button
                 onClick={() => {
                   setMenuOpen(false);
-                  navigate("/auth");
+                  window.location.assign("/auth");
                 }}
                 className="h-[38px] py-0 bg-[#00BC7D] hover:bg-[#00a36c] text-white font-bold rounded-lg px-5 text-xs border border-[#00BC7D] flex items-center justify-center transition-colors"
               >

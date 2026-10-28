@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { escapeHtml } from "@/features/billing/escapeHtml";
+import { wirePrintWindow } from "@/utils/printWindow";
 import { useDebounce } from "@/utils/useDebounce";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
@@ -437,24 +438,18 @@ function ResourcePlantContainer({
               </div>
 
               <div class="print-actions no-print">
-                <button onclick="window.print()" class="print-btn">
+                <button type="button" class="print-btn" data-action="print">
                   ${t("print")}
                 </button>
-                <button onclick="window.close()" class="print-btn close">
+                <button type="button" class="print-btn close" data-action="close">
                   ${t("close")}
                 </button>
               </div>
-
-              <script>
-                // Avtomatik print
-                setTimeout(() => {
-                  window.print();
-                }, 1000);
-              </script>
             </body>
           </html>
         `);
         printWindow.document.close();
+        wirePrintWindow(printWindow);
       } else {
         alert(
           "Pop-up bloklandi. Iltimas, brauzeringizda pop-up'larni ruxsat bering.",

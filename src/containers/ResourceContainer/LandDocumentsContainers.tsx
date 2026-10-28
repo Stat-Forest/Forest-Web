@@ -1,6 +1,7 @@
 "use client";
 
 import { useGetLandDocumentsReportsQuery } from "@/services/generalApi";
+import { resolveExportUrl } from "@/utils/exportUrl";
 import { Loader } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -104,11 +105,14 @@ function LandDocumentsContainers() {
         fileUrl = fileUrl.replace("http://", "https://");
       }
 
+      // Bearer token faqat API origin'iga yuboriladi (audit C9/F2): backend
+      // bergan URL boshqa host bo'lsa — tokensiz (fayl imzolangan havola bilan ochiladi)
+      const sameOrigin = resolveExportUrl(fileUrl) !== null;
       const response = await fetch(fileUrl, {
         method: "GET",
         headers: {
           Accept: "*/*",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token && sameOrigin ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 

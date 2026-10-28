@@ -6,18 +6,22 @@ on:
       - main
   workflow_dispatch:  # qo‘lda ham run qilsa bo‘ladi
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Action'lar commit SHA bilan pin'langan (tag qayta yozilishi mumkin — audit F11)
       - name: Kodni yuklash
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: NodeJS o‘rnatish
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "18"
+          node-version: "20"
           cache: "npm"
 
       # npm ci: package-lock.json dan to'g'ridan-to'g'ri o'rnatadi (npm install'dan tezroq)
@@ -35,9 +39,25 @@ jobs:
         run: npm run build
 
       - name: SSH sozlash
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+      # Server host kaliti pin'lanadi (audit C10): SSH_KNOWN_HOSTS secret'i
+      # (`ssh-keyscan -H <SERVER_HOST>` natijasi) bo'lsa shu, bo'lmasa keyscan (TOFU).
+      - name: Known hosts
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          else
+            echo "::warning::SSH_KNOWN_HOSTS secret yo'q — ssh-keyscan (TOFU) ishlatilmoqda"
+            ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts
+          fi
 
       # rsync faqat o'zgargan fayllarni yuboradi: hash'li nomli assets (shu jumladan
       # ~180 MB video) o'zgarmasa qayta yuklanmaydi. Avval yangi assets, keyin
@@ -45,7 +65,7 @@ jobs:
       - name: Build qilingan fayllarni serverga yuborish
         env:
           TARGET: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/stat-ormon/
-          RSYNC_RSH: ssh -o StrictHostKeyChecking=no
+          RSYNC_RSH: ssh
         run: |
           set -euo pipefail
           rsync -az --exclude 'index.html' dist/ "$TARGET"
@@ -53,11 +73,13 @@ jobs:
           rsync -az --delete dist/ "$TARGET"
 
       - name: Nginx reload qilish
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@334f9259f2f8eb3376d33fa4c684fff373f2c2a6 # v0.1.10
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          # SSH_FINGERPRINT (ssh-keygen -lf <(ssh-keyscan HOST) ko'rinishida) bo'lsa host kaliti tekshiriladi
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           script: |
             echo "Nginx reload qilinyapti..."
             docker exec forest_nginx_prod nginx -s reload

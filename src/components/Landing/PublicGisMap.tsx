@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import { useTranslation } from "react-i18next";
 import { skipToken } from "@reduxjs/toolkit/query";
 import * as L from "leaflet";
+import { escapeHtml } from "@/features/billing/escapeHtml";
 import "leaflet/dist/leaflet.css";
 import "@/views/Dashboard/Billing/Gis/gis.css";
 import "./publicGisMap.css";
@@ -390,7 +391,8 @@ function PublicGisMap() {
     layer.addData(outlines as unknown as GeoJSON.GeoJsonObject);
     layer.eachLayer((feature) => {
       const props = (feature as L.Layer & { feature?: { properties?: { name?: string } } }).feature?.properties;
-      if (props?.name) (feature as L.Path).bindTooltip(props.name, { sticky: true });
+      // Leaflet tooltip HTML sifatida chiqadi — nom (KML'dan) ekranlanadi (audit F3)
+      if (props?.name) (feature as L.Path).bindTooltip(escapeHtml(props.name), { sticky: true });
     });
   }, [mapReady, outlines]);
 
