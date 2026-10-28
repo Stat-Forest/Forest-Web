@@ -8,6 +8,7 @@ import { useYashilAccess } from "@/features/yashil/permissions";
 import { setCabinetId, useCabinetId } from "@/features/yashil/cabinet";
 import { YASHIL_ROUTES } from "@/features/yashil/constants";
 import { yashilApi } from "@/services/yashilApi";
+import NotificationsBell from "./NotificationsBell";
 import { useDispatch } from "react-redux";
 import "./yashil.css";
 
@@ -53,6 +54,7 @@ function YashilLayout({ title, actions, children }: Props) {
 
   const nav = [
     { to: YASHIL_ROUTES.root, label: t("nav_overview") },
+    { to: YASHIL_ROUTES.orders, label: t("nav_orders") },
     { to: YASHIL_ROUTES.reference, label: t("nav_reference") },
   ];
 
@@ -105,6 +107,7 @@ function YashilLayout({ title, actions, children }: Props) {
               {t("script_lat")}
             </button>
           </div>
+          {me && <NotificationsBell unread={me.unread_notifications ?? 0} />}
           {actions}
         </div>
       </div>

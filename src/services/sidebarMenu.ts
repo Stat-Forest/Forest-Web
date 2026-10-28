@@ -98,6 +98,7 @@ export function useYashilSidebarGroup(): SidebarMenuItem {
       iconNode: createElement(Sprout, { size: 18 }),
       children: [
         { id: "yashil-overview", name: t("nav_overview"), path: YASHIL_ROUTES.root },
+        { id: "yashil-orders", name: t("nav_orders"), path: YASHIL_ROUTES.orders },
         { id: "yashil-reference", name: t("nav_reference"), path: YASHIL_ROUTES.reference },
       ],
     }),
