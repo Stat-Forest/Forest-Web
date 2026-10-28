@@ -24,6 +24,7 @@ import {
   type SidebarMenuItem,
 } from "@/services/sidebarMenu";
 import { BILLING_ROUTES } from "@/features/billing/constants";
+import { YASHIL_ROUTES } from "@/features/yashil/constants";
 import {
   Accordion,
   AccordionContent,
@@ -49,14 +50,15 @@ const childPathActive = (pathname: string, child: SidebarMenuItem): boolean => {
 
 function Sidebar() {
   const { t, i18n } = useTranslation();
-  const { sidebar_menu, sidebar_3, billingGroup, isBillingUser } = useSidebarMenu();
+  const { sidebar_menu, sidebar_3, billingGroup, isBillingUser, yashilGroup, isYashilUser, hasYashilAccess } = useSidebarMenu();
   const location = useLocation();
   const userRole = useSelector((state: RootState) => state.auth.user?.role);
   const isSupportAdmin = userRole === "support_admin";
   // support_admin uchun statements/users so'rovlari kerak emas. Billing rollari
   // (billing_user/billing_super) uchun backend statements'dan faqat kadastr
   // parent'ini, users'dan esa faqat o'zini qaytaradi.
-  const skipUserQueries = isSupportAdmin;
+  // ym_* rollari uchun ham: backend reports/statements va users ro'yxatini 403 qiladi.
+  const skipUserQueries = isSupportAdmin || isYashilUser;
 
   const user_id = useSelector((state: RootState) => state.auth.user?.user_id);
   const authUser = useSelector((state: RootState) => state.auth.user);
@@ -108,6 +110,10 @@ function Sidebar() {
   // statements xato bersa ham Ijara billing guruhi top-level ko'rinadi.
   const menuItems = useMemo<SidebarMenuItem[]>(() => {
     if (isSupportAdmin) return [...sidebar_menu, ...sidebar_3].flat();
+    // «Яшил маҳалла»: ym_* rollari uchun yagona bo'lim; boshqa rollar uchun
+    // top-level guruh (TZ §16.1) — a'zolik yoki modul admini bo'lsa.
+    if (isYashilUser) return [yashilGroup, ...sidebar_3.flat()];
+    const yashilItems = hasYashilAccess ? [yashilGroup] : [];
     if (isBillingUser) {
       const parent = sidebarError
         ? undefined
@@ -116,10 +122,11 @@ function Sidebar() {
     }
     return [
       ...sidebar_menu.flat(),
+      ...yashilItems,
       ...withBillingGroup(sidebarData as SidebarMenuItem[], billingGroup),
       ...sidebar_3.flat(),
     ];
-  }, [isSupportAdmin, isBillingUser, sidebar_menu, sidebar_3, sidebarData, sidebarError, billingGroup]);
+  }, [isSupportAdmin, isBillingUser, isYashilUser, hasYashilAccess, yashilGroup, sidebar_menu, sidebar_3, sidebarData, sidebarError, billingGroup]);
 
   if (!skipUserQueries && (sidebarLoading || userLoading)) {
     return (
@@ -403,13 +410,13 @@ function Sidebar() {
 
   const profileUser = userError ? undefined : user?.results[0];
   const profileName =
-    skipUserQueries || (isBillingUser && !profileUser)
+    skipUserQueries || isYashilUser || (isBillingUser && !profileUser)
       ? authUser?.full_name || authUser?.email || ""
       : `${profileUser?.first_name || ""} ${profileUser?.last_name || ""}`;
 
   const profileRole = isSupportAdmin
     ? t("roles.support_admin")
-    : isBillingUser
+    : isBillingUser || isYashilUser
       ? t(`roles.${userRole}`)
       : user?.results[0]?.role &&
           t(`roles.${user.results[0].role}`) !== `roles.${user.results[0].role}`
@@ -420,7 +427,7 @@ function Sidebar() {
     <div className="w-[320px] h-screen overflow-y-auto p-4 bg-white dark:bg-slate-950 font-sans sidebar-gradient flex flex-col justify-between backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800 shadow-xl transition-colors duration-300 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
       <div>
         <Link
-          to={isBillingUser ? BILLING_ROUTES.gis : "/main"}
+          to={isYashilUser ? YASHIL_ROUTES.root : isBillingUser ? BILLING_ROUTES.gis : "/main"}
           className="w-full h-[52px] rounded-2xl flex items-center justify-center text-white mb-3.5 gap-3 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 shadow-lg shadow-blue-500/20 border border-white/20 hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-95 transition-all duration-200 cursor-pointer"
         >
           <img

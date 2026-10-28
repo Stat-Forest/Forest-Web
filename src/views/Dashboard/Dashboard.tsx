@@ -12,6 +12,9 @@ import { getSimpleCookie, setSimpleCookie, removeCookie } from "@/utils/cookie";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import BillingEditRoute from "./Billing/BillingEditRoute";
 import { isBillingRole } from "@/features/billing/permissions";
+import { isYashilRole } from "@/features/yashil/permissions";
+import { YASHIL_ALLOWED_PREFIXES, YASHIL_ROUTES } from "@/features/yashil/constants";
+import YashilRoute from "./Yashil/YashilRoute";
 
 // Lazy loading - Dashboard route'larini alohida chunk'larga ajratish
 const Main = lazy(() => import("./Main"));
@@ -41,6 +44,9 @@ const BillingContractsPage = lazy(() => import("./Billing/Contracts/ContractsPag
 const BillingContractCreatePage = lazy(() => import("./Billing/Contracts/ContractCreatePage"));
 const BillingImportExcelPage = lazy(() => import("./Billing/Contracts/ImportExcelPage"));
 const BillingContractDetailPage = lazy(() => import("./Billing/Contracts/ContractDetailPage"));
+// Yashil mahalla (TZ §16.1 — chap menyuda alohida bo'lim)
+const YashilOverview = lazy(() => import("./Yashil/Overview"));
+const YashilReference = lazy(() => import("./Yashil/Reference"));
 
 const BILLING_ALLOWED_PREFIXES = ["/billing", "/support-information", "/video"];
 
@@ -75,6 +81,11 @@ function Dashboard() {
   // (qolgan API'lar backend'da 403 qaytaradi).
   const isBillingUser = isBillingRole(userRole);
   const billingUserAllowed = isBillingUser && isBillingPathAllowed(location.pathname);
+  // ym_* rollari faqat «Яшил маҳалла» va yordam sahifalariga kiradi.
+  const isYashilUser = isYashilRole(userRole);
+  const yashilUserAllowed =
+    isYashilUser &&
+    YASHIL_ALLOWED_PREFIXES.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
 
   // 🔹 Modalni boshqarish
   useEffect(() => {
@@ -144,6 +155,8 @@ function Dashboard() {
           >
             {isBillingUser && !billingUserAllowed ? (
               <Navigate to="/billing/gis" replace />
+            ) : isYashilUser && !yashilUserAllowed ? (
+              <Navigate to={YASHIL_ROUTES.root} replace />
             ) : (
             <Routes>
               <Route path="main" element={<Main />}>
@@ -215,6 +228,10 @@ function Dashboard() {
               />
               <Route path="billing/contracts/:id" element={<BillingContractDetailPage />} />
 
+              {/* Yashil mahalla */}
+              <Route path="yashil" element={<YashilRoute><YashilOverview /></YashilRoute>} />
+              <Route path="yashil/reference" element={<YashilRoute><YashilReference /></YashilRoute>} />
+
               <Route
                 path="*"
                 element={
@@ -224,7 +241,9 @@ function Dashboard() {
                         ? "/support"
                         : isBillingUser
                           ? "/billing/gis"
-                          : "/main"
+                          : isYashilUser
+                            ? YASHIL_ROUTES.root
+                            : "/main"
                     }
                     replace
                   />

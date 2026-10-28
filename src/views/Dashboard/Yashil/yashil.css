@@ -1,0 +1,197 @@
+/* «Яшил маҳалла» moduli — oq fon + to'q yashil aksent, faqat .yashil-root ichida (TZ §17.1). */
+.yashil-root {
+  --ym-green: #15803d;
+  --ym-green-dark: #116332;
+  --ym-green-soft: #e9f5ed;
+  --ym-green-line: #9ac9a9;
+  --ym-bg: #f3f7f4;
+  --ym-card: #ffffff;
+  --ym-border: #dfebe3;
+  --ym-text: #193b2c;
+  --ym-muted: #63796e;
+  --ym-amber-bg: #fff2d8;
+  --ym-amber: #815c15;
+  --ym-blue-bg: #e7f0fa;
+  --ym-blue: #3c648a;
+  --ym-red-bg: #fde7e7;
+  --ym-red: #9b3232;
+  color: var(--ym-text);
+}
+
+.dark .yashil-root {
+  --ym-green: #22a35a;
+  --ym-green-dark: #1b8a4b;
+  --ym-green-soft: #1f3a2b;
+  --ym-green-line: #2f6a46;
+  --ym-bg: #10251c;
+  --ym-card: #1a3327;
+  --ym-border: #34513f;
+  --ym-text: #e5efe8;
+  --ym-muted: #a3bda9;
+  --ym-amber-bg: #3d3214;
+  --ym-amber: #f0c060;
+  --ym-blue-bg: #1c2f40;
+  --ym-blue: #8fb6dc;
+  --ym-red-bg: #40201f;
+  --ym-red: #f09a9a;
+}
+
+.yashil-root {
+  background: var(--ym-bg);
+  min-height: 100%;
+}
+
+.ym-card {
+  background: var(--ym-card);
+  border: 1px solid var(--ym-border);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 20px rgb(27 65 35 / 0.04);
+}
+
+.ym-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--ym-border);
+  background: var(--ym-card);
+  color: var(--ym-text);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ym-btn:hover {
+  background: var(--ym-green-soft);
+  border-color: var(--ym-green-line);
+}
+.ym-btn:focus-visible {
+  outline: 3px solid #61b67a;
+  outline-offset: 2px;
+}
+.ym-btn--primary,
+.ym-btn--active {
+  background: var(--ym-green);
+  border-color: var(--ym-green);
+  color: #fff;
+}
+.ym-btn--primary:hover,
+.ym-btn--active:hover {
+  background: var(--ym-green-dark);
+  border-color: var(--ym-green-dark);
+  color: #fff;
+}
+
+.ym-select {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ym-border);
+  background: var(--ym-card);
+  color: var(--ym-text);
+  font-size: 13px;
+  max-width: 100%;
+}
+
+.ym-stat {
+  background: var(--ym-card);
+  border: 1px solid var(--ym-border);
+  border-radius: 17px;
+  padding: 20px 22px;
+  text-align: left;
+}
+.ym-stat strong {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 32px;
+  font-weight: 650;
+  margin-top: 10px;
+  color: var(--ym-text);
+}
+.ym-stat strong small {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ym-muted);
+}
+.ym-stat-icon {
+  display: inline-flex;
+  padding: 9px;
+  border-radius: 12px;
+  background: var(--ym-green-soft);
+  color: var(--ym-green);
+}
+
+.ym-badge {
+  display: inline-block;
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--ym-green-soft);
+  color: var(--ym-green-dark);
+  white-space: nowrap;
+}
+.ym-badge--amber { background: var(--ym-amber-bg); color: var(--ym-amber); }
+.ym-badge--blue { background: var(--ym-blue-bg); color: var(--ym-blue); }
+.ym-badge--red { background: var(--ym-red-bg); color: var(--ym-red); }
+
+.ym-notice {
+  background: var(--ym-green-soft);
+  border-left: 3px solid #86b970;
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--ym-text);
+  line-height: 1.6;
+}
+
+.ym-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ym-table th {
+  text-align: left;
+  background: var(--ym-green-soft);
+  color: var(--ym-muted);
+  font-weight: 500;
+  font-size: 12px;
+  padding: 12px;
+}
+.ym-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--ym-border);
+  vertical-align: top;
+}
+.ym-table tr:hover td {
+  background: color-mix(in srgb, var(--ym-green-soft) 55%, transparent);
+}
+
+.ym-muted { color: var(--ym-muted); }
+.ym-title { font-size: 26px; font-weight: 650; letter-spacing: -0.5px; }
+
+.ym-service-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.ym-service-strip > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  border-right: 1px solid var(--ym-border);
+  color: var(--ym-muted);
+  font-size: 12px;
+}
+.ym-service-strip > div:last-child { border-right: 0; }
+.ym-service-strip svg { color: var(--ym-green); flex: none; }
+
+@media (max-width: 900px) {
+  .ym-service-strip { grid-template-columns: repeat(2, 1fr); }
+  .ym-card { padding: 16px; }
+  .ym-title { font-size: 22px; }
+}
