@@ -18,6 +18,7 @@ import { eimzoApi } from "@/services/eimzoApi";
 import { informationAnalyticalApi } from "@/services/informationAnalyticalApi";
 import { uniqeApi } from "@/services/uniqeApi";
 import { billingApi } from "@/services/billingApi";
+import { yashilApi } from "@/services/yashilApi";
 
 const rootReducer = combineReducers({
   [reportApi.reducerPath]: reportApi.reducer,
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   [informationAnalyticalApi.reducerPath]: informationAnalyticalApi.reducer,
   [uniqeApi.reducerPath]: uniqeApi.reducer,
   [billingApi.reducerPath]: billingApi.reducer,
+  [yashilApi.reducerPath]: yashilApi.reducer,
 
   auth: authReducer,
   report: reportReducer,
@@ -67,6 +69,7 @@ const persistConfig: PersistConfig<ReturnType<typeof rootReducer>> = {
     eimzoApi.reducerPath,
     informationAnalyticalApi.reducerPath,
     billingApi.reducerPath,
+    yashilApi.reducerPath,
     "report",
     "sidebar",
     "ui",
@@ -91,7 +94,8 @@ export const store = configureStore({
       eimzoApi.middleware,
       informationAnalyticalApi.middleware,
       uniqeApi.middleware,
-      billingApi.middleware
+      billingApi.middleware,
+      yashilApi.middleware
     ),
 });
 

@@ -50,6 +50,7 @@ import {
 import { statistikApi } from "@/services/statistikApi";
 import { sumApi } from "@/services/sumApi";
 import { billingApi } from "@/services/billingApi";
+import { yashilApi } from "@/services/yashilApi";
 import { eimzoApi } from "@/services/eimzoApi";
 import { informationAnalyticalApi } from "@/services/informationAnalyticalApi";
 import { uniqeApi } from "@/services/uniqeApi";
@@ -253,6 +254,7 @@ function Header({ onLogout }: HeaderProps) {
     dispatch(statistikApi.util.resetApiState());
     dispatch(sumApi.util.resetApiState());
     dispatch(billingApi.util.resetApiState());
+    dispatch(yashilApi.util.resetApiState());
     dispatch(eimzoApi.util.resetApiState());
     dispatch(informationAnalyticalApi.util.resetApiState());
     dispatch(uniqeApi.util.resetApiState());

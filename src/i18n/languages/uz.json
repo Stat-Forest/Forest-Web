@@ -318,7 +318,11 @@
     "hududiy_boshqarma": "Hududiy boshqarma",
     "support_admin": "Support administratori",
     "billing_user": "Ijara billing foydalanuvchisi",
-    "billing_super": "Ijara billing super foydalanuvchisi"
+    "billing_super": "Ijara billing super foydalanuvchisi",
+    "ym_mahalla": "Yashil mahalla: mahalla",
+    "ym_union": "Yashil mahalla: mahallalar uyushmasi",
+    "ym_dm": "Yashil mahalla: DM",
+    "ym_observer": "Yashil mahalla: kuzatuvchi"
   },
   "support_panel": "Support",
   "landing_1": "O‘rmon xo‘jaligi agentligi tomonidan o‘tkazilgan tadbirlar ko‘rsatkichlari",
@@ -1028,5 +1032,6 @@
     "show_all": "Barcha shartnomalarni ko'rsatish",
     "contracts_hint": "Shartnomalar xaritada faqat qidirilganda yoki \"Barchasi\" tanlanganda ko'rinadi.",
     "wheel_hint": "Kattalashtirish uchun Ctrl (⌘) + g'ildirakdan foydalaning yoki xaritani bosing"
-  }
+  },
+  "yashil_mahalla": "Yashil mahalla"
 }

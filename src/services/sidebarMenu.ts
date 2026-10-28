@@ -1,7 +1,7 @@
 "use client";
 
 import { createElement, useMemo, type ReactNode } from "react";
-import { MapPinned } from "lucide-react";
+import { MapPinned, Sprout } from "lucide-react";
 import home_default from "@/assets/sidebar_icons/home_default.svg";
 import reference_default from "@/assets/sidebar_icons/mingcute_certificate-fill_default.svg";
 import support_default from "@/assets/sidebar_icons/carbon_help_defaultsvg.svg";
@@ -11,6 +11,9 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import { BILLING_ROUTES, BILLING_SIDEBAR_GROUP_ID } from "@/features/billing/constants";
 import { isBillingRole } from "@/features/billing/permissions";
+import { YASHIL_ROUTES, YASHIL_SIDEBAR_GROUP_ID } from "@/features/yashil/constants";
+import { isYashilRole, useYashilAccess } from "@/features/yashil/permissions";
+import { useYashilT } from "@/features/yashil/i18n";
 
 export interface SidebarMenuItem {
   id: string | number;
@@ -85,15 +88,42 @@ export function useBillingSidebarGroup(): SidebarMenuItem {
   );
 }
 
-export function useSidebarMenu(): {
+/** «Яшил маҳалла» — top-level guruh (TZ §16.1); nomlar modul yozuvida (kirill/lotin). */
+export function useYashilSidebarGroup(): SidebarMenuItem {
+  const { t } = useYashilT();
+  return useMemo<SidebarMenuItem>(
+    () => ({
+      id: YASHIL_SIDEBAR_GROUP_ID,
+      name: t("module_title"),
+      iconNode: createElement(Sprout, { size: 18 }),
+      children: [
+        { id: "yashil-overview", name: t("nav_overview"), path: YASHIL_ROUTES.root },
+        { id: "yashil-reference", name: t("nav_reference"), path: YASHIL_ROUTES.reference },
+      ],
+    }),
+    [t],
+  );
+}
+
+export interface SidebarMenuResult {
   sidebar_menu: SidebarMenuItem[][];
   sidebar_3: SidebarMenuItem[][];
   billingGroup: SidebarMenuItem;
   isBillingUser: boolean;
-} {
+  yashilGroup: SidebarMenuItem;
+  /** ym_* rollari: faqat «Яшил маҳалла» va Yordam. */
+  isYashilUser: boolean;
+  /** Boshqa rollar uchun ham guruh ko'rinadi — a'zolik yoki modul admini bo'lsa. */
+  hasYashilAccess: boolean;
+}
+
+export function useSidebarMenu(): SidebarMenuResult {
   const { t } = useTranslation();
   const role = useSelector((state: RootState) => state.auth.user?.role);
   const billingGroup = useBillingSidebarGroup();
+  const yashilGroup = useYashilSidebarGroup();
+  const { hasAccess: hasYashilAccess } = useYashilAccess();
+  const yashil = { yashilGroup, isYashilUser: isYashilRole(role), hasYashilAccess };
 
   if (role === "support_admin") {
     return {
@@ -112,6 +142,7 @@ export function useSidebarMenu(): {
       sidebar_3: [],
       billingGroup,
       isBillingUser: false,
+      ...yashil,
     };
   }
 
@@ -132,7 +163,13 @@ export function useSidebarMenu(): {
       sidebar_3: [[helpItem]],
       billingGroup,
       isBillingUser: true,
+      ...yashil,
     };
+  }
+
+  // ym_* rollari: stat menyusi yo'q — faqat «Яшил маҳалла» guruhi va Yordam.
+  if (yashil.isYashilUser) {
+    return { sidebar_menu: [], sidebar_3: [[helpItem]], billingGroup, isBillingUser: false, ...yashil };
   }
 
   const sidebar_menu: SidebarMenuItem[][] = [
@@ -162,5 +199,5 @@ export function useSidebarMenu(): {
     ],
   ];
 
-  return { sidebar_menu, sidebar_3, billingGroup, isBillingUser: false };
+  return { sidebar_menu, sidebar_3, billingGroup, isBillingUser: false, ...yashil };
 }

@@ -89,6 +89,10 @@ export const USER_ROLE = [
   "support_admin",
   "billing_user",
   "billing_super",
+  "ym_mahalla",
+  "ym_union",
+  "ym_dm",
+  "ym_observer",
 ]
 
 export const regions_information = [
