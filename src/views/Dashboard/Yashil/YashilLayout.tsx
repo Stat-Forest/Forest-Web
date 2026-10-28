@@ -52,9 +52,13 @@ function YashilLayout({ title, actions, children }: Props) {
     dispatch(yashilApi.util.resetApiState());
   };
 
+  const memberType = me?.active_cabinet?.member_type;
+  const showWarehouse = memberType === "supplier" || memberType === "observer" || (!!me?.is_admin && !memberType);
   const nav = [
     { to: YASHIL_ROUTES.root, label: t("nav_overview") },
     { to: YASHIL_ROUTES.orders, label: t("nav_orders") },
+    { to: YASHIL_ROUTES.acts, label: t("nav_acts") },
+    ...(showWarehouse ? [{ to: YASHIL_ROUTES.warehouse, label: t("nav_warehouse") }] : []),
     { to: YASHIL_ROUTES.reference, label: t("nav_reference") },
   ];
 

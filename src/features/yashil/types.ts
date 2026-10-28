@@ -160,10 +160,25 @@ export type OrderState =
   | "returned"
   | "supplier_new"
   | "supplier_review"
-  | "execution";
+  | "execution"
+  | "partial"
+  | "closed"
+  | "cancelled";
 
 export type ReturnReason = "address" | "lines" | "supplier" | "documents" | "norms" | "other";
-export type OrderAction = "edit" | "submit" | "review" | "forward" | "return" | "accept";
+export type OrderAction =
+  | "edit"
+  | "submit"
+  | "review"
+  | "forward"
+  | "return"
+  | "accept"
+  | "create_act"
+  | "cancel"
+  | "cancel_request"
+  | "cancel_agree"
+  | "cancel_reject"
+  | "cancel_approve";
 
 export interface DeadlineInfo {
   stage: "review" | "delivery" | null;
@@ -198,6 +213,9 @@ export interface OrderLineOut {
   unit_cyr: string;
   attrs_note: string;
   position: number;
+  /** Ikki imzoli aktlar bo'yicha qabul qilingan va qolgan hajm (3-bosqich). */
+  accepted_qty: string | null;
+  remaining_qty: string | null;
 }
 
 export interface SignatureOut {
@@ -212,30 +230,36 @@ export interface SignatureOut {
   cert_valid_to: string;
 }
 
+export type DocumentStatus = "unsigned" | "partly_signed" | "signed" | "superseded" | "cancelled";
+export type DocumentKind = "order_form" | "act" | "cancellation";
+
 export interface DocumentVersionShort {
   id: UUID;
   version_no: number;
-  status: "unsigned" | "signed" | "superseded" | "cancelled";
+  status: DocumentStatus;
   qr_token: string;
   signatures: SignatureOut[];
 }
 
+export type DocumentContent = OrderFormContent | ActContent | CancellationContent;
+
 export interface DocumentVersionFull extends DocumentVersionShort {
   template_version: number;
-  content: OrderFormContent;
+  content: DocumentContent;
   content_hash: string;
   created_at: string;
 }
 
 export interface OrderDocument {
   id: UUID;
-  kind: "order_form" | "act";
+  kind: DocumentKind;
   number: string;
   current_version: DocumentVersionShort | null;
   versions: DocumentVersionShort[];
 }
 
 export interface OrderFormContent {
+  doc_type: "order_form";
   number: string | null;
   version_no: number;
   date: string | null;
@@ -254,6 +278,52 @@ export interface OrderFormContent {
   extra_info: string;
   attachments_text: string;
   signer: { full_name: string; position: string; phone: string; authority: string };
+}
+
+/** Dalolatnoma mazmuni (TZ §12.1). */
+export interface ActContent {
+  doc_type: "act";
+  number: string;
+  act_index: number;
+  version_no: number;
+  date: string | null;
+  is_partial: boolean;
+  place: string;
+  order_number: string;
+  order_date: string;
+  supplier_name: string;
+  mahalla_name: string;
+  region: string;
+  district: string;
+  object_text: string;
+  lines: { n: number; order_line_id: UUID; code: string; name: string; attrs: string; qty: string; unit: string; ordered_qty: string; item_type: ItemType }[];
+  delivery_date: string;
+  planned_date: string | null;
+  responsible: string;
+  delivery_address: string;
+  note: string;
+  attachments_text: string;
+  deliverer: { name: string; full_name: string; position: string };
+  receiver: { name: string; full_name: string; position: string };
+}
+
+/** Bekor qilish hujjati mazmuni. */
+export interface CancellationContent {
+  doc_type: "cancellation";
+  number: string;
+  order_number: string;
+  version_no: number;
+  date: string;
+  mahalla_name: string;
+  supplier_name: string;
+  requested_by: string;
+  agreed_by: string;
+  approved_by: string;
+  reason: string;
+  is_full: boolean;
+  lines: { n: number; order_line_id: UUID; code: string; name: string; unit: string; ordered_qty: string; accepted_qty: string; cancelled_qty: string }[];
+  result: "cancelled" | "closed" | "partial";
+  result_cyr: string;
 }
 
 export interface OrderVersionOut {
@@ -317,6 +387,235 @@ export interface OrderDetail extends OrderListItem {
   attachments: OrderAttachmentOut[];
   actions: OrderAction[];
   last_return: { comment: string; reason_code: ReturnReason; by: "union" | "supplier"; fields: string[]; at: string; actor: string } | null;
+  acceptance: AcceptanceOut | null;
+  acts: ActListItem[];
+  cancel_request: CancelRequestOut | null;
+  closed_at: string | null;
+}
+
+// ============================================================================ 3-bosqich: ombor
+export interface AcceptanceLine {
+  order_line_id: UUID;
+  code: string;
+  name_cyr: string;
+  unit: Unit;
+  kind: "stock" | "capacity";
+  qty: string;
+  balance_before: string;
+  balance_after: string;
+  shortage: string;
+  period: string | null;
+}
+
+export interface AcceptanceOut {
+  id: UUID;
+  warehouse: { id: UUID; name: string };
+  accepted_on: string;
+  delivery_due: string;
+  executor_name: string;
+  accepted_by: string;
+  result: { warehouse: string; strict: boolean; has_shortage: boolean; lines: AcceptanceLine[] };
+}
+
+export interface StockRow {
+  warehouse_id: UUID;
+  catalog_item_id: UUID;
+  code: string;
+  name_cyr: string;
+  name_lat: string;
+  unit: Unit;
+  precision: number;
+  opening: string;
+  received: string;
+  allocated: string;
+  released: string;
+  returned: string;
+  balance: string;
+  shortage: string;
+  pending_reversals: number;
+}
+
+export interface StockSummary {
+  organization: { id: UUID; name: string; supplier_type: SupplierType | null };
+  warehouse: { id: UUID; name: string };
+  rows: StockRow[];
+  shortage_count: number;
+  pending_reversals: number;
+  can_post: boolean;
+  can_approve: boolean;
+}
+
+export type MovementKind = "opening" | "receipt" | "allocate" | "release" | "return_in" | "reversal";
+export type MovementStatus = "posted" | "pending_approval" | "rejected";
+
+export interface StockMovementOut {
+  id: UUID;
+  kind: MovementKind;
+  status: MovementStatus;
+  qty: string;
+  catalog_item: { id: UUID; code: string; name_cyr: string; name_lat: string; unit: Unit };
+  doc_number: string;
+  doc_date: string | null;
+  note: string;
+  file_url: string | null;
+  order_number: string | null;
+  reversal_of: UUID | null;
+  requested_by: string;
+  approved_by_name: string;
+  approved_at: string | null;
+  decision_note: string;
+  created_at: string;
+}
+
+export interface StockEntryIn {
+  catalog_item: UUID;
+  qty: string;
+  doc_number: string;
+  doc_date: string;
+  note?: string;
+  file?: File | null;
+}
+
+export interface StockEntryResult {
+  movement: StockMovementOut;
+  balance: string;
+  warnings: { code: string; message: string }[];
+}
+
+export interface CapacityRow {
+  catalog_item_id: UUID;
+  code: string;
+  name_cyr: string;
+  name_lat: string;
+  unit: Unit;
+  capacity: string;
+  used: string;
+  available: string;
+}
+
+export interface SupplierOrgRow {
+  id: UUID;
+  name: string;
+  supplier_type: SupplierType;
+  region: string;
+  shortage_count: number;
+  pending_reversals: number;
+}
+
+// ============================================================================ 3-bosqich: dalolatnoma
+export type ActStatus = "draft" | "mahalla_review" | "approved" | "returned" | "cancelled";
+export type ActAction = "edit" | "attach" | "sign" | "cancel" | "approve" | "return";
+export type ActReturnReason = "document" | "quantity" | "quality" | "not_delivered" | "other";
+
+export interface ActLineOut {
+  id: UUID;
+  order_line: UUID;
+  catalog_item: { id: UUID; code: string; name_cyr: string; name_lat: string; unit: Unit; precision: number };
+  qty: string;
+  ordered_qty: string;
+  unit_cyr: string;
+}
+
+export interface ActVersionOut {
+  id: UUID;
+  version_no: number;
+  delivery_date: string;
+  planned_date: string | null;
+  responsible: string;
+  delivery_address: string;
+  note: string;
+  lines: ActLineOut[];
+  document_version_id: UUID | null;
+  submitted_at: string | null;
+  superseded_at: string | null;
+  created_at: string;
+}
+
+export interface ActAttachmentOut {
+  id: UUID;
+  version_no: number;
+  original_name: string;
+  size: number;
+  kind: "photo" | "pdf" | "other";
+  url: string | null;
+  created_at: string;
+}
+
+export interface ActListItem {
+  id: UUID;
+  number: string;
+  index: number;
+  status: ActStatus;
+  status_cyr: string;
+  version_no: number;
+  is_partial: boolean;
+  order: { id: UUID; number: string | null; title: string; state: OrderState; state_cyr: string; mahalla_name: string; supplier_name: string; route: SupplierType };
+  delivery_date: string | null;
+  approved_at: string | null;
+  returned_at: string | null;
+  created_at: string;
+  updated_at: string;
+  actions: ActAction[];
+}
+
+export interface ActDetail extends ActListItem {
+  current_version: ActVersionOut | null;
+  versions: ActVersionOut[];
+  attachments: ActAttachmentOut[];
+  document: OrderDocument | null;
+  last_return: { comment: string; reason_code: ActReturnReason; at: string; actor: string; version_no: number | null } | null;
+}
+
+export interface ActWrite {
+  delivery_date: string;
+  planned_date?: string | null;
+  responsible?: string;
+  delivery_address?: string;
+  note?: string;
+  lines: { order_line: UUID; qty: string }[];
+}
+
+export interface ActSignTask extends SigningTask {
+  document_version_id: UUID;
+  role: "supplier" | "mahalla";
+  content_hash: string;
+}
+
+// ============================================================================ 3-bosqich: bekor qilish
+export type CancelStatus = "requested" | "agreed" | "approved" | "rejected";
+
+export interface CancelRequestOut {
+  id: UUID;
+  order: { id: UUID; number: string | null; title: string; state: OrderState; state_cyr: string; mahalla_name: string; supplier_name: string };
+  requested_by_party: "mahalla" | "supplier";
+  requested_by: { cabinet: string; name: string };
+  is_full: boolean;
+  lines: { order_line_id: UUID; code: string; name_cyr: string; unit: Unit; qty: string }[];
+  reason: string;
+  status: CancelStatus;
+  status_cyr: string;
+  agreed_by_name: string | null;
+  agreed_at: string | null;
+  approved_by_name: string | null;
+  approved_at: string | null;
+  decision_note: string;
+  document: OrderDocument | null;
+  result: { result?: string; released?: unknown[]; lines?: unknown[] };
+  created_at: string;
+}
+
+export interface CancelWrite {
+  reason: string;
+  lines?: { order_line: UUID; qty: string }[];
+}
+
+export interface PdfInfo {
+  url: string;
+  filename: string;
+  size: number;
+  status: DocumentStatus;
+  version_no: number;
+  document_version_id: UUID;
 }
 
 export interface OrderLineIn {
@@ -371,13 +670,16 @@ export interface YashilNotificationOut {
 }
 
 export interface PublicVerify {
-  doc_type: "order_form" | "act";
+  doc_type: DocumentKind;
   number: string | null;
   version_no: number;
   date: string | null;
-  status: "valid" | "unsigned" | "superseded" | "cancelled";
+  status: "valid" | "pending_signature" | "unsigned" | "superseded" | "cancelled";
   is_current: boolean;
+  is_partial: boolean | null;
+  order_number: string | null;
   parties: { mahalla: string; supplier: string };
   signatures: { role: string; signed_at: string; valid: boolean }[];
+  missing_roles: ("supplier" | "mahalla")[];
   checked_at: string;
 }
