@@ -3,7 +3,15 @@
 export const YASHIL_ROUTES = {
   root: "/yashil",
   reference: "/yashil/reference",
+  orders: "/yashil/orders",
+  orderNew: "/yashil/orders/new",
+  order: (id: string) => `/yashil/orders/${id}`,
+  orderEdit: (id: string) => `/yashil/orders/${id}/edit`,
+  verify: (token: string) => `/yashil/verify/${token}`,
 } as const;
+
+/** Idempotency-Key header'i (backend IdempotentPostMixin). */
+export const IDEMPOTENCY_HEADER = "Idempotency-Key";
 
 /** Sidebar'dagi top-level guruh id'si (open-sidebar-submenu uchun). */
 export const YASHIL_SIDEBAR_GROUP_ID = "yashil-mahalla";

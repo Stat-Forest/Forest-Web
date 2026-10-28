@@ -47,6 +47,9 @@ const BillingContractDetailPage = lazy(() => import("./Billing/Contracts/Contrac
 // Yashil mahalla (TZ §16.1 — chap menyuda alohida bo'lim)
 const YashilOverview = lazy(() => import("./Yashil/Overview"));
 const YashilReference = lazy(() => import("./Yashil/Reference"));
+const YashilOrders = lazy(() => import("./Yashil/Orders/OrdersPage"));
+const YashilOrderForm = lazy(() => import("./Yashil/Orders/OrderFormPage"));
+const YashilOrderDetail = lazy(() => import("./Yashil/Orders/OrderDetailPage"));
 
 const BILLING_ALLOWED_PREFIXES = ["/billing", "/support-information", "/video"];
 
@@ -231,6 +234,10 @@ function Dashboard() {
               {/* Yashil mahalla */}
               <Route path="yashil" element={<YashilRoute><YashilOverview /></YashilRoute>} />
               <Route path="yashil/reference" element={<YashilRoute><YashilReference /></YashilRoute>} />
+              <Route path="yashil/orders" element={<YashilRoute><YashilOrders /></YashilRoute>} />
+              <Route path="yashil/orders/new" element={<YashilRoute><YashilOrderForm /></YashilRoute>} />
+              <Route path="yashil/orders/:id" element={<YashilRoute><YashilOrderDetail /></YashilRoute>} />
+              <Route path="yashil/orders/:id/edit" element={<YashilRoute><YashilOrderForm /></YashilRoute>} />
 
               <Route
                 path="*"
