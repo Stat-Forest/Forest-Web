@@ -59,6 +59,9 @@ function YashilLayout({ title, actions, children }: Props) {
     { to: YASHIL_ROUTES.orders, label: t("nav_orders") },
     { to: YASHIL_ROUTES.acts, label: t("nav_acts") },
     ...(showWarehouse ? [{ to: YASHIL_ROUTES.warehouse, label: t("nav_warehouse") }] : []),
+    { to: YASHIL_ROUTES.reports, label: t("nav_reports") },
+    { to: YASHIL_ROUTES.stats, label: t("nav_stats") },
+    { to: YASHIL_ROUTES.map, label: t("nav_map") },
     { to: YASHIL_ROUTES.reference, label: t("nav_reference") },
   ];
 

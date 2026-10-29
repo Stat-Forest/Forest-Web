@@ -204,6 +204,9 @@ export interface OrderListItem {
   last_submitted_at: string | null;
   delivery_due: string | null;
   deadline: DeadlineInfo;
+  /** Tungi hisob (kecha/ertalab): kechikkan ish kunlari va bosqich (TZ §14.2 filtri bilan bir manba). */
+  late_workdays: number;
+  overdue_stage: "review" | "delivery" | "";
 }
 
 export interface OrderLineOut {
@@ -682,4 +685,202 @@ export interface PublicVerify {
   signatures: { role: string; signed_at: string; valid: boolean }[];
   missing_roles: ("supplier" | "mahalla")[];
   checked_at: string;
+}
+
+
+// ===================================================================== 4-bosqich: hisobot, statistika, xarita
+export type PeriodBasis = "submitted" | "accepted" | "delivered";
+
+/** Reestr/statistika/xarita filtrlari (backend `reports.parse_filters`). */
+export interface ReportFilterParams {
+  period_basis?: PeriodBasis;
+  date_from?: string;
+  date_to?: string;
+  region?: UUID;
+  district?: UUID;
+  mahalla?: UUID;
+  supplier_org?: UUID;
+  route?: SupplierType | "";
+  catalog_item?: UUID;
+  category?: string;
+  state?: string;
+  overdue?: boolean;
+  q?: string;
+  ordering?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface RegistryRow {
+  row_no: number;
+  order_id: UUID;
+  line_id: UUID;
+  number: string | null;
+  title: string;
+  route: SupplierType;
+  route_cyr: string;
+  state: OrderState;
+  state_cyr: string;
+  responsible_cyr: string;
+  mahalla: string;
+  mahalla_id: UUID;
+  district: string;
+  region: string;
+  supplier: string;
+  supplier_id: UUID;
+  item: string;
+  item_code: string;
+  category: string;
+  unit: Unit;
+  unit_cyr: string;
+  qty: string;
+  accepted_qty: string;
+  remaining_qty: string;
+  first_submitted_on: string | null;
+  last_submitted_at: string | null;
+  /** Oxirgi yuborish sanasi (Asia/Tashkent) — `first_submitted_on` bilan solishtirish uchun. */
+  last_submitted_on: string | null;
+  review_due: string | null;
+  accepted_on: string | null;
+  delivery_due: string | null;
+  late_workdays: number;
+  overdue_stage: "review" | "delivery" | "";
+  overdue_stage_cyr: string;
+  executor_name: string;
+  act_numbers: string;
+  last_delivery_date: string | null;
+  address: string;
+  lat: string | null;
+  lon: string | null;
+  area_ha: string | null;
+}
+
+export interface RegistryPage extends Paginated<RegistryRow> {
+  filters_label: string;
+}
+
+export interface RegistryItemTotal {
+  item_code: string;
+  item: string;
+  unit: Unit;
+  unit_cyr: string;
+  ordered: string;
+  accepted: string;
+  remaining: string;
+  orders: number;
+  lines: number;
+}
+
+export interface RegistrySummary {
+  orders: number;
+  lines: number;
+  by_item: RegistryItemTotal[];
+  by_state: Partial<Record<OrderState, number>>;
+  overdue_orders: number;
+  filters_label: string;
+}
+
+export interface ReportDictionaries {
+  suppliers: { id: UUID; name: string; supplier_type: SupplierType }[];
+  items: { id: UUID; code: string; name_cyr: string; name_lat: string; supplier_type: SupplierType; category: string; unit: Unit }[];
+  states: { value: OrderState; label: string }[];
+  period_bases: { value: PeriodBasis; label: string }[];
+  routes: { value: SupplierType; label: string }[];
+}
+
+export type ExportKind = "registry" | "acts";
+export type ExportFormat = "xlsx" | "csv" | "pdf";
+export type ExportStatus = "queued" | "running" | "done" | "failed" | "expired";
+
+export interface ExportJobOut {
+  id: UUID;
+  kind: ExportKind;
+  format: ExportFormat;
+  status: ExportStatus;
+  row_count: number;
+  filters: Record<string, unknown>;
+  error: string;
+  created_at: string;
+  finished_at: string | null;
+  url: string | null;
+  filename: string | null;
+}
+
+export interface StatsCards {
+  total: number;
+  new: number;
+  new_union: number;
+  new_supplier: number;
+  reviewing: number;
+  reviewing_union: number;
+  reviewing_supplier: number;
+  reviewed: number;
+  execution: number;
+  partial: number;
+  done: number;
+  returned: number;
+  cancelled: number;
+  overdue: number;
+  overdue_review: number;
+  overdue_delivery: number;
+  filters_label: string;
+}
+
+export interface SeedlingRow {
+  item_code: string;
+  item: string;
+  unit: Unit;
+  unit_cyr: string;
+  orders: number;
+  ordered: string;
+  accepted: string;
+  pending: string;
+  returned_open: string;
+  diff: string;
+}
+
+export interface SeedlingStats {
+  items: SeedlingRow[];
+  totals: { ordered: string; accepted: string; pending: string; returned_open: string; diff: string };
+  filters_label: string;
+}
+
+export interface OrgLagRow {
+  kind: "supplier" | "union";
+  id: UUID;
+  name: string;
+  total: number;
+  in_progress: number;
+  done: number;
+  waiting: number;
+  review_late: number;
+  delivery_late: number;
+  late: number;
+  max_late_days: number;
+  has_late: boolean;
+  done_pct: string;
+}
+
+export interface MapPoint {
+  id: UUID;
+  number: string | null;
+  title: string;
+  state: OrderState;
+  state_cyr: string;
+  route: SupplierType;
+  lat: string;
+  lon: string;
+  mahalla: string;
+  supplier: string;
+  address: string;
+  area_ha: string | null;
+  lines: { item: string; unit_cyr: string; qty: string; accepted: string }[];
+  accepted_on: string | null;
+  delivery_due: string | null;
+  late_workdays: number;
+}
+
+export interface MapPoints {
+  count: number;
+  points: MapPoint[];
 }

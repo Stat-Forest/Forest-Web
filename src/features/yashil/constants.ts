@@ -11,6 +11,9 @@ export const YASHIL_ROUTES = {
   warehouse: "/yashil/warehouse",
   acts: "/yashil/acts",
   act: (id: string) => `/yashil/acts/${id}`,
+  reports: "/yashil/reports",
+  stats: "/yashil/stats",
+  map: "/yashil/map",
 } as const;
 
 /** Idempotency-Key header'i (backend IdempotentPostMixin). */

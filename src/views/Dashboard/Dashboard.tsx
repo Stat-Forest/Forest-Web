@@ -53,6 +53,9 @@ const YashilOrderDetail = lazy(() => import("./Yashil/Orders/OrderDetailPage"));
 const YashilActs = lazy(() => import("./Yashil/Acts/ActsPage"));
 const YashilActDetail = lazy(() => import("./Yashil/Acts/ActDetailPage"));
 const YashilWarehouse = lazy(() => import("./Yashil/Warehouse/WarehousePage"));
+const YashilReports = lazy(() => import("./Yashil/Reports/ReportsPage"));
+const YashilStats = lazy(() => import("./Yashil/Stats/StatsPage"));
+const YashilMap = lazy(() => import("./Yashil/Map/MapPage"));
 
 const BILLING_ALLOWED_PREFIXES = ["/billing", "/support-information", "/video"];
 
@@ -244,6 +247,9 @@ function Dashboard() {
               <Route path="yashil/acts" element={<YashilRoute><YashilActs /></YashilRoute>} />
               <Route path="yashil/acts/:id" element={<YashilRoute><YashilActDetail /></YashilRoute>} />
               <Route path="yashil/warehouse" element={<YashilRoute><YashilWarehouse /></YashilRoute>} />
+              <Route path="yashil/reports" element={<YashilRoute><YashilReports /></YashilRoute>} />
+              <Route path="yashil/stats" element={<YashilRoute><YashilStats /></YashilRoute>} />
+              <Route path="yashil/map" element={<YashilRoute><YashilMap /></YashilRoute>} />
 
               <Route
                 path="*"
