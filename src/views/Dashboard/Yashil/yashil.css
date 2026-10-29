@@ -40,6 +40,11 @@
   background: var(--ym-bg);
   min-height: 100%;
 }
+/* Modul dialoglari ham .yashil-root — ekran balandligiga cho'zilmasin (grid qatorlari tarqalib ketadi) */
+[data-slot="dialog-content"].yashil-root {
+  min-height: 0;
+  align-content: start;
+}
 
 .ym-card {
   background: var(--ym-card);
@@ -76,6 +81,11 @@
   background: var(--ym-green);
   border-color: var(--ym-green);
   color: #fff;
+}
+.ym-btn:disabled,
+.ym-btn:disabled:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .ym-btn--primary:hover,
 .ym-btn--active:hover {

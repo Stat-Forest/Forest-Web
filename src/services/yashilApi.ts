@@ -24,6 +24,21 @@ import type {
   StockSummary,
   SupplierOrgRow,
   DueDates,
+  AdminAssignment,
+  AdminCalendarDay,
+  AdminCatalogItem,
+  AdminMahalla,
+  AdminMembership,
+  AdminMembershipWrite,
+  AdminOrgHit,
+  AdminRoute,
+  AdminSupplier,
+  AdminUnionUnit,
+  AdminUserHit,
+  AuditRow,
+  ImportKind,
+  ImportResultOut,
+  RuleRow,
   ExportFormat,
   ExportJobOut,
   ExportKind,
@@ -66,6 +81,7 @@ const REPORTS = "YashilReports";
 const STATS = "YashilStats";
 const MAP = "YashilMap";
 const EXPORTS = "YashilExports";
+const ADMIN = "YashilAdmin";
 
 /** Har o'zgartiruvchi so'rov uchun yangi Idempotency-Key (takror bosishdan himoya backend'da). */
 export const newIdempotencyKey = (): string =>
@@ -117,7 +133,7 @@ const publicBaseQuery = fetchBaseQuery({ baseUrl: `${base_url}/yashil` });
 export const yashilApi = createApi({
   reducerPath: "yashilApi",
   baseQuery,
-  tagTypes: [ME, REF, ORDERS, NOTIF, STOCK, ACTS, CANCEL, REPORTS, STATS, MAP, EXPORTS],
+  tagTypes: [ME, REF, ORDERS, NOTIF, STOCK, ACTS, CANCEL, REPORTS, STATS, MAP, EXPORTS, ADMIN],
   endpoints: (builder) => ({
     getYashilMe: builder.query<YashilMe, void>({
       query: () => "/me/",
@@ -354,6 +370,113 @@ export const yashilApi = createApi({
       query: (params) => `/map/points/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
       providesTags: [MAP],
     }),
+    // ===================================================================== modul administratori (4b)
+    searchYashilAdminUsers: builder.query<{ results: AdminUserHit[] }, string>({
+      query: (q) => `/admin/users/search/${qs({ q })}`,
+    }),
+    searchYashilAdminOrgs: builder.query<{ results: AdminOrgHit[] }, string>({
+      query: (q) => `/admin/organizations/search/${qs({ q })}`,
+    }),
+    getYashilAdminMemberships: builder.query<Paginated<AdminMembership>, { q?: string; member_type?: string; active?: boolean; page?: number; per_page?: number } | void>({
+      query: (params) => `/admin/memberships/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [{ type: ADMIN, id: "memberships" }],
+    }),
+    saveYashilAdminMembership: builder.mutation<AdminMembership, { id?: UUID; body: AdminMembershipWrite }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/memberships/${id}/` : "/admin/memberships/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "memberships" }, { type: ADMIN, id: "audit" }, ME],
+    }),
+    getYashilAdminCalendar: builder.query<{ results: AdminCalendarDay[] }, number>({
+      query: (year) => `/admin/calendar/${qs({ year })}`,
+      providesTags: [{ type: ADMIN, id: "calendar" }],
+    }),
+    saveYashilAdminCalendarDay: builder.mutation<AdminCalendarDay, Omit<AdminCalendarDay, "id" | "version">>({
+      query: (body) => ({ url: "/admin/calendar/", method: "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "calendar" }, { type: ADMIN, id: "audit" }, { type: REF, id: "calendar" }],
+    }),
+    deleteYashilAdminCalendarDay: builder.mutation<void, UUID>({
+      query: (id) => ({ url: `/admin/calendar/${id}/`, method: "DELETE" }),
+      invalidatesTags: [{ type: ADMIN, id: "calendar" }, { type: ADMIN, id: "audit" }, { type: REF, id: "calendar" }],
+    }),
+    getYashilAdminMahallas: builder.query<Paginated<AdminMahalla>, { q?: string; region?: UUID; district?: UUID; page?: number; per_page?: number } | void>({
+      query: (params) => `/admin/mahallas/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [{ type: ADMIN, id: "mahallas" }],
+    }),
+    saveYashilAdminMahalla: builder.mutation<AdminMahalla, { id?: UUID; body: Partial<{ source_code: string; name: string; district: UUID; address: string; is_active: boolean; valid_to: string | null }> }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/mahallas/${id}/` : "/admin/mahallas/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "mahallas" }, { type: ADMIN, id: "audit" }, { type: REF, id: "mahallas" }],
+    }),
+    getYashilAdminUnionUnits: builder.query<{ results: AdminUnionUnit[] }, void>({
+      query: () => "/admin/union-units/",
+      providesTags: [{ type: ADMIN, id: "units" }],
+    }),
+    saveYashilAdminUnionUnit: builder.mutation<AdminUnionUnit, { id?: UUID; body: Partial<Omit<AdminUnionUnit, "id" | "region_name" | "district_name" | "mahallas">> }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/union-units/${id}/` : "/admin/union-units/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "units" }, { type: ADMIN, id: "audit" }],
+    }),
+    getYashilAdminSuppliers: builder.query<{ results: AdminSupplier[] }, { supplier_type?: string } | void>({
+      query: (params) => `/admin/suppliers/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [{ type: ADMIN, id: "suppliers" }],
+    }),
+    saveYashilAdminSupplier: builder.mutation<AdminSupplier, { id?: UUID; body: Partial<Omit<AdminSupplier, "id" | "organization_name" | "members">> }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/suppliers/${id}/` : "/admin/suppliers/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "suppliers" }, { type: ADMIN, id: "audit" }],
+    }),
+    getYashilAdminAssignments: builder.query<Paginated<AdminAssignment>, { q?: string; mahalla?: UUID; page?: number; per_page?: number } | void>({
+      query: (params) => `/admin/assignments/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [{ type: ADMIN, id: "assignments" }],
+    }),
+    saveYashilAdminAssignment: builder.mutation<AdminAssignment, { id?: UUID; body: Partial<{ mahalla: UUID; organization: UUID; valid_from: string; valid_to: string | null; source_doc: string }> }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/assignments/${id}/` : "/admin/assignments/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "assignments" }, { type: ADMIN, id: "audit" }],
+    }),
+    getYashilAdminRoutes: builder.query<Paginated<AdminRoute>, { q?: string; mahalla?: UUID; page?: number; per_page?: number } | void>({
+      query: (params) => `/admin/routes/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [{ type: ADMIN, id: "routes" }],
+    }),
+    saveYashilAdminRoute: builder.mutation<AdminRoute, { id?: UUID; body: Partial<{ mahalla: UUID; union_unit: UUID; valid_from: string; valid_to: string | null; source_doc: string }> }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/routes/${id}/` : "/admin/routes/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "routes" }, { type: ADMIN, id: "audit" }, { type: ADMIN, id: "units" }],
+    }),
+    getYashilAdminCatalog: builder.query<{ results: AdminCatalogItem[] }, void>({
+      query: () => "/admin/catalog/",
+      providesTags: [{ type: ADMIN, id: "catalog" }],
+    }),
+    saveYashilAdminCatalogItem: builder.mutation<AdminCatalogItem, { id?: UUID; body: Partial<AdminCatalogItem> }>({
+      query: ({ id, body }) => ({ url: id ? `/admin/catalog/${id}/` : "/admin/catalog/", method: id ? "PATCH" : "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "catalog" }, { type: ADMIN, id: "audit" }, { type: REF, id: "catalog" }],
+    }),
+    getYashilAdminCapacity: builder.query<{ period: string; organization: UUID; rows: CapacityRow[] }, { organization: UUID; period: string }>({
+      query: (params) => `/admin/capacity/${qs(params as unknown as Record<string, QueryValue>)}`,
+      providesTags: [{ type: ADMIN, id: "capacity" }],
+    }),
+    saveYashilCapacity: builder.mutation<{ period: string; rows: CapacityRow[] }, { admin: boolean; organization?: UUID; period: string; rows: { catalog_item: UUID; capacity: string }[] }>({
+      query: ({ admin, ...body }) => ({ url: admin ? "/admin/capacity/" : "/stock/capacity/", method: "PUT", body }),
+      invalidatesTags: [{ type: ADMIN, id: "capacity" }, { type: ADMIN, id: "audit" }, STOCK],
+    }),
+    getYashilAdminSettings: builder.query<{ results: RuleRow[] }, void>({
+      query: () => "/admin/settings/",
+      providesTags: [{ type: ADMIN, id: "settings" }],
+    }),
+    saveYashilAdminSetting: builder.mutation<{ results: RuleRow[] }, { key: string; value: number | boolean; effective_from?: string; note?: string }>({
+      query: (body) => ({ url: "/admin/settings/", method: "PUT", body }),
+      invalidatesTags: [{ type: ADMIN, id: "settings" }, { type: ADMIN, id: "audit" }, ME],
+    }),
+    getYashilAdminAudit: builder.query<Paginated<AuditRow>, { model?: string; q?: string; page?: number; per_page?: number } | void>({
+      query: (params) => `/admin/audit/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [{ type: ADMIN, id: "audit" }],
+    }),
+    runYashilImport: builder.mutation<ImportResultOut, { kind: ImportKind; file: File; dryRun: boolean; source?: string }>({
+      query: ({ kind, file, dryRun, source }) => {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("dry_run", dryRun ? "1" : "0");
+        if (source) form.append(kind === "calendar" ? "source_ref" : "source_doc", source);
+        const url = kind === "opening" ? "/stock/opening/import/" : `/admin/${kind}/import/`;
+        return { url, method: "POST", body: form };
+      },
+      invalidatesTags: (_r, _e, { kind, dryRun }) =>
+        dryRun ? [] : kind === "opening" ? [STOCK] : [{ type: ADMIN, id: kind === "calendar" ? "calendar" : kind }, { type: ADMIN, id: "audit" }, REF],
+    }),
     getYashilDocumentPdf: builder.query<PdfInfo, UUID>({
       query: (id) => `/documents/${id}/pdf/`,
     }),
@@ -472,4 +595,29 @@ export const {
   useGetYashilStatsSeedlingsQuery,
   useGetYashilStatsOrganizationsQuery,
   useGetYashilMapPointsQuery,
+  useLazySearchYashilAdminUsersQuery,
+  useLazySearchYashilAdminOrgsQuery,
+  useGetYashilAdminMembershipsQuery,
+  useSaveYashilAdminMembershipMutation,
+  useGetYashilAdminCalendarQuery,
+  useSaveYashilAdminCalendarDayMutation,
+  useDeleteYashilAdminCalendarDayMutation,
+  useGetYashilAdminMahallasQuery,
+  useSaveYashilAdminMahallaMutation,
+  useGetYashilAdminUnionUnitsQuery,
+  useSaveYashilAdminUnionUnitMutation,
+  useGetYashilAdminSuppliersQuery,
+  useSaveYashilAdminSupplierMutation,
+  useGetYashilAdminAssignmentsQuery,
+  useSaveYashilAdminAssignmentMutation,
+  useGetYashilAdminRoutesQuery,
+  useSaveYashilAdminRouteMutation,
+  useGetYashilAdminCatalogQuery,
+  useSaveYashilAdminCatalogItemMutation,
+  useGetYashilAdminCapacityQuery,
+  useSaveYashilCapacityMutation,
+  useGetYashilAdminSettingsQuery,
+  useSaveYashilAdminSettingMutation,
+  useGetYashilAdminAuditQuery,
+  useRunYashilImportMutation,
 } = yashilApi;

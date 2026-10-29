@@ -884,3 +884,161 @@ export interface MapPoints {
   count: number;
   points: MapPoint[];
 }
+
+
+// ===================================================================== 4b: modul administratori
+export interface AdminUserHit {
+  id: UUID;
+  email: string;
+  full_name: string;
+  role: string;
+  organization: string;
+  memberships: number;
+}
+
+export interface AdminMembership {
+  id: UUID;
+  user: UUID;
+  user_info: { id: UUID; email: string; full_name: string; role: string };
+  member_type: MemberType;
+  mahalla: UUID | null;
+  union_unit: UUID | null;
+  organization: UUID | null;
+  cabinet_name: string;
+  can_prepare: boolean;
+  can_sign: boolean;
+  position_title: string;
+  phone: string;
+  authority_doc_number: string;
+  authority_doc_date: string | null;
+  authority_file: boolean;
+  observer_scope: { regions?: string[]; districts?: string[] };
+  valid_from: string;
+  valid_to: string | null;
+  is_active: boolean;
+  is_current: boolean;
+}
+
+export type AdminMembershipWrite = Partial<Omit<AdminMembership, "id" | "user_info" | "cabinet_name" | "authority_file" | "is_current">>;
+
+export interface AdminCalendarDay {
+  id: UUID;
+  date: string;
+  kind: "holiday" | "workday";
+  note: string;
+  source_ref: string;
+  version: number;
+}
+
+export interface AdminMahalla {
+  id: UUID;
+  source_code: string | null;
+  name: string;
+  region: { id: UUID; code: string; name: string };
+  district: { id: UUID; code: string; name: string };
+  address: string;
+  is_active: boolean;
+  valid_from: string;
+  valid_to: string | null;
+}
+
+export interface AdminUnionUnit {
+  id: UUID;
+  name: string;
+  level: "republic" | "region" | "district";
+  region: UUID | null;
+  district: UUID | null;
+  parent: UUID | null;
+  stir: string;
+  is_active: boolean;
+  region_name: string;
+  district_name: string;
+  mahallas: number;
+}
+
+export interface AdminSupplier {
+  id: UUID;
+  organization: UUID;
+  organization_name: string;
+  supplier_type: SupplierType;
+  parent: UUID | null;
+  official_name: string;
+  stir: string;
+  is_active_supplier: boolean;
+  service_regions: UUID[];
+  service_districts: UUID[];
+  members: number;
+}
+
+export interface AdminOrgHit {
+  id: UUID;
+  name: string;
+  region: string;
+  is_supplier: boolean;
+  supplier_type: SupplierType | null;
+}
+
+export interface AdminAssignment {
+  id: UUID;
+  mahalla: UUID;
+  mahalla_name: string;
+  organization: UUID;
+  organization_name: string;
+  valid_from: string;
+  valid_to: string | null;
+  source_doc: string;
+  is_current: boolean;
+}
+
+export interface AdminRoute {
+  id: UUID;
+  mahalla: UUID;
+  mahalla_name: string;
+  union_unit: UUID;
+  union_unit_name: string;
+  valid_from: string;
+  valid_to: string | null;
+  source_doc: string;
+  is_current: boolean;
+}
+
+export interface AdminCatalogItem extends CatalogItem {
+  is_active: boolean;
+  effective_from: string | null;
+  order: number;
+}
+
+export interface RuleRow {
+  key: string;
+  label: string;
+  type: "int" | "bool";
+  min: number | null;
+  max: number | null;
+  default: number | boolean;
+  value: number | boolean;
+  pending: { value: number | boolean; effective_from: string; version: number }[];
+  history: { version: number; value: number | boolean; effective_from: string; note: string; changed_by: string; created_at: string }[];
+}
+
+export interface AuditRow {
+  id: number;
+  created_at: string;
+  user: string;
+  action: "add" | "change" | "delete";
+  model_name: string;
+  object_id: string | null;
+  object_repr: string;
+  change_message: string;
+}
+
+export interface ImportResultOut {
+  dry_run: boolean;
+  applied: boolean;
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: { row: number; message: string }[];
+  error_count: number;
+}
+
+export type ImportKind = "mahallas" | "assignments" | "routes" | "calendar" | "opening";

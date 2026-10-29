@@ -94,6 +94,7 @@ export function useYashilSidebarGroup(): SidebarMenuItem {
   const { cabinet, me } = useYashilAccess();
   const memberType = cabinet?.member_type;
   const showWarehouse = memberType === "supplier" || memberType === "observer" || (!!me?.is_admin && !memberType);
+  const isAdmin = !!me?.is_admin;
   return useMemo<SidebarMenuItem>(
     () => ({
       id: YASHIL_SIDEBAR_GROUP_ID,
@@ -108,9 +109,10 @@ export function useYashilSidebarGroup(): SidebarMenuItem {
         { id: "yashil-stats", name: t("nav_stats"), path: YASHIL_ROUTES.stats },
         { id: "yashil-map", name: t("nav_map"), path: YASHIL_ROUTES.map },
         { id: "yashil-reference", name: t("nav_reference"), path: YASHIL_ROUTES.reference },
+        ...(isAdmin ? [{ id: "yashil-admin", name: t("nav_admin"), path: YASHIL_ROUTES.admin }] : []),
       ],
     }),
-    [t, showWarehouse],
+    [t, showWarehouse, isAdmin],
   );
 }
 
