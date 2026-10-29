@@ -1,8 +1,11 @@
-import { CheckCircle2, Clock, Droplets, Leaf, ListChecks, ShieldCheck, Sprout } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BarChart3, Droplets, FileSpreadsheet, Leaf, MapPinned, ShieldCheck, Sprout } from "lucide-react";
 import YashilLayout from "./YashilLayout";
 import { useYashilT } from "@/features/yashil/i18n";
 import { useYashilAccess } from "@/features/yashil/permissions";
-import { useGetYashilDueQuery } from "@/services/yashilApi";
+import { YASHIL_ROUTES } from "@/features/yashil/constants";
+import { useGetYashilDueQuery, useGetYashilStatsCardsQuery } from "@/services/yashilApi";
+import { StatCards } from "./Stats/StatsPage";
 
 const formatDate = (iso: string | undefined): string => {
   if (!iso) return "—";
@@ -11,20 +14,14 @@ const formatDate = (iso: string | undefined): string => {
 };
 
 /**
- * Umumiy ko'rinish (1-bosqich): kartalar hozircha 0 — buyurtmalar 2-bosqichda.
- * Muddat qoidalari va bugundan hisoblangan sanalar backend kalendaridan.
+ * Umumiy ko'rinish: kartalar kabinet ko'lamidagi haqiqiy raqamlar (`stats/cards/`, unikal buyurtma),
+ * hisobot/statistika/xarita havolalari, muddat qoidalari va bugundan hisoblangan sanalar.
  */
 function Overview() {
   const { t } = useYashilT();
   const { me } = useYashilAccess();
   const { data: due } = useGetYashilDueQuery();
-
-  const stats = [
-    { key: "stat_total", icon: <ListChecks size={20} />, value: 0 },
-    { key: "stat_review", icon: <Clock size={20} />, value: 0 },
-    { key: "stat_execution", icon: <Sprout size={20} />, value: 0 },
-    { key: "stat_done", icon: <CheckCircle2 size={20} />, value: 0 },
-  ] as const;
+  const { data: cards } = useGetYashilStatsCardsQuery(undefined, { skip: !me || (!me.active_cabinet && !me.is_admin) });
 
   return (
     <YashilLayout title={t("nav_overview")}>
@@ -45,23 +42,17 @@ function Overview() {
             <p className="mt-3 text-sm"><span className="ym-badge ym-badge--blue">{t("admin_badge")}</span></p>
           )}
         </div>
-        <div className="ym-notice">{t("stage3_note")}</div>
+        <div className="space-y-2">
+          <div className="ym-notice">{t("overview_note")}</div>
+          <div className="flex flex-wrap gap-2">
+            <Link to={YASHIL_ROUTES.reports} className="ym-btn"><FileSpreadsheet size={16} />{t("nav_reports")}</Link>
+            <Link to={YASHIL_ROUTES.stats} className="ym-btn"><BarChart3 size={16} />{t("nav_stats")}</Link>
+            <Link to={YASHIL_ROUTES.map} className="ym-btn"><MapPinned size={16} />{t("nav_map")}</Link>
+          </div>
+        </div>
       </section>
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((s) => (
-          <div key={s.key} className="ym-stat">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[13px] ym-muted">{t(s.key)}</span>
-              <span className="ym-stat-icon" aria-hidden="true">{s.icon}</span>
-            </div>
-            <strong>
-              {s.value}
-              <small>{t("orders_count_unit")}</small>
-            </strong>
-          </div>
-        ))}
-      </section>
+      <StatCards cards={cards} compact />
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="ym-card">

@@ -24,6 +24,17 @@ import type {
   StockSummary,
   SupplierOrgRow,
   DueDates,
+  ExportFormat,
+  ExportJobOut,
+  ExportKind,
+  MapPoints,
+  OrgLagRow,
+  RegistryPage,
+  RegistrySummary,
+  ReportDictionaries,
+  ReportFilterParams,
+  SeedlingStats,
+  StatsCards,
   Mahalla,
   ObjectType,
   OrderAttachmentOut,
@@ -51,6 +62,10 @@ const NOTIF = "YashilNotif";
 const STOCK = "YashilStock";
 const ACTS = "YashilActs";
 const CANCEL = "YashilCancel";
+const REPORTS = "YashilReports";
+const STATS = "YashilStats";
+const MAP = "YashilMap";
+const EXPORTS = "YashilExports";
 
 /** Har o'zgartiruvchi so'rov uchun yangi Idempotency-Key (takror bosishdan himoya backend'da). */
 export const newIdempotencyKey = (): string =>
@@ -58,9 +73,9 @@ export const newIdempotencyKey = (): string =>
 
 const idem = (key?: string) => ({ [IDEMPOTENCY_HEADER]: key || newIdempotencyKey() });
 
-export interface OrderListParams {
+export interface OrderListParams extends ReportFilterParams {
   state?: string;
-  route?: string;
+  route?: "forest" | "dm" | "";
   mahalla?: UUID;
   q?: string;
   page?: number;
@@ -102,7 +117,7 @@ const publicBaseQuery = fetchBaseQuery({ baseUrl: `${base_url}/yashil` });
 export const yashilApi = createApi({
   reducerPath: "yashilApi",
   baseQuery,
-  tagTypes: [ME, REF, ORDERS, NOTIF, STOCK, ACTS, CANCEL],
+  tagTypes: [ME, REF, ORDERS, NOTIF, STOCK, ACTS, CANCEL, REPORTS, STATS, MAP, EXPORTS],
   endpoints: (builder) => ({
     getYashilMe: builder.query<YashilMe, void>({
       query: () => "/me/",
@@ -182,7 +197,7 @@ export const yashilApi = createApi({
     }),
     submitYashilOrder: builder.mutation<OrderDetail, { id: UUID; document_version_id: UUID; nonce: string; pkcs7: string; version_no: number; key?: string }>({
       query: ({ id, key, ...body }) => ({ url: `/orders/${id}/submit/`, method: "POST", body, headers: idem(key) }),
-      invalidatesTags: (_r, _e, { id }) => [{ type: ORDERS, id }, { type: ORDERS, id: "LIST" }, ME],
+      invalidatesTags: (_r, _e, { id }) => [{ type: ORDERS, id }, { type: ORDERS, id: "LIST" }, ME, REPORTS, STATS, MAP],
     }),
     reviewYashilOrder: builder.mutation<OrderDetail, { id: UUID; version_no: number }>({
       query: ({ id, version_no }) => ({ url: `/orders/${id}/review/`, method: "POST", body: { version_no }, headers: idem() }),
@@ -198,7 +213,7 @@ export const yashilApi = createApi({
     }),
     acceptYashilOrder: builder.mutation<OrderDetail, { id: UUID; version_no: number; executor_name: string }>({
       query: ({ id, ...body }) => ({ url: `/orders/${id}/accept/`, method: "POST", body, headers: idem() }),
-      invalidatesTags: (_r, _e, { id }) => [{ type: ORDERS, id }, { type: ORDERS, id: "LIST" }, STOCK],
+      invalidatesTags: (_r, _e, { id }) => [{ type: ORDERS, id }, { type: ORDERS, id: "LIST" }, STOCK, REPORTS, STATS, MAP],
     }),
 
     // ===================================================================== ombor (3-bosqich)
@@ -241,7 +256,7 @@ export const yashilApi = createApi({
     }),
 
     // ===================================================================== dalolatnomalar (3-bosqich)
-    getYashilActs: builder.query<Paginated<ActListItem>, { order?: UUID; status?: string; q?: string; page?: number; per_page?: number } | void>({
+    getYashilActs: builder.query<Paginated<ActListItem>, ({ order?: UUID; status?: string; q?: string; page?: number; per_page?: number } & ReportFilterParams) | void>({
       query: (params) => `/acts/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
       providesTags: (res) => [{ type: ACTS, id: "LIST" } as const, ...(res?.results ?? []).map((a) => ({ type: ACTS, id: a.id }) as const)],
     }),
@@ -275,7 +290,7 @@ export const yashilApi = createApi({
     }),
     signYashilAct: builder.mutation<ActDetail, { id: UUID; document_version_id: UUID; nonce: string; pkcs7: string; key?: string }>({
       query: ({ id, key, ...body }) => ({ url: `/acts/${id}/sign/`, method: "POST", body, headers: idem(key) }),
-      invalidatesTags: (res, _e, { id }) => [{ type: ACTS, id }, { type: ACTS, id: "LIST" }, { type: ORDERS, id: res?.order.id ?? "LIST" }, { type: ORDERS, id: "LIST" }, ME],
+      invalidatesTags: (res, _e, { id }) => [{ type: ACTS, id }, { type: ACTS, id: "LIST" }, { type: ORDERS, id: res?.order.id ?? "LIST" }, { type: ORDERS, id: "LIST" }, ME, REPORTS, STATS, MAP],
     }),
     returnYashilAct: builder.mutation<ActDetail, { id: UUID; reason_code: ActReturnReason; comment: string }>({
       query: ({ id, ...body }) => ({ url: `/acts/${id}/return/`, method: "POST", body, headers: idem() }),
@@ -298,6 +313,46 @@ export const yashilApi = createApi({
     decideYashilCancel: builder.mutation<CancelRequestOut, { id: UUID; decision: "agree" | "approve" | "reject"; note?: string }>({
       query: ({ id, decision, note }) => ({ url: `/cancel/${id}/${decision}/`, method: "POST", body: { note: note ?? "" }, headers: idem() }),
       invalidatesTags: (res) => [{ type: CANCEL, id: "LIST" }, { type: ORDERS, id: res?.order.id ?? "LIST" }, { type: ORDERS, id: "LIST" }, STOCK],
+    }),
+    // ===================================================================== hisobot, statistika, xarita (4-bosqich)
+    getYashilRegistry: builder.query<RegistryPage, ReportFilterParams | void>({
+      query: (params) => `/reports/registry/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [REPORTS],
+    }),
+    getYashilRegistrySummary: builder.query<RegistrySummary, ReportFilterParams | void>({
+      query: (params) => `/reports/registry/summary/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [REPORTS],
+    }),
+    getYashilReportFilters: builder.query<ReportDictionaries, void>({
+      query: () => "/reports/filters/",
+      providesTags: [REPORTS, REF],
+    }),
+    createYashilExport: builder.mutation<ExportJobOut, { kind: ExportKind; format: ExportFormat; filters: Record<string, unknown> }>({
+      query: (body) => ({ url: "/reports/exports/", method: "POST", body }),
+      invalidatesTags: [EXPORTS],
+    }),
+    getYashilExports: builder.query<{ results: ExportJobOut[] }, void>({
+      query: () => "/reports/exports/",
+      providesTags: [EXPORTS],
+    }),
+    getYashilExport: builder.query<ExportJobOut, UUID>({
+      query: (id) => `/reports/exports/${id}/`,
+    }),
+    getYashilStatsCards: builder.query<StatsCards, ReportFilterParams | void>({
+      query: (params) => `/stats/cards/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [STATS],
+    }),
+    getYashilStatsSeedlings: builder.query<SeedlingStats, ReportFilterParams | void>({
+      query: (params) => `/stats/seedlings/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [STATS],
+    }),
+    getYashilStatsOrganizations: builder.query<{ results: OrgLagRow[]; filters_label: string }, ReportFilterParams | void>({
+      query: (params) => `/stats/organizations/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [STATS],
+    }),
+    getYashilMapPoints: builder.query<MapPoints, (ReportFilterParams & { bbox?: string }) | void>({
+      query: (params) => `/map/points/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
+      providesTags: [MAP],
     }),
     getYashilDocumentPdf: builder.query<PdfInfo, UUID>({
       query: (id) => `/documents/${id}/pdf/`,
@@ -407,4 +462,14 @@ export const {
   useGetYashilCancelRequestsQuery,
   useDecideYashilCancelMutation,
   useGetYashilDocumentPdfQuery,
+  useGetYashilRegistryQuery,
+  useGetYashilRegistrySummaryQuery,
+  useGetYashilReportFiltersQuery,
+  useCreateYashilExportMutation,
+  useGetYashilExportsQuery,
+  useLazyGetYashilExportQuery,
+  useGetYashilStatsCardsQuery,
+  useGetYashilStatsSeedlingsQuery,
+  useGetYashilStatsOrganizationsQuery,
+  useGetYashilMapPointsQuery,
 } = yashilApi;
