@@ -38,7 +38,7 @@ function VerifyDocument() {
               <div className="flex gap-2"><dt className="ym-muted min-w-[120px]">{t("verify_parties")}</dt><dd>{data.parties.mahalla} → {data.parties.supplier}</dd></div>
               <div className="flex gap-2"><dt className="ym-muted min-w-[120px]">{t("verify_signatures")}</dt>
                 <dd>{data.signatures.length === 0 ? "—" : data.signatures.map((s, i) => <div key={i}>{roleLabel(s.role)} · {fmtDateTime(s.signed_at)} · {s.valid ? t("verify_valid") : "—"}</div>)}</dd></div>
-              {data.missing_roles.length > 0 && data.status !== "superseded" && data.status !== "cancelled" && (
+              {data.missing_roles.length > 0 && !["superseded", "cancelled", "tampered"].includes(data.status) && (
                 <div className="flex gap-2"><dt className="ym-muted min-w-[120px]">{t("verify_missing")}</dt><dd>{data.missing_roles.map(roleLabel).join(", ")}</dd></div>
               )}
               <div className="flex gap-2"><dt className="ym-muted min-w-[120px]">{t("verify_checked_at")}</dt><dd>{fmtDateTime(data.checked_at)}</dd></div>

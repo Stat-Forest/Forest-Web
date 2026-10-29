@@ -677,7 +677,7 @@ export interface PublicVerify {
   number: string | null;
   version_no: number;
   date: string | null;
-  status: "valid" | "pending_signature" | "unsigned" | "superseded" | "cancelled";
+  status: "valid" | "pending_signature" | "unsigned" | "superseded" | "cancelled" | "tampered";
   is_current: boolean;
   is_partial: boolean | null;
   order_number: string | null;
