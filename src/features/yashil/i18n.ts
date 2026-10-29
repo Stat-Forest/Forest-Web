@@ -239,6 +239,7 @@ const DICT = {
   verify_unsigned: ["Имзо кутилмоқда", "Imzo kutilmoqda"],
   verify_superseded: ["Алмаштирилган (эски версия)", "Almashtirilgan (eski versiya)"],
   verify_cancelled: ["Бекор қилинган", "Bekor qilingan"],
+  verify_tampered: ["Ҳақиқий эмас: ҳужжат мазмуни имзодан кейин ўзгартирилган", "Haqiqiy emas: hujjat mazmuni imzodan keyin o'zgartirilgan"],
   verify_not_found: ["Ҳужжат топилмади", "Hujjat topilmadi"],
   verify_parties: ["Томонлар", "Tomonlar"],
   verify_signatures: ["Имзолар", "Imzolar"],
