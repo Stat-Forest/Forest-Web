@@ -63,6 +63,7 @@ function YashilLayout({ title, actions, children }: Props) {
     { to: YASHIL_ROUTES.stats, label: t("nav_stats") },
     { to: YASHIL_ROUTES.map, label: t("nav_map") },
     { to: YASHIL_ROUTES.reference, label: t("nav_reference") },
+    ...(me?.is_admin ? [{ to: YASHIL_ROUTES.admin, label: t("nav_admin") }] : []),
   ];
 
   return (

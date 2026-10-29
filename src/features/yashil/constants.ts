@@ -14,6 +14,7 @@ export const YASHIL_ROUTES = {
   reports: "/yashil/reports",
   stats: "/yashil/stats",
   map: "/yashil/map",
+  admin: "/yashil/admin",
 } as const;
 
 /** Idempotency-Key header'i (backend IdempotentPostMixin). */

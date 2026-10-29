@@ -18,6 +18,8 @@ import {
   useRequestYashilReversalMutation,
 } from "@/services/yashilApi";
 import { apiErrorField, apiErrorText, fmtDate, fmtDateTime, todayIso } from "../Orders/orderUi";
+import { ImportDialog } from "../Admin/ImportDialog";
+import { CapacityEditor } from "../Admin/CapacityEditor";
 
 type EntryKind = "receipts" | "opening" | "returns";
 const ENTRY_TITLE: Record<EntryKind, YashilKey> = { receipts: "receipt_title", opening: "opening_title", returns: "return_in_title" };
@@ -102,6 +104,8 @@ function WarehousePage() {
   const [period, setPeriod] = useState(thisMonth());
   const { data: capacity } = useGetYashilCapacityQuery(isDm ? { period, organization: effectiveOrg } : skipToken);
   const [entry, setEntry] = useState<{ kind: EntryKind; preset?: string } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [capEdit, setCapEdit] = useState(false);
   const [reversal, setReversal] = useState<StockMovementOut | null>(null);
   const [decision, setDecision] = useState<{ mv: StockMovementOut; kind: "approve" | "reject" } | null>(null);
   const [note, setNote] = useState("");
@@ -130,6 +134,7 @@ function WarehousePage() {
       actions={canPost && stock ? (
         <>
           <button type="button" className="ym-btn" onClick={() => setEntry({ kind: "opening" })}>{t("add_opening")}</button>
+          <button type="button" className="ym-btn" onClick={() => setImporting(true)}>{t("opening_import")}</button>
           <button type="button" className="ym-btn" onClick={() => setEntry({ kind: "returns" })}>{t("add_return")}</button>
           <button type="button" className="ym-btn ym-btn--primary" onClick={() => setEntry({ kind: "receipts" })}>{t("add_receipt")}</button>
         </>
@@ -191,7 +196,10 @@ function WarehousePage() {
             <section className="ym-card space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-semibold text-lg">{t("capacity_title")}</h3>
-                <label className="text-sm flex items-center gap-2">{t("period")}<input type="month" className="ym-select" value={period} onChange={(e) => setPeriod(e.target.value || thisMonth())} /></label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="text-sm flex items-center gap-2">{t("period")}<input type="month" className="ym-select" value={period} onChange={(e) => setPeriod(e.target.value || thisMonth())} /></label>
+                  {isSupplier && canApprove && capacity && <button type="button" className="ym-btn ym-btn--primary" onClick={() => setCapEdit(true)}>{t("capacity_edit")}</button>}
+                </div>
               </div>
               <table className="ym-table">
                 <thead><tr><th>{t("col_code")}</th><th>{t("col_name")}</th><th>{t("col_unit")}</th><th>{t("col_capacity")}</th><th>{t("col_used")}</th><th>{t("col_available")}</th></tr></thead>
@@ -279,6 +287,8 @@ function WarehousePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {importing && <ImportDialog kind="opening" title={t("opening_import")} onClose={() => setImporting(false)} />}
+      {capEdit && capacity && <CapacityEditor admin={false} period={period} rows={capacity.rows} onClose={() => setCapEdit(false)} />}
     </YashilLayout>
   );
 }
