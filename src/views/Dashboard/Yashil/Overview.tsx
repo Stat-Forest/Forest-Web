@@ -45,7 +45,7 @@ function Overview() {
             <p className="mt-3 text-sm"><span className="ym-badge ym-badge--blue">{t("admin_badge")}</span></p>
           )}
         </div>
-        <div className="ym-notice">{t("stage1_note")}</div>
+        <div className="ym-notice">{t("stage3_note")}</div>
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">

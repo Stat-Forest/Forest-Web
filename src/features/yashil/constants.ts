@@ -8,6 +8,9 @@ export const YASHIL_ROUTES = {
   order: (id: string) => `/yashil/orders/${id}`,
   orderEdit: (id: string) => `/yashil/orders/${id}/edit`,
   verify: (token: string) => `/yashil/verify/${token}`,
+  warehouse: "/yashil/warehouse",
+  acts: "/yashil/acts",
+  act: (id: string) => `/yashil/acts/${id}`,
 } as const;
 
 /** Idempotency-Key header'i (backend IdempotentPostMixin). */

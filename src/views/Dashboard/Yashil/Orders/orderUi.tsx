@@ -1,7 +1,7 @@
 /** Buyurtma UI yordamchilari: holat belgisi, bosqich tasmasi, muddat matni, formatlash. */
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { stateKey, useYashilT, type YashilKey } from "@/features/yashil/i18n";
-import type { DeadlineInfo, OrderState } from "@/features/yashil/types";
+import type { ActStatus, CancelStatus, DeadlineInfo, OrderState } from "@/features/yashil/types";
 import type { YashilApiError } from "@/features/yashil/types";
 
 export const fmtDate = (iso: string | null | undefined): string => {
@@ -41,6 +41,9 @@ const STATE_CLASS: Record<OrderState, string> = {
   supplier_new: "ym-badge--amber",
   supplier_review: "ym-badge--amber",
   execution: "ym-badge--blue",
+  partial: "ym-badge--blue",
+  closed: "",
+  cancelled: "ym-badge--red",
 };
 
 export function StateBadge({ state }: { state: OrderState }) {
@@ -48,9 +51,36 @@ export function StateBadge({ state }: { state: OrderState }) {
   return <span className={`ym-badge ${STATE_CLASS[state] ?? ""}`}>{t(stateKey(state))}</span>;
 }
 
+const ACT_CLASS: Record<ActStatus, string> = {
+  draft: "",
+  mahalla_review: "ym-badge--amber",
+  approved: "",
+  returned: "ym-badge--red",
+  cancelled: "ym-badge--red",
+};
+
+export function ActStatusBadge({ status }: { status: ActStatus }) {
+  const { t } = useYashilT();
+  return <span className={`ym-badge ${ACT_CLASS[status] ?? ""}`}>{t(`act_status_${status}` as YashilKey)}</span>;
+}
+
+const CANCEL_CLASS: Record<CancelStatus, string> = { requested: "ym-badge--amber", agreed: "ym-badge--amber", approved: "ym-badge--red", rejected: "" };
+
+export function CancelStatusBadge({ status }: { status: CancelStatus }) {
+  const { t } = useYashilT();
+  return <span className={`ym-badge ${CANCEL_CLASS[status] ?? ""}`}>{t(`cancel_status_${status}` as YashilKey)}</span>;
+}
+
+/** Sana input'i uchun bugungi kun (mahalliy) YYYY-MM-DD. */
+export const todayIso = (): string => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
 export function DeadlineText({ info, state }: { info: DeadlineInfo; state: OrderState }) {
   const { t } = useYashilT();
-  if (state === "draft" || !info.stage) return <span className="ym-muted">{t("no_deadline")}</span>;
+  if (state === "draft" || state === "closed" || state === "cancelled" || !info.stage) return <span className="ym-muted">{t("no_deadline")}</span>;
   const due = info.stage === "review" ? info.review_due : info.delivery_due;
   const label = info.stage === "review" ? t("review_due") : t("delivery_due");
   return (
@@ -68,22 +98,26 @@ const STEPS: { key: YashilKey; states: OrderState[] }[] = [
   { key: "journey_union", states: ["union_new", "union_review"] },
   { key: "journey_supplier", states: ["supplier_new", "supplier_review"] },
   { key: "journey_execution", states: ["execution"] },
-  { key: "journey_act", states: [] },
-  { key: "journey_done", states: [] },
+  { key: "journey_act", states: ["partial"] },
+  { key: "journey_done", states: ["closed", "cancelled"] },
 ];
 
-export function JourneyStrip({ state }: { state: OrderState }) {
+/** Bosqich tasmasi: `partial` — akt bosqichi (ochiq akt bo'lsa ham shu), `closed` — yakun, `cancelled` — qizil yakun. */
+export function JourneyStrip({ state, actPending }: { state: OrderState; actPending?: boolean }) {
   const { t } = useYashilT();
-  const idx = Math.max(0, STEPS.findIndex((s) => s.states.includes(state)));
+  let idx = Math.max(0, STEPS.findIndex((s) => s.states.includes(state)));
+  if (state === "execution" && actPending) idx = 4;
+  const cancelled = state === "cancelled";
   return (
     <ol className="ym-card flex flex-wrap items-center gap-2 !py-3 !px-4" aria-label={t("journey_order")}>
       {STEPS.map((s, n) => {
-        const done = n < idx;
+        const done = n < idx || (n === idx && state === "closed");
         const here = n === idx;
+        const red = cancelled && here;
         return (
-          <li key={s.key} className={`flex items-center gap-2 text-xs ${here ? "font-semibold text-[var(--ym-green-dark)]" : done ? "text-[var(--ym-green)]" : "ym-muted"}`} aria-current={here ? "step" : undefined}>
-            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] ${here ? "bg-[var(--ym-green)] text-white" : done ? "bg-[var(--ym-green-soft)]" : "bg-[var(--ym-bg)] border border-[var(--ym-border)]"}`}>
-              {done ? <CheckCircle2 size={14} /> : n + 1}
+          <li key={s.key} className={`flex items-center gap-2 text-xs ${red ? "font-semibold text-[var(--ym-red)]" : here ? "font-semibold text-[var(--ym-green-dark)]" : done ? "text-[var(--ym-green)]" : "ym-muted"}`} aria-current={here ? "step" : undefined}>
+            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] ${red ? "bg-[var(--ym-red)] text-white" : here && !done ? "bg-[var(--ym-green)] text-white" : done ? "bg-[var(--ym-green-soft)]" : "bg-[var(--ym-bg)] border border-[var(--ym-border)]"}`}>
+              {red ? <XCircle size={14} /> : done ? <CheckCircle2 size={14} /> : n + 1}
             </span>
             {t(s.key)}
             {n < STEPS.length - 1 && <span className="w-4 h-px bg-[var(--ym-border)] hidden sm:inline-block" aria-hidden="true" />}

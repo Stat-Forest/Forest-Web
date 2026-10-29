@@ -50,6 +50,9 @@ const YashilReference = lazy(() => import("./Yashil/Reference"));
 const YashilOrders = lazy(() => import("./Yashil/Orders/OrdersPage"));
 const YashilOrderForm = lazy(() => import("./Yashil/Orders/OrderFormPage"));
 const YashilOrderDetail = lazy(() => import("./Yashil/Orders/OrderDetailPage"));
+const YashilActs = lazy(() => import("./Yashil/Acts/ActsPage"));
+const YashilActDetail = lazy(() => import("./Yashil/Acts/ActDetailPage"));
+const YashilWarehouse = lazy(() => import("./Yashil/Warehouse/WarehousePage"));
 
 const BILLING_ALLOWED_PREFIXES = ["/billing", "/support-information", "/video"];
 
@@ -238,6 +241,9 @@ function Dashboard() {
               <Route path="yashil/orders/new" element={<YashilRoute><YashilOrderForm /></YashilRoute>} />
               <Route path="yashil/orders/:id" element={<YashilRoute><YashilOrderDetail /></YashilRoute>} />
               <Route path="yashil/orders/:id/edit" element={<YashilRoute><YashilOrderForm /></YashilRoute>} />
+              <Route path="yashil/acts" element={<YashilRoute><YashilActs /></YashilRoute>} />
+              <Route path="yashil/acts/:id" element={<YashilRoute><YashilActDetail /></YashilRoute>} />
+              <Route path="yashil/warehouse" element={<YashilRoute><YashilWarehouse /></YashilRoute>} />
 
               <Route
                 path="*"

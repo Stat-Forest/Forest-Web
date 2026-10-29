@@ -91,6 +91,9 @@ export function useBillingSidebarGroup(): SidebarMenuItem {
 /** «Яшил маҳалла» — top-level guruh (TZ §16.1); nomlar modul yozuvida (kirill/lotin). */
 export function useYashilSidebarGroup(): SidebarMenuItem {
   const { t } = useYashilT();
+  const { cabinet, me } = useYashilAccess();
+  const memberType = cabinet?.member_type;
+  const showWarehouse = memberType === "supplier" || memberType === "observer" || (!!me?.is_admin && !memberType);
   return useMemo<SidebarMenuItem>(
     () => ({
       id: YASHIL_SIDEBAR_GROUP_ID,
@@ -99,10 +102,12 @@ export function useYashilSidebarGroup(): SidebarMenuItem {
       children: [
         { id: "yashil-overview", name: t("nav_overview"), path: YASHIL_ROUTES.root },
         { id: "yashil-orders", name: t("nav_orders"), path: YASHIL_ROUTES.orders },
+        { id: "yashil-acts", name: t("nav_acts"), path: YASHIL_ROUTES.acts },
+        ...(showWarehouse ? [{ id: "yashil-warehouse", name: t("nav_warehouse"), path: YASHIL_ROUTES.warehouse }] : []),
         { id: "yashil-reference", name: t("nav_reference"), path: YASHIL_ROUTES.reference },
       ],
     }),
-    [t],
+    [t, showWarehouse],
   );
 }
 
