@@ -3,6 +3,8 @@ import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolk
 import { base_url, prepareHeaders } from "./baseUrl";
 import { createBaseQueryWithReauth } from "./baseQueryWithReauth";
 import { getCabinetId } from "@/features/yashil/cabinet";
+import { scriptFor } from "@/features/yashil/script";
+import i18n from "@/i18n";
 import { CABINET_HEADER, IDEMPOTENCY_HEADER } from "@/features/yashil/constants";
 import type {
   ActDetail,
@@ -111,16 +113,19 @@ const qs = (params?: Record<string, QueryValue>): string => {
   return s ? `?${s}` : "";
 };
 
-/** Reauth base query + faol kabinet header'i. */
+/** Reauth base query + faol kabinet va platforma tili header'lari (D-28: xabarlar shu tilda keladi). */
 const baseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = (() => {
   const inner = createBaseQueryWithReauth(`${base_url}/yashil`);
   // fetchBaseQuery'ning prepareHeaders'ini kengaytirish o'rniga argumentga header qo'shamiz:
   // reauth qayta urinishda ham header saqlanadi.
   return (args, api, extra) => {
     const cabinet = getCabinetId();
-    if (!cabinet) return inner(args, api, extra);
     const req: FetchArgs = typeof args === "string" ? { url: args } : { ...args };
-    req.headers = { ...(req.headers as Record<string, string> | undefined), [CABINET_HEADER]: cabinet };
+    req.headers = {
+      ...(req.headers as Record<string, string> | undefined),
+      "Accept-Language": scriptFor(i18n.language) === "ru" ? "ru" : "uz",
+      ...(cabinet ? { [CABINET_HEADER]: cabinet } : {}),
+    };
     return inner(req, api, extra);
   };
 })();
@@ -130,10 +135,13 @@ void prepareHeaders;
 /** Ochiq (login'siz) QR tekshiruvi — Authorization yuborilmaydi, 401'da logout bo'lmaydi. */
 const publicBaseQuery = fetchBaseQuery({ baseUrl: `${base_url}/yashil` });
 
+/** Barcha teglar — til o'zgarganda hammasi qayta olinadi. */
+export const YASHIL_TAGS = [ME, REF, ORDERS, NOTIF, STOCK, ACTS, CANCEL, REPORTS, STATS, MAP, EXPORTS, ADMIN] as const;
+
 export const yashilApi = createApi({
   reducerPath: "yashilApi",
   baseQuery,
-  tagTypes: [ME, REF, ORDERS, NOTIF, STOCK, ACTS, CANCEL, REPORTS, STATS, MAP, EXPORTS, ADMIN],
+  tagTypes: YASHIL_TAGS,
   endpoints: (builder) => ({
     getYashilMe: builder.query<YashilMe, void>({
       query: () => "/me/",
