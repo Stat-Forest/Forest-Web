@@ -261,8 +261,12 @@ export interface OrderDocument {
   versions: DocumentVersionShort[];
 }
 
+/** Hujjat tili (D-28): yaratilgan paytdagi platforma tili; yo'q bo'lsa — eski hujjat, kirillda. */
+export type DocumentLang = "uz" | "ru";
+
 export interface OrderFormContent {
   doc_type: "order_form";
+  lang?: DocumentLang;
   number: string | null;
   version_no: number;
   date: string | null;
@@ -286,6 +290,7 @@ export interface OrderFormContent {
 /** Dalolatnoma mazmuni (TZ §12.1). */
 export interface ActContent {
   doc_type: "act";
+  lang?: DocumentLang;
   number: string;
   act_index: number;
   version_no: number;
@@ -313,6 +318,7 @@ export interface ActContent {
 /** Bekor qilish hujjati mazmuni. */
 export interface CancellationContent {
   doc_type: "cancellation";
+  lang?: DocumentLang;
   number: string;
   order_number: string;
   version_no: number;
@@ -327,6 +333,7 @@ export interface CancellationContent {
   lines: { n: number; order_line_id: UUID; code: string; name: string; unit: string; ordered_qty: string; accepted_qty: string; cancelled_qty: string }[];
   result: "cancelled" | "closed" | "partial";
   result_cyr: string;
+  result_label?: string;
 }
 
 export interface OrderVersionOut {
