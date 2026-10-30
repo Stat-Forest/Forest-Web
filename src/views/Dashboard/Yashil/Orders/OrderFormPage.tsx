@@ -89,7 +89,7 @@ const hasService = (items: CatalogItem[], lines: LineDraft[]) =>
   lines.some((l) => items.find((i) => i.id === l.catalog_item)?.item_type === "service");
 
 function OrderFormPage() {
-  const { t, script } = useYashilT();
+  const { t, c } = useYashilT();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { cabinet } = useYashilAccess();
@@ -241,13 +241,13 @@ function OrderFormPage() {
           <label className="text-sm">{t("object_type")}
             <select className="ym-select w-full mt-1" value={form.object_type} onChange={(e) => set("object_type", e.target.value)}>
               <option value="">—</option>
-              {objectTypes.map((o) => <option key={o.id} value={o.id}>{pickName(o, script)}</option>)}
+              {objectTypes.map((o) => <option key={o.id} value={o.id}>{pickName(o)}</option>)}
             </select>{err("object_type")}
           </label>
           <label className="text-sm">{t("season")}
             <select className="ym-select w-full mt-1" value={form.season} onChange={(e) => set("season", e.target.value)}>
               <option value="">—</option>
-              {seasons.map((s) => <option key={s.id} value={s.id}>{s.label_cyr}</option>)}
+              {seasons.map((s) => <option key={s.id} value={s.id}>{c(s.label_cyr)}</option>)}
             </select>
           </label>
           {objectTypes.find((o) => o.id === form.object_type)?.requires_note && (
@@ -280,7 +280,7 @@ function OrderFormPage() {
             <div key={i} className="grid grid-cols-[1fr_120px_auto] gap-2 items-start">
               <select className="ym-select" value={line.catalog_item} onChange={(e) => set("lines", form.lines.map((l, j) => (j === i ? { ...l, catalog_item: e.target.value } : l)))}>
                 <option value="">{t("choose_item")}</option>
-                {items.map((c) => <option key={c.id} value={c.id}>{pickName(c, script)}{Object.values(c.attributes || {}).length ? ` (${Object.values(c.attributes).join(", ")})` : ""}</option>)}
+                {items.map((c) => <option key={c.id} value={c.id}>{pickName(c)}{Object.values(c.attributes || {}).length ? ` (${Object.values(c.attributes).join(", ")})` : ""}</option>)}
               </select>
               <input className="ym-select" inputMode="decimal" placeholder={`${t("qty_placeholder")}${item ? `, ${t(`unit_${item.unit}` as "unit_tup")}` : ""}`} value={line.qty} onChange={(e) => set("lines", form.lines.map((l, j) => (j === i ? { ...l, qty: e.target.value } : l)))} />
               <button type="button" className="ym-btn" onClick={() => set("lines", form.lines.filter((_, j) => j !== i))} aria-label={t("delete")}>✕</button>

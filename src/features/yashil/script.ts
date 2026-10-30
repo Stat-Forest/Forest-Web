@@ -1,33 +1,14 @@
 /**
- * Modul yozuvi: o'zbek kirill (asosiy) yoki lotin. Faqat «Яшил маҳалла»
- * sahifalariga ta'sir qiladi; stat'ning umumiy tili (uz/ru) o'zgarmaydi.
- * Tanlov cookie'da saqlanadi; kichik tashqi store (React useSyncExternalStore).
+ * Modul tili STAT-URMON umumiy tanloviga ergashadi (D-28): `uz` — o'zbek lotin, `ru` — rus.
+ * Alohida almashtirgich yo'q; til header'dagi tanlagich orqali o'zgaradi.
  */
-import { useSyncExternalStore } from "react";
-import { getSimpleCookie, setSimpleCookie } from "@/utils/cookie";
-import { SCRIPT_COOKIE } from "./constants";
+import { useTranslation } from "react-i18next";
 
-export type Script = "cyr" | "lat";
+export type Script = "lat" | "ru";
 
-let current: Script = (getSimpleCookie(SCRIPT_COOKIE) as Script) === "lat" ? "lat" : "cyr";
-const listeners = new Set<() => void>();
+export const scriptFor = (lang?: string | null): Script => (lang?.startsWith("ru") ? "ru" : "lat");
 
-export const getScript = (): Script => current;
-
-export const setScript = (next: Script) => {
-  if (next === current) return;
-  current = next;
-  try {
-    setSimpleCookie(SCRIPT_COOKIE, next, 365);
-  } catch {
-    // cookie yozilmasa ham ishlayveradi
-  }
-  listeners.forEach((fn) => fn());
+export const useScript = (): Script => {
+  const { i18n } = useTranslation();
+  return scriptFor(i18n.language);
 };
-
-const subscribe = (fn: () => void) => {
-  listeners.add(fn);
-  return () => listeners.delete(fn);
-};
-
-export const useScript = (): Script => useSyncExternalStore(subscribe, getScript, getScript);

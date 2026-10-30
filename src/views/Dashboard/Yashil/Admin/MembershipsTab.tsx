@@ -183,7 +183,7 @@ export function MembershipsTab() {
               {(data?.results ?? []).map((m) => (
                 <tr key={m.id}>
                   <td>{m.user_info.full_name || "—"}<div className="ym-muted text-[11px]">{m.user_info.email}</div></td>
-                  <td>{t(TYPE_KEY[m.member_type])}<div className="ym-muted text-[11px]">{m.member_type === "observer" ? (scopeText(m.observer_scope) || "РУз") : m.cabinet_name}</div></td>
+                  <td>{t(TYPE_KEY[m.member_type])}<div className="ym-muted text-[11px]">{m.member_type === "observer" ? (scopeText(m.observer_scope) || t("republic_short")) : m.cabinet_name}</div></td>
                   <td className="whitespace-nowrap">{m.can_prepare && <span className="ym-badge mr-1">{t("right_prepare")}</span>}{m.can_sign && <span className="ym-badge ym-badge--blue">{t("right_sign")}</span>}</td>
                   <td>{m.position_title || "—"}{m.authority_doc_number && <div className="ym-muted text-[11px]">№ {m.authority_doc_number}</div>}</td>
                   <td className="whitespace-nowrap">{periodText(m.valid_from, m.valid_to)}</td>

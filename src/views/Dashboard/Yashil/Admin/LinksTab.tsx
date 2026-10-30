@@ -303,7 +303,7 @@ function Suppliers() {
               <tr key={s.id}>
                 <td>{s.organization_name}{s.stir && <div className="ym-muted text-[11px]">{t("stir")} {s.stir}</div>}</td>
                 <td>{t(s.supplier_type === "dm" ? "tab_route_dm" : "tab_route_forest")}</td>
-                <td className="max-w-[260px]">{s.supplier_type === "dm" ? (s.service_regions.map(regionName).join(", ") || "РУз") : "—"}</td>
+                <td className="max-w-[260px]">{s.supplier_type === "dm" ? (s.service_regions.map(regionName).join(", ") || t("republic_short")) : "—"}</td>
                 <td>{s.members}</td>
                 <td><ActiveBadge active={s.is_active_supplier} /></td>
                 <td><button type="button" className="ym-btn" onClick={() => setDialog({ edit: s })}>{t("edit")}</button></td>

@@ -53,7 +53,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 type DialogKind = "return" | "accept" | "sign" | "act" | "cancel" | "cancel_request" | "cancel_reject" | "cancel_confirm" | null;
 
 function OrderDetailPage() {
-  const { t, script } = useYashilT();
+  const { t, c } = useYashilT();
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const token = useSelector((s: RootState) => s.auth.token);
@@ -165,8 +165,8 @@ function OrderDetailPage() {
           <Row k={t("col_mahalla")} v={`${o.mahalla.name} (${o.mahalla.district}, ${o.mahalla.region})`} />
           <Row k={t("col_supplier")} v={`${o.supplier.name} — ${supplierLabel}`} />
           <Row k={t("union_unit")} v={o.union_unit?.name ?? "—"} />
-          <Row k={t("object_type")} v={o.object_type ? pickName(o.object_type, script) + (o.object_note ? ` (${o.object_note})` : "") : "—"} />
-          <Row k={t("season")} v={o.season?.label_cyr ?? "—"} />
+          <Row k={t("object_type")} v={o.object_type ? pickName(o.object_type) + (o.object_note ? ` (${o.object_note})` : "") : "—"} />
+          <Row k={t("season")} v={o.season ? c(o.season.label_cyr) : "—"} />
           <Row k={t("address")} v={o.address || "—"} />
           <Row k={t("point")} v={o.lat ? `${o.lat}, ${o.lon}` : "—"} />
           <Row k={t("area_ha")} v={o.area_ha ?? "—"} />
@@ -196,10 +196,10 @@ function OrderDetailPage() {
               {o.lines.map((l, i) => (
                 <tr key={l.id}>
                   <td>{i + 1}</td>
-                  <td>{pickName(l.catalog_item, script)}{Object.values(l.catalog_item.attributes || {}).length ? <div className="ym-muted text-xs">{Object.values(l.catalog_item.attributes).join(" · ")}</div> : null}</td>
+                  <td>{pickName(l.catalog_item)}{Object.values(l.catalog_item.attributes || {}).length ? <div className="ym-muted text-xs">{Object.values(l.catalog_item.attributes).join(" · ")}</div> : null}</td>
                   <td>{l.qty}</td>
                   {showAccepted && <><td className="font-semibold">{l.accepted_qty ?? "—"}</td><td className={Number(l.remaining_qty) > 0 ? "" : "ym-muted"}>{l.remaining_qty ?? "—"}</td></>}
-                  <td>{l.unit_cyr}</td>
+                  <td>{c(l.unit_cyr)}</td>
                 </tr>
               ))}
             </tbody>
@@ -351,7 +351,7 @@ function OrderDetailPage() {
               <thead><tr><th>{t("col_name")}</th><th>{t("remaining_qty")}</th><th>{t("col_qty")}</th></tr></thead>
               <tbody>
                 {o.lines.filter((l) => Number(l.remaining_qty ?? l.qty) > 0).map((l) => (
-                  <tr key={l.id}><td>{pickName(l.catalog_item, script)}</td><td>{l.remaining_qty ?? l.qty} {l.unit_cyr}</td>
+                  <tr key={l.id}><td>{pickName(l.catalog_item)}</td><td>{l.remaining_qty ?? l.qty} {c(l.unit_cyr)}</td>
                     <td><input type="number" min={0} max={Number(l.remaining_qty ?? l.qty)} step="any" className="ym-select w-28" value={cancelLines[l.id] ?? ""} onChange={(e) => setCancelLines((m) => ({ ...m, [l.id]: e.target.value }))} /></td></tr>
                 ))}
               </tbody>

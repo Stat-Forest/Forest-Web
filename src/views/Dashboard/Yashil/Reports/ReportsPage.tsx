@@ -41,7 +41,7 @@ function LateCell({ row }: { row: RegistryRow }) {
 }
 
 function RegistryTab() {
-  const { t } = useYashilT();
+  const { t, c } = useYashilT();
   const f = useReportFilters();
   const [sp, setSp] = useSearchParams();
   const page = Math.max(1, Number(sp.get("page") || 1));
@@ -123,13 +123,13 @@ function RegistryTab() {
                   <tr key={r.line_id}>
                     <td className="ym-muted">{r.row_no}</td>
                     <td>{r.mahalla}<div className="ym-muted text-[11px]">{r.region} · {r.district}</div></td>
-                    <td>{r.supplier}<div className="ym-muted text-[11px]">{r.route_cyr}</div></td>
+                    <td>{r.supplier}<div className="ym-muted text-[11px]">{c(r.route_cyr)}</div></td>
                     <td className="whitespace-nowrap"><Link to={YASHIL_ROUTES.order(r.order_id)} className="font-semibold text-[var(--ym-green-dark)] hover:underline">{r.number ?? "—"}</Link><div className="ym-muted text-[11px] max-w-[220px] truncate" title={r.title}>{r.title}</div></td>
                     <td>{r.item}</td>
-                    <td className="text-right whitespace-nowrap">{r.qty} <span className="ym-muted">{r.unit_cyr}</span></td>
+                    <td className="text-right whitespace-nowrap">{r.qty} <span className="ym-muted">{c(r.unit_cyr)}</span></td>
                     <td className="text-right">{r.accepted_qty}</td>
                     <td className="text-right">{r.remaining_qty}</td>
-                    <td><StateBadge state={r.state} />{r.responsible_cyr && <div className="ym-muted text-[11px]">{r.responsible_cyr}</div>}</td>
+                    <td><StateBadge state={r.state} />{r.responsible_cyr && <div className="ym-muted text-[11px]">{c(r.responsible_cyr)}</div>}</td>
                     <td className="whitespace-nowrap">{fmtDate(r.first_submitted_on)}{r.last_submitted_on && r.first_submitted_on !== r.last_submitted_on && <div className="ym-muted text-[11px]">{t("col_resubmitted")}: {fmtDate(r.last_submitted_on)}</div>}</td>
                     <td className="whitespace-nowrap text-[12px]">{r.review_due && <div>{t("review_due")}: {fmtDate(r.review_due)}</div>}{r.delivery_due && <div>{t("delivery_due")}: {fmtDate(r.delivery_due)}</div>}{!r.review_due && !r.delivery_due && "—"}</td>
                     <td><LateCell row={r} /></td>
@@ -165,7 +165,7 @@ function RegistryTab() {
               <thead><tr><th>{t("col_item")}</th><th className="text-right">{t("col_ordered_qty")}</th><th className="text-right">{t("col_accepted")}</th><th className="text-right">{t("col_remaining")}</th><th className="text-right">{t("summary_orders")}</th></tr></thead>
               <tbody>
                 {summary.by_item.map((i) => (
-                  <tr key={i.item_code}><td>{i.item}</td><td className="text-right">{i.ordered} <span className="ym-muted">{i.unit_cyr}</span></td><td className="text-right">{i.accepted}</td><td className="text-right">{i.remaining}</td><td className="text-right">{i.orders}</td></tr>
+                  <tr key={i.item_code}><td>{i.item}</td><td className="text-right">{i.ordered} <span className="ym-muted">{c(i.unit_cyr)}</span></td><td className="text-right">{i.accepted}</td><td className="text-right">{i.remaining}</td><td className="text-right">{i.orders}</td></tr>
                 ))}
               </tbody>
             </table>

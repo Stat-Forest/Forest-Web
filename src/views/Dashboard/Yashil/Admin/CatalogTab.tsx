@@ -43,7 +43,7 @@ function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose:
             <option value="dm">{t("tab_route_dm")}</option>
           </select>
         </label>
-        <label className="text-sm block">{t("col_name")} (кирилл) *<input className={inputCls(field === "name_cyr")} value={form.name_cyr} maxLength={300} onChange={(e) => setForm({ ...form, name_cyr: e.target.value })} /></label>
+        <label className="text-sm block">{t("col_name")} {t("name_cyr_suffix")} *<input className={inputCls(field === "name_cyr")} value={form.name_cyr} maxLength={300} onChange={(e) => setForm({ ...form, name_cyr: e.target.value })} /></label>
         <label className="text-sm block">{t("col_name")} {t("name_lat_suffix")}<input className={inputCls(field === "name_lat")} value={form.name_lat} maxLength={300} onChange={(e) => setForm({ ...form, name_lat: e.target.value })} /></label>
         <label className="text-sm block">{t("col_category")}
           <select className={inputCls(field === "category")} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, item_type: e.target.value === "protection_service" ? "service" : "goods" })}>
@@ -71,8 +71,7 @@ function Capacity() {
   const [editing, setEditing] = useState(false);
   useEffect(() => { if (!org && dms?.results[0]) setOrg(dms.results[0].organization); }, [dms, org]);
   const { data } = useGetYashilAdminCapacityQuery(org ? { organization: org, period } : skipToken);
-  const { script } = useYashilT();
-  return (
+    return (
     <section className="ym-card space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold text-lg">{t("capacity_title")}</h3>
@@ -88,7 +87,7 @@ function Capacity() {
         <thead><tr><th>{t("col_code")}</th><th>{t("col_name")}</th><th>{t("col_capacity")}</th><th>{t("col_used")}</th><th>{t("col_available")}</th></tr></thead>
         <tbody>
           {(data?.rows ?? []).map((r) => (
-            <tr key={r.catalog_item_id}><td className="font-mono text-xs">{r.code}</td><td>{pickName(r, script)}</td><td>{r.capacity}</td><td>{r.used}</td><td>{r.available}</td></tr>
+            <tr key={r.catalog_item_id}><td className="font-mono text-xs">{r.code}</td><td>{pickName(r)}</td><td>{r.capacity}</td><td>{r.used}</td><td>{r.available}</td></tr>
           ))}
           {data && data.rows.length === 0 && <tr><td colSpan={5} className="ym-muted text-center">{t("empty")}</td></tr>}
         </tbody>
@@ -99,7 +98,7 @@ function Capacity() {
 }
 
 export function CatalogTab() {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const { data } = useGetYashilAdminCatalogQuery();
   const [dialog, setDialog] = useState<{ edit: AdminCatalogItem | null } | null>(null);
   return (
@@ -113,7 +112,7 @@ export function CatalogTab() {
               {(data?.results ?? []).map((i) => (
                 <tr key={i.id}>
                   <td className="font-mono text-xs">{i.code}</td>
-                  <td>{pickName(i, script)}</td>
+                  <td>{pickName(i)}</td>
                   <td>{t(i.supplier_type === "dm" ? "tab_route_dm" : "tab_route_forest")}</td>
                   <td>{t(`cat_${i.category}` as YashilKey)}</td>
                   <td>{t(`unit_${i.unit}` as YashilKey)}</td>

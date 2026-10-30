@@ -32,16 +32,15 @@ const pin = (state: string, late: boolean) =>
 
 const esc = (s: string | null | undefined) => String(s ?? "—").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 
-function popupHtml(p: MapPoint, t: (k: never) => string, labels: Record<string, string>): string {
-  const lines = p.lines.map((l) => `<li>${esc(l.item)} — ${esc(l.qty)} ${esc(l.unit_cyr)} <span style="color:#63796e">(${labels.accepted}: ${esc(l.accepted)})</span></li>`).join("");
-  void t;
+function popupHtml(p: MapPoint, c: (text: string) => string, labels: Record<string, string>): string {
+  const lines = p.lines.map((l) => `<li>${esc(l.item)} — ${esc(l.qty)} ${esc(c(l.unit_cyr))} <span style="color:#63796e">(${labels.accepted}: ${esc(l.accepted)})</span></li>`).join("");
   return `
     <div style="font-size:13px;line-height:1.4;min-width:220px;max-width:300px">
-      <div style="font-weight:700">${esc(p.number)} · ${esc(p.state_cyr)}</div>
+      <div style="font-weight:700">${esc(p.number)} · ${esc(c(p.state_cyr))}</div>
       <div style="color:#63796e">${esc(p.title)}</div>
       <div><b>${labels.mahalla}:</b> ${esc(p.mahalla)}</div>
       <div><b>${labels.supplier}:</b> ${esc(p.supplier)}</div>
-      <div><b>${labels.area}:</b> ${esc(p.area_ha)} га</div>
+      <div><b>${labels.area}:</b> ${esc(p.area_ha)} ${labels.ha}</div>
       <ul style="margin:4px 0 4px 14px;padding:0">${lines}</ul>
       <div><b>${labels.due}:</b> ${esc(fmtDate(p.delivery_due))}${p.late_workdays ? ` <span style="color:#9b3232;font-weight:700">${p.late_workdays} ${labels.late}</span>` : ""}</div>
       <a href="${YASHIL_ROUTES.order(p.id)}" data-order="${p.id}" style="display:inline-block;margin-top:6px;color:#15803d;font-weight:700">${labels.open} →</a>
@@ -49,7 +48,7 @@ function popupHtml(p: MapPoint, t: (k: never) => string, labels: Record<string, 
 }
 
 function MapPage() {
-  const { t } = useYashilT();
+  const { t, c } = useYashilT();
   const navigate = useNavigate();
   const f = useReportFilters();
   const [bbox, setBbox] = useState<string | undefined>(undefined);
@@ -63,7 +62,7 @@ function MapPage() {
 
   const labels = useMemo(() => ({
     mahalla: t("col_mahalla"), supplier: t("col_supplier"), area: t("area_ha"), accepted: t("col_accepted"),
-    due: t("delivery_due"), late: t("workdays_short"), open: t("map_open_card"),
+    due: t("delivery_due"), late: t("workdays_short"), open: t("map_open_card"), ha: t("unit_ga"),
   }), [t]);
 
   useEffect(() => {
@@ -95,7 +94,7 @@ function MapPage() {
     cluster.clearLayers();
     const markers = data.points.map((p) => {
       const m = L.marker([Number(p.lat), Number(p.lon)], { icon: pin(p.state, p.late_workdays > 0), title: p.number ?? "" });
-      m.bindPopup(popupHtml(p, t as never, labels), { maxWidth: 320 });
+      m.bindPopup(popupHtml(p, c, labels), { maxWidth: 320 });
       return m;
     });
     cluster.addLayers(markers);

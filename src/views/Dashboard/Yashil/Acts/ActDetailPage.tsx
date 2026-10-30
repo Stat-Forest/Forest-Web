@@ -37,7 +37,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 function ActDetailPage() {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const token = useSelector((s: RootState) => s.auth.token);
@@ -142,7 +142,7 @@ function ActDetailPage() {
             <thead><tr><th>#</th><th>{t("col_name")}</th><th>{t("col_ordered")}</th><th>{t("col_delivered")}</th><th>{t("col_unit")}</th></tr></thead>
             <tbody>
               {(cv?.lines ?? []).map((l, i) => (
-                <tr key={l.id}><td>{i + 1}</td><td>{pickName(l.catalog_item, script)}</td><td>{l.ordered_qty}</td><td className="font-semibold">{l.qty}</td><td>{l.unit_cyr}</td></tr>
+                <tr key={l.id}><td>{i + 1}</td><td>{pickName(l.catalog_item)}</td><td>{l.ordered_qty}</td><td className="font-semibold">{l.qty}</td><td>{l.unit_cyr}</td></tr>
               ))}
             </tbody>
           </table>

@@ -68,7 +68,7 @@ function Bar({ value, max, red }: { value: string; max: number; red?: boolean })
 }
 
 function StatsPage() {
-  const { t } = useYashilT();
+  const { t, c } = useYashilT();
   const f = useReportFilters();
   const { data: cards } = useGetYashilStatsCardsQuery(f.params);
   const { data: seeds } = useGetYashilStatsSeedlingsQuery(f.params);
@@ -101,7 +101,7 @@ function StatsPage() {
                   <tr key={r.item_code}>
                     <td>{r.item}<div className="ym-muted text-[11px]">{r.orders} {t("orders_count_unit")}</div></td>
                     <td><Bar value={r.accepted} max={Number(r.ordered) || maxOrdered} /><div className="text-[11px] ym-muted mt-1">{r.ordered !== "0" ? `${Math.round((Number(r.accepted) / Number(r.ordered)) * 100)}%` : "—"}</div></td>
-                    <td className="text-right whitespace-nowrap">{r.ordered} <span className="ym-muted">{r.unit_cyr}</span></td>
+                    <td className="text-right whitespace-nowrap">{r.ordered} <span className="ym-muted">{c(r.unit_cyr)}</span></td>
                     <td className="text-right">{r.accepted}</td>
                     <td className="text-right"><span className={Number(r.pending) ? "ym-badge ym-badge--amber" : ""}>{r.pending}</span></td>
                     <td className="text-right">{r.returned_open}</td>
