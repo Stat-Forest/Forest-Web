@@ -62,6 +62,8 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
     return () => {
       map.remove();
       mapRef.current = null;
+      // StrictMode'da xarita qayta yaratiladi — eski xaritaga bog'langan marker/qatlam qolmasin
+      markerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -112,7 +114,8 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
 
   return (
     <div className="space-y-2">
-      <div ref={el} className="h-[340px] w-full rounded-xl overflow-hidden border border-[var(--ym-border)]" />
+      {/* isolate: Leaflet qatlamlari (z-index 400+) dialog oynalari ustiga chiqmasin */}
+      <div ref={el} className="isolate h-[340px] w-full rounded-xl overflow-hidden border border-[var(--ym-border)]" />
       {!readOnly && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="ym-muted">{t("map_hint")}</span>

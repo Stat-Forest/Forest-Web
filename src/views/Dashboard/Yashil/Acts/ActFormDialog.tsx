@@ -29,6 +29,8 @@ function ActFormDialog({ order, act, onClose, onDone }: Props) {
   const cv = act?.current_version ?? null;
   const [deliveryDate, setDeliveryDate] = useState(cv?.delivery_date ?? todayIso());
   const [responsible, setResponsible] = useState(cv?.responsible ?? order.executor_name ?? "");
+  // TZ §10.1: rejalashtirilgan yetkazish sanasi (ixtiyoriy)
+  const [plannedDate, setPlannedDate] = useState(cv?.planned_date ?? "");
   const [address, setAddress] = useState(cv?.delivery_address ?? "");
   const [note, setNote] = useState(cv?.note ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +52,7 @@ function ActFormDialog({ order, act, onClose, onDone }: Props) {
 
   const body = (): ActWrite => ({
     delivery_date: deliveryDate,
+    planned_date: plannedDate || null,
     responsible,
     delivery_address: address,
     note,
@@ -83,6 +86,9 @@ function ActFormDialog({ order, act, onClose, onDone }: Props) {
         <div className="grid sm:grid-cols-2 gap-3">
           <label className="text-sm block">{t("delivery_date")} *
             <input type="date" className={`ym-select w-full mt-1 ${errorField === "delivery_date" ? "border-[var(--ym-red)]" : ""}`} value={deliveryDate} max={todayIso()} min={order.accepted_at ? order.accepted_at.slice(0, 10) : undefined} onChange={(e) => setDeliveryDate(e.target.value)} />
+          </label>
+          <label className="text-sm block">{t("planned_date")}
+            <input type="date" className={`ym-select w-full mt-1 ${errorField === "planned_date" ? "border-[var(--ym-red)]" : ""}`} value={plannedDate} onChange={(e) => setPlannedDate(e.target.value)} />
           </label>
           <label className="text-sm block">{t("responsible")}
             <input className="ym-select w-full mt-1" value={responsible} onChange={(e) => setResponsible(e.target.value)} maxLength={300} />
