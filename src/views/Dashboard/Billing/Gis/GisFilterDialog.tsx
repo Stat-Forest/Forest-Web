@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import type { Xojalik } from "@/features/billing/types";
 import { EMPTY_GIS_FILTERS, type GisFilterState } from "@/features/billing/gisFilters";
+import { cn } from "@/lib/utils";
+import { POPOVER_Z } from "../Contracts/ContractForm/fields";
 
 // Radix Select bo'sh string qiymatli item'ga ruxsat bermaydi — "Barchasi" uchun sentinel.
 const ALL = "__all__";
@@ -99,7 +101,7 @@ function GisFilterDialog({ open, onOpenChange, filters, xojaliklar, onApply, onC
               <SelectTrigger className={`${fieldClass} w-full`}>
                 <SelectValue placeholder={t("billing.all")} />
               </SelectTrigger>
-              <SelectContent className="max-h-72">
+              <SelectContent className={cn(POPOVER_Z, "max-h-72")}>
                 <SelectItem value={ALL}>{t("billing.all")}</SelectItem>
                 {xojaliklar.map((x) => (
                   <SelectItem key={x.id} value={x.id}>
@@ -138,7 +140,7 @@ function GisFilterDialog({ open, onOpenChange, filters, xojaliklar, onApply, onC
               <SelectTrigger className={`${fieldClass} w-full`}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={POPOVER_Z}>
                 <SelectItem value={ALL}>{t("billing.status_default")}</SelectItem>
                 <SelectItem value="all">{t("billing.status_all")}</SelectItem>
                 <SelectItem value="active">{t("billing.status_active")}</SelectItem>
@@ -155,7 +157,7 @@ function GisFilterDialog({ open, onOpenChange, filters, xojaliklar, onApply, onC
               <SelectTrigger className={`${fieldClass} w-full`}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={POPOVER_Z}>
                 <SelectItem value={ALL}>{t("billing.all")}</SelectItem>
                 <SelectItem value="debtors">{t("billing.debtors")}</SelectItem>
               </SelectContent>

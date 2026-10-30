@@ -731,6 +731,7 @@
     "by_map": "xarita bo'yicha",
     "loading": "Yuklanmoqda...",
     "map_loading": "Shartnomalar yuklanmoqda...",
+    "gis_pick_filter_hint": "Shartnomalarni xaritada ko'rish uchun filtrni qo'llang yoki chapdagi paneldan xo'jalikni tanlang",
     "load_error": "Shartnomalar ma'lumotini yuklashda xatolik yuz berdi",
     "contracts_added_today": "Bugun qo'shilgan",
     "contracts_by_year": "Yil bo'yicha",

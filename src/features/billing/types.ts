@@ -137,6 +137,8 @@ export interface ContractFilters {
   /** `1` — faqat qarzdorlar (rent_amount > paid_amount) */
   debtors?: 1 | "1" | "" | boolean;
   search?: string;
+  /** geo-list: `1` — faqat soni (natijalarsiz) */
+  summary?: 1;
   ordering?: ContractOrdering | "";
 }
 

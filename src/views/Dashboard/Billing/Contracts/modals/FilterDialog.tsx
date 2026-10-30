@@ -27,6 +27,8 @@ import {
 } from "@/services/billingApi";
 import { EMPTY_CONTRACTS_FILTERS, type ContractsFilterState } from "../components/contractsFilters";
 import { DIALOG_CONTENT, DIALOG_DESC, DIALOG_TITLE, FIELD, LABEL, OUTLINE_BTN, PRIMARY_BTN } from "./dialogStyles";
+import { cn } from "@/lib/utils";
+import { POPOVER_Z } from "../ContractForm/fields";
 
 // Radix Select bo'sh string qiymatli item'ga ruxsat bermaydi — "Barchasi" uchun sentinel.
 const ALL = "__all__";
@@ -106,7 +108,7 @@ function FilterDialog({ open, onOpenChange, filters, onApply, onClear }: FilterD
               <SelectTrigger className={selectTrigger}>
                 <SelectValue placeholder={t("billing.all")} />
               </SelectTrigger>
-              <SelectContent className="max-h-72">
+              <SelectContent className={cn(POPOVER_Z, "max-h-72")}>
                 <SelectItem value={ALL}>{t("billing.all")}</SelectItem>
                 {regions.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
@@ -129,7 +131,7 @@ function FilterDialog({ open, onOpenChange, filters, onApply, onClear }: FilterD
               <SelectTrigger className={selectTrigger}>
                 <SelectValue placeholder={t("billing.all")} />
               </SelectTrigger>
-              <SelectContent className="max-h-80">
+              <SelectContent className={cn(POPOVER_Z, "max-h-80")}>
                 <div className="p-2 sticky top-0 bg-popover z-10" onKeyDown={(e) => e.stopPropagation()}>
                   <div className="relative">
                     <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -161,7 +163,7 @@ function FilterDialog({ open, onOpenChange, filters, onApply, onClear }: FilterD
               <SelectTrigger className={selectTrigger}>
                 <SelectValue placeholder={t("billing.all")} />
               </SelectTrigger>
-              <SelectContent className="max-h-72">
+              <SelectContent className={cn(POPOVER_Z, "max-h-72")}>
                 <SelectItem value={ALL}>{t("billing.all")}</SelectItem>
                 {bolimlar.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
@@ -187,7 +189,7 @@ function FilterDialog({ open, onOpenChange, filters, onApply, onClear }: FilterD
               <SelectTrigger className={selectTrigger}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={POPOVER_Z}>
                 <SelectItem value={ALL}>{t("billing.all")}</SelectItem>
                 <SelectItem value="debtors">{t("billing.debtors")}</SelectItem>
               </SelectContent>
