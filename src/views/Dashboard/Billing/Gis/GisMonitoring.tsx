@@ -39,7 +39,7 @@ import {
   type ContractPopupLabels,
 } from "@/features/billing/markers";
 import { UZ_MAP_CENTER, UZ_MAP_ZOOM } from "@/features/billing/constants";
-import type { ContractGeoItem, ViloyatOption, XojalikLocation } from "@/features/billing/types";
+import type { ContractFilters, ContractGeoItem, ViloyatOption, XojalikLocation } from "@/features/billing/types";
 
 function GisMonitoring() {
   const { t, i18n } = useTranslation();
@@ -64,21 +64,36 @@ function GisMonitoring() {
   const apiFilters = useMemo(() => gisFiltersToApi(filters), [filters]);
   const hasFilters = hasActiveGisFilters(filters);
 
+  // ---- "Xo'jalikka o'tish" paneli holati ----
+  const [selectedViloyatId, setSelectedViloyatId] = useState("");
+  const [selectedXojalikId, setSelectedXojalikId] = useState("");
+
   // ---- Ma'lumotlar ----
-  const {
-    data: geoData,
-    isFetching: contractsFetching,
-    isError: contractsError,
-  } = useGetContractsGeoListQuery(apiFilters);
-  const contracts = geoData?.results;
   const { data: xojaliklar = [] } = useGetXojaliklarQuery();
   const { data: xojalikLocations = [] } = useGetXojalikLocationsQuery();
   const [fetchXojalikLocation] = useLazyGetXojalikLocationQuery();
   const [fetchKonturDetail] = useLazyGetXojalikKonturQuery();
 
-  // ---- "Xo'jalikka o'tish" paneli holati ----
-  const [selectedViloyatId, setSelectedViloyatId] = useState("");
-  const [selectedXojalikId, setSelectedXojalikId] = useState("");
+  // Shartnomalar xaritada faqat filtr qo'llanganda yoki paneldan xo'jalik
+  // tanlanganda chiziladi; aks holda faqat umumiy soni so'raladi.
+  const panelXojalik = useMemo(
+    () => xojalikLocations.find((x) => String(x.id) === selectedXojalikId)?.xojalik ?? "",
+    [xojalikLocations, selectedXojalikId],
+  );
+  const showContracts = hasFilters || panelXojalik !== "";
+  const geoArgs = useMemo<ContractFilters>(
+    () =>
+      showContracts
+        ? { ...apiFilters, xojalik: apiFilters.xojalik || panelXojalik }
+        : { status: apiFilters.status, summary: 1 },
+    [showContracts, apiFilters, panelXojalik],
+  );
+  const {
+    data: geoData,
+    isFetching: contractsFetching,
+    isError: contractsError,
+  } = useGetContractsGeoListQuery(geoArgs);
+  const contracts = showContracts ? geoData?.results : undefined;
   const [selectedKonturId, setSelectedKonturId] = useState("");
   const [konturSearch, setKonturSearch] = useState("");
   const { data: konturlar = [], isFetching: konturLoading } = useGetXojalikKontursQuery(
@@ -404,6 +419,12 @@ function GisMonitoring() {
             onKonturChange={(id) => void handleKonturChange(id)}
             onKonturSearchChange={setKonturSearch}
           />
+
+          {!showContracts && !contractsError && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] max-w-[90%] rounded-xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 shadow-lg backdrop-blur-md text-center">
+              {t("billing.gis_pick_filter_hint")}
+            </div>
+          )}
 
           {contractsFetching && (
             <div className="absolute top-3 right-14 z-[1000] inline-flex items-center gap-2 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-lg backdrop-blur-md">
