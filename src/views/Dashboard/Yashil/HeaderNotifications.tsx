@@ -2,14 +2,19 @@
  * «Яшил маҳалла» kabinet xabarnomalari (TZ §22.4) platformaning umumiy bildirishnoma panelida (D-28).
  * Sarlavha `kind` bo'yicha joriy tilda tuziladi; izoh (body) — foydalanuvchi yozgan matn.
  */
+import { useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Leaf } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useYashilT, type YashilKey } from "@/features/yashil/i18n";
 import { useYashilAccess } from "@/features/yashil/permissions";
+import { useScript } from "@/features/yashil/script";
 import { YASHIL_ROUTES } from "@/features/yashil/constants";
 import type { YashilNotificationOut } from "@/features/yashil/types";
 import {
+  YASHIL_TAGS,
+  yashilApi,
   useGetYashilNotificationsQuery,
   useReadAllYashilNotificationsMutation,
   useReadYashilNotificationMutation,
@@ -18,8 +23,21 @@ import { fmtDateTime } from "./Orders/orderUi";
 
 /** O'qilmagan modul xabarnomalari soni (platforma qo'ng'irog'idagi raqamga qo'shiladi). */
 export function useYashilUnread(): number {
+  useResetOnLanguageChange();
   const { hasAccess, me } = useYashilAccess();
   return hasAccess ? me?.unread_notifications ?? 0 : 0;
+}
+
+/** Platforma tili o'zgarsa modul ma'lumotlari qayta olinadi — xabarlar va xabarnomalar yangi tilda keladi. */
+function useResetOnLanguageChange() {
+  const script = useScript();
+  const dispatch = useDispatch();
+  const prev = useRef(script);
+  useEffect(() => {
+    if (prev.current === script) return;
+    prev.current = script;
+    dispatch(yashilApi.util.invalidateTags([...YASHIL_TAGS]));
+  }, [script, dispatch]);
 }
 
 /** Panel ochilganda modul xabarnomalari (RTK keshi — panel va sarlavha bitta so'rovni bo'lishadi). */

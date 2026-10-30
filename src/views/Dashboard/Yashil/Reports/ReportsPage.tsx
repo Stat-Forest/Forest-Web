@@ -125,7 +125,7 @@ function RegistryTab() {
                     <td>{r.mahalla}<div className="ym-muted text-[11px]">{r.region} · {r.district}</div></td>
                     <td>{r.supplier}<div className="ym-muted text-[11px]">{c(r.route_cyr)}</div></td>
                     <td className="whitespace-nowrap"><Link to={YASHIL_ROUTES.order(r.order_id)} className="font-semibold text-[var(--ym-green-dark)] hover:underline">{r.number ?? "—"}</Link><div className="ym-muted text-[11px] max-w-[220px] truncate" title={r.title}>{r.title}</div></td>
-                    <td>{r.item}</td>
+                    <td>{r.item_lat ?? r.item}</td>
                     <td className="text-right whitespace-nowrap">{r.qty} <span className="ym-muted">{c(r.unit_cyr)}</span></td>
                     <td className="text-right">{r.accepted_qty}</td>
                     <td className="text-right">{r.remaining_qty}</td>
@@ -165,7 +165,7 @@ function RegistryTab() {
               <thead><tr><th>{t("col_item")}</th><th className="text-right">{t("col_ordered_qty")}</th><th className="text-right">{t("col_accepted")}</th><th className="text-right">{t("col_remaining")}</th><th className="text-right">{t("summary_orders")}</th></tr></thead>
               <tbody>
                 {summary.by_item.map((i) => (
-                  <tr key={i.item_code}><td>{i.item}</td><td className="text-right">{i.ordered} <span className="ym-muted">{c(i.unit_cyr)}</span></td><td className="text-right">{i.accepted}</td><td className="text-right">{i.remaining}</td><td className="text-right">{i.orders}</td></tr>
+                  <tr key={i.item_code}><td>{i.item_lat ?? i.item}</td><td className="text-right">{i.ordered} <span className="ym-muted">{c(i.unit_cyr)}</span></td><td className="text-right">{i.accepted}</td><td className="text-right">{i.remaining}</td><td className="text-right">{i.orders}</td></tr>
                 ))}
               </tbody>
             </table>

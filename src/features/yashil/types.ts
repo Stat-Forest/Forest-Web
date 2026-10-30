@@ -729,6 +729,8 @@ export interface RegistryRow {
   supplier: string;
   supplier_id: UUID;
   item: string;
+  /** Nom lotinda (uz/ru interfeysi uchun) */
+  item_lat?: string;
   item_code: string;
   category: string;
   unit: Unit;
@@ -762,6 +764,8 @@ export interface RegistryPage extends Paginated<RegistryRow> {
 export interface RegistryItemTotal {
   item_code: string;
   item: string;
+  /** Nom lotinda (uz/ru interfeysi uchun) */
+  item_lat?: string;
   unit: Unit;
   unit_cyr: string;
   ordered: string;
@@ -829,6 +833,8 @@ export interface StatsCards {
 export interface SeedlingRow {
   item_code: string;
   item: string;
+  /** Nom lotinda (uz/ru interfeysi uchun) */
+  item_lat?: string;
   unit: Unit;
   unit_cyr: string;
   orders: number;
@@ -874,7 +880,7 @@ export interface MapPoint {
   supplier: string;
   address: string;
   area_ha: string | null;
-  lines: { item: string; unit_cyr: string; qty: string; accepted: string }[];
+  lines: { item: string; item_lat?: string; unit_cyr: string; qty: string; accepted: string }[];
   accepted_on: string | null;
   delivery_due: string | null;
   late_workdays: number;

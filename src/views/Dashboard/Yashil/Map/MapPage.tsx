@@ -33,7 +33,7 @@ const pin = (state: string, late: boolean) =>
 const esc = (s: string | null | undefined) => String(s ?? "—").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 
 function popupHtml(p: MapPoint, c: (text: string) => string, labels: Record<string, string>): string {
-  const lines = p.lines.map((l) => `<li>${esc(l.item)} — ${esc(l.qty)} ${esc(c(l.unit_cyr))} <span style="color:#63796e">(${labels.accepted}: ${esc(l.accepted)})</span></li>`).join("");
+  const lines = p.lines.map((l) => `<li>${esc(l.item_lat ?? l.item)} — ${esc(l.qty)} ${esc(c(l.unit_cyr))} <span style="color:#63796e">(${labels.accepted}: ${esc(l.accepted)})</span></li>`).join("");
   return `
     <div style="font-size:13px;line-height:1.4;min-width:220px;max-width:300px">
       <div style="font-weight:700">${esc(p.number)} · ${esc(c(p.state_cyr))}</div>
