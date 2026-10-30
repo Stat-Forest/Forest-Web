@@ -28,7 +28,7 @@ const REVERSIBLE = new Set(["opening", "receipt", "return_in"]);
 const thisMonth = (): string => todayIso().slice(0, 7);
 
 function EntryDialog({ kind, rows, onClose, preset }: { kind: EntryKind; rows: StockRow[]; onClose: () => void; preset?: string }) {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const [item, setItem] = useState(preset ?? rows[0]?.catalog_item_id ?? "");
   const [qty, setQty] = useState("");
   const [docNumber, setDocNumber] = useState("");
@@ -63,7 +63,7 @@ function EntryDialog({ kind, rows, onClose, preset }: { kind: EntryKind; rows: S
         <DialogHeader><DialogTitle>{t(ENTRY_TITLE[kind])}</DialogTitle><DialogDescription>{kind === "opening" ? t("opening_hint") : t("warehouse_subtitle")}</DialogDescription></DialogHeader>
         <label className="text-sm block">{t("col_name")} *
           <select className={cls("catalog_item")} value={item} onChange={(e) => setItem(e.target.value)}>
-            {rows.map((r) => <option key={r.catalog_item_id} value={r.catalog_item_id}>{r.code} — {pickName(r, script)} ({t(`unit_${r.unit}` as YashilKey)})</option>)}
+            {rows.map((r) => <option key={r.catalog_item_id} value={r.catalog_item_id}>{r.code} — {pickName(r)} ({t(`unit_${r.unit}` as YashilKey)})</option>)}
           </select>
         </label>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -86,7 +86,7 @@ function EntryDialog({ kind, rows, onClose, preset }: { kind: EntryKind; rows: S
 }
 
 function WarehousePage() {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const { cabinet, me } = useYashilAccess();
   const isSupplier = cabinet?.member_type === "supplier";
   const needsOrg = !isSupplier;
@@ -176,7 +176,7 @@ function WarehousePage() {
                     return (
                       <tr key={r.catalog_item_id} className={`cursor-pointer ${itemFilter === r.catalog_item_id ? "bg-[var(--ym-green-soft)]" : ""}`} onClick={() => { setItemFilter(itemFilter === r.catalog_item_id ? null : r.catalog_item_id); setPage(1); }}>
                         <td className="font-mono text-xs">{r.code}</td>
-                        <td>{pickName(r, script)}</td>
+                        <td>{pickName(r)}</td>
                         <td>{t(`unit_${r.unit}` as YashilKey)}</td>
                         <td>{r.opening}</td>
                         <td>{r.received}</td>
@@ -205,7 +205,7 @@ function WarehousePage() {
                 <thead><tr><th>{t("col_code")}</th><th>{t("col_name")}</th><th>{t("col_unit")}</th><th>{t("col_capacity")}</th><th>{t("col_used")}</th><th>{t("col_available")}</th></tr></thead>
                 <tbody>
                   {(capacity?.rows ?? []).map((r) => (
-                    <tr key={r.catalog_item_id}><td className="font-mono text-xs">{r.code}</td><td>{pickName(r, script)}</td><td>{t(`unit_${r.unit}` as YashilKey)}</td><td>{r.capacity}</td><td>{r.used}</td><td className={`font-semibold ${Number(r.available) <= 0 ? "text-[var(--ym-red)]" : ""}`}>{r.available}</td></tr>
+                    <tr key={r.catalog_item_id}><td className="font-mono text-xs">{r.code}</td><td>{pickName(r)}</td><td>{t(`unit_${r.unit}` as YashilKey)}</td><td>{r.capacity}</td><td>{r.used}</td><td className={`font-semibold ${Number(r.available) <= 0 ? "text-[var(--ym-red)]" : ""}`}>{r.available}</td></tr>
                   ))}
                   {capacity && capacity.rows.length === 0 && <tr><td colSpan={6} className="ym-muted text-center">{t("empty")}</td></tr>}
                 </tbody>
@@ -231,7 +231,7 @@ function WarehousePage() {
                     <tr key={m.id}>
                       <td className="whitespace-nowrap ym-muted text-xs">{fmtDateTime(m.created_at)}</td>
                       <td>{t(`kind_${m.kind}` as YashilKey)}{m.order_number ? <div className="ym-muted text-[11px]">{m.order_number}</div> : null}</td>
-                      <td>{m.catalog_item.code} — {pickName(m.catalog_item, script)}</td>
+                      <td>{m.catalog_item.code} — {pickName(m.catalog_item)}</td>
                       <td className={`font-semibold ${Number(m.qty) < 0 ? "text-[var(--ym-red)]" : ""}`}>{Number(m.qty) > 0 ? `+${m.qty}` : m.qty}</td>
                       <td className="whitespace-nowrap">{m.doc_number || "—"}{m.doc_date ? <div className="ym-muted text-[11px]">{fmtDate(m.doc_date)}</div> : null}{m.file_url && <a href={m.file_url} target="_blank" rel="noreferrer" className="block text-[11px] underline text-[var(--ym-green-dark)]">{t("add_file").replace("+", "").trim()}</a>}</td>
                       <td className="text-xs max-w-[220px]">{m.note}{m.decision_note ? <div className="ym-muted">{m.decision_note}</div> : null}</td>

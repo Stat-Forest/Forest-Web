@@ -3,12 +3,10 @@ import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Leaf } from "lucide-react";
 import { useYashilT } from "@/features/yashil/i18n";
-import { setScript } from "@/features/yashil/script";
 import { useYashilAccess } from "@/features/yashil/permissions";
 import { setCabinetId, useCabinetId } from "@/features/yashil/cabinet";
 import { YASHIL_ROUTES } from "@/features/yashil/constants";
 import { yashilApi } from "@/services/yashilApi";
-import NotificationsBell from "./NotificationsBell";
 import { useDispatch } from "react-redux";
 import "./yashil.css";
 
@@ -26,12 +24,12 @@ const MEMBER_TYPE_KEY = {
 } as const;
 
 /**
- * Modul sahifalari uchun umumiy qobiq: yashil tema, nomlar tasmasi, kabinet
- * tanlagich va kirill/lotin almashtirgich. Faqat `.yashil-root` ichida ishlaydi —
- * stat'ning qolgan dizayni o'zgarmaydi.
+ * Modul sahifalari uchun umumiy qobiq: yashil tema, nomlar tasmasi va kabinet
+ * tanlagich. Til va bildirishnomalar — platforma header'ida (D-28). Faqat
+ * `.yashil-root` ichida ishlaydi — stat'ning qolgan dizayni o'zgarmaydi.
  */
 function YashilLayout({ title, actions, children }: Props) {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const { me } = useYashilAccess();
   const cabinetId = useCabinetId();
   const dispatch = useDispatch();
@@ -97,25 +95,6 @@ function YashilLayout({ title, actions, children }: Props) {
               </select>
             </label>
           )}
-          <div className="inline-flex rounded-[10px] overflow-hidden border border-[var(--ym-border)]" role="group" aria-label="Yozuv">
-            <button
-              type="button"
-              className={`ym-btn !border-0 !rounded-none ${script === "cyr" ? "ym-btn--active" : ""}`}
-              onClick={() => setScript("cyr")}
-              aria-pressed={script === "cyr"}
-            >
-              {t("script_cyr")}
-            </button>
-            <button
-              type="button"
-              className={`ym-btn !border-0 !rounded-none ${script === "lat" ? "ym-btn--active" : ""}`}
-              onClick={() => setScript("lat")}
-              aria-pressed={script === "lat"}
-            >
-              {t("script_lat")}
-            </button>
-          </div>
-          {me && <NotificationsBell unread={me.unread_notifications ?? 0} />}
           {actions}
         </div>
       </div>

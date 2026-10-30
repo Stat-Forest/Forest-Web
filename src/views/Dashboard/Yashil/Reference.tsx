@@ -30,7 +30,7 @@ const formatDate = (iso: string): string => {
 
 /** Kabinet ma'lumotlari: a'zolik, mahalla/yetkazib beruvchilar, katalog, kalendar. */
 function Reference() {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const { me, cabinet } = useYashilAccess();
   const [search, setSearch] = useState("");
 
@@ -155,7 +155,7 @@ function Reference() {
                   <tr key={item.id}>
                     <td className="font-mono text-xs">{item.code}</td>
                     <td>
-                      {pickName(item, script)}
+                      {pickName(item)}
                       {Object.keys(item.attributes || {}).length > 0 && (
                         <div className="ym-muted text-xs">{Object.values(item.attributes).join(" · ")}</div>
                       )}

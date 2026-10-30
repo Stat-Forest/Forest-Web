@@ -92,7 +92,7 @@ interface BarProps {
 }
 
 export function ReportFilterBar({ f, withState = true, withOverdue = true, withSearch = true }: BarProps) {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const { cabinet } = useYashilAccess();
   const isMahalla = cabinet?.member_type === "mahalla";
   const { data: dict } = useGetYashilReportFiltersQuery();
@@ -162,7 +162,7 @@ export function ReportFilterBar({ f, withState = true, withOverdue = true, withS
         <span className={lbl}>{t("filter_item")}</span>
         <select className="ym-select w-full" value={f.get("catalog_item")} onChange={(e) => f.set({ catalog_item: e.target.value || undefined })}>
           <option value="">{t("filter_all")}</option>
-          {items.map((i) => <option key={i.id} value={i.id}>{pickName(i, script)}</option>)}
+          {items.map((i) => <option key={i.id} value={i.id}>{pickName(i)}</option>)}
         </select>
       </label>
       {withState && (

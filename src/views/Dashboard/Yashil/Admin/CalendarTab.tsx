@@ -6,7 +6,6 @@ import { fmtDate } from "../Orders/orderUi";
 import { FormDialog, inputCls, useSave } from "./adminUi";
 import { ImportDialog } from "./ImportDialog";
 
-const WEEKDAYS = ["Як", "Ду", "Се", "Чо", "Па", "Жу", "Ша"];
 
 export function CalendarTab() {
   const { t } = useYashilT();
@@ -38,7 +37,7 @@ export function CalendarTab() {
           <tbody>
             {(data?.results ?? []).map((d) => (
               <tr key={d.id}>
-                <td className="whitespace-nowrap">{fmtDate(d.date)} <span className="ym-muted">{WEEKDAYS[new Date(`${d.date}T00:00:00`).getDay()]}</span></td>
+                <td className="whitespace-nowrap">{fmtDate(d.date)} <span className="ym-muted">{t("weekdays_short").split(",")[new Date(`${d.date}T00:00:00`).getDay()]}</span></td>
                 <td><span className={`ym-badge ${d.kind === "holiday" ? "ym-badge--red" : "ym-badge--blue"}`}>{t(d.kind === "holiday" ? "kind_holiday" : "kind_workday")}</span></td>
                 <td>{d.note || "—"}</td>
                 <td>{d.source_ref || "—"}</td>

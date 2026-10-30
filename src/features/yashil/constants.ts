@@ -29,8 +29,7 @@ export const YASHIL_ROLES = ["ym_mahalla", "ym_union", "ym_dm", "ym_observer"] a
 /** Faol kabinet header'i (backend `CABINET_HEADER`). */
 export const CABINET_HEADER = "X-Yashil-Cabinet";
 
-/** Tanlangan kabinet va yozuv (kirill/lotin) cookie'lari. */
+/** Tanlangan kabinet cookie'si. */
 export const CABINET_COOKIE = "yashil_cabinet";
-export const SCRIPT_COOKIE = "yashil_script";
 
 export const YASHIL_ALLOWED_PREFIXES = ["/yashil", "/support-information", "/video"];

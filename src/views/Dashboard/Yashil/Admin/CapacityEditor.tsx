@@ -8,7 +8,7 @@ import { FormDialog, useSave } from "./adminUi";
 export function CapacityEditor({ admin, organization, period, rows, onClose }: {
   admin: boolean; organization?: UUID; period: string; rows: CapacityRow[]; onClose: () => void;
 }) {
-  const { t, script } = useYashilT();
+  const { t } = useYashilT();
   const [save, { isLoading }] = useSaveYashilCapacityMutation();
   const { error, run } = useSave();
   const [values, setValues] = useState<Record<string, string>>({});
@@ -24,7 +24,7 @@ export function CapacityEditor({ admin, organization, period, rows, onClose }: {
           <tbody>
             {rows.map((r) => (
               <tr key={r.catalog_item_id}>
-                <td>{pickName(r, script)} <span className="ym-muted">({t(`unit_${r.unit}` as YashilKey)})</span></td>
+                <td>{pickName(r)} <span className="ym-muted">({t(`unit_${r.unit}` as YashilKey)})</span></td>
                 <td>{r.used}</td>
                 <td><input type="number" min={Number(r.used) || 0} step="any" inputMode="decimal" className="ym-select w-28" value={values[r.catalog_item_id] ?? ""}
                   onChange={(e) => setValues({ ...values, [r.catalog_item_id]: e.target.value })} aria-label={`${r.code} ${t("col_capacity")}`} /></td>

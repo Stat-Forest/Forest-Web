@@ -25,7 +25,7 @@ interface LineDraft {
 }
 
 function ActFormDialog({ order, act, onClose, onDone }: Props) {
-  const { t, script } = useYashilT();
+  const { t, c } = useYashilT();
   const cv = act?.current_version ?? null;
   const [deliveryDate, setDeliveryDate] = useState(cv?.delivery_date ?? todayIso());
   const [responsible, setResponsible] = useState(cv?.responsible ?? order.executor_name ?? "");
@@ -44,7 +44,7 @@ function ActFormDialog({ order, act, onClose, onDone }: Props) {
     return order.lines.map((l) => {
       // Qaytarilgan aktning o'z hajmi qolgan hajmga kirmaydi (u hali qabul qilinmagan), shuning uchun remaining o'zgarmaydi.
       const remaining = l.remaining_qty ?? l.qty;
-      return { order_line: l.id, name: pickName(l.catalog_item, script), unit: l.unit_cyr, ordered: l.qty, remaining, qty: prev.get(l.id) ?? (Number(remaining) > 0 && !act ? remaining : "0") };
+      return { order_line: l.id, name: pickName(l.catalog_item), unit: c(l.unit_cyr), ordered: l.qty, remaining, qty: prev.get(l.id) ?? (Number(remaining) > 0 && !act ? remaining : "0") };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order.id, act?.id]);

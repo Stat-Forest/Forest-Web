@@ -71,6 +71,7 @@ import { NavLink } from "react-router-dom";
 import { toggleSidebar } from "@/features/sidebarSlice";
 import { setHeaderState } from "@/features/uiSlice";
 import AiModal from "../Modals/AiModal";
+import { YashilHeaderNotifications, useYashilNotifications, useYashilUnread } from "@/views/Dashboard/Yashil/HeaderNotifications";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -200,6 +201,10 @@ function Header({ onLogout }: HeaderProps) {
   const { data, error, isLoading } = useGetNotificationReportsQuery({
     lang: currentLang,
   });
+  // «Яшил маҳалла» kabinet xabarnomalari shu panelda (o'qilganlik holati serverda)
+  const yashilUnread = useYashilUnread();
+  const yashilItems = useYashilNotifications(notificationOpen);
+  const badgeCount = unreadCount + yashilUnread;
 
   useEffect(() => {
     applyBackground(selectedBg);
@@ -375,9 +380,9 @@ function Header({ onLogout }: HeaderProps) {
                 className="h-[40px] w-[40px] p-0 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative flex items-center justify-center cursor-pointer"
               >
                 <Bell size={18} className="text-blue-600 dark:text-white" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px] font-bold flex items-center justify-center shadow-xs">
-                    {unreadCount}
+                {badgeCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full min-w-4 h-4 px-0.5 text-[10px] font-bold flex items-center justify-center shadow-xs">
+                    {badgeCount}
                   </span>
                 )}
               </Button>
@@ -400,6 +405,7 @@ function Header({ onLogout }: HeaderProps) {
               </SheetHeader>
 
               <div className="flex-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <YashilHeaderNotifications open={notificationOpen} onNavigate={() => handleNotificationOpen(false)} />
                 {isLoading ? (
                   <div className="flex flex-col justify-center items-center h-64 gap-3 text-slate-400">
                     <div className="w-8 h-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
@@ -429,7 +435,7 @@ function Header({ onLogout }: HeaderProps) {
                       </Card>
                     ))}
                   </div>
-                ) : (
+                ) : yashilItems.length ? null : (
                   <div className="flex flex-col justify-center items-center h-[calc(100vh-220px)] text-center p-6">
                     <div className="h-20 w-20 rounded-3xl bg-blue-50 dark:bg-slate-900 text-blue-500 dark:text-blue-400 flex items-center justify-center mb-4 shadow-inner border border-blue-100 dark:border-slate-800 animate-pulse">
                       <BellOff size={36} />
