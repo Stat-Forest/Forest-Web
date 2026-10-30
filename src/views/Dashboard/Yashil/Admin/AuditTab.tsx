@@ -10,6 +10,7 @@ const PER_PAGE = 25;
 
 export function AuditTab() {
   const { t } = useYashilT();
+  const modelLabel = (m: string) => (MODELS.includes(m) ? t(`audit_model_${m}` as YashilKey) : m);
   const [model, setModel] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -20,7 +21,7 @@ export function AuditTab() {
       <div className="flex flex-wrap gap-2">
         <select className="ym-select" value={model} onChange={(e) => { setModel(e.target.value); setPage(1); }} aria-label={t("col_object")}>
           <option value="">{t("filter_all")}</option>
-          {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+          {MODELS.map((m) => <option key={m} value={m}>{modelLabel(m)}</option>)}
         </select>
         <input className="ym-select" placeholder={t("search")} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} aria-label={t("search")} />
       </div>
@@ -34,7 +35,7 @@ export function AuditTab() {
                   <td className="whitespace-nowrap">{fmtDateTime(r.created_at)}</td>
                   <td>{r.user || "—"}</td>
                   <td><span className={`ym-badge ${r.action === "delete" ? "ym-badge--red" : r.action === "add" ? "" : "ym-badge--blue"}`}>{t(`action_${r.action}` as YashilKey)}</span></td>
-                  <td>{r.model_name}<div className="ym-muted text-[11px]">{r.object_repr}</div></td>
+                  <td>{modelLabel(r.model_name)}<div className="ym-muted text-[11px]">{r.object_repr}</div></td>
                 </tr>
               ))}
             </tbody>

@@ -126,7 +126,7 @@ function MapPage() {
         </div>
       </div>
       <div className="ym-card !p-2">
-        <div ref={el} className="h-[70vh] min-h-[420px] w-full rounded-xl overflow-hidden" />
+        <div ref={el} className="isolate h-[70vh] min-h-[420px] w-full rounded-xl overflow-hidden" />
       </div>
     </YashilLayout>
   );

@@ -44,7 +44,7 @@ function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose:
           </select>
         </label>
         <label className="text-sm block">{t("col_name")} (кирилл) *<input className={inputCls(field === "name_cyr")} value={form.name_cyr} maxLength={300} onChange={(e) => setForm({ ...form, name_cyr: e.target.value })} /></label>
-        <label className="text-sm block">{t("col_name")} (lotin)<input className={inputCls(field === "name_lat")} value={form.name_lat} maxLength={300} onChange={(e) => setForm({ ...form, name_lat: e.target.value })} /></label>
+        <label className="text-sm block">{t("col_name")} {t("name_lat_suffix")}<input className={inputCls(field === "name_lat")} value={form.name_lat} maxLength={300} onChange={(e) => setForm({ ...form, name_lat: e.target.value })} /></label>
         <label className="text-sm block">{t("col_category")}
           <select className={inputCls(field === "category")} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, item_type: e.target.value === "protection_service" ? "service" : "goods" })}>
             {CATEGORIES[form.supplier_type].map((c) => <option key={c} value={c}>{t(`cat_${c}` as YashilKey)}</option>)}
@@ -55,10 +55,10 @@ function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose:
             {UNITS.map((u) => <option key={u} value={u}>{t(`unit_${u}` as YashilKey)}</option>)}
           </select>
         </label>
-        <label className="text-sm block">Тартиб<input type="number" className={inputCls(field === "order")} value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
+        <label className="text-sm block">{t("sort_order")}<input type="number" className={inputCls(field === "order")} value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
         <label className="inline-flex items-center gap-2 text-sm min-h-[40px] self-end"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />{t("status_active")}</label>
       </div>
-      <label className="text-sm block">attributes (JSON)<textarea className={inputCls(field === "attributes" || attrError)} value={form.attributes} onChange={(e) => setForm({ ...form, attributes: e.target.value })} /></label>
+      <label className="text-sm block">{t("attributes_json")}<textarea className={inputCls(field === "attributes" || attrError)} value={form.attributes} onChange={(e) => setForm({ ...form, attributes: e.target.value })} /></label>
     </FormDialog>
   );
 }

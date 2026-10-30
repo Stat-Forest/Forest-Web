@@ -34,7 +34,7 @@ export function CalendarTab() {
       </div>
       <div className="overflow-auto">
         <table className="ym-table text-[13px]">
-          <thead><tr><th>{t("col_date")}</th><th>{t("col_type")}</th><th>{t("note")}</th><th>{t("col_source")}</th><th></th></tr></thead>
+          <thead><tr><th>{t("col_date")}</th><th>{t("col_type")}</th><th>{t("note")}</th><th>{t("calendar_source")}</th><th></th></tr></thead>
           <tbody>
             {(data?.results ?? []).map((d) => (
               <tr key={d.id}>

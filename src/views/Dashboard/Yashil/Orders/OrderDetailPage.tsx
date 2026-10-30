@@ -13,6 +13,7 @@ import SignSubmitDialog from "./SignSubmitDialog";
 import DocumentPreview from "./DocumentPreview";
 import ActFormDialog from "../Acts/ActFormDialog";
 import { pickName, useYashilT, type YashilKey } from "@/features/yashil/i18n";
+import { useYashilAccess } from "@/features/yashil/permissions";
 import { YASHIL_ROUTES } from "@/features/yashil/constants";
 import type { OrderAction, OrderDetail, ReturnReason } from "@/features/yashil/types";
 import {
@@ -31,6 +32,11 @@ import { ActStatusBadge, CancelStatusBadge, DeadlineText, JourneyStrip, StateBad
 
 const REASONS: ReturnReason[] = ["address", "lines", "supplier", "documents", "norms", "other"];
 const FIELD_OPTIONS = ["title", "address", "lat", "area_ha", "lines", "attachments", "supplier_org", "extra_info"];
+// Qaytarishda belgilanadigan maydonlar — foydalanuvchi ko'radigan nomlar
+const FIELD_LABEL: Record<string, YashilKey> = {
+  title: "title_label", address: "address", lat: "point", area_ha: "area_ha", lines: "lines_title",
+  attachments: "attachments_title", supplier_org: "col_supplier", extra_info: "extra_info",
+};
 const ACTION_KEY: Record<OrderAction, YashilKey> = {
   submit: "action_submit", review: "action_review", forward: "action_forward", return: "action_return", accept: "action_accept", edit: "action_edit",
   create_act: "action_create_act", cancel: "action_cancel", cancel_request: "action_cancel_request", cancel_agree: "action_cancel_agree",
@@ -52,6 +58,7 @@ function OrderDetailPage() {
   const navigate = useNavigate();
   const token = useSelector((s: RootState) => s.auth.token);
   const { data: o, isLoading, error } = useGetYashilOrderQuery(id);
+  const { me } = useYashilAccess();
   const [review] = useReviewYashilOrderMutation();
   const [forward] = useForwardYashilOrderMutation();
   const [ret, { isLoading: returning }] = useReturnYashilOrderMutation();
@@ -117,6 +124,9 @@ function OrderDetailPage() {
       {o.last_return && (o.state === "returned") && (
         <div className="ym-notice" style={{ borderLeftColor: "#d9a441" }}>
           <b>{o.last_return.by === "union" ? t("returned_by_union") : t("returned_by_supplier")}</b> ({t(`reason_${o.last_return.reason_code}` as YashilKey)}, {fmtDateTime(o.last_return.at)}): {o.last_return.comment}
+          {o.last_return.fields.length > 0 && (
+            <div className="mt-1 text-sm">{t("return_fields")}: {o.last_return.fields.map((f) => (FIELD_LABEL[f] ? t(FIELD_LABEL[f]) : f)).join(", ")}</div>
+          )}
         </div>
       )}
 
@@ -140,7 +150,7 @@ function OrderDetailPage() {
               <StateBadge state={o.state} />
               <span className="ym-badge">v{o.version_no}</span>
               <DeadlineText info={stage} state={o.state} />
-              {stage.stage === "review" && stage.review_used != null && <span className="ym-muted text-xs">{stage.review_used} / 3 {t("used_days")}</span>}
+              {stage.stage === "review" && stage.review_used != null && <span className="ym-muted text-xs">{stage.review_used} / {me?.rules.review_workdays ?? 3} {t("used_days")}</span>}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -295,7 +305,7 @@ function OrderDetailPage() {
           <div className="text-sm">{t("return_fields")}
             <div className="flex flex-wrap gap-2 mt-1">
               {FIELD_OPTIONS.map((f) => (
-                <button key={f} type="button" className={`ym-btn !min-h-7 !px-2 text-xs ${fields.includes(f) ? "ym-btn--active" : ""}`} onClick={() => setFields((xs) => (xs.includes(f) ? xs.filter((x) => x !== f) : [...xs, f]))}>{f}</button>
+                <button key={f} type="button" className={`ym-btn !min-h-7 !px-2 text-xs ${fields.includes(f) ? "ym-btn--active" : ""}`} onClick={() => setFields((xs) => (xs.includes(f) ? xs.filter((x) => x !== f) : [...xs, f]))}>{t(FIELD_LABEL[f])}</button>
               ))}
             </div>
           </div>
@@ -323,7 +333,7 @@ function OrderDetailPage() {
           <DialogHeader><DialogTitle>{t("cancel_draft_title")}</DialogTitle><DialogDescription>{t("cancel_draft_hint")}</DialogDescription></DialogHeader>
           <label className="text-sm block">{t("cancel_reason")}<textarea className="ym-select w-full mt-1 min-h-[70px]" value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <DialogFooter>
-            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("cancel")}</button>
+            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("close")}</button>
             <button type="button" className="ym-btn ym-btn--primary" disabled={cancelling || !comment.trim()} onClick={() => run(() => cancelOrder({ id: o.id, body: { reason: comment } }).unwrap(), t("action_ok"))}>{t("confirm")}</button>
           </DialogFooter>
         </DialogContent>
@@ -349,7 +359,7 @@ function OrderDetailPage() {
           )}
           <label className="text-sm block">{t("cancel_reason")}<textarea className="ym-select w-full mt-1 min-h-[70px]" value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <DialogFooter>
-            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("cancel")}</button>
+            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("close")}</button>
             <button type="button" className="ym-btn ym-btn--primary" disabled={cancelling || !comment.trim() || (!cancelFull && !Object.values(cancelLines).some((v) => Number(v) > 0))}
               onClick={() => run(() => cancelOrder({ id: o.id, body: { reason: comment, lines: cancelFull ? [] : Object.entries(cancelLines).filter(([, v]) => Number(v) > 0).map(([k, v]) => ({ order_line: k, qty: v })) } }).unwrap(), t("action_ok"))}>
               {t("send_request")}
@@ -363,7 +373,7 @@ function OrderDetailPage() {
           <DialogHeader><DialogTitle>{pendingDecision === "approve" ? t("action_cancel_approve") : t("action_cancel_agree")}</DialogTitle><DialogDescription>{cr?.reason}</DialogDescription></DialogHeader>
           <p className="text-sm">{t("cancel_lines")}: {cr?.is_full ? t("all_remaining") : cr?.lines.map((l) => `${l.name_cyr} — ${l.qty}`).join("; ")}</p>
           <DialogFooter>
-            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("cancel")}</button>
+            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("close")}</button>
             <button type="button" className="ym-btn ym-btn--primary" disabled={deciding || !cr || !pendingDecision} onClick={() => cr && pendingDecision && run(() => decideCancel({ id: cr.id, decision: pendingDecision }).unwrap(), t("action_ok"))}>{t("confirm")}</button>
           </DialogFooter>
         </DialogContent>
@@ -374,7 +384,7 @@ function OrderDetailPage() {
           <DialogHeader><DialogTitle>{t("action_cancel_reject")}</DialogTitle><DialogDescription>{cr?.reason}</DialogDescription></DialogHeader>
           <label className="text-sm block">{t("reject_note")} *<textarea className="ym-select w-full mt-1 min-h-[70px]" value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <DialogFooter>
-            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("cancel")}</button>
+            <button type="button" className="ym-btn" onClick={() => setDialog(null)}>{t("close")}</button>
             <button type="button" className="ym-btn ym-btn--primary" disabled={deciding || !comment.trim() || !cr} onClick={() => cr && run(() => decideCancel({ id: cr.id, decision: "reject", note: comment }).unwrap(), t("action_ok"))}>{t("reject")}</button>
           </DialogFooter>
         </DialogContent>

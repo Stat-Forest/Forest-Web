@@ -159,7 +159,7 @@ function UnitDialog({ edit, onClose }: { edit: AdminUnionUnit | null; onClose: (
             {LEVELS.map((l) => <option key={l} value={l}>{t(`level_${l}` as YashilKey)}</option>)}
           </select>
         </label>
-        <label className="text-sm block">STIR<input className={inputCls(field === "stir")} value={form.stir} maxLength={9} onChange={(e) => setForm({ ...form, stir: e.target.value })} /></label>
+        <label className="text-sm block">{t("stir")}<input className={inputCls(field === "stir")} value={form.stir} maxLength={9} onChange={(e) => setForm({ ...form, stir: e.target.value })} /></label>
         <label className="text-sm block">{t("filter_region")}
           <select className={inputCls(field === "region")} value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value, district: "" })}>
             <option value="">—</option>
@@ -197,7 +197,7 @@ function Units() {
           <tbody>
             {(data?.results ?? []).map((u) => (
               <tr key={u.id}>
-                <td>{u.name}{u.stir && <div className="ym-muted text-[11px]">STIR {u.stir}</div>}</td>
+                <td>{u.name}{u.stir && <div className="ym-muted text-[11px]">{t("stir")} {u.stir}</div>}</td>
                 <td>{t(`level_${u.level}` as YashilKey)}</td>
                 <td>{u.region_name || "—"}<div className="ym-muted text-[11px]">{u.district_name}</div></td>
                 <td>{u.mahallas}</td>
@@ -262,8 +262,8 @@ function SupplierDialog({ edit, onClose }: { edit: AdminSupplier | null; onClose
         </>
       )}
       <div className="grid sm:grid-cols-2 gap-3">
-        <label className="text-sm block">{t("col_name")} (rasmiy)<input className={inputCls(field === "official_name")} value={form.official_name} maxLength={300} onChange={(e) => setForm({ ...form, official_name: e.target.value })} /></label>
-        <label className="text-sm block">STIR<input className={inputCls(field === "stir")} value={form.stir} maxLength={9} onChange={(e) => setForm({ ...form, stir: e.target.value })} /></label>
+        <label className="text-sm block">{t("col_name")} {t("name_official_suffix")}<input className={inputCls(field === "official_name")} value={form.official_name} maxLength={300} onChange={(e) => setForm({ ...form, official_name: e.target.value })} /></label>
+        <label className="text-sm block">{t("stir")}<input className={inputCls(field === "stir")} value={form.stir} maxLength={9} onChange={(e) => setForm({ ...form, stir: e.target.value })} /></label>
         {isDm && (
           <label className="text-sm block">{t("col_parent")}
             <select className={inputCls(field === "parent")} value={form.parent} onChange={(e) => setForm({ ...form, parent: e.target.value })}>
@@ -301,7 +301,7 @@ function Suppliers() {
           <tbody>
             {(data?.results ?? []).map((s) => (
               <tr key={s.id}>
-                <td>{s.organization_name}{s.stir && <div className="ym-muted text-[11px]">STIR {s.stir}</div>}</td>
+                <td>{s.organization_name}{s.stir && <div className="ym-muted text-[11px]">{t("stir")} {s.stir}</div>}</td>
                 <td>{t(s.supplier_type === "dm" ? "tab_route_dm" : "tab_route_forest")}</td>
                 <td className="max-w-[260px]">{s.supplier_type === "dm" ? (s.service_regions.map(regionName).join(", ") || "РУз") : "—"}</td>
                 <td>{s.members}</td>

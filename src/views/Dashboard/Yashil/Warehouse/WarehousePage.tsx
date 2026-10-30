@@ -160,7 +160,7 @@ function WarehousePage() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h2 className="text-xl font-semibold">{stock.organization.name} — {stock.warehouse.name}</h2>
-                <p className="ym-muted text-xs">{t("warehouse_subtitle")}</p>
+                <p className="ym-muted text-xs">{t(isDm ? "warehouse_subtitle_dm" : "warehouse_subtitle")}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {stock.shortage_count > 0 && <span className="ym-badge ym-badge--red">{stock.shortage_count} {t("shortage_count")}</span>}
