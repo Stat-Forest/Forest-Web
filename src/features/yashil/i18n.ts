@@ -239,6 +239,11 @@ const DICT = {
   map_confirm: ["Шу жойни тасдиқлаш", "Shu joyni tasdiqlash", "Подтвердить это место"],
   map_confirmed: ["Нуқта тасдиқланган", "Nuqta tasdiqlangan", "Точка подтверждена"],
   map_not_set: ["Нуқта белгиланмаган", "Nuqta belgilanmagan", "Точка не отмечена"],
+  map_outside: [
+    "Бу жой Ўзбекистон ҳудудидан ташқарида — бошқа жойни босинг",
+    "Bu joy O'zbekiston hududidan tashqarida — boshqa joyni bosing",
+    "Это место за пределами Узбекистана — выберите другое",
+  ],
   polygon_hint: [
     "Полигон ихтиёрий: майдон автоматик ҳисобланади",
     "Poligon ixtiyoriy: maydon avtomatik hisoblanadi",

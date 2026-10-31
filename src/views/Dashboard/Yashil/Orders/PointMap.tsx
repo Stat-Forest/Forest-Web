@@ -1,6 +1,7 @@
 /**
  * Buyurtma joyi: Leaflet xaritada nuqta (bosish/sudrash), ixtiyoriy poligon (leaflet-draw),
  * poligon maydoni turf bilan (TZ §5.1). `readOnly` — tafsilot sahifasi uchun.
+ * `bounds` — nuqta yo'q bo'lsa xarita shu hududda ochiladi; `limits` dan tashqariga nuqta qo'yilmaydi.
  */
 import { useEffect, useRef, useState } from "react";
 import * as L from "leaflet";
@@ -12,6 +13,7 @@ import type { Feature, Polygon } from "geojson";
 import { setupBaseMap } from "@/features/billing/mapLayers";
 import { UZ_MAP_CENTER, UZ_MAP_ZOOM } from "@/features/billing/constants";
 import { useYashilT } from "@/features/yashil/i18n";
+import type { MapBox } from "@/features/yashil/types";
 
 export interface PointMapProps {
   lat: number | null;
@@ -19,6 +21,8 @@ export interface PointMapProps {
   polygon: Polygon | null;
   confirmed: boolean;
   readOnly?: boolean;
+  bounds?: MapBox | null;
+  limits?: MapBox;
   onPoint?: (lat: number, lon: number) => void;
   onConfirm?: () => void;
   onPolygon?: (polygon: Polygon | null, areaHa: number | null) => void;
@@ -31,13 +35,32 @@ const PIN = L.divIcon({
   iconAnchor: [9, 18],
 });
 
-function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, onPolygon }: PointMapProps) {
+const inside = (limits: MapBox | undefined, lat: number, lon: number) => {
+  if (!limits) return true;
+  const [[south, west], [north, east]] = limits;
+  return lat >= south && lat <= north && lon >= west && lon <= east;
+};
+
+function PointMap({ lat, lon, polygon, confirmed, readOnly, bounds, limits, onPoint, onConfirm, onPolygon }: PointMapProps) {
   const { t } = useYashilT();
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const drawnRef = useRef<L.FeatureGroup | null>(null);
   const [drawing, setDrawing] = useState<L.Draw.Polygon | null>(null);
+  const [outside, setOutside] = useState(false);
+  const posRef = useRef<[number, number] | null>(null);
+
+  // Chegaradan tashqari nuqta qabul qilinmaydi (server ham tekshiradi)
+  const pick = (pLat: number, pLon: number) => {
+    const ok = inside(limits, pLat, pLon);
+    setOutside(!ok);
+    if (ok) onPoint?.(pLat, pLon);
+    return ok;
+  };
+  // Leaflet hodisalari bir marta ulanadi — har doim oxirgi `pick` chaqirilsin
+  const pickRef = useRef(pick);
+  useEffect(() => { pickRef.current = pick; });
 
   // Xarita bir marta yaratiladi
   useEffect(() => {
@@ -48,7 +71,7 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
     const drawn = new L.FeatureGroup().addTo(map);
     drawnRef.current = drawn;
     if (!readOnly) {
-      map.on("click", (e: L.LeafletMouseEvent) => onPoint?.(e.latlng.lat, e.latlng.lng));
+      map.on("click", (e: L.LeafletMouseEvent) => pickRef.current(e.latlng.lat, e.latlng.lng));
       map.on(L.Draw.Event.CREATED, (e: L.LeafletEvent) => {
         const layer = (e as L.DrawEvents.Created).layer as L.Polygon;
         drawn.clearLayers();
@@ -58,7 +81,10 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
         setDrawing(null);
       });
     }
-    setTimeout(() => map.invalidateSize(), 50);
+    setTimeout(() => {
+      map.invalidateSize();
+      if (lat == null && bounds) map.fitBounds(bounds, { padding: [10, 10] });
+    }, 50);
     return () => {
       map.remove();
       mapRef.current = null;
@@ -72,6 +98,7 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    posRef.current = lat != null && lon != null ? [lat, lon] : null;
     if (lat == null || lon == null) {
       markerRef.current?.remove();
       markerRef.current = null;
@@ -79,12 +106,16 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
     }
     if (!markerRef.current) {
       markerRef.current = L.marker([lat, lon], { icon: PIN, draggable: !readOnly }).addTo(map);
-      if (!readOnly) markerRef.current.on("dragend", (e) => { const p = (e.target as L.Marker).getLatLng(); onPoint?.(p.lat, p.lng); });
+      if (!readOnly) markerRef.current.on("dragend", (e) => {
+        const marker = e.target as L.Marker;
+        const p = marker.getLatLng();
+        if (!pickRef.current(p.lat, p.lng) && posRef.current) marker.setLatLng(posRef.current);
+      });
       map.setView([lat, lon], Math.max(map.getZoom(), 15));
     } else {
       markerRef.current.setLatLng([lat, lon]);
     }
-  }, [lat, lon, readOnly, onPoint]);
+  }, [lat, lon, readOnly]);
 
   // Tashqaridan kelgan poligon (tahrirlash / tafsilot)
   useEffect(() => {
@@ -123,6 +154,7 @@ function PointMap({ lat, lon, polygon, confirmed, readOnly, onPoint, onConfirm, 
             {lat == null ? t("map_not_set") : `${lat.toFixed(6)}, ${lon!.toFixed(6)}`}{confirmed && lat != null ? ` · ${t("map_confirmed")}` : ""}
           </span>
           <button type="button" className="ym-btn ym-btn--primary" disabled={lat == null || confirmed} onClick={onConfirm}>{t("map_confirm")}</button>
+          {outside && <span className="ym-badge ym-badge--red">{t("map_outside")}</span>}
           <span className="flex-1" />
           <button type="button" className="ym-btn" onClick={startDraw} disabled={!!drawing}>{t("draw_polygon")}</button>
           <button type="button" className="ym-btn" onClick={clearPolygon} disabled={!polygon && !drawing}>{t("clear_polygon")}</button>

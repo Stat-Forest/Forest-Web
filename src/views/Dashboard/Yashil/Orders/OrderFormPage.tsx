@@ -256,6 +256,7 @@ function OrderFormPage() {
         </div>
         <PointMap
           lat={form.lat} lon={form.lon} polygon={form.polygon} confirmed={form.pointConfirmed}
+          bounds={suppliers.map?.bounds} limits={suppliers.map?.limits}
           onPoint={(lat, lon) => setForm((f) => (f ? { ...f, lat, lon, pointConfirmed: false } : f))}
           onConfirm={() => set("pointConfirmed", true)}
           onPolygon={(polygon, areaHa) => setForm((f) => (f ? { ...f, polygon, area_calc_ha: areaHa != null ? String(areaHa) : "" } : f))}

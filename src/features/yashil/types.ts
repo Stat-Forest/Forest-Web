@@ -89,7 +89,11 @@ export interface SuppliersForMahalla {
   dm: { options: Supplier[] };
   union: UnionUnit | null;
   union_message: string | null;
+  /** [[janub, g'arb], [shimol, sharq]]: bounds — viloyat (xarita shu yerda ochiladi), limits — nuqta qabul qilinadigan hudud */
+  map?: { bounds: MapBox | null; limits: MapBox };
 }
+
+export type MapBox = [[number, number], [number, number]];
 
 export interface CatalogItem {
   id: UUID;
