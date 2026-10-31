@@ -5,6 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { toast } from "react-toastify";
 import { useYashilT, type YashilKey } from "@/features/yashil/i18n";
 import type { AdminAssignment, AdminOrgHit, AdminRoute, AdminSupplier, AdminUnionUnit, SupplierType } from "@/features/yashil/types";
 import {
@@ -14,14 +15,16 @@ import {
   useGetYashilAdminSuppliersQuery,
   useGetYashilAdminUnionUnitsQuery,
   useGetYashilDistrictsQuery,
+  useGetYashilForestCandidatesQuery,
   useGetYashilRegionsQuery,
   useLazySearchYashilAdminOrgsQuery,
   useSaveYashilAdminAssignmentMutation,
   useSaveYashilAdminRouteMutation,
   useSaveYashilAdminSupplierMutation,
   useSaveYashilAdminUnionUnitMutation,
+  useSyncYashilForestsMutation,
 } from "@/services/yashilApi";
-import { todayIso } from "../Orders/orderUi";
+import { apiErrorText, fmtDate, todayIso } from "../Orders/orderUi";
 import { ActiveBadge, FormDialog, Pager, inputCls, periodText, useSave } from "./adminUi";
 import { ImportDialog } from "./ImportDialog";
 
@@ -60,8 +63,10 @@ function PeriodLinkDialog({ kind, edit, onClose }: { kind: "forest" | "routes"; 
   const [validFrom, setValidFrom] = useState(todayIso());
   const [validTo, setValidTo] = useState(edit?.valid_to ?? "");
   const [sourceDoc, setSourceDoc] = useState(edit?.source_doc ?? "");
+  const [sourceDate, setSourceDate] = useState(edit?.source_doc_date ?? "");
+  const [supplierQ, setSupplierQ] = useState("");
   const submit = () => {
-    const common = { valid_to: validTo || null, source_doc: sourceDoc };
+    const common = { valid_to: validTo || null, source_doc: sourceDoc, source_doc_date: sourceDate || null };
     if (kind === "forest") {
       const body = edit ? common : { ...common, mahalla, organization: target, valid_from: validFrom };
       return run(() => saveA({ id: edit?.id, body }).unwrap(), onClose);
@@ -76,10 +81,11 @@ function PeriodLinkDialog({ kind, edit, onClose }: { kind: "forest" | "routes"; 
         <>
           <MahallaPicker value={mahalla} onChange={setMahalla} bad={field === "mahalla"} />
           <label className="text-sm block">{kind === "forest" ? t("member_type_supplier") : t("member_type_union")} *
+            {kind === "forest" && <input className="ym-select w-full mt-1" placeholder={t("search")} value={supplierQ} onChange={(e) => setSupplierQ(e.target.value)} />}
             <select className={inputCls(field === "organization" || field === "union_unit")} value={target} onChange={(e) => setTarget(e.target.value)}>
               <option value="">—</option>
               {kind === "forest"
-                ? (suppliers?.results ?? []).filter((s) => s.is_active_supplier).map((s) => <option key={s.id} value={s.organization}>{s.organization_name}</option>)
+                ? (suppliers?.results ?? []).filter((s) => s.is_active_supplier && s.organization_name.toLowerCase().includes(supplierQ.trim().toLowerCase())).map((s) => <option key={s.id} value={s.organization}>{s.organization_name}</option>)
                 : (units?.results ?? []).filter((u) => u.is_active).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </label>
@@ -89,7 +95,10 @@ function PeriodLinkDialog({ kind, edit, onClose }: { kind: "forest" | "routes"; 
         {!edit && <label className="text-sm block">{t("valid_from")} *<input type="date" className={inputCls(field === "valid_from")} value={validFrom} onChange={(e) => setValidFrom(e.target.value)} /></label>}
         <label className="text-sm block">{t("valid_to")}<input type="date" className={inputCls(field === "valid_to" || field === "__all__")} value={validTo ?? ""} onChange={(e) => setValidTo(e.target.value)} /></label>
       </div>
-      <label className="text-sm block">{t("import_source")}<input className={inputCls(field === "source_doc")} value={sourceDoc} maxLength={200} onChange={(e) => setSourceDoc(e.target.value)} /></label>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <label className="text-sm block">{t("doc_number")}<input className={inputCls(field === "source_doc")} value={sourceDoc} maxLength={200} placeholder={t("doc_number_ph")} onChange={(e) => setSourceDoc(e.target.value)} /></label>
+        <label className="text-sm block">{t("doc_date")}<input type="date" className={inputCls(field === "source_doc_date")} value={sourceDate} onChange={(e) => setSourceDate(e.target.value)} /></label>
+      </div>
     </FormDialog>
   );
 }
@@ -122,7 +131,7 @@ function PeriodLinks({ kind }: { kind: "forest" | "routes" }) {
                 <td>{row.mahalla_name}</td>
                 <td>{"organization_name" in row ? row.organization_name : (row as AdminRoute).union_unit_name}</td>
                 <td className="whitespace-nowrap">{periodText(row.valid_from, row.valid_to)}</td>
-                <td>{row.source_doc || "—"}</td>
+                <td>{row.source_doc || "—"}{row.source_doc_date && <div className="ym-muted text-[11px]">{fmtDate(row.source_doc_date)}</div>}</td>
                 <td><ActiveBadge active current={row.is_current} /></td>
                 <td><button type="button" className="ym-btn" onClick={() => setDialog({ edit: row })}>{t("close_period")}</button></td>
               </tr>
@@ -133,7 +142,7 @@ function PeriodLinks({ kind }: { kind: "forest" | "routes" }) {
       </div>
       <Pager page={page} count={data?.count ?? 0} perPage={PER_PAGE} onPage={setPage} />
       {dialog && <PeriodLinkDialog kind={kind} edit={dialog.edit} onClose={() => setDialog(null)} />}
-      {importing && <ImportDialog kind={kind === "forest" ? "assignments" : "routes"} withSource title={`${t(kind === "forest" ? "links_forest" : "links_routes")} — ${t("import_excel")}`} onClose={() => setImporting(false)} />}
+      {importing && <ImportDialog kind={kind === "forest" ? "assignments" : "routes"} withDocDate title={`${t(kind === "forest" ? "links_forest" : "links_routes")} — ${t("import_excel")}`} onClose={() => setImporting(false)} />}
     </>
   );
 }
@@ -286,15 +295,71 @@ function SupplierDialog({ edit, onClose }: { edit: AdminSupplier | null; onClose
   );
 }
 
+/** Statdagi viloyat o'rmon xo'jaliklari (nomida «o'rmon», hali yetkazib beruvchi emas) — belgilanganlarni qo'shish. */
+function ForestSyncDialog({ onClose }: { onClose: () => void }) {
+  const { t } = useYashilT();
+  const { data, isFetching } = useGetYashilForestCandidatesQuery();
+  const [sync, { isLoading }] = useSyncYashilForestsMutation();
+  const [off, setOff] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
+  const rows = data?.results ?? [];
+  const picked = rows.filter((r) => !off.has(r.id)).map((r) => r.id);
+  const toggle = (id: string) => setOff((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const submit = async () => {
+    setError(null);
+    try {
+      const res = await sync({ organizations: picked }).unwrap();
+      toast.success(`${t("forest_sync_done")}: ${res.created}`);
+      onClose();
+    } catch (e) {
+      setError(apiErrorText(e, t("error_generic")));
+    }
+  };
+  return (
+    <FormDialog title={t("forest_sync")} description={t("forest_sync_hint")} open onClose={onClose} onSave={submit} saving={isLoading}
+      disabled={isFetching || picked.length === 0} error={error} wide>
+      {isFetching && <p className="text-sm ym-muted">{t("loading")}</p>}
+      {!isFetching && rows.length === 0 && <p className="text-sm ym-muted">{t("forest_sync_empty")}</p>}
+      {rows.length > 0 && (
+        <>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="ym-badge">{picked.length} / {rows.length}</span>
+            <button type="button" className="ym-btn" onClick={() => setOff(new Set())}>{t("select_all")}</button>
+            <button type="button" className="ym-btn" onClick={() => setOff(new Set(rows.map((r) => r.id)))}>{t("select_none")}</button>
+          </div>
+          <ul className="ym-card !p-2 max-h-[50vh] overflow-auto text-sm space-y-1">
+            {rows.map((r) => (
+              <li key={r.id}>
+                <label className="flex items-start gap-2 px-1 py-0.5 rounded hover:bg-[var(--ym-green-soft)]">
+                  <input type="checkbox" className="mt-1" checked={!off.has(r.id)} onChange={() => toggle(r.id)} />
+                  <span>{r.name} <span className="ym-muted">({r.region}{r.stir ? ` · ${t("stir")} ${r.stir}` : ""})</span></span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </FormDialog>
+  );
+}
+
 function Suppliers() {
   const { t } = useYashilT();
   const { data: regions } = useGetYashilRegionsQuery();
   const { data } = useGetYashilAdminSuppliersQuery();
   const [dialog, setDialog] = useState<{ edit: AdminSupplier | null } | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const regionName = (id: string) => regions?.find((r) => r.id === id)?.name ?? "";
   return (
     <>
-      <div className="flex justify-end"><button type="button" className="ym-btn ym-btn--primary" onClick={() => setDialog({ edit: null })}>{t("supplier_new")}</button></div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <button type="button" className="ym-btn" onClick={() => setSyncing(true)}>{t("forest_sync")}</button>
+        <button type="button" className="ym-btn ym-btn--primary" onClick={() => setDialog({ edit: null })}>{t("supplier_new")}</button>
+      </div>
       <div className="overflow-auto">
         <table className="ym-table text-[13px]">
           <thead><tr><th>{t("col_org")}</th><th>{t("col_type")}</th><th>{t("col_regions")}</th><th>{t("col_members")}</th><th>{t("col_status")}</th><th></th></tr></thead>
@@ -313,6 +378,7 @@ function Suppliers() {
         </table>
       </div>
       {dialog && <SupplierDialog edit={dialog.edit} onClose={() => setDialog(null)} />}
+      {syncing && <ForestSyncDialog onClose={() => setSyncing(false)} />}
     </>
   );
 }

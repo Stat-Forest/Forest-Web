@@ -386,6 +386,7 @@ export interface OrderDetail extends OrderListItem {
   area_note: string;
   water_source: string;
   contact_person: string;
+  contact_phone: string;
   extra_info: string;
   base_seedlings: number | null;
   problem_note: string;
@@ -654,6 +655,7 @@ export interface OrderWrite {
   area_note?: string;
   water_source?: string;
   contact_person?: string;
+  contact_phone?: string;
   extra_info?: string;
   base_seedlings?: number | null;
   problem_note?: string;
@@ -987,6 +989,13 @@ export interface AdminSupplier {
   members: number;
 }
 
+export interface ForestCandidate {
+  id: UUID;
+  name: string;
+  region: string;
+  stir: string;
+}
+
 export interface AdminOrgHit {
   id: UUID;
   name: string;
@@ -1004,6 +1013,7 @@ export interface AdminAssignment {
   valid_from: string;
   valid_to: string | null;
   source_doc: string;
+  source_doc_date: string | null;
   is_current: boolean;
 }
 
@@ -1016,6 +1026,7 @@ export interface AdminRoute {
   valid_from: string;
   valid_to: string | null;
   source_doc: string;
+  source_doc_date: string | null;
   is_current: boolean;
 }
 
