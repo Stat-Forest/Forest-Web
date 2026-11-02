@@ -3,11 +3,13 @@
  * → xato bo'lmasa «Тасдиқлаш ва ёзиш». Server hammasi yoki hech narsa tamoyilida ishlaydi.
  */
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useYashilT, type YashilKey } from "@/features/yashil/i18n";
 import type { ImportKind, ImportResultOut } from "@/features/yashil/types";
-import { useRunYashilImportMutation } from "@/services/yashilApi";
+import { downloadImportTemplate, useRunYashilImportMutation } from "@/services/yashilApi";
+import type { RootState } from "@/app/store";
 import { apiErrorText } from "../Orders/orderUi";
 
 const COLS: Record<ImportKind, YashilKey> = {
@@ -18,10 +20,15 @@ const COLS: Record<ImportKind, YashilKey> = {
   opening: "import_cols_opening",
 };
 
-export function ImportDialog({ kind, title, withSource, onClose }: { kind: ImportKind; title: string; withSource?: boolean; onClose: () => void }) {
+/** `withSource` — bitta «asos» maydoni (kalendar); `withDocDate` — asos hujjat raqami va sanasi alohida. */
+export function ImportDialog({ kind, title, withSource, withDocDate, onClose }: {
+  kind: ImportKind; title: string; withSource?: boolean; withDocDate?: boolean; onClose: () => void;
+}) {
   const { t } = useYashilT();
+  const token = useSelector((s: RootState) => s.auth.token);
   const [file, setFile] = useState<File | null>(null);
   const [source, setSource] = useState("");
+  const [sourceDate, setSourceDate] = useState("");
   const [result, setResult] = useState<ImportResultOut | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [run, { isLoading }] = useRunYashilImportMutation();
@@ -30,7 +37,7 @@ export function ImportDialog({ kind, title, withSource, onClose }: { kind: Impor
     if (!file) return;
     setError(null);
     try {
-      const res = await run({ kind, file, dryRun, source: source || undefined }).unwrap();
+      const res = await run({ kind, file, dryRun, source: source || undefined, sourceDate: sourceDate || undefined }).unwrap();
       setResult(res);
       if (!dryRun && res.applied) {
         toast.success(`${t("import_done")}: ${res.created} ${t("import_created")}, ${res.updated} ${t("import_updated")}`);
@@ -51,7 +58,12 @@ export function ImportDialog({ kind, title, withSource, onClose }: { kind: Impor
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{t("import_hint")}</DialogDescription>
         </DialogHeader>
-        <div className="text-xs ym-muted"><span className="font-semibold">{t("import_columns")}:</span> {t(COLS[kind])}</div>
+        <div className="flex flex-wrap items-start gap-2">
+          <div className="flex-1 min-w-[16rem] text-xs ym-muted"><span className="font-semibold">{t("import_columns")}:</span> {t(COLS[kind])}</div>
+          <button type="button" className="ym-btn" onClick={() => downloadImportTemplate(kind, token).catch(() => toast.error(t("error_generic")))}>
+            {t("import_template")}
+          </button>
+        </div>
         <label className="text-sm block">.xlsx (≤ 10 MB)
           <input type="file" accept=".xlsx" className="ym-select w-full mt-1" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); setError(null); }} />
         </label>
@@ -59,6 +71,16 @@ export function ImportDialog({ kind, title, withSource, onClose }: { kind: Impor
           <label className="text-sm block">{t("import_source")}
             <input className="ym-select w-full mt-1" value={source} maxLength={300} onChange={(e) => { setSource(e.target.value); setResult(null); }} />
           </label>
+        )}
+        {withDocDate && (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <label className="text-sm block">{t("doc_number")}
+              <input className="ym-select w-full mt-1" value={source} maxLength={200} placeholder={t("doc_number_ph")} onChange={(e) => { setSource(e.target.value); setResult(null); }} />
+            </label>
+            <label className="text-sm block">{t("doc_date")}
+              <input type="date" className="ym-select w-full mt-1" value={sourceDate} onChange={(e) => { setSourceDate(e.target.value); setResult(null); }} />
+            </label>
+          </div>
         )}
         {result && (
           <div className="ym-card !p-3 space-y-2 text-sm">

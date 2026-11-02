@@ -16,8 +16,9 @@ function MahallaDialog({ edit, onClose }: { edit: AdminMahalla | null; onClose: 
   const { data: regions } = useGetYashilRegionsQuery();
   const [region, setRegion] = useState(edit?.region.id ?? "");
   const { data: districts } = useGetYashilDistrictsQuery(region ? { region } : skipToken);
+  // Kod tizim tomonidan beriladi (tuman kodi + tartib raqam) — formada faqat ko'rsatiladi
   const [form, setForm] = useState({
-    source_code: edit?.source_code ?? "", name: edit?.name ?? "", district: edit?.district.id ?? "", address: edit?.address ?? "",
+    name: edit?.name ?? "", district: edit?.district.id ?? "", address: edit?.address ?? "",
     is_active: edit?.is_active ?? true, valid_to: edit?.valid_to ?? "",
   });
   const submit = () => run(() => save({ id: edit?.id, body: { ...form, valid_to: form.valid_to || null } }).unwrap(), onClose);
@@ -38,7 +39,9 @@ function MahallaDialog({ edit, onClose }: { edit: AdminMahalla | null; onClose: 
           </select>
         </label>
         <label className="text-sm block">{t("col_name")} *<input className={inputCls(field === "name")} value={form.name} maxLength={200} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-        <label className="text-sm block">{t("col_code")}<input className={inputCls(field === "source_code")} value={form.source_code} maxLength={50} onChange={(e) => setForm({ ...form, source_code: e.target.value })} /></label>
+        <label className="text-sm block">{t("col_code")}
+          <input className="ym-select w-full mt-1 ym-muted" value={edit?.source_code ?? ""} placeholder={t("mahalla_code_auto")} readOnly />
+        </label>
       </div>
       <label className="text-sm block">{t("col_address")}<input className={inputCls(field === "address")} value={form.address} maxLength={500} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
       <div className="grid sm:grid-cols-2 gap-3 items-end">

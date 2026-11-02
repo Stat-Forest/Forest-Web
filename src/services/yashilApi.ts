@@ -35,6 +35,7 @@ import type {
   AdminOrgHit,
   AdminRoute,
   AdminSupplier,
+  ForestCandidate,
   AdminUnionUnit,
   AdminUserHit,
   AuditRow,
@@ -429,11 +430,19 @@ export const yashilApi = createApi({
       query: ({ id, body }) => ({ url: id ? `/admin/suppliers/${id}/` : "/admin/suppliers/", method: id ? "PATCH" : "POST", body }),
       invalidatesTags: [{ type: ADMIN, id: "suppliers" }, { type: ADMIN, id: "audit" }],
     }),
+    getYashilForestCandidates: builder.query<{ results: ForestCandidate[]; count: number }, void>({
+      query: () => "/admin/suppliers/forest-candidates/",
+      providesTags: [{ type: ADMIN, id: "suppliers" }],
+    }),
+    syncYashilForests: builder.mutation<{ created: number }, { organizations?: UUID[] }>({
+      query: (body) => ({ url: "/admin/suppliers/sync-forests/", method: "POST", body }),
+      invalidatesTags: [{ type: ADMIN, id: "suppliers" }, { type: ADMIN, id: "audit" }, REF],
+    }),
     getYashilAdminAssignments: builder.query<Paginated<AdminAssignment>, { q?: string; mahalla?: UUID; page?: number; per_page?: number } | void>({
       query: (params) => `/admin/assignments/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
       providesTags: [{ type: ADMIN, id: "assignments" }],
     }),
-    saveYashilAdminAssignment: builder.mutation<AdminAssignment, { id?: UUID; body: Partial<{ mahalla: UUID; organization: UUID; valid_from: string; valid_to: string | null; source_doc: string }> }>({
+    saveYashilAdminAssignment: builder.mutation<AdminAssignment, { id?: UUID; body: Partial<{ mahalla: UUID; organization: UUID; valid_from: string; valid_to: string | null; source_doc: string; source_doc_date: string | null }> }>({
       query: ({ id, body }) => ({ url: id ? `/admin/assignments/${id}/` : "/admin/assignments/", method: id ? "PATCH" : "POST", body }),
       invalidatesTags: [{ type: ADMIN, id: "assignments" }, { type: ADMIN, id: "audit" }],
     }),
@@ -441,7 +450,7 @@ export const yashilApi = createApi({
       query: (params) => `/admin/routes/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
       providesTags: [{ type: ADMIN, id: "routes" }],
     }),
-    saveYashilAdminRoute: builder.mutation<AdminRoute, { id?: UUID; body: Partial<{ mahalla: UUID; union_unit: UUID; valid_from: string; valid_to: string | null; source_doc: string }> }>({
+    saveYashilAdminRoute: builder.mutation<AdminRoute, { id?: UUID; body: Partial<{ mahalla: UUID; union_unit: UUID; valid_from: string; valid_to: string | null; source_doc: string; source_doc_date: string | null }> }>({
       query: ({ id, body }) => ({ url: id ? `/admin/routes/${id}/` : "/admin/routes/", method: id ? "PATCH" : "POST", body }),
       invalidatesTags: [{ type: ADMIN, id: "routes" }, { type: ADMIN, id: "audit" }, { type: ADMIN, id: "units" }],
     }),
@@ -473,14 +482,14 @@ export const yashilApi = createApi({
       query: (params) => `/admin/audit/${qs((params ?? undefined) as Record<string, QueryValue> | undefined)}`,
       providesTags: [{ type: ADMIN, id: "audit" }],
     }),
-    runYashilImport: builder.mutation<ImportResultOut, { kind: ImportKind; file: File; dryRun: boolean; source?: string }>({
-      query: ({ kind, file, dryRun, source }) => {
+    runYashilImport: builder.mutation<ImportResultOut, { kind: ImportKind; file: File; dryRun: boolean; source?: string; sourceDate?: string }>({
+      query: ({ kind, file, dryRun, source, sourceDate }) => {
         const form = new FormData();
         form.append("file", file);
         form.append("dry_run", dryRun ? "1" : "0");
         if (source) form.append(kind === "calendar" ? "source_ref" : "source_doc", source);
-        const url = kind === "opening" ? "/stock/opening/import/" : `/admin/${kind}/import/`;
-        return { url, method: "POST", body: form };
+        if (sourceDate) form.append("source_doc_date", sourceDate);
+        return { url: importUrl(kind), method: "POST", body: form };
       },
       invalidatesTags: (_r, _e, { kind, dryRun }) =>
         dryRun ? [] : kind === "opening" ? [STOCK] : [{ type: ADMIN, id: kind === "calendar" ? "calendar" : kind }, { type: ADMIN, id: "audit" }, REF],
@@ -528,6 +537,24 @@ export const openDocumentHtml = async (versionId: UUID, token: string | null): P
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank", "noopener");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+};
+
+const importUrl = (kind: ImportKind) => (kind === "opening" ? "/stock/opening/import/" : `/admin/${kind}/import/`);
+
+/** Import uchun namuna .xlsx (sarlavha + namuna qator) — token bilan olib, faylga saqlaydi. */
+export const downloadImportTemplate = async (kind: ImportKind, token: string | null): Promise<void> => {
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const cabinet = getCabinetId();
+  if (cabinet) headers[CABINET_HEADER] = cabinet;
+  const res = await fetch(`${base_url}/yashil${importUrl(kind)}`, { headers });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `yashil-${kind}-namuna.xlsx`;
+  a.click();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 };
 
@@ -615,6 +642,8 @@ export const {
   useGetYashilAdminUnionUnitsQuery,
   useSaveYashilAdminUnionUnitMutation,
   useGetYashilAdminSuppliersQuery,
+  useGetYashilForestCandidatesQuery,
+  useSyncYashilForestsMutation,
   useSaveYashilAdminSupplierMutation,
   useGetYashilAdminAssignmentsQuery,
   useSaveYashilAdminAssignmentMutation,

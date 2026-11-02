@@ -1,4 +1,7 @@
-/** Katalog (javob В1–В6): pozitsiyalar, faollik, nom/atribut tahriri (kod o'zgarmaydi), DM xizmat quvvati oy bo'yicha. */
+/**
+ * Katalog (javob В1–В6): pozitsiyalar, faollik, nom/atribut tahriri, DM xizmat quvvati oy bo'yicha.
+ * Kod — pozitsiyaning o'zgarmas qisqa belgisi (import va ombor hujjatlari shu bilan topadi); bo'sh bo'lsa server beradi (OX-001 / DM-001).
+ */
 import { useEffect, useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { pickName, useYashilT, type YashilKey } from "@/features/yashil/i18n";
@@ -14,6 +17,30 @@ const CATEGORIES: Record<SupplierType, string[]> = {
   dm: ["fertilizer", "equipment", "irrigation", "protection_service"],
 };
 
+type AttrRow = { key: string; value: string };
+const toRows = (attrs: Record<string, unknown> | undefined): AttrRow[] =>
+  Object.entries(attrs ?? {}).map(([key, value]) => ({ key, value: String(value ?? "") }));
+
+/** Xususiyatlar: «Номи | Қиймати» qatorlari (serverga {номи: қиймати} ko'rinishida boradi). */
+function AttributesEditor({ rows, onChange, bad }: { rows: AttrRow[]; onChange: (rows: AttrRow[]) => void; bad?: boolean }) {
+  const { t } = useYashilT();
+  const put = (i: number, patch: Partial<AttrRow>) => onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  return (
+    <fieldset className={`text-sm space-y-2 ${bad ? "text-[var(--ym-red)]" : ""}`}>
+      <legend className="mb-1">{t("attributes")}</legend>
+      <p className="ym-muted text-xs">{t("attributes_hint")}</p>
+      {rows.map((r, i) => (
+        <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <input className="ym-select" value={r.key} maxLength={60} placeholder={t("attr_name_ph")} aria-label={t("attr_name")} onChange={(e) => put(i, { key: e.target.value })} />
+          <input className="ym-select" value={r.value} maxLength={200} placeholder={t("attr_value_ph")} aria-label={t("attr_value")} onChange={(e) => put(i, { value: e.target.value })} />
+          <button type="button" className="ym-btn" aria-label={t("delete")} onClick={() => onChange(rows.filter((_, j) => j !== i))}>✕</button>
+        </div>
+      ))}
+      <button type="button" className="ym-btn" onClick={() => onChange([...rows, { key: "", value: "" }])}>{t("attr_add")}</button>
+    </fieldset>
+  );
+}
+
 function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose: () => void }) {
   const { t } = useYashilT();
   const [save, { isLoading }] = useSaveYashilAdminCatalogItemMutation();
@@ -21,12 +48,11 @@ function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose:
   const [form, setForm] = useState({
     code: edit?.code ?? "", name_cyr: edit?.name_cyr ?? "", name_lat: edit?.name_lat ?? "", supplier_type: (edit?.supplier_type ?? "forest") as SupplierType,
     item_type: (edit?.item_type ?? "goods") as ItemType, category: edit?.category ?? "seedling", unit: (edit?.unit ?? "tup") as Unit,
-    is_active: edit?.is_active ?? true, order: edit?.order ?? 0, attributes: JSON.stringify(edit?.attributes ?? {}),
+    is_active: edit?.is_active ?? true, order: edit?.order ?? 0,
   });
-  const [attrError, setAttrError] = useState(false);
+  const [attrs, setAttrs] = useState<AttrRow[]>(toRows(edit?.attributes));
   const submit = () => {
-    let attributes: Record<string, string> = {};
-    try { attributes = JSON.parse(form.attributes || "{}"); setAttrError(false); } catch { setAttrError(true); return; }
+    const attributes = Object.fromEntries(attrs.filter((r) => r.key.trim() && r.value.trim()).map((r) => [r.key.trim(), r.value.trim()]));
     const body = edit
       ? { name_cyr: form.name_cyr, name_lat: form.name_lat, category: form.category, is_active: form.is_active, order: Number(form.order) || 0, attributes }
       : { ...form, order: Number(form.order) || 0, attributes, effective_from: todayIso() };
@@ -34,9 +60,12 @@ function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose:
   };
   return (
     <FormDialog title={edit ? `${edit.code} · v${edit.version}` : t("catalog_new")} description={edit ? t("catalog_code_fixed") : undefined} open onClose={onClose}
-      onSave={submit} saving={isLoading} disabled={!form.code || !form.name_cyr} error={error || (attrError ? "attributes: JSON" : null)} wide>
+      onSave={submit} saving={isLoading} disabled={!form.name_cyr} error={error} wide>
       <div className="grid sm:grid-cols-2 gap-3">
-        <label className="text-sm block">{t("col_code")} *<input className={inputCls(field === "code")} value={form.code} disabled={!!edit} maxLength={40} onChange={(e) => setForm({ ...form, code: e.target.value })} /></label>
+        <label className="text-sm block">{t("col_code")}
+          <input className={inputCls(field === "code")} value={form.code} disabled={!!edit} maxLength={40} placeholder={t(form.supplier_type === "dm" ? "catalog_code_auto_dm" : "catalog_code_auto_forest")} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} />
+          {!edit && <span className="ym-muted text-xs">{t("catalog_code_hint")}</span>}
+        </label>
         <label className="text-sm block">{t("col_type")}
           <select className={inputCls(field === "supplier_type")} value={form.supplier_type} disabled={!!edit} onChange={(e) => { const st = e.target.value as SupplierType; setForm({ ...form, supplier_type: st, category: CATEGORIES[st][0], item_type: "goods" }); }}>
             <option value="forest">{t("tab_route_forest")}</option>
@@ -58,7 +87,7 @@ function ItemDialog({ edit, onClose }: { edit: AdminCatalogItem | null; onClose:
         <label className="text-sm block">{t("sort_order")}<input type="number" className={inputCls(field === "order")} value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
         <label className="inline-flex items-center gap-2 text-sm min-h-[40px] self-end"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />{t("status_active")}</label>
       </div>
-      <label className="text-sm block">{t("attributes_json")}<textarea className={inputCls(field === "attributes" || attrError)} value={form.attributes} onChange={(e) => setForm({ ...form, attributes: e.target.value })} /></label>
+      <AttributesEditor rows={attrs} onChange={setAttrs} bad={field === "attributes"} />
     </FormDialog>
   );
 }

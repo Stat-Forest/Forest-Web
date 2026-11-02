@@ -173,6 +173,7 @@ function OrderDetailPage() {
           {o.area_calc_ha && <Row k={t("area_calc")} v={`${o.area_calc_ha}${o.area_note ? ` · ${o.area_note}` : ""}`} />}
           {o.water_source && <Row k={t("water_source")} v={o.water_source} />}
           {o.contact_person && <Row k={t("contact_person")} v={o.contact_person} />}
+          {o.contact_phone && <Row k={t("contact_phone")} v={o.contact_phone} />}
           {o.base_seedlings != null && <Row k={t("base_seedlings")} v={o.base_seedlings} />}
           {o.problem_note && <Row k={t("problem_note")} v={o.problem_note} />}
           {o.extra_info && <Row k={t("extra_info")} v={o.extra_info} />}
