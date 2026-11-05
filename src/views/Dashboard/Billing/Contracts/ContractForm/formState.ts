@@ -511,9 +511,6 @@ export const validateForm = (
 
   // --- Yer haqida
   const li = state.landInfo;
-  (["circle", "section", "counter", "massive"] as const).forEach((f) => {
-    if (isFilled(li[f]) && !inRange(li[f], 0, 999_999_999)) add(`landInfo.${f}`, "land", "format", t("billing.form_err_land_number_range"));
-  });
   if (!isFilled(li.rent_area)) {
     add("landInfo.rent_area", "land", "required", t("billing.form_err_rent_area_required"));
   } else if (!inRange(li.rent_area, 0.01, 999_999_999)) {
