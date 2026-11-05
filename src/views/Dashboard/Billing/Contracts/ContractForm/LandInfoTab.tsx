@@ -30,7 +30,7 @@ function LandInfoTab({ landInfo, dispatch, errorOf, sectionErrors, contractId, r
         value={landInfo[field]}
         onChange={set(field)}
         invalid={!!errorOf(`landInfo.${field}`)}
-        maxLength={50}
+        maxLength={255}
         disabled={readOnly}
       />
     </Field>

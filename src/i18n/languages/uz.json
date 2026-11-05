@@ -617,7 +617,6 @@
     "form_err_passport_len": "Passport 9 belgidan iborat bo'lishi kerak, m.u. AA1929918",
     "form_err_phone_len": "Telefon raqami 12 raqamdan iborat bo'lishi kerak, m.u. 998911992919",
     "form_err_text_len": "Uzunligi 5 dan 255 belgigacha bo'lishi kerak",
-    "form_err_land_number_range": "0 dan 999 999 999 gacha bo'lgan raqam bo'lishi kerak",
     "form_err_rent_area_required": "Ijara maydonini kiriting (ga)",
     "form_err_rent_area_range": "Ijara maydoni 0.01 dan 999 999 999 gacha bo'lishi kerak",
     "form_err_coord": "Koordinata noto'g'ri (masalan: 41.311081)",
